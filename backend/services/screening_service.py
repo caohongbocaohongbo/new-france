@@ -1,0 +1,219 @@
+"""
+筛选流水线服务 — 串联三级 Agent 完整流程
+DataCollector → SignalEngine → RecommendationAgent
+"""
+import logging
+import re
+from datetime import date, datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import pandas as pd
+
+from ..agents.layer1_data_collector.agent import DataCollectorAgent
+from ..agents.layer2_signal_engine.agent import SignalEngineAgent
+from ..agents.layer3_recommendation.agent import RecommendationAgent
+from ..events.engine import EventEngine
+
+logger = logging.getLogger(__name__)
+
+PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
+FRANCE_FILE = PROJECT_DIR / "data" / "france.md"
+
+
+def _read_watchlist() -> List[Dict]:
+    """从 france.md 读取监控列表"""
+    if not FRANCE_FILE.exists():
+        return []
+    content = FRANCE_FILE.read_text(encoding="utf-8")
+    entries = []
+    for line in content.split("\n"):
+        match = re.match(
+            r"\|\s*(\d{6})\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*\|",
+            line,
+        )
+        if match:
+            entries.append({
+                "code": match.group(1),
+                "name": match.group(2).strip(),
+                "zt_date": match.group(3),
+                "ref_price": float(match.group(4)),
+            })
+    return entries
+
+
+async def run_full_pipeline(
+    target_date: Optional[date] = None,
+    drop_min: float = 3.0,
+    drop_max: float = 10.0,
+    vol_min: float = 1.0,
+    vol_max: float = 5.0,
+    turnover_min: float = 5.0,
+    turnover_max: float = 10.0,
+    mc_min: float = 50.0,
+    mc_max: float = 200.0,
+    pe_max: float = 50.0,
+    dry_run: bool = False,
+) -> dict:
+    """
+    完整的每日筛选流水线
+
+    Returns:
+        {
+            "total_scored": int,
+            "strong_buy": int, "buy": int, "watch": int,
+            "results": [ScoredStock dicts],
+            "errors": [...],
+        }
+    """
+    if target_date is None:
+        target_date = date.today()
+
+    errors = []
+    logger.info("=" * 50)
+    logger.info(f"New France 筛选流水线启动 — {target_date}")
+    logger.info("=" * 50)
+
+    # ---- Layer 1: 数据采集 ----
+    logger.info("[Layer 1] 数据采集...")
+    collector = DataCollectorAgent()
+
+    # 获取指数涨幅
+    from ..agents.layer1_data_collector.sources.index_data import fetch_index_gain
+    index_gain = fetch_index_gain()
+    logger.info(f"  上证指数涨幅: {index_gain:+.2f}%")
+
+    # 读取监控列表
+    watchlist = _read_watchlist()
+    if not watchlist:
+        return {
+            "total_scored": 0, "strong_buy": 0, "buy": 0, "watch": 0,
+            "results": [], "index_gain": index_gain,
+            "errors": ["监控列表为空，请先添加股票"],
+        }
+
+    logger.info(f"  监控列表: {len(watchlist)} 只")
+
+    # 拉取实时行情
+    codes = [e["code"] for e in watchlist]
+    quotes = await collector.collect_watchlist_quotes(codes)
+    logger.info(f"  实时行情: {len(quotes)} 只")
+
+    # 拉取历史K线
+    historical = await collector.collect_historical_batch(codes)
+
+    # ---- 事件采集 ----
+    logger.info("[事件引擎] 采集事件...")
+    event_engine = EventEngine()
+    events = await event_engine.collect_daily_events(target_date)
+    watchlist_names = [e["name"] for e in watchlist]
+    event_map = await event_engine.match_stock_events(events, codes, watchlist_names)
+
+    # ---- 回撤检测 ----
+    logger.info("[Layer 2] 回撤检测...")
+    quote_map = {}
+    for _, row in quotes.iterrows():
+        quote_map[row["代码"]] = row
+
+    candidates = []
+    for e in watchlist:
+        code = e["code"]
+        if code not in quote_map:
+            continue
+        q = quote_map[code]
+        current_price = q["最新价"]
+        if current_price is None or current_price <= 0:
+            continue
+
+        drop_pct = (current_price - e["ref_price"]) / e["ref_price"] * 100
+        abs_drop = abs(drop_pct)
+
+        if abs_drop < drop_min or abs_drop > drop_max:
+            continue
+
+        # 量比/换手率/PE/市值 快速筛选
+        vr = q.get("量比")
+        to = q.get("换手率")
+        pe = q.get("市盈率")
+        mc = q.get("流通市值")
+
+        if vr is not None and vr > 0 and not (vol_min <= vr <= vol_max):
+            continue
+        if to is not None and to > 0 and not (turnover_min <= to <= turnover_max):
+            continue
+        if pe is not None and pe > 0 and pe > pe_max:
+            continue
+        if mc is not None and mc > 0:
+            mc_yi = mc / 1e8
+            if not (mc_min <= mc_yi <= mc_max):
+                continue
+
+        candidates.append({
+            "code": code,
+            "name": e["name"],
+            "zt_date": e["zt_date"],
+            "ref_price": e["ref_price"],
+            "current_price": current_price,
+            "drop_pct": round(drop_pct, 2),
+            "涨跌幅": q["涨跌幅"],
+            "换手率": q["换手率"],
+            "市盈率": q["市盈率"],
+            "量比": q["量比"],
+            "总市值": q["总市值"],
+            "流通市值": q["流通市值"],
+            "封板时间": 0,
+            "炸板次数": 0,
+            "涨停频率": 0,
+        })
+
+    logger.info(f"  回撤检测 + 快速筛选后: {len(candidates)} 只候选")
+
+    # ---- Layer 2: 多因子评分 ----
+    logger.info("[Layer 2] 多因子评分...")
+    engine = SignalEngineAgent()
+    scored = engine.evaluate(candidates, quotes, historical, index_gain, event_map)
+
+    # ---- Layer 3: 生成报告 ----
+    logger.info("[Layer 3] 生成报告...")
+    recom = RecommendationAgent()
+    summary = await recom.execute(scored, target_date, index_gain, dry_run=dry_run)
+
+    # ---- 构建响应 ----
+    results = []
+    for s in scored:
+        factor_list = {}
+        for key, r in s.factor_scores.items():
+            factor_list[key] = {
+                "name": r.name,
+                "score": r.score,
+                "weight": r.weight,
+                "detail": r.detail,
+                "passed": r.passed,
+            }
+        results.append({
+            "rank": s.rank,
+            "code": s.code,
+            "name": s.name,
+            "zt_date": s.zt_date,
+            "ref_price": s.ref_price,
+            "current_price": s.current_price,
+            "drop_pct": s.drop_pct,
+            "total_score": s.total_score,
+            "event_impact": s.event_impact,
+            "adjusted_score": s.adjusted_score,
+            "recommendation": s.recommendation,
+            "factors": factor_list,
+        })
+
+    return {
+        "date": target_date.strftime("%Y-%m-%d"),
+        "index_gain": index_gain,
+        "total_scored": summary["total_scored"],
+        "strong_buy": summary["strong_buy"],
+        "buy": summary["buy"],
+        "watch": summary["watch"],
+        "results": results,
+        "report_md": summary.get("report_md"),
+        "report_html": summary.get("report_html"),
+        "errors": errors,
+    }
