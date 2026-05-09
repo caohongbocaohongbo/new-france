@@ -1,5 +1,8 @@
 /* New France — 尾盘涨停选股系统 前端逻辑 */
-const API_BASE = '/api/v1';
+// 本地开发用 localhost，线上部署时改为云服务地址
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000/api/v1'
+    : 'https://new-france-api.onrender.com/api/v1';  // 替换为实际云服务地址
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
