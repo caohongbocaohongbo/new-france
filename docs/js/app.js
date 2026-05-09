@@ -5,14 +5,16 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
 
 const DEMO_DATA = {
     watchlist: [
-        {code:"600519",name:"贵州茅台",zt_date:"2026-05-07",ref_price:1680.00,status:"active"},
-        {code:"000858",name:"五粮液",zt_date:"2026-05-06",ref_price:145.50,status:"active"},
-        {code:"300750",name:"宁德时代",zt_date:"2026-05-05",ref_price:210.00,status:"active"},
-        {code:"002594",name:"比亚迪",zt_date:"2026-05-07",ref_price:285.00,status:"recommended"},
-        {code:"600036",name:"招商银行",zt_date:"2026-05-05",ref_price:42.80,status:"active"},
-        {code:"002317",name:"众生药业",zt_date:"2026-05-04",ref_price:18.50,status:"expired"},
-        {code:"601012",name:"隆基绿能",zt_date:"2026-05-03",ref_price:32.60,status:"recommended"},
-        {code:"300274",name:"阳光电源",zt_date:"2026-05-07",ref_price:95.00,status:"active"},
+        {code:"600519",name:"贵州茅台",zt_date:"2026-05-07",ref_price:1680.00,current_price:1625.00,drop_pct:-3.27,turnover:6.8,vol_ratio:2.3,pe:25.3,mcap:"52亿",status:"active",source:"东方财富涨停股池",zt_time:"09:35",zbc:0},
+        {code:"000858",name:"五粮液",zt_date:"2026-05-06",ref_price:145.50,current_price:138.00,drop_pct:-5.15,turnover:6.5,vol_ratio:2.1,pe:38.2,mcap:"180亿",status:"active",source:"东方财富涨停股池",zt_time:"10:15",zbc:0},
+        {code:"300750",name:"宁德时代",zt_date:"2026-05-05",ref_price:210.00,current_price:199.50,drop_pct:-5.00,turnover:7.2,vol_ratio:1.8,pe:42.5,mcap:"120亿",status:"active",source:"东方财富涨停股池",zt_time:"09:42",zbc:0},
+        {code:"002594",name:"比亚迪",zt_date:"2026-05-07",ref_price:285.00,current_price:272.00,drop_pct:-4.56,turnover:5.3,vol_ratio:1.5,pe:32.0,mcap:"260亿",status:"recommended",source:"东方财富涨停股池",zt_time:"13:20",zbc:1},
+        {code:"600036",name:"招商银行",zt_date:"2026-05-05",ref_price:42.80,current_price:40.50,drop_pct:-5.37,turnover:4.2,vol_ratio:1.2,pe:6.8,mcap:"380亿",status:"active",source:"东方财富涨停股池",zt_time:"10:30",zbc:0},
+        {code:"002317",name:"众生药业",zt_date:"2026-05-04",ref_price:18.50,current_price:17.20,drop_pct:-7.03,turnover:8.1,vol_ratio:3.5,pe:55.0,mcap:"35亿",status:"expired",source:"东方财富涨停股池",zt_time:"14:10",zbc:2},
+        {code:"601012",name:"隆基绿能",zt_date:"2026-05-03",ref_price:32.60,current_price:30.80,drop_pct:-5.52,turnover:4.2,vol_ratio:1.2,pe:45.0,mcap:"88亿",status:"recommended",source:"东方财富涨停股池",zt_time:"11:05",zbc:0},
+        {code:"300274",name:"阳光电源",zt_date:"2026-05-07",ref_price:95.00,current_price:90.50,drop_pct:-4.74,turnover:7.0,vol_ratio:2.8,pe:28.5,mcap:"150亿",status:"active",source:"东方财富涨停股池",zt_time:"09:28",zbc:0},
+        {code:"600887",name:"伊利股份",zt_date:"2026-05-06",ref_price:32.00,current_price:30.20,drop_pct:-5.63,turnover:5.8,vol_ratio:1.9,pe:22.0,mcap:"95亿",status:"active",source:"东方财富涨停股池",zt_time:"10:45",zbc:0},
+        {code:"002466",name:"天齐锂业",zt_date:"2026-05-05",ref_price:55.00,current_price:52.00,drop_pct:-5.45,turnover:9.5,vol_ratio:4.2,pe:18.5,mcap:"65亿",status:"active",source:"东方财富涨停股池",zt_time:"09:50",zbc:0},
     ],
     recommendations: [
         {
@@ -97,6 +99,7 @@ const DEMO_DATA = {
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
+    initWatchlistTabs();
     updateDateTime();
     checkSystemStatus();
     loadDashboard();
@@ -133,6 +136,20 @@ function navigateTo(page, pushState = true) {
     if (page === 'watchlist') loadWatchlist();
     if (page === 'recommendations') loadRecommendations();
     if (page === 'settings') setupSettingsPage();
+}
+
+let wlCurrentStatus = ''; // current tab filter
+
+function initWatchlistTabs() {
+    document.querySelectorAll('#wlTabs .tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('#wlTabs .tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            wlCurrentStatus = tab.dataset.status;
+            document.getElementById('wlStatus').value = wlCurrentStatus;
+            loadWatchlist(1);
+        });
+    });
 }
 
 // ---- System Status ----
@@ -241,17 +258,26 @@ async function loadWatchlist(page = 1) {
 
 function renderWatchlistTable(items) {
     const tags = {active:'回撤中',recommended:'已推荐',expired:'已过期'};
-    document.getElementById('wlTableBody').innerHTML = items.map(item => `
-        <tr>
+    document.getElementById('wlTableBody').innerHTML = items.map(item => {
+        const cp = item.current_price || item.ref_price;
+        const dp = item.drop_pct != null ? item.drop_pct : 0;
+        const dpColor = dp < 0 ? (Math.abs(dp) >= 5 ? '#E74C3C' : '#F39C12') : '#27AE60';
+        return `<tr>
             <td><input type="checkbox"></td>
             <td><span class="stock-code">${item.code}</span></td>
-            <td>${item.name}</td>
+            <td>${item.name}${item.zt_time ? '<div style="font-size:10px;color:#8B95A8">封板'+item.zt_time+(item.zbc>0?' 炸板'+item.zbc+'次':'')+'</div>' : ''}</td>
             <td>${item.zt_date}</td>
             <td>${item.ref_price.toFixed(2)}</td>
-            <td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td>
+            <td>${cp.toFixed(2)}</td>
+            <td style="color:${dpColor};font-weight:600">${dp.toFixed(2)}%</td>
+            <td>${item.turnover||'--'}%</td>
+            <td>${item.vol_ratio||'--'}</td>
+            <td>${item.pe||'--'}</td>
+            <td>${item.mcap||'--'}</td>
             <td><span class="tag tag-${item.status||'active'}">${tags[item.status]||'回撤中'}</span></td>
             <td><button class="btn" onclick="removeWatchlistItem('${item.code}')" style="padding:4px 8px;font-size:11px">移除</button></td>
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
 }
 
 async function removeWatchlistItem(code) {
@@ -329,6 +355,8 @@ async function runScreening() {
     body.innerHTML = '<div class="empty-state"><p>筛选运行中...</p></div>';
 
     const params = new URLSearchParams();
+    params.set('gain_min', document.getElementById('scrGainMin').value||3);
+    params.set('gain_max', document.getElementById('scrGainMax').value||10);
     params.set('drop_min', document.getElementById('scrDropMin').value||3);
     params.set('drop_max', document.getElementById('scrDropMax').value||10);
     params.set('vol_min', document.getElementById('scrVolMin').value||1);
@@ -374,6 +402,7 @@ function renderScreeningResults(results) {
 }
 
 function resetScreening() {
+    document.getElementById('scrGainMin').value=3; document.getElementById('scrGainMax').value=10;
     document.getElementById('scrDropMin').value=3; document.getElementById('scrDropMax').value=10;
     document.getElementById('scrVolMin').value=1; document.getElementById('scrVolMax').value=5;
     document.getElementById('scrToMin').value=5; document.getElementById('scrToMax').value=10;

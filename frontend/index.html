@@ -109,6 +109,8 @@
         <div class="filter-bar">
             <input type="text" id="wlSearch" class="input" placeholder="搜索代码/名称...">
             <select id="wlStatus" class="select"><option value="">全部状态</option><option value="active">回撤中</option><option value="recommended">已推荐</option><option value="expired">已过期</option></select>
+            <span style="font-size:11px;color:#8B95A8;margin-left:8px">数据源:</span>
+            <a href="https://quote.eastmoney.com/ztb/detail" target="_blank" style="color:#3B82F6;font-size:11px">东方财富涨停股池</a>
             <button class="btn btn-primary" onclick="loadWatchlist()">查询</button>
             <button class="btn" onclick="exportWatchlist()">导出CSV</button>
         </div>
@@ -143,6 +145,10 @@
         <div class="screening-layout">
             <div class="screening-filters panel">
                 <div class="panel-header"><h2>筛选条件</h2></div>
+                <div class="filter-group">
+                    <label>涨幅范围（当日）</label>
+                    <div class="range-inputs"><input type="number" id="scrGainMin" class="input input-sm" value="3" step="0.5"> - <input type="number" id="scrGainMax" class="input input-sm" value="10" step="0.5"> %</div>
+                </div>
                 <div class="filter-group">
                     <label>回撤范围</label>
                     <div class="range-inputs"><input type="number" id="scrDropMin" class="input input-sm" value="5" step="0.5"> - <input type="number" id="scrDropMax" class="input input-sm" value="10" step="0.5"> %</div>
