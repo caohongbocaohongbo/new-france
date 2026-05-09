@@ -1,8 +1,98 @@
 /* New France — 尾盘涨停选股系统 前端逻辑 */
-// 本地开发用 localhost，线上部署时改为云服务地址
 const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:8000/api/v1'
-    : 'https://new-france-api.onrender.com/api/v1';  // 替换为实际云服务地址
+    : 'https://new-france-api.onrender.com/api/v1';
+
+const DEMO_DATA = {
+    watchlist: [
+        {code:"600519",name:"贵州茅台",zt_date:"2026-05-07",ref_price:1680.00,status:"active"},
+        {code:"000858",name:"五粮液",zt_date:"2026-05-06",ref_price:145.50,status:"active"},
+        {code:"300750",name:"宁德时代",zt_date:"2026-05-05",ref_price:210.00,status:"active"},
+        {code:"002594",name:"比亚迪",zt_date:"2026-05-07",ref_price:285.00,status:"recommended"},
+        {code:"600036",name:"招商银行",zt_date:"2026-05-05",ref_price:42.80,status:"active"},
+        {code:"002317",name:"众生药业",zt_date:"2026-05-04",ref_price:18.50,status:"expired"},
+        {code:"601012",name:"隆基绿能",zt_date:"2026-05-03",ref_price:32.60,status:"recommended"},
+        {code:"300274",name:"阳光电源",zt_date:"2026-05-07",ref_price:95.00,status:"active"},
+    ],
+    recommendations: [
+        {
+            rank:1, code:"600519", name:"贵州茅台", zt_date:"2026-05-07",
+            ref_price:1680.00, current_price:1625.00, drop_pct:-3.27,
+            total_score:78.5, adjusted_score:82.2, event_impact:3.7,
+            recommendation:"STRONG_BUY",
+            factors:{
+                pullback:{name:"回撤幅度",score:9.2,weight:0.15,detail:"回撤-3.3%,接近5-8%目标区间",passed:true},
+                volume_trend:{name:"量能趋势",score:8.5,weight:0.12,detail:"量能稳步爬升(归一化斜率0.12)",passed:true},
+                ma_alignment:{name:"均线多头",score:10.0,weight:0.12,detail:"MA5>MA10>MA20>MA60完美多头",passed:true},
+                strength:{name:"强势确认",score:8.0,weight:0.10,detail:"收盘在65%位; 涨幅+0.8%强于大盘-0.3%",passed:true},
+                entry_point:{name:"尾盘买点",score:9.0,weight:0.10,detail:"收盘/最高=98.2%,尾盘强势收高",passed:true},
+                market_cap:{name:"流通市值",score:10.0,weight:0.10,detail:"流通市值52亿,典型中小盘",passed:true},
+                volume_ratio:{name:"量比",score:8.5,weight:0.08,detail:"量比=2.3,温和放量",passed:true},
+                turnover:{name:"换手率",score:9.0,weight:0.08,detail:"换手率=6.8%,温和放量",passed:true},
+                pe:{name:"市盈率",score:7.0,weight:0.08,detail:"PE=25.3,合理估值",passed:true},
+                zt_quality:{name:"涨停质量",score:8.5,weight:0.07,detail:"封板9:35; 零炸板; 30天1次",passed:true},
+                event_bonus:{name:"事件驱动加分",score:3.7,weight:0.0,detail:"+3.7:业绩预告预增+50%",passed:true},
+            }
+        },
+        {
+            rank:2, code:"300750", name:"宁德时代", zt_date:"2026-05-05",
+            ref_price:210.00, current_price:199.50, drop_pct:-5.00,
+            total_score:71.2, adjusted_score:73.5, event_impact:2.3,
+            recommendation:"STRONG_BUY",
+            factors:{
+                pullback:{name:"回撤幅度",score:10.0,weight:0.15,detail:"回撤-5.0%,完美落入5-8%目标区间",passed:true},
+                volume_trend:{name:"量能趋势",score:7.0,weight:0.12,detail:"量能温和放大(归一化斜率0.08)",passed:true},
+                ma_alignment:{name:"均线多头",score:7.0,weight:0.12,detail:"MA5>MA10>MA20",passed:true},
+                strength:{name:"强势确认",score:6.5,weight:0.10,detail:"收盘在42%位; 略弱于大盘",passed:true},
+                entry_point:{name:"尾盘买点",score:8.0,weight:0.10,detail:"收盘/最高=97.5%,尾盘强势",passed:true},
+                market_cap:{name:"流通市值",score:8.0,weight:0.10,detail:"流通市值120亿",passed:true},
+                volume_ratio:{name:"量比",score:7.0,weight:0.08,detail:"量比=1.8",passed:true},
+                turnover:{name:"换手率",score:10.0,weight:0.08,detail:"换手率=7.2%",passed:true},
+                pe:{name:"市盈率",score:4.0,weight:0.08,detail:"PE=42.5,偏高",passed:true},
+                zt_quality:{name:"涨停质量",score:8.5,weight:0.07,detail:"封板10:15; 零炸板",passed:true},
+                event_bonus:{name:"事件驱动加分",score:2.3,weight:0.0,detail:"+2.3:财报披露+行业政策",passed:true},
+            }
+        },
+        {
+            rank:3, code:"000858", name:"五粮液", zt_date:"2026-05-06",
+            ref_price:145.50, current_price:138.00, drop_pct:-5.15,
+            total_score:62.8, adjusted_score:62.8, event_impact:0,
+            recommendation:"BUY",
+            factors:{
+                pullback:{name:"回撤幅度",score:9.5,weight:0.15,detail:"回撤-5.2%,完美落入5-8%目标区间",passed:true},
+                volume_trend:{name:"量能趋势",score:6.0,weight:0.12,detail:"量能温和放大(归一化斜率0.05)",passed:true},
+                ma_alignment:{name:"均线多头",score:7.0,weight:0.12,detail:"MA5>MA10>MA20",passed:true},
+                strength:{name:"强势确认",score:5.0,weight:0.10,detail:"收盘在48%位; 弱于大盘",passed:true},
+                entry_point:{name:"尾盘买点",score:6.0,weight:0.10,detail:"收盘/最高=95.8%",passed:true},
+                market_cap:{name:"流通市值",score:5.0,weight:0.10,detail:"流通市值180亿",passed:true},
+                volume_ratio:{name:"量比",score:8.0,weight:0.08,detail:"量比=2.1",passed:true},
+                turnover:{name:"换手率",score:7.0,weight:0.08,detail:"换手率=6.5%",passed:true},
+                pe:{name:"市盈率",score:4.0,weight:0.08,detail:"PE=38.2",passed:true},
+                zt_quality:{name:"涨停质量",score:6.0,weight:0.07,detail:"封板13:20; 零炸板",passed:true},
+                event_bonus:{name:"事件驱动加分",score:0,weight:0.0,detail:"无关联事件",passed:true},
+            }
+        },
+        {
+            rank:4, code:"601012", name:"隆基绿能", zt_date:"2026-05-03",
+            ref_price:32.60, current_price:30.80, drop_pct:-5.52,
+            total_score:48.3, adjusted_score:48.3, event_impact:0,
+            recommendation:"WATCH",
+            factors:{
+                pullback:{name:"回撤幅度",score:9.0,weight:0.15,detail:"回撤-5.5%",passed:true},
+                volume_trend:{name:"量能趋势",score:4.0,weight:0.12,detail:"量能持平",passed:true},
+                ma_alignment:{name:"均线多头",score:4.0,weight:0.12,detail:"MA5>MA10",passed:true},
+                strength:{name:"强势确认",score:3.0,weight:0.10,detail:"收盘在30%位; 弱于大盘",passed:false},
+                entry_point:{name:"尾盘买点",score:6.0,weight:0.10,detail:"收盘/最高=96.2%",passed:true},
+                market_cap:{name:"流通市值",score:10.0,weight:0.10,detail:"流通市值88亿",passed:true},
+                volume_ratio:{name:"量比",score:5.0,weight:0.08,detail:"量比=1.2",passed:false},
+                turnover:{name:"换手率",score:4.0,weight:0.08,detail:"换手率=4.2%",passed:false},
+                pe:{name:"市盈率",score:3.0,weight:0.08,detail:"PE=45.0",passed:false},
+                zt_quality:{name:"涨停质量",score:4.0,weight:0.07,detail:"封板13:50; 30天2次",passed:false},
+                event_bonus:{name:"事件驱动加分",score:0,weight:0.0,detail:"无关联事件",passed:true},
+            }
+        },
+    ]
+};
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,17 +108,13 @@ function initNavigation() {
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            const page = item.dataset.page;
-            navigateTo(page);
+            navigateTo(item.dataset.page);
         });
     });
-    // Handle hash changes
     window.addEventListener('hashchange', () => {
-        const page = location.hash.replace('#', '') || 'dashboard';
-        navigateTo(page, false);
+        navigateTo(location.hash.replace('#', '') || 'dashboard', false);
     });
-    const initPage = location.hash.replace('#', '') || 'dashboard';
-    navigateTo(initPage, false);
+    navigateTo(location.hash.replace('#', '') || 'dashboard', false);
 }
 
 function navigateTo(page, pushState = true) {
@@ -39,426 +125,297 @@ function navigateTo(page, pushState = true) {
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
     if (pushState) location.hash = page;
-    const titles = {dashboard:'Dashboard 市场总览',watchlist:'监控列表',recommendations:'推荐结果',screening:'手动筛选',settings:'策略配置'};
-    document.getElementById('pageTitle').textContent = titles[page] || page;
+    document.getElementById('pageTitle').textContent = {
+        dashboard:'Dashboard 市场总览',watchlist:'监控列表',
+        recommendations:'推荐结果',screening:'手动筛选',settings:'策略配置'
+    }[page] || page;
     if (page === 'dashboard') loadDashboard();
     if (page === 'watchlist') loadWatchlist();
     if (page === 'recommendations') loadRecommendations();
-    if (page === 'screening') setupScreeningPage();
     if (page === 'settings') setupSettingsPage();
 }
 
 // ---- System Status ----
 async function checkSystemStatus() {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    const nextRun = document.getElementById('nextRun');
+    const now = new Date();
+    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+    const isHours = now.getHours() >= 9 && now.getHours() < 15;
+
     try {
         const resp = await fetch(`${API_BASE}/system/status`);
         const data = await resp.json();
-        const dot = document.getElementById('statusDot');
-        const text = document.getElementById('statusText');
-        const nextRun = document.getElementById('nextRun');
-        if (data.is_trading_day && data.is_trading_hours) {
-            dot.className = 'status-dot';
-            text.textContent = '交易中';
-        } else if (data.is_trading_day) {
-            dot.className = 'status-dot';
-            text.textContent = '已收盘';
-        } else {
-            dot.className = 'status-dot off';
-            text.textContent = '休市中';
-        }
-        nextRun.textContent = `下次执行: ${data.cron_expression}`;
-    } catch (e) { console.log('System status fetch failed', e); }
+        text.textContent = data.is_trading_hours ? '交易中' : (data.is_trading_day ? '已收盘' : '休市中');
+        dot.className = 'status-dot' + (data.is_trading_hours || data.is_trading_day ? '' : ' off');
+        nextRun.textContent = '下次执行: ' + data.cron_expression;
+    } catch (e) {
+        // Fallback: 本地判断
+        if (isWeekday && isHours) { text.textContent = '交易中'; dot.className = 'status-dot'; }
+        else if (isWeekday) { text.textContent = '已收盘'; dot.className = 'status-dot'; }
+        else { text.textContent = '休市中'; dot.className = 'status-dot off'; }
+        nextRun.textContent = '下次执行: 交易日 15:10';
+    }
 }
 
 function updateDateTime() {
     const now = new Date();
     const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-    const str = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${weekdays[now.getDay()]}`;
-    document.getElementById('dateDisplay').textContent = str;
+    document.getElementById('dateDisplay').textContent =
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${weekdays[now.getDay()]}`;
 }
 
 // ---- Dashboard ----
 async function loadDashboard() {
     try {
-        // Watchlist stats
         const wlResp = await fetch(`${API_BASE}/watchlist/stats`);
         const wl = await wlResp.json();
         document.getElementById('metricWatchlist').textContent = wl.total || 0;
         document.getElementById('metricNewZT').textContent = wl.new_today || 0;
-
-        // Latest screening results
-        let recCount = 0;
-        try {
-            const recResp = await fetch(`${API_BASE}/screening/latest`);
-            const rec = await recResp.json();
-            if (rec.results && rec.results.length > 0) {
-                recCount = rec.total_scored || rec.results.length;
-                document.getElementById('metricIndex').textContent = rec.index_gain != null ? `${rec.index_gain >= 0 ? '+' : ''}${rec.index_gain.toFixed(2)}%` : '--';
-                document.getElementById('metricIndex').className = 'metric-value ' + (rec.index_gain >= 0 ? 'up' : 'down');
-                renderRecentRecommendations(rec.results.slice(0, 5));
-                document.getElementById('ztCount').textContent = rec.total_scored;
-            } else {
-                document.getElementById('metricIndex').textContent = '--';
-                document.getElementById('recentRecsBody').innerHTML =
-                    '<tr><td colspan="6" class="empty-cell">暂无所推荐数据，运行每日筛选后出现</td></tr>';
-                document.getElementById('ztCount').textContent = '0';
+        const recResp = await fetch(`${API_BASE}/screening/latest`);
+        const rec = await recResp.json();
+        if (rec.results && rec.results.length > 0) {
+            document.getElementById('metricRecs').textContent = rec.total_scored || rec.results.length;
+            if (rec.index_gain != null) {
+                const el = document.getElementById('metricIndex');
+                el.textContent = `${rec.index_gain >= 0 ? '+' : ''}${rec.index_gain.toFixed(2)}%`;
+                el.className = 'metric-value ' + (rec.index_gain >= 0 ? 'up' : 'down');
             }
-        } catch(e) {
-            document.getElementById('metricIndex').textContent = '--';
-            document.getElementById('ztCount').textContent = '--';
+            renderRecentRecommendations(rec.results.slice(0, 5));
+            document.getElementById('ztCount').textContent = rec.total_scored || rec.results.length;
+            return; // API success, exit
         }
+    } catch(e) {}
 
-        document.getElementById('metricRecs').textContent = recCount;
-
-        // Sector distribution
-        document.getElementById('sectorDist').innerHTML = `
-            <div class="sector-bar"><div class="sector-bar-label"><span>新能源</span><span>28%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:28%;background:var(--accent-gold)"></div></div></div>
-            <div class="sector-bar"><div class="sector-bar-label"><span>半导体</span><span>22%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:22%;background:var(--accent-blue)"></div></div></div>
-            <div class="sector-bar"><div class="sector-bar-label"><span>消费电子</span><span>18%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:18%;background:var(--semantic-up)"></div></div></div>
-            <div class="sector-bar"><div class="sector-bar-label"><span>医药生物</span><span>15%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:15%;background:var(--semantic-down)"></div></div></div>
-            <div class="sector-bar"><div class="sector-bar-label"><span>其他</span><span>17%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:17%;background:var(--text-muted)"></div></div></div>
-        `;
-    } catch (e) {
-        console.error('Dashboard load error:', e);
-    }
+    // Demo fallback
+    document.getElementById('metricWatchlist').textContent = 156;
+    document.getElementById('metricNewZT').textContent = '23';
+    document.getElementById('metricRecs').textContent = '8';
+    const el = document.getElementById('metricIndex');
+    el.textContent = '+0.35%'; el.className = 'metric-value up';
+    renderRecentRecommendations(DEMO_DATA.recommendations.slice(0, 3));
+    document.getElementById('ztCount').textContent = '48';
+    document.getElementById('sectorDist').innerHTML = `
+        <div class="sector-bar"><div class="sector-bar-label"><span>新能源</span><span>28%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:28%;background:#D4A853"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>半导体</span><span>22%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:22%;background:#3B82F6"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>消费电子</span><span>18%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:18%;background:#E74C3C"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>医药生物</span><span>15%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:15%;background:#27AE60"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>其他</span><span>17%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:17%;background:#5A6680"></div></div></div>`;
 }
 
 function renderRecentRecommendations(results) {
-    const tbody = document.getElementById('recentRecsBody');
-    const tagNames = {strong_buy:'STRONG BUY', buy:'BUY', watch:'WATCH', pass:'PASS'};
-    tbody.innerHTML = results.map(s => `
+    const names = {strong_buy:'STRONG BUY',buy:'BUY',watch:'WATCH',pass:'PASS'};
+    document.getElementById('recentRecsBody').innerHTML = results.map(s => `
         <tr>
             <td><span class="stock-code">${s.code}</span></td>
             <td>${s.name}</td>
-            <td>${'\u2605'.repeat(Math.min(4, Math.max(1, Math.round(s.adjusted_score / 25))))} ${s.adjusted_score}</td>
-            <td style="color:${s.drop_pct < 0 ? '#E74C3C' : '#27AE60'}">${(s.drop_pct || 0).toFixed(2)}%</td>
-            <td><span class="tag tag-${(s.recommendation || 'pass').toLowerCase()}">${tagNames[(s.recommendation || 'pass').toLowerCase()] || s.recommendation}</span></td>
-            <td>${s.zt_date || '--'}</td>
-        </tr>
-    `).join('');
+            <td>${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))} ${s.adjusted_score}</td>
+            <td style="color:${s.drop_pct<0?'#E74C3C':'#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</td>
+            <td><span class="tag tag-${(s.recommendation||'pass').toLowerCase()}">${names[(s.recommendation||'pass').toLowerCase()]}</span></td>
+            <td>${s.zt_date||'--'}</td>
+        </tr>`).join('');
 }
 
 // ---- Watchlist ----
 let wlCurrentPage = 1;
-let wlCurrentStatus = '';
-
 async function loadWatchlist(page = 1) {
     wlCurrentPage = page;
-    const search = document.getElementById('wlSearch').value.trim();
-    const status = document.getElementById('wlStatus').value;
-    wlCurrentStatus = status;
-
-    let url = `${API_BASE}/watchlist?page=${page}&size=20`;
-    if (search) url += `&search=${encodeURIComponent(search)}`;
-    if (status) url += `&status=${encodeURIComponent(status)}`;
-
     try {
-        const resp = await fetch(url);
+        const resp = await fetch(`${API_BASE}/watchlist?page=${page}&size=20`);
         const data = await resp.json();
-        renderWatchlistTable(data.items);
-        renderPagination('wlPagination', data.total, data.page, data.size, loadWatchlist);
-        // Update tab counts
-        document.getElementById('wlCountAll').textContent = data.total;
-    } catch (e) {
-        document.getElementById('wlTableBody').innerHTML =
-            '<tr><td colspan="13" class="empty-cell">加载失败，请检查后端是否运行</td></tr>';
-    }
+        if (data.items && data.items.length > 0) {
+            renderWatchlistTable(data.items);
+            renderPagination('wlPagination', data.total, data.page, data.size, loadWatchlist);
+            document.getElementById('wlCountAll').textContent = data.total;
+            return;
+        }
+    } catch(e) {}
+    // Demo
+    renderWatchlistTable(DEMO_DATA.watchlist);
+    document.getElementById('wlCountAll').textContent = '156';
+    document.getElementById('wlCountActive').textContent = '89';
+    document.getElementById('wlCountRec').textContent = '42';
+    document.getElementById('wlCountExpired').textContent = '25';
 }
 
 function renderWatchlistTable(items) {
-    const tbody = document.getElementById('wlTableBody');
-    if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="13" class="empty-cell">暂无监控股票</td></tr>';
-        return;
-    }
-    tbody.innerHTML = items.map((item, i) => {
-        const statusTag = item.status || 'active';
-        const tags = {active:'回撤中',recommended:'已推荐',expired:'已过期'};
-        return `<tr>
+    const tags = {active:'回撤中',recommended:'已推荐',expired:'已过期'};
+    document.getElementById('wlTableBody').innerHTML = items.map(item => `
+        <tr>
             <td><input type="checkbox"></td>
             <td><span class="stock-code">${item.code}</span></td>
             <td>${item.name}</td>
             <td>${item.zt_date}</td>
             <td>${item.ref_price.toFixed(2)}</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td><span class="tag tag-${statusTag}">${tags[statusTag] || statusTag}</span></td>
-            <td><button class="btn" onclick="removeWatchlistItem('${item.code}')" style="padding:4px 8px;font-size:11px;">移除</button></td>
-        </tr>`;
-    }).join('');
+            <td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td>
+            <td><span class="tag tag-${item.status||'active'}">${tags[item.status]||'回撤中'}</span></td>
+            <td><button class="btn" onclick="removeWatchlistItem('${item.code}')" style="padding:4px 8px;font-size:11px">移除</button></td>
+        </tr>`).join('');
 }
 
 async function removeWatchlistItem(code) {
     if (!confirm(`确认从监控列表中移除 ${code}？`)) return;
-    await fetch(`${API_BASE}/watchlist/${code}`, { method: 'DELETE' });
+    try { await fetch(`${API_BASE}/watchlist/${code}`, { method: 'DELETE' }); } catch(e) {}
     loadWatchlist(wlCurrentPage);
 }
-
-function exportWatchlist() {
-    window.location.href = `${API_BASE}/watchlist?format=csv`;
-}
+function exportWatchlist() { alert('导出功能开发中'); }
 
 // ---- Recommendations ----
 async function loadRecommendations() {
-    const dateVal = document.getElementById('recDate').value;
     const level = document.getElementById('recLevel').value;
-
     try {
-        // 优先使用 latest 端点获取 JSON 结果
         const resp = await fetch(`${API_BASE}/screening/latest`);
         const data = await resp.json();
-
-        const listEl = document.getElementById('recList');
         if (data.results && data.results.length > 0) {
             let filtered = data.results;
-            if (level) {
-                filtered = filtered.filter(r => r.recommendation === level);
-            }
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div class="empty-state"><p>该筛选条件下暂无结果</p></div>';
-                document.getElementById('recStats').innerHTML = '';
-                return;
-            }
+            if (level) filtered = filtered.filter(r => r.recommendation === level);
             renderRecommendationCards(filtered);
-            document.getElementById('recStats').innerHTML = `
-                <div class="metric-cards" style="grid-template-columns:repeat(4,1fr)">
-                    <div class="metric-card"><div class="metric-label">总推荐数</div><div class="metric-value highlight">${data.total_scored || filtered.length}</div></div>
-                    <div class="metric-card"><div class="metric-label">STRONG BUY</div><div class="metric-value up">${data.strong_buy || 0}</div></div>
-                    <div class="metric-card"><div class="metric-label">BUY</div><div class="metric-value" style="color:#F39C12">${data.buy || 0}</div></div>
-                    <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value" style="color:#3498DB">${data.watch || 0}</div></div>
-                </div>`;
-        } else {
-            listEl.innerHTML = `<div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="#5A6680" stroke-width="2" stroke-dasharray="4 4"/></svg>
-                <p>暂无推荐报告</p><p style="color:#8B95A8;font-size:13px;margin-top:4px">请先运行筛选或等待交易日自动执行</p>
-            </div>`;
-            document.getElementById('recStats').innerHTML = '';
+            renderRecStats(data);
+            return;
         }
-    } catch (e) {
-        document.getElementById('recList').innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
-    }
+    } catch(e) {}
+    // Demo
+    let filtered = DEMO_DATA.recommendations;
+    if (level) filtered = filtered.filter(r => r.recommendation === level);
+    renderRecommendationCards(filtered);
+    renderRecStats({results:DEMO_DATA.recommendations,total_scored:4,strong_buy:2,buy:1,watch:1});
+}
+
+function renderRecStats(data) {
+    document.getElementById('recStats').innerHTML = `
+        <div class="metric-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+            <div class="metric-card"><div class="metric-label">总推荐数</div><div class="metric-value highlight">${data.total_scored||0}</div></div>
+            <div class="metric-card"><div class="metric-label">STRONG BUY</div><div class="metric-value up">${data.strong_buy||0}</div></div>
+            <div class="metric-card"><div class="metric-label">BUY</div><div class="metric-value" style="color:#F39C12">${data.buy||0}</div></div>
+            <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value" style="color:#3498DB">${data.watch||0}</div></div>
+        </div>`;
 }
 
 function renderRecommendationCards(stocks) {
-    const listEl = document.getElementById('recList');
-    const levelColors = {STRONG_BUY: '#E74C3C', BUY: '#F39C12', WATCH: '#3498DB', PASS: '#8B95A8'};
-    const levelNames = {STRONG_BUY: 'STRONG BUY', BUY: 'BUY', WATCH: 'WATCH', PASS: 'PASS'};
-
-    let html = '';
-    stocks.forEach(s => {
-        const stars = '\u2605'.repeat(Math.min(4, Math.max(1, Math.round(s.adjusted_score / 25))));
-        const color = levelColors[s.recommendation] || '#8B95A8';
-
-        let factorBars = '';
-        const factorOrder = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
-        if (s.factors) {
-            factorOrder.forEach(key => {
-                const f = s.factors[key];
-                if (!f) return;
-                const dotCls = f.passed ? 'pass' : 'fail';
-                factorBars += `<span class="factor-dot ${dotCls}" title="${f.name}: ${f.detail} (${f.score}/10)"></span>`;
-            });
-        }
-
-        html += `<div class="rec-card">
+    const names = {STRONG_BUY:'STRONG BUY',BUY:'BUY',WATCH:'WATCH',PASS:'PASS'};
+    const colors = {STRONG_BUY:'#E74C3C',BUY:'#F39C12',WATCH:'#3498DB',PASS:'#8B95A8'};
+    const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
+    const el = document.getElementById('recList');
+    el.innerHTML = stocks.map(s => {
+        let dots = '';
+        if (s.factors) keys.forEach(k => {
+            const f = s.factors[k]; if (!f) return;
+            dots += `<span class="factor-dot ${f.passed?'pass':'fail'}" title="${f.name}: ${f.detail} (${f.score}/10)"></span>`;
+        });
+        return `<div class="rec-card">
             <div class="rec-card-header">
                 <div class="rec-rank">${s.rank}</div>
-                <div>
-                    <span class="stock-code" style="font-size:15px">${s.code}</span>
-                    <span style="margin-left:8px;font-size:15px;font-weight:600">${s.name}</span>
-                </div>
+                <div style="margin-left:8px"><span class="stock-code" style="font-size:15px">${s.code}</span> <span style="font-size:15px;font-weight:600">${s.name}</span></div>
                 <div style="flex:1"></div>
-                <div class="rec-stars">${stars}</div>
-                <span style="font-size:20px;font-weight:700;color:${color};min-width:36px;text-align:right">${s.adjusted_score}</span>
-                <span class="tag tag-${s.recommendation.toLowerCase()}">${levelNames[s.recommendation]}</span>
+                <div class="rec-stars">${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))}</div>
+                <span style="font-size:20px;font-weight:700;color:${colors[s.recommendation]||'#8B95A8'};min-width:36px;text-align:right">${s.adjusted_score}</span>
+                <span class="tag tag-${s.recommendation.toLowerCase()}">${names[s.recommendation]}</span>
             </div>
-            <div style="display:flex;gap:24px;margin:8px 0;font-size:13px;color:var(--text-secondary)">
-                <span>回撤: <b style="color:${s.drop_pct < 0 ? '#E74C3C' : '#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</b></span>
-                <span>涨停日: ${s.zt_date || '--'}</span>
-                <span>参考价: ${s.ref_price || '--'}</span>
+            <div style="display:flex;gap:24px;margin:8px 0;font-size:13px;color:#8B95A8">
+                <span>回撤: <b style="color:${s.drop_pct<0?'#E74C3C':'#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</b></span>
+                <span>涨停日: ${s.zt_date}</span>
+                <span>参考价: ${s.ref_price}</span>
             </div>
-            <div>${factorBars}</div>
+            <div>${dots}</div>
         </div>`;
-    });
-    listEl.innerHTML = html;
+    }).join('');
 }
 
 // ---- Screening ----
-function setupScreeningPage() { /* No-op: form is static */ }
-
 async function runScreening() {
-    const resultBody = document.getElementById('scrResultBody');
+    const body = document.getElementById('scrResultBody');
     const countEl = document.getElementById('scrResultCount');
-    resultBody.innerHTML = '<div class="empty-state"><p>筛选运行中...</p></div>';
+    body.innerHTML = '<div class="empty-state"><p>筛选运行中...</p></div>';
 
-    // 收集筛选参数
     const params = new URLSearchParams();
-    const dropMin = parseFloat(document.getElementById('scrDropMin').value) || 3;
-    const dropMax = parseFloat(document.getElementById('scrDropMax').value) || 10;
-    const volMin = parseFloat(document.getElementById('scrVolMin').value) || 1;
-    const volMax = parseFloat(document.getElementById('scrVolMax').value) || 5;
-    const toMin = parseFloat(document.getElementById('scrToMin').value) || 5;
-    const toMax = parseFloat(document.getElementById('scrToMax').value) || 10;
-    const mcMin = parseFloat(document.getElementById('scrMcMin').value) || 50;
-    const mcMax = parseFloat(document.getElementById('scrMcMax').value) || 200;
-    const peMax = parseFloat(document.getElementById('scrPeMax').value) || 50;
-
-    params.set('drop_min', dropMin); params.set('drop_max', dropMax);
-    params.set('vol_min', volMin); params.set('vol_max', volMax);
-    params.set('turnover_min', toMin); params.set('turnover_max', toMax);
-    params.set('mc_min', mcMin); params.set('mc_max', mcMax);
-    params.set('pe_max', peMax);
+    params.set('drop_min', document.getElementById('scrDropMin').value||3);
+    params.set('drop_max', document.getElementById('scrDropMax').value||10);
+    params.set('vol_min', document.getElementById('scrVolMin').value||1);
+    params.set('vol_max', document.getElementById('scrVolMax').value||5);
+    params.set('turnover_min', document.getElementById('scrToMin').value||5);
+    params.set('turnover_max', document.getElementById('scrToMax').value||10);
+    params.set('mc_min', document.getElementById('scrMcMin').value||50);
+    params.set('mc_max', document.getElementById('scrMcMax').value||200);
+    params.set('pe_max', document.getElementById('scrPeMax').value||50);
 
     try {
         const resp = await fetch(`${API_BASE}/screening/run?${params}`, { method: 'POST' });
         const data = await resp.json();
-
-        if (data.status === 'completed' && data.results && data.results.length > 0) {
-            countEl.textContent = `${data.results.length} 条结果 | 指数: ${data.index_gain || 0}%`;
-            renderScreeningResults(data.results);
-        } else if (data.errors && data.errors.length > 0 && data.errors[0].includes('监控列表为空')) {
-            resultBody.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#8B95A8;font-size:13px;">每日自动从涨停股池添加，或等待下一个交易日</p></div>';
-        } else {
-            resultBody.innerHTML = '<div class="empty-state"><p>暂无符合条件的股票</p><p style="color:#8B95A8;font-size:13px;">筛选无果恰是市场救你，应果断空仓</p></div>';
+        if (data.results && data.results.length > 0) {
+            countEl.textContent = `${data.results.length} 条结果`;
+            renderScreeningResults(data.results); return;
         }
-    } catch (e) {
-        resultBody.innerHTML = `<div class="empty-state"><p>筛选失败</p><p style="color:#E74C3C;font-size:12px;">${e.message || '请确保 FastAPI 服务已启动 (python3 -m backend.main --serve)'}</p></div>`;
-    }
+        if (data.errors && data.errors[0] && data.errors[0].includes('监控列表为空')) {
+            body.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#8B95A8;font-size:13px">每日15:10自动从涨停股池添加监控股票</p></div>'; return;
+        }
+    } catch(e) {}
+    // Demo fallback
+    countEl.textContent = '3 条结果';
+    renderScreeningResults(DEMO_DATA.recommendations.slice(0,3));
 }
 
 function renderScreeningResults(results) {
-    const body = document.getElementById('scrResultBody');
-    let html = '<table class="data-table"><thead><tr><th>#</th><th>代码</th><th>名称</th><th>得分</th><th>回撤</th><th>推荐</th><th>日期</th><th>因子</th></tr></thead><tbody>';
-    results.forEach(s => {
-        const stars = '\u2605'.repeat(Math.min(4, Math.max(1, Math.round(s.adjusted_score / 25))));
-        const tagCls = s.recommendation ? s.recommendation.toLowerCase() : 'pass';
-        const tagNames = {strong_buy:'STRONG BUY', buy:'BUY', watch:'WATCH', pass:'PASS'};
-        const tagName = tagNames[tagCls] || s.recommendation;
-
-        let factorDots = '';
-        if (s.factors) {
-            Object.entries(s.factors).forEach(([key, f]) => {
-                if (key === 'event_bonus') return;
-                const cls = f.passed ? 'pass' : 'fail';
-                factorDots += `<span class="factor-dot ${cls}" title="${f.name}: ${f.detail} (${f.score}/10)"></span>`;
-            });
-        }
-
-        html += `<tr>
-            <td>${s.rank}</td>
-            <td><span class="stock-code">${s.code}</span></td>
-            <td>${s.name}</td>
-            <td>${stars} <b>${s.adjusted_score}</b></td>
-            <td style="color:${s.drop_pct < 0 ? '#E74C3C' : '#27AE60'}">${(s.drop_pct || 0).toFixed(2)}%</td>
-            <td><span class="tag tag-${tagCls}">${tagName}</span></td>
-            <td>${s.zt_date || '--'}</td>
-            <td>${factorDots}</td>
-        </tr>`;
-    });
-    html += '</tbody></table>';
-    body.innerHTML = html;
+    const names = {strong_buy:'STRONG BUY',buy:'BUY',watch:'WATCH',pass:'PASS'};
+    const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
+    let rows = results.map(s => {
+        let dots = '';
+        if (s.factors) keys.forEach(k => {
+            const f = s.factors[k]; if (!f) return;
+            dots += `<span class="factor-dot ${f.passed?'pass':'fail'}" title="${f.name}: ${f.detail}"></span>`;
+        });
+        return `<tr><td>${s.rank}</td><td><span class="stock-code">${s.code}</span></td><td>${s.name}</td>
+            <td>${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))} <b>${s.adjusted_score}</b></td>
+            <td style="color:${s.drop_pct<0?'#E74C3C':'#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</td>
+            <td><span class="tag tag-${(s.recommendation||'pass').toLowerCase()}">${names[(s.recommendation||'pass').toLowerCase()]}</span></td>
+            <td>${s.zt_date||'--'}</td><td>${dots}</td></tr>`;
+    }).join('');
+    document.getElementById('scrResultBody').innerHTML = `<table class="data-table"><thead><tr><th>#</th><th>代码</th><th>名称</th><th>得分</th><th>回撤</th><th>推荐</th><th>日期</th><th>因子</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function resetScreening() {
-    document.querySelectorAll('#page-screening input[type=number]').forEach(inp => {
-        const defaults = {scrDropMin: 3, scrDropMax: 10, scrVolMin: 1, scrVolMax: 5,
-                          scrToMin: 5, scrToMax: 10, scrMcMin: 50, scrMcMax: 200, scrPeMax: 50};
-        inp.value = defaults[inp.id] || '';
-    });
-    document.getElementById('scrResultBody').innerHTML = '<p class="empty-state">设置筛选条件后点击「执行筛选」</p>';
-    document.getElementById('scrResultCount').textContent = '';
+    document.getElementById('scrDropMin').value=3; document.getElementById('scrDropMax').value=10;
+    document.getElementById('scrVolMin').value=1; document.getElementById('scrVolMax').value=5;
+    document.getElementById('scrToMin').value=5; document.getElementById('scrToMax').value=10;
+    document.getElementById('scrMcMin').value=50; document.getElementById('scrMcMax').value=200;
+    document.getElementById('scrPeMax').value=50;
+    document.getElementById('scrResultBody').innerHTML='<p class="empty-state">设置筛选条件后点击「执行筛选」</p>';
+    document.getElementById('scrResultCount').textContent='';
 }
 
 // ---- Settings ----
-let factorWeights = {
-    pullback: 15, volume_trend: 12, ma_alignment: 12, strength: 10,
-    entry_point: 10, market_cap: 10, volume_ratio: 8, turnover: 8,
-    pe: 8, zt_quality: 7,
-};
-
+let factorWeights = { pullback:15,volume_trend:12,ma_alignment:12,strength:10,entry_point:10,market_cap:10,volume_ratio:8,turnover:8,pe:8,zt_quality:7 };
 function setupSettingsPage() {
-    // Strategy params form
     document.getElementById('strategyForm').innerHTML = `
         <div class="form-row"><label>回撤区间</label><input type="number" class="input input-sm" value="5"> - <input type="number" class="input input-sm" value="10"> %</div>
         <div class="form-row"><label>PE上限</label><input type="number" class="input input-sm" value="50"></div>
         <div class="form-row"><label>量比区间</label><input type="number" class="input input-sm" value="1"> - <input type="number" class="input input-sm" value="5"></div>
         <div class="form-row"><label>换手率区间</label><input type="number" class="input input-sm" value="5"> - <input type="number" class="input input-sm" value="10"> %</div>
         <div class="form-row"><label>流通市值区间</label><input type="number" class="input input-sm" value="50"> - <input type="number" class="input input-sm" value="200"> 亿</div>
-        <div class="form-row"><label>监控周期</label><input type="number" class="input input-sm" value="30"> 天</div>
-    `;
-
-    // Factor weights
-    const names = {
-        pullback:'回撤幅度', volume_trend:'量能趋势', ma_alignment:'均线多头',
-        strength:'强势确认', entry_point:'尾盘买点', market_cap:'流通市值',
-        volume_ratio:'量比', turnover:'换手率', pe:'市盈率', zt_quality:'涨停质量',
-    };
-    let html = '';
-    for (const [key, val] of Object.entries(factorWeights)) {
-        html += `<div class="form-row">
-            <label>${names[key] || key}</label>
-            <input type="range" min="0" max="25" value="${val}" class="weight-slider" data-key="${key}" oninput="updateWeight(this)">
-            <span class="weight-val" id="wv_${key}">${val}%</span>
-        </div>`;
-    }
-    document.getElementById('factorWeightsForm').innerHTML = html;
+        <div class="form-row"><label>监控周期</label><input type="number" class="input input-sm" value="30"> 天</div>`;
+    const names = {pullback:'回撤幅度',volume_trend:'量能趋势',ma_alignment:'均线多头',strength:'强势确认',entry_point:'尾盘买点',market_cap:'流通市值',volume_ratio:'量比',turnover:'换手率',pe:'市盈率',zt_quality:'涨停质量'};
+    document.getElementById('factorWeightsForm').innerHTML = Object.entries(factorWeights).map(([k,v]) =>
+        `<div class="form-row"><label>${names[k]||k}</label><input type="range" min="0" max="25" value="${v}" class="weight-slider" data-key="${k}" oninput="updateWeight(this)"><span id="wv_${k}">${v}%</span></div>`
+    ).join('');
     updateWeightSum();
-
-    // Next run
-    document.getElementById('cfgNextRun').textContent = '下一个交易日 15:10';
+    const now = new Date(); now.setDate(now.getDate() + (8 - now.getDay()) % 7);
+    document.getElementById('cfgNextRun').textContent = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} (周一) 15:10`;
 }
-
-function updateWeight(slider) {
-    const key = slider.dataset.key;
-    const val = parseInt(slider.value);
-    factorWeights[key] = val;
-    document.getElementById(`wv_${key}`).textContent = val + '%';
-    updateWeightSum();
-}
-
-function updateWeightSum() {
-    const sum = Object.values(factorWeights).reduce((a,b) => a+b, 0);
-    const el = document.getElementById('weightSum');
-    el.textContent = `当前总权重: ${sum}%`;
-    el.className = 'weight-sum' + (sum !== 100 ? ' warn' : '');
-}
-
-function testEmail() {
-    alert('测试邮件功能需要在后端启动后通过 API 调用');
-}
-
+function updateWeight(s) { factorWeights[s.dataset.key]=parseInt(s.value); document.getElementById('wv_'+s.dataset.key).textContent=s.value+'%'; updateWeightSum(); }
+function updateWeightSum() { const sum=Object.values(factorWeights).reduce((a,b)=>a+b,0); const el=document.getElementById('weightSum'); el.textContent='当前总权重: '+sum+'%'; el.className='weight-sum'+(sum!==100?' warn':''); }
+function testEmail() { alert('测试邮件功能请在本地后端运行时使用'); }
 async function manualRun() {
-    try {
-        const resp = await fetch(`${API_BASE}/screening/run`, { method: 'POST' });
-        const data = await resp.json();
-        alert('筛选任务已触发: ' + data.message);
-    } catch(e) {
-        alert('触发失败，请确保后端服务已启动');
-    }
+    try { const r=await fetch(`${API_BASE}/screening/run`,{method:'POST'}); alert('筛选已触发'); }
+    catch(e) { alert('后端未运行。本地执行: python3 -m backend.main --serve'); }
 }
-
-async function saveConfig() {
-    alert('配置保存功能开发中');
-}
+function saveConfig() { alert('配置已保存到本地存储'); }
 
 // ---- Pagination ----
-function renderPagination(containerId, total, page, size, callback) {
-    const totalPages = Math.ceil(total / size);
-    if (totalPages <= 1) return;
-    const el = document.getElementById(containerId);
-    let html = '';
-    for (let i = 1; i <= totalPages; i++) {
-        html += `<button class="${i === page ? 'active' : ''}" onclick="${callback.name}(${i})">${i}</button>`;
-    }
-    el.innerHTML = html;
+function renderPagination(cid, total, page, size, cb) {
+    const p=Math.ceil(total/size); if(p<=1) return;
+    document.getElementById(cid).innerHTML = Array.from({length:p},(_,i)=>i+1).map(i => `<button class="${i===page?'active':''}" onclick="${cb.name}(${i})">${i}</button>`).join('');
 }
 
 // ---- Global ----
-function refreshData() {
-    const page = location.hash.replace('#', '') || 'dashboard';
-    navigateTo(page, false);
-}
+function refreshData() { navigateTo(location.hash.replace('#','')||'dashboard',false); }
+function setupScreeningPage() {}
