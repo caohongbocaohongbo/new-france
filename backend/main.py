@@ -76,9 +76,85 @@ def main():
         test_email()
         return
 
-    logger.info("New France v1.0 启动")
-    # TODO: 完整的每日运行流程 (main pipeline)
-    logger.info("完成。使用 --serve 启动 API 服务，或在 Web UI 中手动触发筛选。")
+    # 默认：执行每日完整流程
+    asyncio.run(_run_daily_pipeline(args, logger))
+
+
+async def _run_daily_pipeline(args, logger):
+    """完整的每日定时任务"""
+    from datetime import date
+
+    logger.info("New France v1.0 每日流水线启动")
+    today = date.today()
+    weekday = today.weekday()
+
+    if weekday >= 5 and not args.force:
+        logger.info(f"今天是周{['一','二','三','四','五','六','日'][weekday]}，非交易日，退出")
+        return
+
+    # 1. 抓取今日涨停股池
+    from backend.agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
+    from backend.agents.layer1_data_collector.sources.index_data import fetch_index_gain
+    import pandas as pd
+    import re, os
+    from pathlib import Path
+
+    logger.info("[Step 1] 抓取涨停股池...")
+    zt_pool = fetch_zt_pool()
+    if zt_pool is None or zt_pool.empty:
+        logger.error("无法获取涨停股池，退出")
+        return
+
+    index_gain = fetch_index_gain()
+    logger.info(f"  涨停: {len(zt_pool)} 只, 上证: {index_gain:+.2f}%")
+
+    # 2. 更新监控列表
+    logger.info("[Step 2] 更新监控列表...")
+    france_file = Path(__file__).resolve().parent.parent / "data" / "france.md"
+    today_str = today.strftime("%Y-%m-%d")
+
+    existing_codes = set()
+    if france_file.exists():
+        content = france_file.read_text(encoding="utf-8")
+        for line in content.split("\n"):
+            m = re.match(r"\|\s*(\d{6})\s*\|", line)
+            if m: existing_codes.add(m.group(1))
+
+    new_entries = []
+    for _, row in zt_pool.iterrows():
+        code = str(row["代码"]).strip().zfill(6)
+        if code in existing_codes: continue
+        name = str(row["名称"]).strip()
+        price = float(row["最新价"])
+        if price <= 0: continue
+        new_entries.append({"code": code, "name": name, "zt_date": today_str, "ref_price": price})
+
+    if new_entries:
+        lines = [f"| {e['code']} | {e['name']} | {e['zt_date']} | {e['ref_price']:.2f} |" for e in new_entries]
+        if not france_file.exists():
+            france_file.parent.mkdir(parents=True, exist_ok=True)
+            france_file.write_text("# 涨停监控列表\n\n| 代码 | 名称 | 涨停日期 | 参考价 |\n|------|------|----------|--------|\n" + "\n".join(lines) + "\n", encoding="utf-8")
+        else:
+            with open(france_file, "a", encoding="utf-8") as f:
+                f.write("\n".join(lines) + "\n")
+        logger.info(f"  新增 {len(new_entries)} 只监控股票")
+    else:
+        logger.info("  无新增（全部已监控）")
+
+    # 3. 执行完整筛选流水线
+    logger.info("[Step 3] 执行筛选流水线...")
+    from backend.services.screening_service import run_full_pipeline
+    result = await run_full_pipeline(target_date=today, dry_run=args.dry_run)
+
+    logger.info(f"  结果: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}, WATCH={result['watch']}")
+    if result.get("errors"):
+        for e in result["errors"]:
+            logger.warning(f"  ⚠ {e}")
+
+    if result["total_scored"] == 0:
+        logger.info("筛选无果恰是市场救你，应果断空仓")
+
+    logger.info("New France v1.0 每日流水线完成")
 
 
 if __name__ == "__main__":
