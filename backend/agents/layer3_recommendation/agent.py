@@ -40,14 +40,11 @@ class RecommendationAgent:
         html_path = self._ensure_path(REPORTS_DIR / f"{date_str}.html")
         generate_html_report(scored_stocks, target_date, index_gain, html_path)
 
-        # 3. 发送邮件（仅 STRONG_BUY）
+        # 3. 发送邮件（无论有无推荐都发）
         notify_ok = True
         if not dry_run:
-            buy_signals = [s for s in scored_stocks
-                           if s.recommendation in ("STRONG_BUY", "BUY")]
-            if buy_signals:
-                notify_ok = send_notification(buy_signals, target_date,
-                                              index_gain, str(md_path))
+            notify_ok = send_notification(scored_stocks, target_date,
+                                          index_gain, str(md_path))
 
         # 4. 统计摘要
         summary = {
