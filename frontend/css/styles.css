@@ -58,6 +58,7 @@
     --r-md: 8px;
     --r-lg: 12px;
     --r-full: 9999px;
+    --r-card: 24px;
 
     /* Shadows */
     --shadow-card: 0 2px 8px 0 rgba(0,0,0,0.05);
@@ -247,7 +248,7 @@ body {
 
 .metric-card {
     background: var(--surface-card);
-    border-radius: var(--r-sm);
+    border-radius: var(--r-card);
     padding: var(--sp-lg);
     border: 1px solid var(--hairline);
     transition: box-shadow 0.15s;
@@ -280,7 +281,7 @@ body {
 /* ===== Panel ===== */
 .panel {
     background: var(--surface-card);
-    border-radius: var(--r-sm);
+    border-radius: var(--r-card);
     border: 1px solid var(--hairline);
     margin-bottom: var(--sp-base);
     overflow: hidden;
@@ -319,22 +320,26 @@ body {
     font-size: 14px;
 }
 
+.data-table td {
+    padding: 0 var(--sp-md);
+    border-bottom: 1px solid var(--hairline-soft);
+    white-space: nowrap;
+    color: var(--body);
+    height: 44px;
+    vertical-align: middle;
+}
+
 .data-table th {
     background: var(--surface-soft);
     color: var(--muted);
-    padding: var(--sp-sm) var(--sp-md);
+    padding: 0 var(--sp-md);
     text-align: left;
     font-weight: 500;
     font-size: 12px;
     white-space: nowrap;
     border-bottom: 1px solid var(--hairline);
-}
-
-.data-table td {
-    padding: var(--sp-sm) var(--sp-md);
-    border-bottom: 1px solid var(--hairline-soft);
-    white-space: nowrap;
-    color: var(--body);
+    height: 36px;
+    vertical-align: middle;
 }
 
 .data-table tr:hover td {
@@ -681,7 +686,7 @@ body {
 .rec-card {
     background: var(--surface-card);
     border: 1px solid var(--hairline);
-    border-radius: var(--r-sm);
+    border-radius: var(--r-card);
     padding: var(--sp-lg);
     margin-bottom: var(--sp-md);
     transition: box-shadow 0.15s;

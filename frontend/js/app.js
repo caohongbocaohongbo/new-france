@@ -432,10 +432,31 @@ function setupSettingsPage() {
 }
 function updateWeight(s) { factorWeights[s.dataset.key]=parseInt(s.value); document.getElementById('wv_'+s.dataset.key).textContent=s.value+'%'; updateWeightSum(); }
 function updateWeightSum() { const sum=Object.values(factorWeights).reduce((a,b)=>a+b,0); const el=document.getElementById('weightSum'); el.textContent='当前总权重: '+sum+'%'; el.className='weight-sum'+(sum!==100?' warn':''); }
-function testEmail() { alert('测试邮件功能请在本地后端运行时使用'); }
+async function testEmail() {
+    try {
+        const resp = await fetch(`${API_BASE}/system/test-email`, { method: 'POST' });
+        const data = await resp.json();
+        if (data.status === 'ok') {
+            alert('测试邮件已发送，请检查收件箱');
+        } else {
+            alert('发送失败: ' + (data.message || '未知错误'));
+        }
+    } catch(e) {
+        alert('后端服务未运行，无法发送测试邮件\n本地执行: python3 -m backend.main --test-email');
+    }
+}
+
 async function manualRun() {
-    try { const r=await fetch(`${API_BASE}/screening/run`,{method:'POST'}); alert('筛选已触发'); }
-    catch(e) { alert('后端未运行。本地执行: python3 -m backend.main --serve'); }
+    try {
+        const resp = await fetch(`${API_BASE}/screening/run`, { method: 'POST' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const total = data.total_scored || data.results?.length || 0;
+        alert(`筛选已完成\n共 ${total} 条推荐结果\nSTRONG_BUY: ${data.strong_buy || 0}  BUY: ${data.buy || 0}  WATCH: ${data.watch || 0}`);
+        loadDashboard();
+    } catch(e) {
+        alert('后端服务未运行，无法执行筛选\n本地执行: python3 -m backend.main');
+    }
 }
 function saveConfig() { alert('配置已保存到本地存储'); }
 
