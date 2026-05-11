@@ -1,78 +1,89 @@
-"""FastAPI 应用入口"""
+"""New France — 尾盘涨停选股系统入口 (CLI + API)"""
 import sys
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_DIR))
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from .api.router_screening import router as screening_router
-from .api.router_watchlist import router as watchlist_router
-from .api.router_events import router as events_router
-from .api.router_reports import router as reports_router
-from .api.router_system import router as system_router
-
-app = FastAPI(
-    title="New France — 尾盘涨停选股系统",
-    version="1.0.0",
-    description="A股尾盘涨停股监控与多因子推荐系统 API",
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(screening_router, prefix="/api/v1/screening", tags=["筛选"])
-app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["监控列表"])
-app.include_router(events_router, prefix="/api/v1/events", tags=["事件"])
-app.include_router(reports_router, prefix="/api/v1/reports", tags=["报告"])
-app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
+# FastAPI app 延迟加载，仅在 --serve 时需要
+_app = None
 
 
-@app.get("/")
-def root():
-    return {"service": "New France API", "version": "1.0.0"}
+def get_app():
+    """延迟加载 FastAPI，避免 CLI 模式强依赖 fastapi/uvicorn"""
+    global _app
+    if _app is not None:
+        return _app
+
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from .api.router_screening import router as screening_router
+    from .api.router_watchlist import router as watchlist_router
+    from .api.router_events import router as events_router
+    from .api.router_reports import router as reports_router
+    from .api.router_system import router as system_router
+
+    _app = FastAPI(
+        title="New France — 尾盘涨停选股系统",
+        version="1.0.0",
+        description="A股尾盘涨停股监控与多因子推荐系统 API",
+    )
+    _app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    _app.include_router(screening_router, prefix="/api/v1/screening", tags=["筛选"])
+    _app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["监控列表"])
+    _app.include_router(events_router, prefix="/api/v1/events", tags=["事件"])
+    _app.include_router(reports_router, prefix="/api/v1/reports", tags=["报告"])
+    _app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
+
+    @_app.get("/")
+    def root():
+        return {"service": "New France API", "version": "1.0.0"}
+
+    return _app
 
 
 def main():
-    """CLI 入口 — 运行每日筛选"""
+    """CLI 入口"""
     import argparse
     import logging
     import asyncio
     from datetime import date
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s [%(levelname)s] %(message)s",
-                        datefmt="%H:%M:%S")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S",
+    )
     logger = logging.getLogger("new-france")
 
     parser = argparse.ArgumentParser(description="New France 涨停回撤选股系统")
     parser.add_argument("--dry-run", action="store_true", help="仅筛选，不发通知")
-    parser.add_argument("--force", action="store_true", help="强制运行")
-    parser.add_argument("--test-email", action="store_true", help="测试邮件")
+    parser.add_argument("--force", action="store_true", help="强制运行（跳过交易日检查）")
+    parser.add_argument("--test-email", action="store_true", help="发送测试邮件")
     parser.add_argument("--serve", action="store_true", help="启动 API 服务")
     parser.add_argument("--init-db", action="store_true", help="初始化数据库")
     args = parser.parse_args()
 
     if args.init_db:
-        from backend.db.database import init_db
+        from .db.database import init_db
         init_db()
         logger.info("数据库已初始化")
         return
 
     if args.serve:
         import uvicorn
+        app = get_app()
         logger.info("启动 API 服务 http://localhost:8000")
         uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
         return
 
     if args.test_email:
-        from backend.agents.layer3_recommendation.notifier import test_email
+        from .agents.layer3_recommendation.notifier import test_email
         test_email()
         return
 
@@ -93,11 +104,10 @@ async def _run_daily_pipeline(args, logger):
         return
 
     # 1. 抓取今日涨停股池
-    from backend.agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
-    from backend.agents.layer1_data_collector.sources.index_data import fetch_index_gain
-    import pandas as pd
-    import re, os
-    from pathlib import Path
+    from .agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
+    from .agents.layer1_data_collector.sources.index_data import fetch_index_gain
+    import re
+    import os
 
     logger.info("[Step 1] 抓取涨停股池...")
     zt_pool = fetch_zt_pool()
@@ -110,7 +120,7 @@ async def _run_daily_pipeline(args, logger):
 
     # 2. 更新监控列表
     logger.info("[Step 2] 更新监控列表...")
-    france_file = Path(__file__).resolve().parent.parent / "data" / "france.md"
+    france_file = PROJECT_DIR / "data" / "france.md"
     today_str = today.strftime("%Y-%m-%d")
 
     existing_codes = set()
@@ -118,22 +128,27 @@ async def _run_daily_pipeline(args, logger):
         content = france_file.read_text(encoding="utf-8")
         for line in content.split("\n"):
             m = re.match(r"\|\s*(\d{6})\s*\|", line)
-            if m: existing_codes.add(m.group(1))
+            if m:
+                existing_codes.add(m.group(1))
 
     new_entries = []
     for _, row in zt_pool.iterrows():
         code = str(row["代码"]).strip().zfill(6)
-        if code in existing_codes: continue
+        if code in existing_codes:
+            continue
         name = str(row["名称"]).strip()
         price = float(row["最新价"])
-        if price <= 0: continue
+        if price <= 0:
+            continue
         new_entries.append({"code": code, "name": name, "zt_date": today_str, "ref_price": price})
 
     if new_entries:
         lines = [f"| {e['code']} | {e['name']} | {e['zt_date']} | {e['ref_price']:.2f} |" for e in new_entries]
         if not france_file.exists():
             france_file.parent.mkdir(parents=True, exist_ok=True)
-            france_file.write_text("# 涨停监控列表\n\n| 代码 | 名称 | 涨停日期 | 参考价 |\n|------|------|----------|--------|\n" + "\n".join(lines) + "\n", encoding="utf-8")
+            france_file.write_text(
+                "# 涨停监控列表\n\n| 代码 | 名称 | 涨停日期 | 参考价 |\n|------|------|----------|--------|\n"
+                + "\n".join(lines) + "\n", encoding="utf-8")
         else:
             with open(france_file, "a", encoding="utf-8") as f:
                 f.write("\n".join(lines) + "\n")
@@ -143,7 +158,7 @@ async def _run_daily_pipeline(args, logger):
 
     # 3. 执行完整筛选流水线
     logger.info("[Step 3] 执行筛选流水线...")
-    from backend.services.screening_service import run_full_pipeline
+    from .services.screening_service import run_full_pipeline
     result = await run_full_pipeline(target_date=today, dry_run=args.dry_run)
 
     logger.info(f"  结果: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}, WATCH={result['watch']}")

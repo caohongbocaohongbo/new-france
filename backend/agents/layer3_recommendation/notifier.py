@@ -1,6 +1,7 @@
 """
 通知模块 — 邮件通知
 """
+import os
 import smtplib
 import logging
 from email.mime.text import MIMEText
@@ -13,10 +14,10 @@ NOTIFY_CONFIG = {
     "email_enabled": True,
     "email_host": "smtp.qq.com",
     "email_port": 465,
-    "email_user": "896256756@qq.com",
-    "email_to": "896256756@qq.com",
+    "email_user": os.environ.get("SMTP_USER", "896256756@qq.com"),
+    "email_to": os.environ.get("SMTP_TO", "896256756@qq.com"),
 }
-SMTP_PASSWORD = "ptgefkdomxambdhg"
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 
 WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
