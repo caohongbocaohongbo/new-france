@@ -214,10 +214,10 @@ async function loadDashboard() {
     renderRecentRecommendations(DEMO_DATA.recommendations.slice(0, 3));
     document.getElementById('ztCount').textContent = '48';
     document.getElementById('sectorDist').innerHTML = `
-        <div class="sector-bar"><div class="sector-bar-label"><span>新能源</span><span>28%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:28%;background:#D4A853"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>半导体</span><span>22%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:22%;background:#3B82F6"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>消费电子</span><span>18%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:18%;background:#E74C3C"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>医药生物</span><span>15%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:15%;background:#27AE60"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>新能源</span><span>28%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:28%;background:#2932e1"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>半导体</span><span>22%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:22%;background:#2932e1"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>消费电子</span><span>18%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:18%;background:#e60012"></div></div></div>
+        <div class="sector-bar"><div class="sector-bar-label"><span>医药生物</span><span>15%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:15%;background:#009966"></div></div></div>
         <div class="sector-bar"><div class="sector-bar-label"><span>其他</span><span>17%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:17%;background:#5A6680"></div></div></div>`;
 }
 
@@ -228,7 +228,7 @@ function renderRecentRecommendations(results) {
             <td><span class="stock-code">${s.code}</span></td>
             <td>${s.name}</td>
             <td>${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))} ${s.adjusted_score}</td>
-            <td style="color:${s.drop_pct<0?'#E74C3C':'#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</td>
+            <td style="color:${s.drop_pct<0?'#e60012':'#009966'}">${(s.drop_pct||0).toFixed(2)}%</td>
             <td><span class="tag tag-${(s.recommendation||'pass').toLowerCase()}">${names[(s.recommendation||'pass').toLowerCase()]}</span></td>
             <td>${s.zt_date||'--'}</td>
         </tr>`).join('');
@@ -261,11 +261,11 @@ function renderWatchlistTable(items) {
     document.getElementById('wlTableBody').innerHTML = items.map(item => {
         const cp = item.current_price || item.ref_price;
         const dp = item.drop_pct != null ? item.drop_pct : 0;
-        const dpColor = dp < 0 ? (Math.abs(dp) >= 5 ? '#E74C3C' : '#F39C12') : '#27AE60';
+        const dpColor = dp < 0 ? (Math.abs(dp) >= 5 ? '#e60012' : '#F39C12') : '#009966';
         return `<tr>
             <td><input type="checkbox"></td>
             <td><span class="stock-code">${item.code}</span></td>
-            <td>${item.name}${item.zt_time ? '<div style="font-size:10px;color:#8B95A8">封板'+item.zt_time+(item.zbc>0?' 炸板'+item.zbc+'次':'')+'</div>' : ''}</td>
+            <td>${item.name}${item.zt_time ? '<div style="font-size:10px;color:#999999">封板'+item.zt_time+(item.zbc>0?' 炸板'+item.zbc+'次':'')+'</div>' : ''}</td>
             <td>${item.zt_date}</td>
             <td>${item.ref_price.toFixed(2)}</td>
             <td>${cp.toFixed(2)}</td>
@@ -314,13 +314,13 @@ function renderRecStats(data) {
             <div class="metric-card"><div class="metric-label">总推荐数</div><div class="metric-value highlight">${data.total_scored||0}</div></div>
             <div class="metric-card"><div class="metric-label">STRONG BUY</div><div class="metric-value up">${data.strong_buy||0}</div></div>
             <div class="metric-card"><div class="metric-label">BUY</div><div class="metric-value" style="color:#F39C12">${data.buy||0}</div></div>
-            <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value" style="color:#3498DB">${data.watch||0}</div></div>
+            <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value" style="color:#2932e1">${data.watch||0}</div></div>
         </div>`;
 }
 
 function renderRecommendationCards(stocks) {
     const names = {STRONG_BUY:'STRONG BUY',BUY:'BUY',WATCH:'WATCH',PASS:'PASS'};
-    const colors = {STRONG_BUY:'#E74C3C',BUY:'#F39C12',WATCH:'#3498DB',PASS:'#8B95A8'};
+    const colors = {STRONG_BUY:'#e60012',BUY:'#F39C12',WATCH:'#2932e1',PASS:'#999999'};
     const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
     const el = document.getElementById('recList');
     el.innerHTML = stocks.map(s => {
@@ -335,11 +335,11 @@ function renderRecommendationCards(stocks) {
                 <div style="margin-left:8px"><span class="stock-code" style="font-size:15px">${s.code}</span> <span style="font-size:15px;font-weight:600">${s.name}</span></div>
                 <div style="flex:1"></div>
                 <div class="rec-stars">${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))}</div>
-                <span style="font-size:20px;font-weight:700;color:${colors[s.recommendation]||'#8B95A8'};min-width:36px;text-align:right">${s.adjusted_score}</span>
+                <span style="font-size:20px;font-weight:700;color:${colors[s.recommendation]||'#999999'};min-width:36px;text-align:right">${s.adjusted_score}</span>
                 <span class="tag tag-${s.recommendation.toLowerCase()}">${names[s.recommendation]}</span>
             </div>
-            <div style="display:flex;gap:24px;margin:8px 0;font-size:13px;color:#8B95A8">
-                <span>回撤: <b style="color:${s.drop_pct<0?'#E74C3C':'#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</b></span>
+            <div style="display:flex;gap:24px;margin:8px 0;font-size:13px;color:#999999">
+                <span>回撤: <b style="color:${s.drop_pct<0?'#e60012':'#009966'}">${(s.drop_pct||0).toFixed(2)}%</b></span>
                 <span>涨停日: ${s.zt_date}</span>
                 <span>参考价: ${s.ref_price}</span>
             </div>
@@ -375,7 +375,7 @@ async function runScreening() {
             renderScreeningResults(data.results); return;
         }
         if (data.errors && data.errors[0] && data.errors[0].includes('监控列表为空')) {
-            body.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#8B95A8;font-size:13px">每日15:10自动从涨停股池添加监控股票</p></div>'; return;
+            body.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#999999;font-size:13px">每日15:10自动从涨停股池添加监控股票</p></div>'; return;
         }
     } catch(e) {}
     // Demo fallback
@@ -394,7 +394,7 @@ function renderScreeningResults(results) {
         });
         return `<tr><td>${s.rank}</td><td><span class="stock-code">${s.code}</span></td><td>${s.name}</td>
             <td>${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))} <b>${s.adjusted_score}</b></td>
-            <td style="color:${s.drop_pct<0?'#E74C3C':'#27AE60'}">${(s.drop_pct||0).toFixed(2)}%</td>
+            <td style="color:${s.drop_pct<0?'#e60012':'#009966'}">${(s.drop_pct||0).toFixed(2)}%</td>
             <td><span class="tag tag-${(s.recommendation||'pass').toLowerCase()}">${names[(s.recommendation||'pass').toLowerCase()]}</span></td>
             <td>${s.zt_date||'--'}</td><td>${dots}</td></tr>`;
     }).join('');
