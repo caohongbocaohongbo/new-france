@@ -2,7 +2,7 @@
 Layer 1: DataCollectorAgent — 只读数据采集
 职责: 从外部API拉取所有数据，不做计算或写入
 """
-import time
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, date
@@ -15,6 +15,9 @@ from .sources.historical_kline import fetch_historical
 from .sources.index_data import fetch_index_gain
 
 logger = logging.getLogger(__name__)
+
+# 历史K线并发抓取限制（避免被数据源封IP）
+_KLINE_SEMAPHORE = asyncio.Semaphore(8)
 
 
 @dataclass
@@ -62,17 +65,19 @@ class DataCollectorAgent:
 
     async def collect_historical_batch(self, symbols: List[str],
                                        days: int = 60) -> Dict[str, pd.DataFrame]:
-        """批量拉取历史K线（带限流）"""
+        """批量拉取历史K线（并发，限制 8 并发避免被封）"""
         result = {}
-        for i, sym in enumerate(symbols):
+
+        async def _fetch_one(sym):
             try:
-                hist = fetch_historical(sym, days=days)
+                async with _KLINE_SEMAPHORE:
+                    hist = await asyncio.to_thread(fetch_historical, sym, days)
                 if hist is not None and not hist.empty:
                     result[sym] = hist
-                if i > 0 and i % 10 == 0:
-                    time.sleep(0.5)  # 限流
             except Exception as e:
                 logger.debug(f"  {sym} 历史数据失败: {e}")
+
+        await asyncio.gather(*(_fetch_one(s) for s in symbols))
         return result
 
     def _safe_fetch(self, label: str, fn, pack: RawDataPack, **kwargs):
