@@ -135,7 +135,7 @@ function navigateTo(page, pushState = true) {
     if (nav) nav.classList.add('active');
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
-    if (pushState) location.hash = page;
+    if (pushState) history.replaceState(null, '', '#' + page);
     document.getElementById('pageTitle').textContent = {
         dashboard:'Dashboard 市场总览',watchlist:'监控列表',
         recommendations:'推荐结果',screening:'手动筛选',settings:'策略配置'
