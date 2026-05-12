@@ -95,7 +95,8 @@ def _send_email(subject: str, content: str) -> bool:
         msg["To"] = NOTIFY_CONFIG["email_to"]
 
         with smtplib.SMTP_SSL(NOTIFY_CONFIG["email_host"],
-                              NOTIFY_CONFIG["email_port"]) as server:
+                              NOTIFY_CONFIG["email_port"],
+                              timeout=15) as server:
             server.login(NOTIFY_CONFIG["email_user"], password)
             server.send_message(msg)
 

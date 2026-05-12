@@ -3,6 +3,14 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
     ? 'http://localhost:8000/api/v1'
     : 'https://new-france-api.onrender.com/api/v1';
 
+// 带超时的 fetch（Render 冷启动可能 30s+，10s 超时直接走 fallback）
+function apiFetch(path, opts = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    return fetch(`${API_BASE}${path}`, { ...opts, signal: controller.signal })
+        .finally(() => clearTimeout(timeout));
+}
+
 const DEMO_DATA = {
     watchlist: [
         {code:"600519",name:"贵州茅台",zt_date:"2026-05-07",ref_price:1680.00,current_price:1625.00,drop_pct:-3.27,turnover:6.8,vol_ratio:2.3,pe:25.3,mcap:"52亿",status:"active",source:"东方财富涨停股池",zt_time:"09:35",zbc:0},
@@ -162,7 +170,7 @@ async function checkSystemStatus() {
     const isHours = now.getHours() >= 9 && now.getHours() < 15;
 
     try {
-        const resp = await fetch(`${API_BASE}/system/status`);
+        const resp = await apiFetch('/system/status');
         const data = await resp.json();
         text.textContent = data.is_trading_hours ? '交易中' : (data.is_trading_day ? '已收盘' : '休市中');
         dot.className = 'status-dot' + (data.is_trading_hours || data.is_trading_day ? '' : ' off');
@@ -186,11 +194,11 @@ function updateDateTime() {
 // ---- Dashboard ----
 async function loadDashboard() {
     try {
-        const wlResp = await fetch(`${API_BASE}/watchlist/stats`);
+        const wlResp = await apiFetch('/watchlist/stats');
         const wl = await wlResp.json();
         document.getElementById('metricWatchlist').textContent = wl.total || 0;
         document.getElementById('metricNewZT').textContent = wl.new_today || 0;
-        const recResp = await fetch(`${API_BASE}/screening/latest`);
+        const recResp = await apiFetch('/screening/latest');
         const rec = await recResp.json();
         if (rec.results && rec.results.length > 0) {
             document.getElementById('metricRecs').textContent = rec.total_scored || rec.results.length;
@@ -239,7 +247,7 @@ let wlCurrentPage = 1;
 async function loadWatchlist(page = 1) {
     wlCurrentPage = page;
     try {
-        const resp = await fetch(`${API_BASE}/watchlist?page=${page}&size=20`);
+        const resp = await apiFetch(`/watchlist?page=${page}&size=20`);
         const data = await resp.json();
         if (data.items && data.items.length > 0) {
             renderWatchlistTable(data.items);
@@ -282,7 +290,7 @@ function renderWatchlistTable(items) {
 
 async function removeWatchlistItem(code) {
     if (!confirm(`确认从监控列表中移除 ${code}？`)) return;
-    try { await fetch(`${API_BASE}/watchlist/${code}`, { method: 'DELETE' }); } catch(e) {}
+    try { await apiFetch(`/watchlist/${code}`, { method: 'DELETE' }); } catch(e) {}
     loadWatchlist(wlCurrentPage);
 }
 function exportWatchlist() { alert('导出功能开发中'); }
@@ -291,7 +299,7 @@ function exportWatchlist() { alert('导出功能开发中'); }
 async function loadRecommendations() {
     const level = document.getElementById('recLevel').value;
     try {
-        const resp = await fetch(`${API_BASE}/screening/latest`);
+        const resp = await apiFetch('/screening/latest');
         const data = await resp.json();
         if (data.results && data.results.length > 0) {
             let filtered = data.results;
@@ -368,7 +376,7 @@ async function runScreening() {
     params.set('pe_max', document.getElementById('scrPeMax').value||50);
 
     try {
-        const resp = await fetch(`${API_BASE}/screening/run?${params}`, { method: 'POST' });
+        const resp = await apiFetch(`/screening/run?${params}`, { method: 'POST' });
         const data = await resp.json();
         if (data.results && data.results.length > 0) {
             countEl.textContent = `${data.results.length} 条结果`;
@@ -434,7 +442,7 @@ function updateWeight(s) { factorWeights[s.dataset.key]=parseInt(s.value); docum
 function updateWeightSum() { const sum=Object.values(factorWeights).reduce((a,b)=>a+b,0); const el=document.getElementById('weightSum'); el.textContent='当前总权重: '+sum+'%'; el.className='weight-sum'+(sum!==100?' warn':''); }
 async function testEmail() {
     try {
-        const resp = await fetch(`${API_BASE}/system/test-email`, { method: 'POST' });
+        const resp = await apiFetch('/system/test-email', { method: 'POST' });
         const data = await resp.json();
         if (data.status === 'ok') {
             alert('测试邮件已发送，请检查收件箱');
@@ -448,7 +456,7 @@ async function testEmail() {
 
 async function manualRun() {
     try {
-        const resp = await fetch(`${API_BASE}/screening/run`, { method: 'POST' });
+        const resp = await apiFetch('/screening/run', { method: 'POST' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         const total = data.total_scored || data.results?.length || 0;
