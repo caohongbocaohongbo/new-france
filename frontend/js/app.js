@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initWatchlistTabs();
     updateDateTime();
     checkSystemStatus();
-    loadDashboard();
+    // loadDashboard() 由 initNavigation() → navigateTo('dashboard') 触发, 避免重复调用
     setInterval(updateDateTime, 60000);
 });
 
