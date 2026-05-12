@@ -1,9 +1,20 @@
 """New France — 尾盘涨停选股系统入口 (CLI + API)"""
 import sys
+import os
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
+
+# 确保项目根目录在 Python path 中（修复 crontab 环境下的模块导入问题）
 sys.path.insert(0, str(PROJECT_DIR))
+os.chdir(str(PROJECT_DIR))
+
+# 加载 .env 文件（修复 SMTP 密码无法读取的问题）
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_DIR / ".env")
+except ImportError:
+    pass
 
 # FastAPI app 延迟加载，仅在 --serve 时需要
 _app = None
@@ -77,9 +88,16 @@ def main():
 
     if args.serve:
         import uvicorn
+        from config.settings import settings
+        from .db.database import init_db
+
+        # 确保数据库表已创建
+        init_db()
+
         app = get_app()
-        logger.info("启动 API 服务 http://localhost:8000")
-        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+        port = settings.api_port
+        logger.info(f"启动 API 服务 0.0.0.0:{port}")
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
         return
 
     if args.test_email:

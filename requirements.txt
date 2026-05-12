@@ -6,11 +6,12 @@ requests>=2.28
 sqlalchemy>=2.0
 pydantic>=2.5
 pydantic-settings>=2.0
+python-dotenv>=1.0
 
-# 本地 API 服务器（GitHub Actions 不需要）
-# fastapi>=0.109
-# uvicorn>=0.27
-# aiosqlite>=0.19
+# API 服务器
+fastapi>=0.109
+uvicorn>=0.27
+aiosqlite>=0.19
 
 # 增强数据源（可选，失败自动降级）
 # akshare>=1.18.60

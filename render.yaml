@@ -1,0 +1,47 @@
+# Render Blueprint — New France 涨停回撤选股系统
+# 文档: https://render.com/docs/blueprint-spec
+
+services:
+  # ---- 后端 API ----
+  - type: web
+    name: new-france-api
+    env: python
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m backend.main --serve
+    envVars:
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_USER
+        value: "896256756@qq.com"
+      - key: EMAIL_TO
+        value: "896256756@qq.com"
+      - key: DEBUG
+        value: "false"
+
+  # ---- 定时任务 (每日筛选) ----
+  - type: cron
+    name: new-france-daily-screening
+    env: python
+    region: oregon
+    schedule: "10 7 * * 1-5"  # UTC 07:10 = 北京时间 15:10
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m backend.main
+    envVars:
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_USER
+        value: "896256756@qq.com"
+      - key: EMAIL_TO
+        value: "896256756@qq.com"
+
+# ---- 前端静态站点 ----
+staticSites:
+  - name: new-france
+    buildCommand: echo "Static site — no build required"
+    publishPath: frontend
+    pullRequestPreviewsEnabled: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

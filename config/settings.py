@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # ---- API ----
     api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    api_port: int = Field(default=8000, alias="PORT")
 
     # ---- 策略 ----
     tracking_days: int = 30
