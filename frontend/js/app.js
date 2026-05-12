@@ -6,7 +6,9 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
 // 带超时的 fetch（Render 冷启动可能 30s+，10s 超时直接走 fallback）
 function apiFetch(path, opts = {}) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const ms = opts.timeout || 10000;
+    delete opts.timeout;
+    const timeout = setTimeout(() => controller.abort(), ms);
     return fetch(`${API_BASE}${path}`, { ...opts, signal: controller.signal })
         .finally(() => clearTimeout(timeout));
 }
@@ -376,7 +378,7 @@ async function runScreening() {
     params.set('pe_max', document.getElementById('scrPeMax').value||50);
 
     try {
-        const resp = await apiFetch(`/screening/run?${params}`, { method: 'POST' });
+        const resp = await apiFetch(`/screening/run?${params}`, { method: 'POST', timeout: 120000 });
         const data = await resp.json();
         if (data.results && data.results.length > 0) {
             countEl.textContent = `${data.results.length} 条结果`;
@@ -385,7 +387,10 @@ async function runScreening() {
         if (data.errors && data.errors[0] && data.errors[0].includes('监控列表为空')) {
             body.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#999999;font-size:13px">每日15:10自动从涨停股池添加监控股票</p></div>'; return;
         }
-    } catch(e) {}
+    } catch(e) {
+        body.innerHTML = '<div class="empty-state"><p style="color:#e60012">请求超时或后端异常，请稍后重试</p></div>';
+        return;
+    }
     // Demo fallback
     countEl.textContent = '3 条结果';
     renderScreeningResults(DEMO_DATA.recommendations.slice(0,3));
@@ -442,7 +447,7 @@ function updateWeight(s) { factorWeights[s.dataset.key]=parseInt(s.value); docum
 function updateWeightSum() { const sum=Object.values(factorWeights).reduce((a,b)=>a+b,0); const el=document.getElementById('weightSum'); el.textContent='当前总权重: '+sum+'%'; el.className='weight-sum'+(sum!==100?' warn':''); }
 async function testEmail() {
     try {
-        const resp = await apiFetch('/system/test-email', { method: 'POST' });
+        const resp = await apiFetch('/system/test-email', { method: 'POST', timeout: 30000 });
         const data = await resp.json();
         if (data.status === 'ok') {
             alert('测试邮件已发送，请检查收件箱');
@@ -450,20 +455,27 @@ async function testEmail() {
             alert('发送失败: ' + (data.message || '未知错误'));
         }
     } catch(e) {
-        alert('后端服务未运行，无法发送测试邮件\n本地执行: python3 -m backend.main --test-email');
+        alert('请求超时或后端异常，请稍后重试');
     }
 }
 
 async function manualRun() {
+    // 显示执行中状态
+    const oldText = event.target.textContent;
+    event.target.textContent = '筛选中，请稍候...';
+    event.target.disabled = true;
     try {
-        const resp = await apiFetch('/screening/run', { method: 'POST' });
+        const resp = await apiFetch('/screening/run', { method: 'POST', timeout: 120000 });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         const total = data.total_scored || data.results?.length || 0;
         alert(`筛选已完成\n共 ${total} 条推荐结果\nSTRONG_BUY: ${data.strong_buy || 0}  BUY: ${data.buy || 0}  WATCH: ${data.watch || 0}`);
         loadDashboard();
     } catch(e) {
-        alert('后端服务未运行，无法执行筛选\n本地执行: python3 -m backend.main');
+        alert('请求超时或后端异常，请稍后重试');
+    } finally {
+        event.target.textContent = oldText;
+        event.target.disabled = false;
     }
 }
 function saveConfig() { alert('配置已保存到本地存储'); }
