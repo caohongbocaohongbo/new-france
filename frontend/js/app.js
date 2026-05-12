@@ -182,7 +182,7 @@ async function checkSystemStatus() {
         if (isWeekday && isHours) { text.textContent = '交易中'; dot.className = 'status-dot'; }
         else if (isWeekday) { text.textContent = '已收盘'; dot.className = 'status-dot'; }
         else { text.textContent = '休市中'; dot.className = 'status-dot off'; }
-        nextRun.textContent = '下次执行: 交易日 15:10';
+        nextRun.textContent = '下次执行: 交易日 15:10 (北京时间)';
     }
 }
 
@@ -440,8 +440,12 @@ function setupSettingsPage() {
         `<div class="form-row"><label>${names[k]||k}</label><input type="range" min="0" max="25" value="${v}" class="weight-slider" data-key="${k}" oninput="updateWeight(this)"><span id="wv_${k}">${v}%</span></div>`
     ).join('');
     updateWeightSum();
-    const now = new Date(); now.setDate(now.getDate() + (8 - now.getDay()) % 7);
-    document.getElementById('cfgNextRun').textContent = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} (周一) 15:10`;
+    // 计算下一个交易日
+    const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+    const next = new Date();
+    do { next.setDate(next.getDate() + 1); } while (next.getDay() === 0 || next.getDay() === 6);
+    document.getElementById('cfgNextRun').textContent =
+        `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')} (${weekdays[next.getDay()]}) 15:10`;
 }
 function updateWeight(s) { factorWeights[s.dataset.key]=parseInt(s.value); document.getElementById('wv_'+s.dataset.key).textContent=s.value+'%'; updateWeightSum(); }
 function updateWeightSum() { const sum=Object.values(factorWeights).reduce((a,b)=>a+b,0); const el=document.getElementById('weightSum'); el.textContent='当前总权重: '+sum+'%'; el.className='weight-sum'+(sum!==100?' warn':''); }

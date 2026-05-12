@@ -22,8 +22,8 @@ async def system_status():
     return {
         "is_trading_day": now.weekday() < 5,
         "is_trading_hours": is_trading,
-        "next_execution": "15:10 (交易日)",
-        "cron_expression": "10 15 * * 1-5",
+        "next_execution": "15:10 (北京时间, 交易日)",
+        "cron_expression": "每个交易日 15:10 (北京时间)",
         "timestamp": now.isoformat(),
     }
 
