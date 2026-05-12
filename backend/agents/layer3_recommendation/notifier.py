@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 NOTIFY_CONFIG = {
     "email_enabled": True,
-    "email_host": "smtp.qq.com",
-    "email_port": 465,
-    "email_user": os.environ.get("SMTP_USER", "896256756@qq.com"),
-    "email_to": os.environ.get("SMTP_TO", "896256756@qq.com"),
+    "email_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
+    "email_port": int(os.environ.get("SMTP_PORT", "465")),
+    "email_user": os.environ.get("SMTP_USER", ""),
+    "email_to": os.environ.get("EMAIL_TO", os.environ.get("SMTP_USER", "")),
 }
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 
