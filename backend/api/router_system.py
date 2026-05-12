@@ -1,21 +1,23 @@
 """系统 API — 健康检查、状态、配置"""
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+BEIJING_TZ = timezone(timedelta(hours=8))
+
 
 @router.get("/health")
 async def health():
-    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+    return {"status": "ok", "timestamp": datetime.now(BEIJING_TZ).isoformat()}
 
 
 @router.get("/status")
 async def system_status():
-    """系统运行状态"""
-    now = datetime.now()
+    """系统运行状态（北京时间）"""
+    now = datetime.now(BEIJING_TZ)
     is_trading = now.weekday() < 5 and 9 <= now.hour <= 15
     return {
         "is_trading_day": now.weekday() < 5,
