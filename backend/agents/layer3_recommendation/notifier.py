@@ -95,7 +95,8 @@ def _send_email(subject: str, content: str) -> tuple[bool, str]:
         msg["To"] = NOTIFY_CONFIG["email_to"]
 
         port = int(NOTIFY_CONFIG["email_port"])
-        if port == 587:
+        # 587/25 → STARTTLS；465 → SSL（Render 免费层封锁 465/587，用 25 试试）
+        if port in (587, 25):
             with smtplib.SMTP(NOTIFY_CONFIG["email_host"], port, timeout=15) as server:
                 server.starttls()
                 server.login(NOTIFY_CONFIG["email_user"], password)
