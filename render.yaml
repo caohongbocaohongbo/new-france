@@ -14,7 +14,11 @@ services:
         sync: false
       - key: SMTP_USER
         value: "896256756@qq.com"
-      - key: EMAIL_TO
+      - key: SMTP_HOST
+        value: "smtp.gmail.com"
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_TO
         value: "896256756@qq.com"
       - key: DEBUG
         value: "false"
@@ -32,7 +36,11 @@ services:
         sync: false
       - key: SMTP_USER
         value: "896256756@qq.com"
-      - key: EMAIL_TO
+      - key: SMTP_HOST
+        value: "smtp.gmail.com"
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_TO
         value: "896256756@qq.com"
 
 # ---- 前端静态站点 ----

@@ -15,7 +15,7 @@ NOTIFY_CONFIG = {
     "email_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
     "email_port": int(os.environ.get("SMTP_PORT", "465")),
     "email_user": os.environ.get("SMTP_USER", ""),
-    "email_to": os.environ.get("EMAIL_TO", os.environ.get("SMTP_USER", "")),
+    "email_to": os.environ.get("SMTP_TO", os.environ.get("SMTP_USER", "")),
 }
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
 
