@@ -33,11 +33,11 @@ async def test_email_endpoint():
     """发送测试邮件"""
     try:
         from ..agents.layer3_recommendation.notifier import test_email
-        ok = test_email()
+        ok, msg = test_email()
         if ok:
             return {"status": "ok", "message": "测试邮件已发送，请检查收件箱"}
         else:
-            return {"status": "error", "message": "邮件发送失败，请检查 SMTP 配置"}
+            return {"status": "error", "message": msg}
     except Exception as e:
         logger.error(f"测试邮件失败: {e}")
         return {"status": "error", "message": f"发送失败: {str(e)}"}

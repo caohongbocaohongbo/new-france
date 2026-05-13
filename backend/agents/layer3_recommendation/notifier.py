@@ -31,10 +31,11 @@ def send_notification(scored_stocks, target_date: date,
         return False
 
     content = _build_email_content(scored_stocks, target_date, index_gain)
-    return _send_email(
+    ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         content=content,
     )
+    return ok
 
 
 def _build_email_content(stocks, target_date, index_gain) -> str:
@@ -82,11 +83,10 @@ def _build_email_content(stocks, target_date, index_gain) -> str:
     return "\n".join(lines)
 
 
-def _send_email(subject: str, content: str) -> bool:
+def _send_email(subject: str, content: str) -> tuple[bool, str]:
     password = SMTP_PASSWORD
     if not password:
-        logger.warning("SMTP密码未配置")
-        return False
+        return False, "SMTP密码未配置（环境变量 SMTP_PASSWORD 为空）"
 
     try:
         msg = MIMEText(content, "plain", "utf-8")
@@ -101,13 +101,22 @@ def _send_email(subject: str, content: str) -> bool:
             server.send_message(msg)
 
         logger.info(f"邮件已发送至 {NOTIFY_CONFIG['email_to']}")
-        return True
+        return True, "OK"
+    except smtplib.SMTPAuthenticationError as e:
+        err = f"SMTP 登录失败: 邮箱={NOTIFY_CONFIG['email_user']}, 错误={e}"
+        logger.error(err)
+        return False, err
+    except smtplib.SMTPConnectError as e:
+        err = f"SMTP 连接失败: {NOTIFY_CONFIG['email_host']}:{NOTIFY_CONFIG['email_port']}, 错误={e}"
+        logger.error(err)
+        return False, err
     except Exception as e:
-        logger.error(f"邮件发送失败: {e}")
-        return False
+        err = f"发送异常: {type(e).__name__}: {e}"
+        logger.error(err)
+        return False, err
 
 
-def test_email() -> bool:
+def test_email() -> tuple[bool, str]:
     """发送测试邮件"""
     return _send_email(
         subject="[测试] New France 涨停回撤战法",
