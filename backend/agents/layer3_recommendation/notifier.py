@@ -94,11 +94,16 @@ def _send_email(subject: str, content: str) -> tuple[bool, str]:
         msg["From"] = NOTIFY_CONFIG["email_user"]
         msg["To"] = NOTIFY_CONFIG["email_to"]
 
-        with smtplib.SMTP_SSL(NOTIFY_CONFIG["email_host"],
-                              NOTIFY_CONFIG["email_port"],
-                              timeout=15) as server:
-            server.login(NOTIFY_CONFIG["email_user"], password)
-            server.send_message(msg)
+        port = int(NOTIFY_CONFIG["email_port"])
+        if port == 587:
+            with smtplib.SMTP(NOTIFY_CONFIG["email_host"], port, timeout=15) as server:
+                server.starttls()
+                server.login(NOTIFY_CONFIG["email_user"], password)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP_SSL(NOTIFY_CONFIG["email_host"], port, timeout=15) as server:
+                server.login(NOTIFY_CONFIG["email_user"], password)
+                server.send_message(msg)
 
         logger.info(f"邮件已发送至 {NOTIFY_CONFIG['email_to']}")
         return True, "OK"
