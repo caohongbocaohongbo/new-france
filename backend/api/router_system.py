@@ -32,19 +32,12 @@ async def system_status():
 async def test_email_endpoint():
     """发送测试邮件"""
     try:
-        from ..agents.layer3_recommendation.notifier import test_email, BREVO_API_KEY, NOTIFY_CONFIG
-        import os
+        from ..agents.layer3_recommendation.notifier import test_email
         ok, msg = test_email()
-        return {
-            "status": "ok" if ok else "error",
-            "message": msg,
-            "debug": {
-                "brevo_key_set": bool(BREVO_API_KEY),
-                "brevo_key_len": len(BREVO_API_KEY),
-                "email_user": NOTIFY_CONFIG["email_user"],
-                "email_to": NOTIFY_CONFIG["email_to"],
-            }
-        }
+        if ok:
+            return {"status": "ok", "message": "测试邮件已发送，请检查收件箱"}
+        else:
+            return {"status": "error", "message": msg}
     except Exception as e:
         logger.error(f"测试邮件失败: {e}")
         return {"status": "error", "message": f"发送失败: {str(e)}"}
