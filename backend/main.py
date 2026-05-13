@@ -122,10 +122,11 @@ def main():
 
 async def _run_daily_pipeline(args, logger):
     """完整的每日定时任务"""
-    from datetime import date
+    from datetime import datetime, timezone, timedelta
+    BEIJING_TZ = timezone(timedelta(hours=8))
 
     logger.info("New France v1.0 每日流水线启动")
-    today = date.today()
+    today = datetime.now(BEIJING_TZ).date()
     weekday = today.weekday()
 
     if weekday >= 5 and not args.force:

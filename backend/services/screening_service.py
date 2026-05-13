@@ -2,6 +2,7 @@
 筛选流水线服务 — 串联三级 Agent 完整流程
 DataCollector → SignalEngine → RecommendationAgent
 """
+import asyncio
 import logging
 import re
 from datetime import date, datetime, timedelta
@@ -94,18 +95,18 @@ async def run_full_pipeline(
 
     logger.info(f"  监控列表: {len(watchlist)} 只")
 
-    # 拉取实时行情
+    # 拉取实时行情 + 历史K线 + 事件采集（并行，无数据依赖）
     codes = [e["code"] for e in watchlist]
-    quotes = await collector.collect_watchlist_quotes(codes)
+    event_engine = EventEngine()
+
+    quotes, historical, events = await asyncio.gather(
+        collector.collect_watchlist_quotes(codes),
+        collector.collect_historical_batch(codes),
+        event_engine.collect_daily_events(target_date),
+    )
     logger.info(f"  实时行情: {len(quotes)} 只")
 
-    # 拉取历史K线
-    historical = await collector.collect_historical_batch(codes)
-
-    # ---- 事件采集 ----
-    logger.info("[事件引擎] 采集事件...")
-    event_engine = EventEngine()
-    events = await event_engine.collect_daily_events(target_date)
+    # ---- 事件匹配 ----
     watchlist_names = [e["name"] for e in watchlist]
     event_map = await event_engine.match_stock_events(events, codes, watchlist_names)
 

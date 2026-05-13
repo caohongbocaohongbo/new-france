@@ -2,9 +2,11 @@
 历史K线数据源 — akshare + 新浪备用
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import pandas as pd
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +15,7 @@ def fetch_historical(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
     """获取个股历史日线数据（前复权）"""
     try:
         import akshare as ak
-        end = datetime.now()
+        end = datetime.now(BEIJING_TZ)
         start = end - timedelta(days=days + 30)
         df = ak.stock_zh_a_hist(
             symbol=symbol, period="daily",

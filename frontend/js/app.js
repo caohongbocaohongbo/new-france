@@ -131,8 +131,8 @@ function initNavigation() {
 }
 
 let _currentPage = '';
-function navigateTo(page, pushState = true) {
-    if (page === _currentPage) return;
+function navigateTo(page, pushState = true, force = false) {
+    if (!force && page === _currentPage) return;
     _currentPage = page;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -548,5 +548,5 @@ function renderPagination(cid, total, page, size, cb) {
 }
 
 // ---- Global ----
-function refreshData() { navigateTo(location.hash.replace('#','')||'dashboard',false); }
+function refreshData() { navigateTo(location.hash.replace('#','')||'dashboard', false, true); }
 function setupScreeningPage() {}

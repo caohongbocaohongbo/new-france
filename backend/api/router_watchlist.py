@@ -14,7 +14,10 @@ def _parse_watchlist():
     """解析 france.md 监控列表"""
     if not FRANCE_FILE.exists():
         return []
-    content = FRANCE_FILE.read_text(encoding="utf-8")
+    try:
+        content = FRANCE_FILE.read_text(encoding="utf-8")
+    except Exception:
+        return []
     entries = []
     for line in content.split("\n"):
         match = re.match(
@@ -54,8 +57,9 @@ async def get_watchlist(status: Optional[str] = Query(None),
 async def get_watchlist_stats():
     """监控列表统计"""
     entries = _parse_watchlist()
-    from datetime import datetime, timedelta
-    today = datetime.now()
+    from datetime import datetime, timezone, timedelta
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    today = datetime.now(BEIJING_TZ)
     cutoff = today - timedelta(days=30)
     new_today = sum(1 for e in entries if e["zt_date"] == today.strftime("%Y-%m-%d"))
     return {
@@ -79,5 +83,8 @@ async def remove_from_watchlist(code: str):
     lines = [f"| {e['code']} | {e['name']} | {e['zt_date']} | {e['ref_price']:.2f} |"
              for e in entries]
     FRANCE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    FRANCE_FILE.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
+    try:
+        FRANCE_FILE.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"写入文件失败: {e}")
     return {"message": f"已移除 {code}", "remaining": len(entries)}

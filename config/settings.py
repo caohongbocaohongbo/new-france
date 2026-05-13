@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     # ---- 邮件通知 ----
     smtp_host: str = "smtp.qq.com"
     smtp_port: int = 465
-    smtp_user: str = "896256756@qq.com"
+    smtp_user: str = ""
     smtp_password: str = Field(default="", repr=False)
-    email_to: str = "896256756@qq.com"
+    email_to: str = ""
 
     # ---- API ----
     api_host: str = "0.0.0.0"

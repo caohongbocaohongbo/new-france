@@ -1,10 +1,16 @@
 """
 数据库 ORM 模型 — SQLAlchemy
 """
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import (Column, Integer, String, Float, Text, DateTime,
                         UniqueConstraint, ForeignKey, Index)
 from .database import Base
+
+BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+def beijing_now():
+    return datetime.now(BEIJING_TZ)
 
 
 class ScreeningTask(Base):
@@ -26,7 +32,7 @@ class ScreeningTask(Base):
     error_message = Column(Text)
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=beijing_now)
 
 
 class StockScore(Base):
@@ -61,7 +67,7 @@ class StockScore(Base):
     recommendation = Column(String(20))
     factor_details = Column(Text)  # JSON
 
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=beijing_now)
 
     __table_args__ = (
         Index("idx_stock_scores_task", "task_id"),
@@ -79,7 +85,7 @@ class WatchlistStock(Base):
     zt_date = Column(String(10), nullable=False)
     ref_price = Column(Float, nullable=False)
     status = Column(String(20), default="active")
-    added_at = Column(DateTime, default=datetime.now)
+    added_at = Column(DateTime, default=beijing_now)
     expired_at = Column(DateTime)
     removed_at = Column(DateTime)
 
@@ -104,7 +110,7 @@ class StockEvent(Base):
     impact_score = Column(Float, default=0)
     source = Column(String(100))
     source_url = Column(String(500))
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=beijing_now)
 
     __table_args__ = (
         Index("idx_events_date", "event_date"),

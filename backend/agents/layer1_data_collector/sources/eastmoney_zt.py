@@ -3,11 +3,13 @@
 """
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 
 def fetch_zt_pool() -> Optional[pd.DataFrame]:
@@ -19,7 +21,7 @@ def fetch_zt_pool() -> Optional[pd.DataFrame]:
         "Pageindex": 0,
         "pagesize": 500,
         "sort": "fbt:asc",
-        "date": datetime.now().strftime("%Y%m%d"),
+        "date": datetime.now(BEIJING_TZ).strftime("%Y%m%d"),
     }
     headers = {
         "User-Agent": (
