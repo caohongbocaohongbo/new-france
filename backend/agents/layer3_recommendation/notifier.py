@@ -1,7 +1,8 @@
 """
-通知模块 — 邮件通知
+通知模块 — 邮件通知（Brevo HTTP API 优先，SMTP 备选）
 """
 import os
+import json
 import smtplib
 import logging
 from email.mime.text import MIMEText
@@ -12,12 +13,11 @@ logger = logging.getLogger(__name__)
 
 NOTIFY_CONFIG = {
     "email_enabled": True,
-    "email_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
-    "email_port": int(os.environ.get("SMTP_PORT", "465")),
     "email_user": os.environ.get("SMTP_USER", ""),
     "email_to": os.environ.get("SMTP_TO", os.environ.get("SMTP_USER", "")),
 }
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 
 WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
@@ -83,43 +83,94 @@ def _build_email_content(stocks, target_date, index_gain) -> str:
     return "\n".join(lines)
 
 
-def _send_email(subject: str, content: str) -> tuple[bool, str]:
+def _send_via_brevo(subject: str, content: str) -> tuple[bool, str]:
+    """通过 Brevo HTTP API 发送邮件（Render 上 SMTP 端口被封，走 HTTP）"""
+    try:
+        import requests
+        resp = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={
+                "api-key": BREVO_API_KEY,
+                "Content-Type": "application/json",
+            },
+            json={
+                "sender": {
+                    "email": NOTIFY_CONFIG["email_user"] or "noreply@new-france.onrender.com",
+                    "name": "New France 选股系统",
+                },
+                "to": [{"email": NOTIFY_CONFIG["email_to"]}],
+                "subject": subject,
+                "textContent": content,
+            },
+            timeout=15,
+        )
+        if resp.status_code in (200, 201):
+            logger.info(f"[Brevo] 邮件已发送至 {NOTIFY_CONFIG['email_to']}")
+            return True, "OK"
+        err = f"Brevo API 返回 {resp.status_code}: {resp.text[:200]}"
+        logger.error(err)
+        return False, err
+    except Exception as e:
+        err = f"Brevo 发送异常: {type(e).__name__}: {e}"
+        logger.error(err)
+        return False, err
+
+
+def _send_via_smtp(subject: str, content: str) -> tuple[bool, str]:
+    """通过 SMTP 发送邮件（本地 / GitHub Actions 使用）"""
+    host = os.environ.get("SMTP_HOST", "smtp.qq.com")
+    port = int(os.environ.get("SMTP_PORT", "465"))
+    user = NOTIFY_CONFIG["email_user"]
     password = SMTP_PASSWORD
+
     if not password:
-        return False, "SMTP密码未配置（环境变量 SMTP_PASSWORD 为空）"
+        return False, "SMTP密码未配置"
+    if not user:
+        return False, "SMTP_USER 未配置"
 
     try:
         msg = MIMEText(content, "plain", "utf-8")
         msg["Subject"] = subject
-        msg["From"] = NOTIFY_CONFIG["email_user"]
+        msg["From"] = user
         msg["To"] = NOTIFY_CONFIG["email_to"]
 
-        port = int(NOTIFY_CONFIG["email_port"])
-        # 587/25 → STARTTLS；465 → SSL（Render 免费层封锁 465/587，用 25 试试）
         if port in (587, 25):
-            with smtplib.SMTP(NOTIFY_CONFIG["email_host"], port, timeout=15) as server:
+            with smtplib.SMTP(host, port, timeout=15) as server:
                 server.starttls()
-                server.login(NOTIFY_CONFIG["email_user"], password)
+                server.login(user, password)
                 server.send_message(msg)
         else:
-            with smtplib.SMTP_SSL(NOTIFY_CONFIG["email_host"], port, timeout=15) as server:
-                server.login(NOTIFY_CONFIG["email_user"], password)
+            with smtplib.SMTP_SSL(host, port, timeout=15) as server:
+                server.login(user, password)
                 server.send_message(msg)
 
-        logger.info(f"邮件已发送至 {NOTIFY_CONFIG['email_to']}")
+        logger.info(f"[SMTP] 邮件已发送至 {NOTIFY_CONFIG['email_to']}")
         return True, "OK"
     except smtplib.SMTPAuthenticationError as e:
-        err = f"SMTP 登录失败: 邮箱={NOTIFY_CONFIG['email_user']}, 错误={e}"
+        err = f"SMTP 登录失败: {user}, 错误={e}"
         logger.error(err)
         return False, err
     except smtplib.SMTPConnectError as e:
-        err = f"SMTP 连接失败: {NOTIFY_CONFIG['email_host']}:{NOTIFY_CONFIG['email_port']}, 错误={e}"
+        err = f"SMTP 连接失败: {host}:{port}, 错误={e}"
+        logger.error(err)
+        return False, err
+    except OSError as e:
+        err = f"SMTP 网络不通: {e}"
         logger.error(err)
         return False, err
     except Exception as e:
-        err = f"发送异常: {type(e).__name__}: {e}"
+        err = f"SMTP 异常: {type(e).__name__}: {e}"
         logger.error(err)
         return False, err
+
+
+def _send_email(subject: str, content: str) -> tuple[bool, str]:
+    """发送邮件：Brevo HTTP API 优先 → SMTP 备选"""
+    # 如果配了 Brevo API Key，优先走 HTTP（Render 环境 SMTP 端口被封）
+    if BREVO_API_KEY:
+        return _send_via_brevo(subject, content)
+    # 否则走 SMTP（本地 crontab / GitHub Actions）
+    return _send_via_smtp(subject, content)
 
 
 def test_email() -> tuple[bool, str]:
