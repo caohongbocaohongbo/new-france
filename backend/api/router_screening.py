@@ -3,11 +3,12 @@
 """
 import json
 import logging
+import asyncio
 from datetime import date
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, BackgroundTasks
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -15,8 +16,42 @@ logger = logging.getLogger(__name__)
 REPORTS_DIR = Path(__file__).resolve().parent.parent.parent / "reports"
 
 
+def _cache_error(msg: str):
+    """缓存错误信息到 latest.json，供前端轮询"""
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = REPORTS_DIR / "latest.json"
+    cache_file.write_text(json.dumps({"status": "error", "message": msg}, ensure_ascii=False),
+                          encoding="utf-8")
+
+
+async def _run_screening_task(params: dict):
+    """后台执行筛选流水线（不阻塞 HTTP 响应）"""
+    try:
+        from ..services.screening_service import run_full_pipeline
+
+        result = await run_full_pipeline(
+            target_date=date.today(),
+            drop_min=params["drop_min"], drop_max=params["drop_max"],
+            vol_min=params["vol_min"], vol_max=params["vol_max"],
+            turnover_min=params["turnover_min"], turnover_max=params["turnover_max"],
+            mc_min=params["mc_min"], mc_max=params["mc_max"],
+            pe_max=params["pe_max"],
+        )
+
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        cache_file = REPORTS_DIR / "latest.json"
+        cache_file.write_text(json.dumps({"status": "completed", **result}, ensure_ascii=False, indent=2),
+                              encoding="utf-8")
+        logger.info(f"后台筛选完成: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}")
+
+    except Exception as e:
+        logger.exception(f"后台筛选异常: {e}")
+        _cache_error(str(e))
+
+
 @router.post("/run")
 async def run_screening(
+    background_tasks: BackgroundTasks,
     drop_min: float = Query(3.0, ge=0, le=20),
     drop_max: float = Query(10.0, ge=0, le=20),
     vol_min: float = Query(1.0, ge=0),
@@ -27,30 +62,28 @@ async def run_screening(
     mc_max: float = Query(200.0, ge=0),
     pe_max: float = Query(50.0, ge=0),
 ):
-    """手动触发筛选 — 完整三级 Agent 流水线"""
-    try:
-        from ..services.screening_service import run_full_pipeline
+    """手动触发筛选 — 后台异步执行，前端轮询 /latest 获取结果"""
+    params = {
+        "drop_min": drop_min, "drop_max": drop_max,
+        "vol_min": vol_min, "vol_max": vol_max,
+        "turnover_min": turnover_min, "turnover_max": turnover_max,
+        "mc_min": mc_min, "mc_max": mc_max,
+        "pe_max": pe_max,
+    }
 
-        result = await run_full_pipeline(
-            target_date=date.today(),
-            drop_min=drop_min, drop_max=drop_max,
-            vol_min=vol_min, vol_max=vol_max,
-            turnover_min=turnover_min, turnover_max=turnover_max,
-            mc_min=mc_min, mc_max=mc_max,
-            pe_max=pe_max,
-        )
+    # 写入运行中状态
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = REPORTS_DIR / "latest.json"
+    cache_file.write_text(json.dumps({"status": "running", "params": params}, ensure_ascii=False),
+                          encoding="utf-8")
 
-        # 缓存最新结果到 reports/latest.json
-        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-        cache_file = REPORTS_DIR / "latest.json"
-        cache_file.write_text(json.dumps(result, ensure_ascii=False, indent=2),
-                              encoding="utf-8")
+    # 后台执行（不阻塞响应，避免 Render 30s 网关超时）
+    background_tasks.add_task(_run_screening_task, params)
 
-        return {"status": "completed", **result}
-
-    except Exception as e:
-        logger.exception(f"筛选流水线异常: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "status": "started",
+        "message": "筛选任务已启动，请轮询 /api/v1/screening/latest 查看结果",
+    }
 
 
 @router.get("/latest")

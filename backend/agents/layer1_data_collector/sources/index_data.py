@@ -22,12 +22,7 @@ def fetch_index_gain() -> float:
 
 
 def _fetch_index_direct() -> float:
-    """直连东方财富API"""
-    try:
-        from curl_cffi import requests as curl_req
-    except ImportError:
-        import requests as curl_req
-
+    """直连东方财富API (优先用标准 requests，curl_cffi 做备选)"""
     url = "https://push2.eastmoney.com/api/qt/stock/get"
     params = {
         "secid": "1.000001",
@@ -39,6 +34,22 @@ def _fetch_index_direct() -> float:
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
         "Referer": "https://quote.eastmoney.com/",
     }
-    resp = curl_req.get(url, params=params, headers=headers, timeout=10)
-    data = resp.json()
-    return float(data.get("data", {}).get("f3", 0))
+
+    # 优先标准 requests
+    try:
+        import requests
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        data = resp.json()
+        return float(data.get("data", {}).get("f3", 0))
+    except Exception:
+        pass
+
+    # 备选 curl_cffi
+    try:
+        from curl_cffi import requests as curl_req
+        resp = curl_req.get(url, params=params, headers=headers, timeout=15)
+        data = resp.json()
+        return float(data.get("data", {}).get("f3", 0))
+    except Exception as e:
+        logger.warning(f"直连东方财富也失败: {e}")
+        return 0.0

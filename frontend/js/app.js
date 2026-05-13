@@ -362,7 +362,8 @@ function renderRecommendationCards(stocks) {
 async function runScreening() {
     const body = document.getElementById('scrResultBody');
     const countEl = document.getElementById('scrResultCount');
-    body.innerHTML = '<div class="empty-state"><p>筛选运行中...</p></div>';
+    const startBtn = document.querySelector('.btn-primary[onclick="runScreening()"]');
+    body.innerHTML = '<div class="empty-state"><p>筛选任务已提交，等待结果...</p><p style="font-size:12px;color:#999">流水线运行中（约 1-3 分钟），结果将自动刷新</p></div>';
 
     const params = new URLSearchParams();
     params.set('gain_min', document.getElementById('scrGainMin').value||3);
@@ -378,22 +379,52 @@ async function runScreening() {
     params.set('pe_max', document.getElementById('scrPeMax').value||50);
 
     try {
-        const resp = await apiFetch(`/screening/run?${params}`, { method: 'POST', timeout: 120000 });
-        const data = await resp.json();
-        if (data.results && data.results.length > 0) {
-            countEl.textContent = `${data.results.length} 条结果`;
-            renderScreeningResults(data.results); return;
+        // Step 1: 启动后台筛选任务（立即返回，不阻塞）
+        const startResp = await apiFetch(`/screening/run?${params}`, { method: 'POST', timeout: 30000 });
+        const startData = await startResp.json();
+
+        if (startData.status !== 'started') {
+            body.innerHTML = `<div class="empty-state"><p style="color:#e60012">启动失败: ${startData.message || '未知错误'}</p></div>`;
+            return;
         }
-        if (data.errors && data.errors[0] && data.errors[0].includes('监控列表为空')) {
-            body.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#999999;font-size:13px">每日15:10自动从涨停股池添加监控股票</p></div>'; return;
+
+        // Step 2: 轮询结果（最长 5 分钟，每 3 秒一次）
+        let dots = 0;
+        for (let i = 0; i < 100; i++) {
+            await new Promise(r => setTimeout(r, 3000));
+            const pollResp = await apiFetch('/screening/latest', { timeout: 10000 });
+            const pollData = await pollResp.json();
+
+            // 更新进度提示
+            dots = (dots + 1) % 4;
+            const spinner = '.'.repeat(dots + 1);
+            body.innerHTML = `<div class="empty-state"><p>筛选运行中${spinner}</p><p style="font-size:12px;color:#999">已完成 ${Math.round((i+1)/100*100)}% 轮询（最长 5 分钟）</p></div>`;
+
+            if (pollData.status === 'completed') {
+                if (pollData.results && pollData.results.length > 0) {
+                    countEl.textContent = `${pollData.results.length} 条结果`;
+                    renderScreeningResults(pollData.results);
+                    return;
+                }
+                if (pollData.errors && pollData.errors[0] && pollData.errors[0].includes('监控列表为空')) {
+                    body.innerHTML = '<div class="empty-state"><p>监控列表为空</p><p style="color:#999999;font-size:13px">每日15:10自动从涨停股池添加监控股票</p></div>';
+                    return;
+                }
+                countEl.textContent = '0 条结果';
+                body.innerHTML = '<div class="empty-state"><p>筛选完成，无符合条件的股票</p></div>';
+                return;
+            }
+
+            if (pollData.status === 'error') {
+                body.innerHTML = `<div class="empty-state"><p style="color:#e60012">筛选异常: ${pollData.message || '未知错误'}</p></div>`;
+                return;
+            }
         }
+
+        body.innerHTML = '<div class="empty-state"><p style="color:#e60012">筛选超时，请稍后重试或查看 /screening/latest</p></div>';
     } catch(e) {
-        body.innerHTML = '<div class="empty-state"><p style="color:#e60012">请求超时或后端异常，请稍后重试</p></div>';
-        return;
+        body.innerHTML = '<div class="empty-state"><p style="color:#e60012">请求异常，请检查后端是否运行</p></div>';
     }
-    // Demo fallback
-    countEl.textContent = '3 条结果';
-    renderScreeningResults(DEMO_DATA.recommendations.slice(0,3));
 }
 
 function renderScreeningResults(results) {
@@ -464,22 +495,39 @@ async function testEmail() {
 }
 
 async function manualRun() {
-    // 显示执行中状态
-    const oldText = event.target.textContent;
-    event.target.textContent = '筛选中，请稍候...';
-    event.target.disabled = true;
+    const btn = event.target;
+    const oldText = btn.textContent;
+    btn.textContent = '筛选中，请稍候...';
+    btn.disabled = true;
     try {
-        const resp = await apiFetch('/screening/run', { method: 'POST', timeout: 120000 });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        const total = data.total_scored || data.results?.length || 0;
-        alert(`筛选已完成\n共 ${total} 条推荐结果\nSTRONG_BUY: ${data.strong_buy || 0}  BUY: ${data.buy || 0}  WATCH: ${data.watch || 0}`);
-        loadDashboard();
+        // 启动后台任务
+        const startResp = await apiFetch('/screening/run', { method: 'POST', timeout: 30000 });
+        const startData = await startResp.json();
+        if (startData.status !== 'started') throw new Error(startData.message || '启动失败');
+
+        // 轮询结果
+        for (let i = 0; i < 100; i++) {
+            await new Promise(r => setTimeout(r, 3000));
+            btn.textContent = `轮询中 (${i + 1}/100)...`;
+            const pollResp = await apiFetch('/screening/latest', { timeout: 10000 });
+            const pollData = await pollResp.json();
+            if (pollData.status === 'completed') {
+                const total = pollData.total_scored || pollData.results?.length || 0;
+                alert(`筛选已完成\n共 ${total} 条推荐结果\nSTRONG_BUY: ${pollData.strong_buy || 0}  BUY: ${pollData.buy || 0}  WATCH: ${pollData.watch || 0}`);
+                loadDashboard();
+                return;
+            }
+            if (pollData.status === 'error') {
+                alert('筛选失败: ' + (pollData.message || '未知错误'));
+                return;
+            }
+        }
+        alert('筛选超时，请查看筛选页面');
     } catch(e) {
-        alert('请求超时或后端异常，请稍后重试');
+        alert('请求异常，请检查后端是否运行');
     } finally {
-        event.target.textContent = oldText;
-        event.target.disabled = false;
+        btn.textContent = oldText;
+        btn.disabled = false;
     }
 }
 function saveConfig() { alert('配置已保存到本地存储'); }

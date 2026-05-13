@@ -28,6 +28,7 @@ def get_app():
 
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.staticfiles import StaticFiles
     from .api.router_screening import router as screening_router
     from .api.router_watchlist import router as watchlist_router
     from .api.router_events import router as events_router
@@ -51,8 +52,18 @@ def get_app():
     _app.include_router(reports_router, prefix="/api/v1/reports", tags=["报告"])
     _app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
 
+    # 托管前端静态文件
+    frontend_dir = PROJECT_DIR / "frontend"
+    if frontend_dir.is_dir():
+        _app.mount("/css", StaticFiles(directory=frontend_dir / "css"), name="css")
+        _app.mount("/js", StaticFiles(directory=frontend_dir / "js"), name="js")
+
     @_app.get("/")
     def root():
+        from fastapi.responses import FileResponse
+        index_path = PROJECT_DIR / "frontend" / "index.html"
+        if index_path.is_file():
+            return FileResponse(str(index_path))
         return {"service": "New France API", "version": "1.0.0"}
 
     return _app
