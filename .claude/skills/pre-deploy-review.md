@@ -1,7 +1,7 @@
 ---
 name: pre-deploy-review
-description: 部署前全面代码审查 — 检查前后端常见陷阱（重复调用、超时缺失、串行瓶颈、时区、CSS 冲突等）
-trigger: 部署前、提交 PR 前、用户说 "review 代码" / "检查代码" / "上线前检查"
+description: 部署前全面审查 — 代码质量 + 数据质量 + 接口一致性（重复调用、超时缺失、串行瓶颈、时区、CSS 冲突、假数据污染等）
+trigger: 部署前、提交 PR 前、用户说 "review 代码" / "检查代码" / "上线前检查" / "数据对不对"
 agent: pre-deploy-reviewer
 ---
 
@@ -68,14 +68,39 @@ agent: pre-deploy-reviewer
 | `.env.example` 与代码一致 | env var 名称与 `os.environ.get()` 调用匹配 |
 | GitHub Actions 兼容 | 确认 CI workflow 不会因新增依赖而中断 |
 
+### 6. 运行时数据质量
+
+检查 `data/` 目录下的持久化文件。这些不是代码，但会被提交或部署：
+
+| 检查项 | 方法 | 严重度 |
+|--------|------|--------|
+| **DEMO_DATA 交叉污染** | 逐行对比 `data/france.md` 与 `frontend/js/app.js` 中的 `DEMO_DATA.watchlist`，相同的代码+名称+日期组合即为种子数据泄漏 | **阻断** |
+| **大规模蓝筹股出现在涨停列表** | 搜索流通市值 > 500 亿的股票（600519 茅台、000858 五粮液、601398 工行等）出现在 `france.md`——这类股票极少涨停，大概率是假数据 | **阻断** |
+| **数据日期与交易日历不符** | `france.md` 中的 `zt_date` 若是周末/节假日 → 假数据 | 高 |
+| **数据量突变** | 某一天新增条目数是前一日的 5 倍以上或为 0 → 数据源异常，需排查 | 高 |
+| **参考价逻辑校验** | 涨停参考价应接近涨停价（当日涨幅 ≈ 10%），若参考价明显偏离市场价 → 数据异常 | 中 |
+| **`data/` 目录被 gitignore** | 确认 `data/*.db` 在 `.gitignore` 中（数据库文件不应提交），但 `france.md` 可以提交 | 低 |
+
+### 7. 全链路实战验证（新增）
+
+不仅静态审查代码，还要模拟用户操作路径：
+
+| 检查项 | 方法 |
+|--------|------|
+| **首页加载** | 跟踪 `DOMContentLoaded` → 所有 API 调用次数，确认无重复 |
+| **导航切换** | 点击 sidebar 每个 tab，确认每次只触发一批 API 请求 |
+| **按钮操作** | 点击"查询"/"执行筛选"/"手动触发"，确认请求数和响应时间 |
+| **数据闭环** | API 返回数据 → 前端渲染字段一一对应，无 undefined/null 穿透 |
+
 ## 执行方式
 
-每次用户请求或推送前，将任务拆分为 2-3 个后台 agent 并行执行：
+每次用户请求或推送前，将任务拆分为 3-4 个后台 agent 并行执行：
 
 ```
-Agent 1 (Frontend): 检查所有 JS/CSS 文件
-Agent 2 (Backend):  检查所有 Python 文件
+Agent 1 (Frontend):  检查所有 JS/CSS 文件 + 全链路调用分析
+Agent 2 (Backend):   检查所有 Python 文件
 Agent 3 (Integration): 检查前后端接口一致性 + 配置文件
+Agent 4 (Data Quality): 检查 data/ 运行时数据质量（新增）
 ```
 
 每个 agent 返回发现的问题列表，主 agent 汇总后给出：
@@ -96,3 +121,4 @@ Agent 3 (Integration): 检查前后端接口一致性 + 配置文件
 7. `datetime.now()` 用 UTC 判断 A 股交易时间 → **检查项 3.4**
 8. `.logo svg rect { fill: var(--primary) }` 覆盖新 logo 颜色 → **检查项 2.1**
 9. `frontend/` 修复了但 `docs/` 未同步 → **检查项 1.10**
+10. `data/france.md` 混入 5 条 DEMO_DATA 种子假数据（茅台/五粮液等大蓝筹"涨停"）→ **检查项 6.1 + 6.2**
