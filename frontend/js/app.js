@@ -130,7 +130,10 @@ function initNavigation() {
     navigateTo(location.hash.replace('#', '') || 'dashboard', false);
 }
 
+let _currentPage = '';
 function navigateTo(page, pushState = true) {
+    if (page === _currentPage) return;
+    _currentPage = page;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const nav = document.querySelector(`[data-page="${page}"]`);
@@ -363,6 +366,9 @@ async function runScreening() {
     const body = document.getElementById('scrResultBody');
     const countEl = document.getElementById('scrResultCount');
     const startBtn = document.querySelector('.btn-primary[onclick="runScreening()"]');
+    const oldBtnText = startBtn.textContent;
+    startBtn.disabled = true;
+    startBtn.textContent = '筛选中...';
     body.innerHTML = '<div class="empty-state"><p>筛选任务已提交，等待结果...</p><p style="font-size:12px;color:#999">流水线运行中（约 1-3 分钟），结果将自动刷新</p></div>';
 
     const params = new URLSearchParams();
@@ -424,6 +430,9 @@ async function runScreening() {
         body.innerHTML = '<div class="empty-state"><p style="color:#e60012">筛选超时，请稍后重试或查看 /screening/latest</p></div>';
     } catch(e) {
         body.innerHTML = '<div class="empty-state"><p style="color:#e60012">请求异常，请检查后端是否运行</p></div>';
+    } finally {
+        startBtn.disabled = false;
+        startBtn.textContent = oldBtnText;
     }
 }
 
