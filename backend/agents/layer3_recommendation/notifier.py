@@ -42,43 +42,68 @@ def _build_email_content(stocks, target_date, index_gain) -> str:
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
+    # 读取监控列表概况
+    try:
+        from pathlib import Path
+        france_file = Path(__file__).resolve().parent.parent.parent.parent / "data" / "france.md"
+        if france_file.exists():
+            wl_lines = [l for l in france_file.read_text(encoding="utf-8").split("\n")
+                       if l.startswith("|") and l.count("|") >= 5]
+            wl_total = len(wl_lines)
+            wl_today = sum(1 for l in wl_lines if date_str in l)
+        else:
+            wl_total = wl_today = 0
+    except Exception:
+        wl_total = wl_today = 0
+
     lines = [
         f"New France 涨停回撤战法 - {date_str} {weekday}",
         "=" * 40,
         f"上证指数涨幅: {index_gain:+.2f}%",
+        f"监控股票总数: {wl_total} 只",
+        f"今日新增涨停: {wl_today} 只",
         "",
     ]
 
     strong = [s for s in stocks if s.recommendation == "STRONG_BUY"]
     buy = [s for s in stocks if s.recommendation == "BUY"]
+    watch = [s for s in stocks if s.recommendation == "WATCH"]
 
-    lines.append(f"【推荐汇总】STRONG_BUY {len(strong)} 只 | BUY {len(buy)} 只")
+    lines.append(f"【今日筛选结果】STRONG_BUY {len(strong)} | BUY {len(buy)} | WATCH {len(watch)}")
     lines.append("")
 
-    for s in strong + buy:
-        stars = "\u2605" * min(4, max(1, int(s.adjusted_score / 25)))
-        level_cn = {"STRONG_BUY": "强烈买入", "BUY": "建议买入"}
-        pe = s.factor_scores.get("pe")
-        pe_str = ""
-        if pe:
-            pe_str = f" PE详情: {pe.detail}"
-        lines.append(f"[{level_cn.get(s.recommendation, s.recommendation)}] "
-                     f"{s.name}({s.code}) 得分:{s.adjusted_score:.0f} {stars}")
-        lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
-        lines.append(f"  评分详情:")
-        for key, r in s.factor_scores.items():
-            if key == "event_bonus":
-                continue
-            mark = "\u2713" if r.passed else "\u2717"
-            lines.append(f"    {mark} {r.name}({r.weight*100:.0f}%): {r.detail}")
+    if not stocks:
+        lines.append("今日无符合条件的回撤买入信号。")
+        lines.append("涨停股已加入监控列表，待回撤 3-10% 后进入筛选范围。")
         lines.append("")
+    else:
+        for s in strong + buy:
+            stars = "\u2605" * min(4, max(1, int(s.adjusted_score / 25)))
+            level_cn = {"STRONG_BUY": "强烈买入", "BUY": "建议买入"}
+            pe = s.factor_scores.get("pe")
+            pe_str = ""
+            if pe:
+                pe_str = f" PE详情: {pe.detail}"
+            lines.append(f"[{level_cn.get(s.recommendation, s.recommendation)}] "
+                         f"{s.name}({s.code}) 得分:{s.adjusted_score:.0f} {stars}")
+            lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
+            lines.append(f"  评分详情:")
+            for key, r in s.factor_scores.items():
+                if key == "event_bonus":
+                    continue
+                mark = "\u2713" if r.passed else "\u2717"
+                lines.append(f"    {mark} {r.name}({r.weight*100:.0f}%): {r.detail}")
+            lines.append("")
 
     lines.append("-" * 40)
     lines.append("")
-    lines.append("【特别提醒】")
-    lines.append("1. 本策略追踪曾涨停股票，在回撤5%-10%时寻找买点")
-    lines.append("2. 理财有风险，投资需谨慎，本结果仅供参考")
-    lines.append("3. 所有推荐基于量化因子评分，需结合盘感综合判断")
+    lines.append("【查看完整数据】")
+    lines.append(f"前端页面: https://new-france.onrender.com")
+    lines.append("")
+    lines.append("【策略说明】")
+    lines.append("1. 每日15:10抓取涨停股池 → 加入监控列表")
+    lines.append("2. 次日开始追踪回撤，3-10%回撤区间触发买入信号")
+    lines.append("3. 理财有风险，投资需谨慎，本结果仅供参考")
 
     return "\n".join(lines)
 
