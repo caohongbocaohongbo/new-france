@@ -4,9 +4,7 @@ DataCollector → SignalEngine → RecommendationAgent
 """
 import asyncio
 import logging
-import re
-from datetime import date, datetime, timedelta
-from pathlib import Path
+from datetime import date
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -15,32 +13,13 @@ from ..agents.layer1_data_collector.agent import DataCollectorAgent
 from ..agents.layer2_signal_engine.agent import SignalEngineAgent
 from ..agents.layer3_recommendation.agent import RecommendationAgent
 from ..events.engine import EventEngine
+from .watchlist_store import FRANCE_FILE, parse_watchlist
 
 logger = logging.getLogger(__name__)
 
-PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
-FRANCE_FILE = PROJECT_DIR / "data" / "france.md"
-
-
 def _read_watchlist() -> List[Dict]:
     """从 france.md 读取监控列表"""
-    if not FRANCE_FILE.exists():
-        return []
-    content = FRANCE_FILE.read_text(encoding="utf-8")
-    entries = []
-    for line in content.split("\n"):
-        match = re.match(
-            r"\|\s*(\d{6})\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*\|",
-            line,
-        )
-        if match:
-            entries.append({
-                "code": match.group(1),
-                "name": match.group(2).strip(),
-                "zt_date": match.group(3),
-                "ref_price": float(match.group(4)),
-            })
-    return entries
+    return parse_watchlist(FRANCE_FILE)
 
 
 async def run_full_pipeline(

@@ -136,8 +136,6 @@ async def _run_daily_pipeline(args, logger):
     # 1. 抓取今日涨停股池
     from .agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
     from .agents.layer1_data_collector.sources.index_data import fetch_index_gain
-    import re
-    import os
 
     logger.info("[Step 1] 抓取涨停股池...")
     zt_pool = fetch_zt_pool()
@@ -153,13 +151,12 @@ async def _run_daily_pipeline(args, logger):
     france_file = PROJECT_DIR / "data" / "france.md"
     today_str = today.strftime("%Y-%m-%d")
 
-    existing_codes = set()
-    if france_file.exists():
-        content = france_file.read_text(encoding="utf-8")
-        for line in content.split("\n"):
-            m = re.match(r"\|\s*(\d{6})\s*\|", line)
-            if m:
-                existing_codes.add(m.group(1))
+    from .services.watchlist_store import normalize_watchlist_file, write_watchlist
+
+    existing_entries, duplicate_count = normalize_watchlist_file(france_file)
+    if duplicate_count:
+        logger.info(f"  已清理 {duplicate_count} 条重复监控记录")
+    existing_codes = {entry["code"] for entry in existing_entries}
 
     new_entries = []
     for _, row in zt_pool.iterrows():
@@ -171,17 +168,10 @@ async def _run_daily_pipeline(args, logger):
         if price <= 0:
             continue
         new_entries.append({"code": code, "name": name, "zt_date": today_str, "ref_price": price})
+        existing_codes.add(code)
 
     if new_entries:
-        lines = [f"| {e['code']} | {e['name']} | {e['zt_date']} | {e['ref_price']:.2f} |" for e in new_entries]
-        if not france_file.exists():
-            france_file.parent.mkdir(parents=True, exist_ok=True)
-            france_file.write_text(
-                "# 涨停监控列表\n\n| 代码 | 名称 | 涨停日期 | 参考价 |\n|------|------|----------|--------|\n"
-                + "\n".join(lines) + "\n", encoding="utf-8")
-        else:
-            with open(france_file, "a", encoding="utf-8") as f:
-                f.write("\n".join(lines) + "\n")
+        write_watchlist(existing_entries + new_entries, france_file)
         logger.info(f"  新增 {len(new_entries)} 只监控股票")
     else:
         logger.info("  无新增（全部已监控）")

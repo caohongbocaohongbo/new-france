@@ -13,98 +13,7 @@ function apiFetch(path, opts = {}) {
         .finally(() => clearTimeout(timeout));
 }
 
-const DEMO_DATA = {
-    watchlist: [
-        {code:"600519",name:"贵州茅台",zt_date:"2026-05-07",ref_price:1680.00,current_price:1625.00,drop_pct:-3.27,turnover:6.8,vol_ratio:2.3,pe:25.3,mcap:"52亿",status:"active",source:"东方财富涨停股池",zt_time:"09:35",zbc:0},
-        {code:"000858",name:"五粮液",zt_date:"2026-05-06",ref_price:145.50,current_price:138.00,drop_pct:-5.15,turnover:6.5,vol_ratio:2.1,pe:38.2,mcap:"180亿",status:"active",source:"东方财富涨停股池",zt_time:"10:15",zbc:0},
-        {code:"300750",name:"宁德时代",zt_date:"2026-05-05",ref_price:210.00,current_price:199.50,drop_pct:-5.00,turnover:7.2,vol_ratio:1.8,pe:42.5,mcap:"120亿",status:"active",source:"东方财富涨停股池",zt_time:"09:42",zbc:0},
-        {code:"002594",name:"比亚迪",zt_date:"2026-05-07",ref_price:285.00,current_price:272.00,drop_pct:-4.56,turnover:5.3,vol_ratio:1.5,pe:32.0,mcap:"260亿",status:"recommended",source:"东方财富涨停股池",zt_time:"13:20",zbc:1},
-        {code:"600036",name:"招商银行",zt_date:"2026-05-05",ref_price:42.80,current_price:40.50,drop_pct:-5.37,turnover:4.2,vol_ratio:1.2,pe:6.8,mcap:"380亿",status:"active",source:"东方财富涨停股池",zt_time:"10:30",zbc:0},
-        {code:"002317",name:"众生药业",zt_date:"2026-05-04",ref_price:18.50,current_price:17.20,drop_pct:-7.03,turnover:8.1,vol_ratio:3.5,pe:55.0,mcap:"35亿",status:"expired",source:"东方财富涨停股池",zt_time:"14:10",zbc:2},
-        {code:"601012",name:"隆基绿能",zt_date:"2026-05-03",ref_price:32.60,current_price:30.80,drop_pct:-5.52,turnover:4.2,vol_ratio:1.2,pe:45.0,mcap:"88亿",status:"recommended",source:"东方财富涨停股池",zt_time:"11:05",zbc:0},
-        {code:"300274",name:"阳光电源",zt_date:"2026-05-07",ref_price:95.00,current_price:90.50,drop_pct:-4.74,turnover:7.0,vol_ratio:2.8,pe:28.5,mcap:"150亿",status:"active",source:"东方财富涨停股池",zt_time:"09:28",zbc:0},
-        {code:"600887",name:"伊利股份",zt_date:"2026-05-06",ref_price:32.00,current_price:30.20,drop_pct:-5.63,turnover:5.8,vol_ratio:1.9,pe:22.0,mcap:"95亿",status:"active",source:"东方财富涨停股池",zt_time:"10:45",zbc:0},
-        {code:"002466",name:"天齐锂业",zt_date:"2026-05-05",ref_price:55.00,current_price:52.00,drop_pct:-5.45,turnover:9.5,vol_ratio:4.2,pe:18.5,mcap:"65亿",status:"active",source:"东方财富涨停股池",zt_time:"09:50",zbc:0},
-    ],
-    recommendations: [
-        {
-            rank:1, code:"600519", name:"贵州茅台", zt_date:"2026-05-07",
-            ref_price:1680.00, current_price:1625.00, drop_pct:-3.27,
-            total_score:78.5, adjusted_score:82.2, event_impact:3.7,
-            recommendation:"STRONG_BUY",
-            factors:{
-                pullback:{name:"回撤幅度",score:9.2,weight:0.15,detail:"回撤-3.3%,接近5-8%目标区间",passed:true},
-                volume_trend:{name:"量能趋势",score:8.5,weight:0.12,detail:"量能稳步爬升(归一化斜率0.12)",passed:true},
-                ma_alignment:{name:"均线多头",score:10.0,weight:0.12,detail:"MA5>MA10>MA20>MA60完美多头",passed:true},
-                strength:{name:"强势确认",score:8.0,weight:0.10,detail:"收盘在65%位; 涨幅+0.8%强于大盘-0.3%",passed:true},
-                entry_point:{name:"尾盘买点",score:9.0,weight:0.10,detail:"收盘/最高=98.2%,尾盘强势收高",passed:true},
-                market_cap:{name:"流通市值",score:10.0,weight:0.10,detail:"流通市值52亿,典型中小盘",passed:true},
-                volume_ratio:{name:"量比",score:8.5,weight:0.08,detail:"量比=2.3,温和放量",passed:true},
-                turnover:{name:"换手率",score:9.0,weight:0.08,detail:"换手率=6.8%,温和放量",passed:true},
-                pe:{name:"市盈率",score:7.0,weight:0.08,detail:"PE=25.3,合理估值",passed:true},
-                zt_quality:{name:"涨停质量",score:8.5,weight:0.07,detail:"封板9:35; 零炸板; 30天1次",passed:true},
-                event_bonus:{name:"事件驱动加分",score:3.7,weight:0.0,detail:"+3.7:业绩预告预增+50%",passed:true},
-            }
-        },
-        {
-            rank:2, code:"300750", name:"宁德时代", zt_date:"2026-05-05",
-            ref_price:210.00, current_price:199.50, drop_pct:-5.00,
-            total_score:71.2, adjusted_score:73.5, event_impact:2.3,
-            recommendation:"STRONG_BUY",
-            factors:{
-                pullback:{name:"回撤幅度",score:10.0,weight:0.15,detail:"回撤-5.0%,完美落入5-8%目标区间",passed:true},
-                volume_trend:{name:"量能趋势",score:7.0,weight:0.12,detail:"量能温和放大(归一化斜率0.08)",passed:true},
-                ma_alignment:{name:"均线多头",score:7.0,weight:0.12,detail:"MA5>MA10>MA20",passed:true},
-                strength:{name:"强势确认",score:6.5,weight:0.10,detail:"收盘在42%位; 略弱于大盘",passed:true},
-                entry_point:{name:"尾盘买点",score:8.0,weight:0.10,detail:"收盘/最高=97.5%,尾盘强势",passed:true},
-                market_cap:{name:"流通市值",score:8.0,weight:0.10,detail:"流通市值120亿",passed:true},
-                volume_ratio:{name:"量比",score:7.0,weight:0.08,detail:"量比=1.8",passed:true},
-                turnover:{name:"换手率",score:10.0,weight:0.08,detail:"换手率=7.2%",passed:true},
-                pe:{name:"市盈率",score:4.0,weight:0.08,detail:"PE=42.5,偏高",passed:true},
-                zt_quality:{name:"涨停质量",score:8.5,weight:0.07,detail:"封板10:15; 零炸板",passed:true},
-                event_bonus:{name:"事件驱动加分",score:2.3,weight:0.0,detail:"+2.3:财报披露+行业政策",passed:true},
-            }
-        },
-        {
-            rank:3, code:"000858", name:"五粮液", zt_date:"2026-05-06",
-            ref_price:145.50, current_price:138.00, drop_pct:-5.15,
-            total_score:62.8, adjusted_score:62.8, event_impact:0,
-            recommendation:"BUY",
-            factors:{
-                pullback:{name:"回撤幅度",score:9.5,weight:0.15,detail:"回撤-5.2%,完美落入5-8%目标区间",passed:true},
-                volume_trend:{name:"量能趋势",score:6.0,weight:0.12,detail:"量能温和放大(归一化斜率0.05)",passed:true},
-                ma_alignment:{name:"均线多头",score:7.0,weight:0.12,detail:"MA5>MA10>MA20",passed:true},
-                strength:{name:"强势确认",score:5.0,weight:0.10,detail:"收盘在48%位; 弱于大盘",passed:true},
-                entry_point:{name:"尾盘买点",score:6.0,weight:0.10,detail:"收盘/最高=95.8%",passed:true},
-                market_cap:{name:"流通市值",score:5.0,weight:0.10,detail:"流通市值180亿",passed:true},
-                volume_ratio:{name:"量比",score:8.0,weight:0.08,detail:"量比=2.1",passed:true},
-                turnover:{name:"换手率",score:7.0,weight:0.08,detail:"换手率=6.5%",passed:true},
-                pe:{name:"市盈率",score:4.0,weight:0.08,detail:"PE=38.2",passed:true},
-                zt_quality:{name:"涨停质量",score:6.0,weight:0.07,detail:"封板13:20; 零炸板",passed:true},
-                event_bonus:{name:"事件驱动加分",score:0,weight:0.0,detail:"无关联事件",passed:true},
-            }
-        },
-        {
-            rank:4, code:"601012", name:"隆基绿能", zt_date:"2026-05-03",
-            ref_price:32.60, current_price:30.80, drop_pct:-5.52,
-            total_score:48.3, adjusted_score:48.3, event_impact:0,
-            recommendation:"WATCH",
-            factors:{
-                pullback:{name:"回撤幅度",score:9.0,weight:0.15,detail:"回撤-5.5%",passed:true},
-                volume_trend:{name:"量能趋势",score:4.0,weight:0.12,detail:"量能持平",passed:true},
-                ma_alignment:{name:"均线多头",score:4.0,weight:0.12,detail:"MA5>MA10",passed:true},
-                strength:{name:"强势确认",score:3.0,weight:0.10,detail:"收盘在30%位; 弱于大盘",passed:false},
-                entry_point:{name:"尾盘买点",score:6.0,weight:0.10,detail:"收盘/最高=96.2%",passed:true},
-                market_cap:{name:"流通市值",score:10.0,weight:0.10,detail:"流通市值88亿",passed:true},
-                volume_ratio:{name:"量比",score:5.0,weight:0.08,detail:"量比=1.2",passed:false},
-                turnover:{name:"换手率",score:4.0,weight:0.08,detail:"换手率=4.2%",passed:false},
-                pe:{name:"市盈率",score:3.0,weight:0.08,detail:"PE=45.0",passed:false},
-                zt_quality:{name:"涨停质量",score:4.0,weight:0.07,detail:"封板13:50; 30天2次",passed:false},
-                event_bonus:{name:"事件驱动加分",score:0,weight:0.0,detail:"无关联事件",passed:true},
-            }
-        },
-    ]
-};
+// 所有数据均来自后台API，无本地DEMO数据
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
@@ -156,12 +65,33 @@ let wlCurrentStatus = ''; // current tab filter
 function initWatchlistTabs() {
     document.querySelectorAll('#wlTabs .tab').forEach(tab => {
         tab.addEventListener('click', () => {
-            document.querySelectorAll('#wlTabs .tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
             wlCurrentStatus = tab.dataset.status;
             document.getElementById('wlStatus').value = wlCurrentStatus;
+            syncWatchlistTabs();
             loadWatchlist(1);
         });
+    });
+
+    const statusSelect = document.getElementById('wlStatus');
+    if (statusSelect) {
+        statusSelect.addEventListener('change', () => {
+            wlCurrentStatus = statusSelect.value;
+            syncWatchlistTabs();
+            loadWatchlist(1);
+        });
+    }
+
+    const searchInput = document.getElementById('wlSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') loadWatchlist(1);
+        });
+    }
+}
+
+function syncWatchlistTabs() {
+    document.querySelectorAll('#wlTabs .tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.status === wlCurrentStatus);
     });
 }
 
@@ -198,13 +128,29 @@ function updateDateTime() {
 
 // ---- Dashboard ----
 async function loadDashboard() {
+    // 重置为空状态
+    document.getElementById('metricWatchlist').textContent = '--';
+    document.getElementById('metricNewZT').textContent = '--';
+    document.getElementById('metricRecs').textContent = '--';
+    document.getElementById('metricIndex').textContent = '--';
+    document.getElementById('recentRecsBody').innerHTML = '<tr><td colspan="6" class="empty-cell">加载中...</td></tr>';
+    document.getElementById('ztCount').textContent = '--';
+    document.getElementById('sectorDist').innerHTML = '<p style="color:#8B95A8;text-align:center;padding:20px">加载中...</p>';
+
     try {
-        const wlResp = await apiFetch('/watchlist/stats');
+        // 并行请求 watchlist stats 和最新筛选结果
+        const [wlResp, recResp] = await Promise.all([
+            apiFetch('/watchlist/stats'),
+            apiFetch('/screening/latest')
+        ]);
         const wl = await wlResp.json();
+        const rec = await recResp.json();
+
+        // 监控股票数
         document.getElementById('metricWatchlist').textContent = wl.total || 0;
         document.getElementById('metricNewZT').textContent = wl.new_today || 0;
-        const recResp = await apiFetch('/screening/latest');
-        const rec = await recResp.json();
+
+        // 推荐数和指数
         if (rec.results && rec.results.length > 0) {
             document.getElementById('metricRecs').textContent = rec.total_scored || rec.results.length;
             if (rec.index_gain != null) {
@@ -214,24 +160,52 @@ async function loadDashboard() {
             }
             renderRecentRecommendations(rec.results.slice(0, 5));
             document.getElementById('ztCount').textContent = rec.total_scored || rec.results.length;
-            return; // API success, exit
+        } else {
+            document.getElementById('metricRecs').textContent = '0';
+            document.getElementById('ztCount').textContent = '0';
+            document.getElementById('recentRecsBody').innerHTML = '<tr><td colspan="6" class="empty-cell">暂无推荐数据</td></tr>';
+            // 尝试获取上证指数
+            try {
+                const idxResp = await apiFetch('/system/status');
+                const idx = await idxResp.json();
+                document.getElementById('metricIndex').textContent = '--';
+            } catch(e) {}
         }
-    } catch(e) {}
 
-    // Demo fallback
-    document.getElementById('metricWatchlist').textContent = 156;
-    document.getElementById('metricNewZT').textContent = '23';
-    document.getElementById('metricRecs').textContent = '8';
-    const el = document.getElementById('metricIndex');
-    el.textContent = '+0.35%'; el.className = 'metric-value up';
-    renderRecentRecommendations(DEMO_DATA.recommendations.slice(0, 3));
-    document.getElementById('ztCount').textContent = '48';
-    document.getElementById('sectorDist').innerHTML = `
-        <div class="sector-bar"><div class="sector-bar-label"><span>新能源</span><span>28%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:28%;background:#2932e1"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>半导体</span><span>22%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:22%;background:#2932e1"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>消费电子</span><span>18%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:18%;background:#e60012"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>医药生物</span><span>15%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:15%;background:#009966"></div></div></div>
-        <div class="sector-bar"><div class="sector-bar-label"><span>其他</span><span>17%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:17%;background:#5A6680"></div></div></div>`;
+        // 板块分布 - 从筛选结果的行业统计中获取
+        if (rec.sector_dist) {
+            renderSectorDist(rec.sector_dist);
+        } else {
+            document.getElementById('sectorDist').innerHTML = '<p style="color:#8B95A8;text-align:center;padding:20px">暂无板块分布数据</p>';
+        }
+
+    } catch(e) {
+        // API 不可用时显示真实空状态，不使用假数据
+        document.getElementById('metricWatchlist').textContent = '--';
+        document.getElementById('metricNewZT').textContent = '--';
+        document.getElementById('metricRecs').textContent = '--';
+        document.getElementById('metricIndex').textContent = '--';
+        document.getElementById('recentRecsBody').innerHTML = '<tr><td colspan="6" class="empty-cell" style="color:#e60012">API 连接失败，请检查后端服务</td></tr>';
+        document.getElementById('ztCount').textContent = '--';
+        document.getElementById('sectorDist').innerHTML = '<p style="color:#e60012;text-align:center;padding:20px">后端服务不可用</p>';
+    }
+}
+
+function renderSectorDist(sectors) {
+    if (!sectors || Object.keys(sectors).length === 0) {
+        document.getElementById('sectorDist').innerHTML = '<p style="color:#8B95A8;text-align:center;padding:20px">暂无板块分布数据</p>';
+        return;
+    }
+    const total = Object.values(sectors).reduce((a,b)=>a+b,0);
+    const colors = ['#2932e1','#e60012','#009966','#F39C12','#5A6680','#8B95A8'];
+    let i = 0;
+    document.getElementById('sectorDist').innerHTML = Object.entries(sectors)
+        .sort((a,b) => b[1]-a[1])
+        .map(([name, count]) => {
+            const pct = total > 0 ? Math.round(count/total*100) : 0;
+            const c = colors[i++ % colors.length];
+            return `<div class="sector-bar"><div class="sector-bar-label"><span>${name}</span><span>${pct}%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:${pct}%;background:${c}"></div></div></div>`;
+        }).join('');
 }
 
 function renderRecentRecommendations(results) {
@@ -249,24 +223,95 @@ function renderRecentRecommendations(results) {
 
 // ---- Watchlist ----
 let wlCurrentPage = 1;
+let wlFullCache = null; // 全量数据缓存（用于状态分类计数）
+let wlSortKey = '';
+let wlSortOrder = 'asc';
+
+function setWatchlistSort(key) {
+    if (wlSortKey === key) {
+        wlSortOrder = wlSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        wlSortKey = key;
+        wlSortOrder = 'asc';
+    }
+    updateWatchlistSortHeaders();
+    loadWatchlist(1);
+}
+
+function updateWatchlistSortHeaders() {
+    document.querySelectorAll('.sort-header[data-sort-key]').forEach(button => {
+        const isActive = button.dataset.sortKey === wlSortKey;
+        button.classList.toggle('active', isActive);
+        button.classList.toggle('asc', isActive && wlSortOrder === 'asc');
+        button.classList.toggle('desc', isActive && wlSortOrder === 'desc');
+        const th = button.closest('th');
+        if (th) th.setAttribute('aria-sort', isActive ? (wlSortOrder === 'asc' ? 'ascending' : 'descending') : 'none');
+    });
+}
+
+function buildWatchlistParams(page, includeStatus = true) {
+    const params = new URLSearchParams({ page: String(page), size: '20' });
+    const search = document.getElementById('wlSearch')?.value.trim();
+    const selectedStatus = document.getElementById('wlStatus')?.value ?? wlCurrentStatus;
+    wlCurrentStatus = selectedStatus;
+
+    if (includeStatus && wlCurrentStatus) params.set('status', wlCurrentStatus);
+    if (search) params.set('search', search);
+    if (includeStatus && wlSortKey) {
+        params.set('sort_by', wlSortKey);
+        params.set('sort_order', wlSortOrder);
+    }
+    return params;
+}
+
 async function loadWatchlist(page = 1) {
     wlCurrentPage = page;
+    syncWatchlistTabs();
+    updateWatchlistSortHeaders();
+
+    // 重置为空状态
+    document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="13" class="empty-cell">加载中...</td></tr>';
+    document.getElementById('wlCountAll').textContent = '0';
+    document.getElementById('wlCountActive').textContent = '0';
+    document.getElementById('wlCountRec').textContent = '0';
+    document.getElementById('wlCountExpired').textContent = '0';
+
     try {
-        const resp = await apiFetch(`/watchlist?page=${page}&size=20`);
-        const data = await resp.json();
+        const pageParams = buildWatchlistParams(page, true);
+        const statsParams = buildWatchlistParams(1, false);
+        statsParams.set('size', '500');
+
+        // 同时获取分页数据和全量统计（全量用于tab计数）
+        const [pageResp, statsResp] = await Promise.all([
+            apiFetch(`/watchlist?${pageParams.toString()}`),
+            apiFetch(`/watchlist?${statsParams.toString()}`)  // 一次获取全量用于状态统计
+        ]);
+        const data = await pageResp.json();
+        const allData = await statsResp.json();
+
         if (data.items && data.items.length > 0) {
             renderWatchlistTable(data.items);
             renderPagination('wlPagination', data.total, data.page, data.size, loadWatchlist);
-            document.getElementById('wlCountAll').textContent = data.total;
-            return;
+        } else {
+            document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="13" class="empty-cell">暂无监控数据。每日15:10自动从涨停股池添加。</td></tr>';
+            document.getElementById('wlPagination').innerHTML = '';
         }
-    } catch(e) {}
-    // Demo
-    renderWatchlistTable(DEMO_DATA.watchlist);
-    document.getElementById('wlCountAll').textContent = '156';
-    document.getElementById('wlCountActive').textContent = '89';
-    document.getElementById('wlCountRec').textContent = '42';
-    document.getElementById('wlCountExpired').textContent = '25';
+
+        // 从全量数据计算各状态数量
+        if (allData.items && allData.items.length > 0) {
+            wlFullCache = allData.items;
+            document.getElementById('wlCountAll').textContent = allData.total;
+            document.getElementById('wlCountActive').textContent = allData.items.filter(i => i.status === 'active').length;
+            document.getElementById('wlCountRec').textContent = allData.items.filter(i => i.status === 'recommended').length;
+            document.getElementById('wlCountExpired').textContent = allData.items.filter(i => i.status === 'expired').length;
+        } else {
+            document.getElementById('wlCountAll').textContent = allData.total || 0;
+        }
+
+    } catch(e) {
+        document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="13" class="empty-cell" style="color:#e60012">API 连接失败，请检查后端服务</td></tr>';
+        document.getElementById('wlPagination').innerHTML = '';
+    }
 }
 
 function renderWatchlistTable(items) {
@@ -303,22 +348,36 @@ function exportWatchlist() { alert('导出功能开发中'); }
 // ---- Recommendations ----
 async function loadRecommendations() {
     const level = document.getElementById('recLevel').value;
+    document.getElementById('recList').innerHTML = '<p class="empty-state">加载中...</p>';
+    document.getElementById('recStats').innerHTML = '';
+
     try {
         const resp = await apiFetch('/screening/latest');
         const data = await resp.json();
         if (data.results && data.results.length > 0) {
             let filtered = data.results;
             if (level) filtered = filtered.filter(r => r.recommendation === level);
-            renderRecommendationCards(filtered);
+            if (filtered.length > 0) {
+                renderRecommendationCards(filtered);
+            } else {
+                document.getElementById('recList').innerHTML = '<p class="empty-state">该等级暂无推荐结果</p>';
+            }
             renderRecStats(data);
             return;
         }
-    } catch(e) {}
-    // Demo
-    let filtered = DEMO_DATA.recommendations;
-    if (level) filtered = filtered.filter(r => r.recommendation === level);
-    renderRecommendationCards(filtered);
-    renderRecStats({results:DEMO_DATA.recommendations,total_scored:4,strong_buy:2,buy:1,watch:1});
+        // 无筛选结果
+        document.getElementById('recList').innerHTML = '<p class="empty-state">暂无推荐数据。每日15:10自动筛选，请耐心等待。</p>';
+        document.getElementById('recStats').innerHTML = `
+            <div class="metric-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+                <div class="metric-card"><div class="metric-label">总推荐数</div><div class="metric-value">0</div></div>
+                <div class="metric-card"><div class="metric-label">STRONG BUY</div><div class="metric-value">0</div></div>
+                <div class="metric-card"><div class="metric-label">BUY</div><div class="metric-value">0</div></div>
+                <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value">0</div></div>
+            </div>`;
+    } catch(e) {
+        document.getElementById('recList').innerHTML = '<p class="empty-state" style="color:#e60012">API 连接失败，请检查后端服务</p>';
+        document.getElementById('recStats').innerHTML = '';
+    }
 }
 
 function renderRecStats(data) {
@@ -543,7 +602,11 @@ function saveConfig() { alert('配置已保存到本地存储'); }
 
 // ---- Pagination ----
 function renderPagination(cid, total, page, size, cb) {
-    const p=Math.ceil(total/size); if(p<=1) return;
+    const p = Math.ceil(total / size);
+    if (p <= 1) {
+        document.getElementById(cid).innerHTML = '';
+        return;
+    }
     document.getElementById(cid).innerHTML = Array.from({length:p},(_,i)=>i+1).map(i => `<button class="${i===page?'active':''}" onclick="${cb.name}(${i})">${i}</button>`).join('');
 }
 

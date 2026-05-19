@@ -152,7 +152,7 @@
         </div>
         <div class="panel">
             <table class="data-table">
-                <thead><tr><th><input type="checkbox"></th><th>代码</th><th>名称</th><th>涨停日期</th><th>参考价</th><th>现价</th><th>回撤%</th><th>换手率</th><th>量比</th><th>PE</th><th>流通市值</th><th>状态</th><th>操作</th></tr></thead>
+                <thead><tr><th><input type="checkbox"></th><th>代码</th><th>名称</th><th>涨停日期</th><th>参考价</th><th>现价</th><th aria-sort="none"><button type="button" class="sort-header" data-sort-key="drop_pct" onclick="setWatchlistSort('drop_pct')">回撤%<span class="sort-caret" aria-hidden="true"></span></button></th><th aria-sort="none"><button type="button" class="sort-header" data-sort-key="turnover" onclick="setWatchlistSort('turnover')">换手率<span class="sort-caret" aria-hidden="true"></span></button></th><th aria-sort="none"><button type="button" class="sort-header" data-sort-key="vol_ratio" onclick="setWatchlistSort('vol_ratio')">量比<span class="sort-caret" aria-hidden="true"></span></button></th><th aria-sort="none"><button type="button" class="sort-header" data-sort-key="pe" onclick="setWatchlistSort('pe')">PE<span class="sort-caret" aria-hidden="true"></span></button></th><th>流通市值</th><th>状态</th><th>操作</th></tr></thead>
                 <tbody id="wlTableBody"><tr><td colspan="13" class="empty-cell">加载中...</td></tr></tbody>
             </table>
             <div class="pagination" id="wlPagination"></div>

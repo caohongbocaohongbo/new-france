@@ -1,39 +1,19 @@
 """监控列表 API"""
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
-import re
-import os
 import logging
-from pathlib import Path
+
+from ..services.watchlist_store import parse_watchlist, write_watchlist
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-FRANCE_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "france.md"
+SORTABLE_FIELDS = {"drop_pct", "turnover", "vol_ratio", "pe"}
 
 
 def _parse_watchlist():
     """解析 france.md 监控列表"""
-    if not FRANCE_FILE.exists():
-        return []
-    try:
-        content = FRANCE_FILE.read_text(encoding="utf-8")
-    except Exception:
-        return []
-    entries = []
-    for line in content.split("\n"):
-        match = re.match(
-            r"\|\s*(\d{6})\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*\|",
-            line
-        )
-        if match:
-            entries.append({
-                "code": match.group(1),
-                "name": match.group(2).strip(),
-                "zt_date": match.group(3),
-                "ref_price": float(match.group(4)),
-            })
-    return entries
+    return parse_watchlist()
 
 
 def _enrich_with_quotes(entries: list) -> list:
@@ -53,6 +33,10 @@ def _enrich_with_quotes(entries: list) -> list:
     if quotes is not None and not quotes.empty:
         for _, row in quotes.iterrows():
             quote_map[row["代码"]] = row
+
+    from datetime import datetime, timezone, timedelta
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    today = datetime.now(BEIJING_TZ).date()
 
     result = []
     for e in entries:
@@ -83,40 +67,93 @@ def _enrich_with_quotes(entries: list) -> list:
                 "pe": None, "mcap_raw": None, "mcap": None,
             }
 
-        # 状态判断
-        from datetime import datetime, timezone, timedelta
-        BEIJING_TZ = timezone(timedelta(hours=8))
-        today = datetime.now(BEIJING_TZ).date()
+        # 状态判断（基于日期，不依赖行情）
         try:
             zt_date = datetime.strptime(e["zt_date"], "%Y-%m-%d").date()
         except Exception:
             zt_date = today
-
         days_since = (today - zt_date).days
-        if days_since > 30:
-            entry["status"] = "expired"
-        elif entry.get("drop_pct") is not None and abs(entry["drop_pct"]) >= 3:
-            entry["status"] = "active"
-        elif entry.get("drop_pct") is not None:
-            entry["status"] = "active"
-        else:
-            entry["status"] = "active"
+        entry["status"] = "expired" if days_since > 30 else "active"
 
         result.append(entry)
 
     return result
 
 
+def _parse_with_status(entries: list) -> list:
+    """仅解析监控列表并标注状态（不含行情查询，速度快）"""
+    from datetime import datetime, timezone, timedelta
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    today = datetime.now(BEIJING_TZ).date()
+
+    result = []
+    for e in entries:
+        try:
+            zt_date = datetime.strptime(e["zt_date"], "%Y-%m-%d").date()
+        except Exception:
+            zt_date = today
+        days_since = (today - zt_date).days
+        result.append({
+            **e,
+            "status": "expired" if days_since > 30 else "active",
+        })
+    return result
+
+
+def _as_sort_number(value):
+    """行情字段可能来自 pandas/numpy；统一转成可排序数字。"""
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number:
+        return None
+    return number
+
+
+def _sort_watchlist(entries: list, sort_by: Optional[str], sort_order: str) -> list:
+    if not sort_by:
+        return entries
+    if sort_by not in SORTABLE_FIELDS:
+        raise HTTPException(status_code=400, detail="不支持的排序字段")
+    if sort_order not in {"asc", "desc"}:
+        raise HTTPException(status_code=400, detail="排序方向仅支持 asc 或 desc")
+
+    reverse = sort_order == "desc"
+    with_values = []
+    without_values = []
+    for entry in entries:
+        value = _as_sort_number(entry.get(sort_by))
+        if value is None:
+            without_values.append(entry)
+        else:
+            with_values.append((value, entry))
+
+    with_values.sort(key=lambda item: item[0], reverse=reverse)
+    return [entry for _, entry in with_values] + without_values
+
+
 @router.get("")
 async def get_watchlist(status: Optional[str] = Query(None),
                         search: Optional[str] = Query(None),
+                        sort_by: Optional[str] = Query(None),
+                        sort_order: str = Query("asc"),
                         page: int = Query(1, ge=1),
-                        size: int = Query(20, ge=1, le=100)):
-    """获取监控列表（含实时行情补全）"""
+                        size: int = Query(20, ge=1, le=500)):
+    """获取监控列表（含实时行情补全）
+
+    - size <= 50: 补全实时行情，用于展示与表头排序
+    - size > 50: 仅标注状态不补全行情（用于全量统计）
+    """
     entries = _parse_watchlist()
 
-    # 补全实时行情
-    entries = _enrich_with_quotes(entries)
+    # 大请求仅返回状态标注（不拉行情），小请求才补全行情
+    if size > 50:
+        entries = _parse_with_status(entries)
+    else:
+        entries = _enrich_with_quotes(entries)
 
     if search:
         entries = [e for e in entries
@@ -124,6 +161,8 @@ async def get_watchlist(status: Optional[str] = Query(None),
 
     if status:
         entries = [e for e in entries if e.get("status") == status]
+
+    entries = _sort_watchlist(entries, sort_by, sort_order)
 
     total = len(entries)
     start = (page - 1) * size
@@ -153,16 +192,8 @@ async def remove_from_watchlist(code: str):
     """从监控列表中移除股票"""
     entries = _parse_watchlist()
     entries = [e for e in entries if e["code"] != code]
-    header = (
-        "# 涨停监控列表\n\n"
-        "| 代码 | 名称 | 涨停日期 | 参考价 |\n"
-        "|------|------|----------|--------|\n"
-    )
-    lines = [f"| {e['code']} | {e['name']} | {e['zt_date']} | {e['ref_price']:.2f} |"
-             for e in entries]
-    FRANCE_FILE.parent.mkdir(parents=True, exist_ok=True)
     try:
-        FRANCE_FILE.write_text(header + "\n".join(lines) + "\n", encoding="utf-8")
+        remaining = write_watchlist(entries)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"写入文件失败: {e}")
-    return {"message": f"已移除 {code}", "remaining": len(entries)}
+    return {"message": f"已移除 {code}", "remaining": remaining}
