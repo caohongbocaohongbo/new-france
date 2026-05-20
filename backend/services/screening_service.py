@@ -72,11 +72,14 @@ async def run_full_pipeline(
         zt_codes = zt_pool["代码"].tolist()
         logger.info(f"  涨停股池: {len(zt_codes)} 只")
         # 拉取涨停股的实时行情（获取量比、PE等补充字段）
-        zt_quotes = fetch_stock_quotes(zt_codes)
         zt_quote_map = {}
-        if not zt_quotes.empty:
-            for _, row in zt_quotes.iterrows():
-                zt_quote_map[row["代码"]] = row
+        try:
+            zt_quotes = fetch_stock_quotes(zt_codes)
+            if not zt_quotes.empty:
+                for _, row in zt_quotes.iterrows():
+                    zt_quote_map[row["代码"]] = row
+        except Exception as e:
+            logger.warning(f"  涨停股行情拉取失败(将使用基本信息): {e}")
         # 构建涨停股列表
         for _, zt in zt_pool.iterrows():
             code = zt["代码"]
