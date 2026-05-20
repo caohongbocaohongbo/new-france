@@ -24,13 +24,16 @@ WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周�
 
 def send_notification(scored_stocks, target_date: date,
                       index_gain: float = 0.0,
-                      report_path: str = "") -> bool:
+                      report_path: str = "",
+                      zt_list: list = None) -> bool:
     """发送邮件通知"""
     if not NOTIFY_CONFIG["email_enabled"]:
         logger.info("邮件通知未启用")
         return False
 
-    content = _build_email_content(scored_stocks, target_date, index_gain)
+    if zt_list is None:
+        zt_list = []
+    content = _build_email_content(scored_stocks, target_date, index_gain, zt_list)
     ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         content=content,
@@ -38,7 +41,7 @@ def send_notification(scored_stocks, target_date: date,
     return ok
 
 
-def _build_email_content(stocks, target_date, index_gain) -> str:
+def _build_email_content(stocks, target_date, index_gain, zt_list: list) -> str:
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -47,23 +50,46 @@ def _build_email_content(stocks, target_date, index_gain) -> str:
         from pathlib import Path
         france_file = Path(__file__).resolve().parent.parent.parent.parent / "data" / "france.md"
         if france_file.exists():
+            import re
             wl_lines = [l for l in france_file.read_text(encoding="utf-8").split("\n")
-                       if l.startswith("|") and l.count("|") >= 5]
+                       if re.match(r"\|\s*\d{6}\s*\|", l)]
             wl_total = len(wl_lines)
-            wl_today = sum(1 for l in wl_lines if date_str in l)
         else:
-            wl_total = wl_today = 0
+            wl_total = 0
     except Exception:
-        wl_total = wl_today = 0
+        wl_total = 0
 
     lines = [
         f"New France 涨停回撤战法 - {date_str} {weekday}",
         "=" * 40,
         f"上证指数涨幅: {index_gain:+.2f}%",
         f"监控股票总数: {wl_total} 只",
-        f"今日新增涨停: {wl_today} 只",
+        f"今日新增涨停: {len(zt_list)} 只",
         "",
     ]
+
+    # ---- 今日涨停股列表 ----
+    if zt_list:
+        lines.append("【今日涨停股列表】")
+        lines.append("")
+        for zt in zt_list:
+            mcap = zt.get('mcap', 0)
+            mcap_str = f"{mcap/1e8:.1f}亿" if mcap and mcap > 0 else "--"
+            fbt = zt.get('seal_time', 0)
+            fbt_str = f"{fbt//1000000:02d}:{(fbt%1000000)//10000:02d}" if fbt and fbt > 0 else "--"
+            lines.append(
+                f"  {zt['code']} {zt['name']}  "
+                f"现价:{zt.get('price',0):.2f}  "
+                f"涨幅:{zt.get('change_pct',0):+.2f}%  "
+                f"换手:{zt.get('turnover',0):.1f}%  "
+                f"量比:{zt.get('vol_ratio') or '--'}  "
+                f"PE:{zt.get('pe') or '--'}  "
+                f"市值:{mcap_str}  "
+                f"封板:{fbt_str}  "
+                f"炸板:{int(zt.get('break_count',0))}次  "
+                f"连板:{int(zt.get('consecutive',0))}天"
+            )
+        lines.append("")
 
     strong = [s for s in stocks if s.recommendation == "STRONG_BUY"]
     buy = [s for s in stocks if s.recommendation == "BUY"]
@@ -77,28 +103,31 @@ def _build_email_content(stocks, target_date, index_gain) -> str:
         lines.append("涨停股已加入监控列表，待回撤 3-10% 后进入筛选范围。")
         lines.append("")
     else:
-        for s in strong + buy:
-            stars = "\u2605" * min(4, max(1, int(s.adjusted_score / 25)))
-            level_cn = {"STRONG_BUY": "强烈买入", "BUY": "建议买入"}
-            pe = s.factor_scores.get("pe")
-            pe_str = ""
-            if pe:
-                pe_str = f" PE详情: {pe.detail}"
-            lines.append(f"[{level_cn.get(s.recommendation, s.recommendation)}] "
-                         f"{s.name}({s.code}) 得分:{s.adjusted_score:.0f} {stars}")
-            lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
-            lines.append(f"  评分详情:")
-            for key, r in s.factor_scores.items():
-                if key == "event_bonus":
-                    continue
-                mark = "\u2713" if r.passed else "\u2717"
-                lines.append(f"    {mark} {r.name}({r.weight*100:.0f}%): {r.detail}")
+        if strong:
+            lines.append(f"--- STRONG_BUY 强烈买入 ({len(strong)}只) ---")
+            lines.append("")
+            for s in strong:
+                _append_stock_detail(lines, s)
+            lines.append("")
+
+        if buy:
+            lines.append(f"--- BUY 建议买入 ({len(buy)}只) ---")
+            lines.append("")
+            for s in buy:
+                _append_stock_detail(lines, s)
+            lines.append("")
+
+        if watch:
+            lines.append(f"--- WATCH 观察 ({len(watch)}只) ---")
+            lines.append("")
+            for s in watch:
+                _append_stock_detail(lines, s)
             lines.append("")
 
     lines.append("-" * 40)
     lines.append("")
     lines.append("【查看完整数据】")
-    lines.append(f"前端页面: https://new-france.onrender.com")
+    lines.append("前端页面: https://new-france.onrender.com")
     lines.append("")
     lines.append("【策略说明】")
     lines.append("1. 每日15:10抓取涨停股池 → 加入监控列表")
@@ -106,6 +135,22 @@ def _build_email_content(stocks, target_date, index_gain) -> str:
     lines.append("3. 理财有风险，投资需谨慎，本结果仅供参考")
 
     return "\n".join(lines)
+
+
+def _append_stock_detail(lines, s):
+    """格式化单只推荐股票的详细信息"""
+    stars = "★" * min(4, max(1, int(s.adjusted_score / 25)))
+    level_cn = {"STRONG_BUY": "强烈买入", "BUY": "建议买入", "WATCH": "观察"}
+    lines.append(f"[{level_cn.get(s.recommendation, s.recommendation)}] "
+                 f"{s.name}({s.code}) 得分:{s.adjusted_score:.0f} {stars}")
+    lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
+    lines.append("  评分详情:")
+    for key, r in s.factor_scores.items():
+        if key == "event_bonus":
+            continue
+        mark = "✓" if r.passed else "✗"
+        lines.append(f"    {mark} {r.name}({r.weight*100:.0f}%): {r.detail}")
+    lines.append("")
 
 
 def _send_via_brevo(subject: str, content: str) -> tuple[bool, str]:
@@ -191,10 +236,8 @@ def _send_via_smtp(subject: str, content: str) -> tuple[bool, str]:
 
 def _send_email(subject: str, content: str) -> tuple[bool, str]:
     """发送邮件：Brevo HTTP API 优先 → SMTP 备选"""
-    # 如果配了 Brevo API Key，优先走 HTTP（Render 环境 SMTP 端口被封）
     if BREVO_API_KEY:
         return _send_via_brevo(subject, content)
-    # 否则走 SMTP（本地 crontab / GitHub Actions）
     return _send_via_smtp(subject, content)
 
 

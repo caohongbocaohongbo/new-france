@@ -3,14 +3,31 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
     ? 'http://localhost:8000/api/v1'
     : 'https://new-france-api.onrender.com/api/v1';
 
-// 带超时的 fetch（Render 冷启动可能 30s+，10s 超时直接走 fallback）
-function apiFetch(path, opts = {}) {
-    const controller = new AbortController();
-    const ms = opts.timeout || 10000;
+// 带超时和重试的 fetch（Render 免费层冷启动需要 30-60s）
+async function apiFetch(path, opts = {}) {
+    const ms = opts.timeout || 30000;  // 默认30s，覆盖Render冷启动
+    const maxRetries = opts.retries || 1;
     delete opts.timeout;
-    const timeout = setTimeout(() => controller.abort(), ms);
-    return fetch(`${API_BASE}${path}`, { ...opts, signal: controller.signal })
-        .finally(() => clearTimeout(timeout));
+    delete opts.retries;
+
+    let lastError;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        if (attempt > 0) {
+            // 重试前等待（指数退避）
+            await new Promise(r => setTimeout(r, Math.min(2000 * Math.pow(2, attempt - 1), 10000)));
+        }
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), ms);
+        try {
+            const resp = await fetch(`${API_BASE}${path}`, { ...opts, signal: controller.signal });
+            return resp;
+        } catch (e) {
+            lastError = e;
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+    throw lastError;
 }
 
 // 所有数据均来自后台API，无本地DEMO数据
@@ -180,14 +197,19 @@ async function loadDashboard() {
         }
 
     } catch(e) {
-        // API 不可用时显示真实空状态，不使用假数据
+        // API 不可用（可能是 Render 冷启动），提供重试
         document.getElementById('metricWatchlist').textContent = '--';
         document.getElementById('metricNewZT').textContent = '--';
         document.getElementById('metricRecs').textContent = '--';
         document.getElementById('metricIndex').textContent = '--';
-        document.getElementById('recentRecsBody').innerHTML = '<tr><td colspan="6" class="empty-cell" style="color:#e60012">API 连接失败，请检查后端服务</td></tr>';
+        document.getElementById('recentRecsBody').innerHTML =
+            '<tr><td colspan="6" class="empty-cell" style="color:#e60012">'
+            + 'API 连接失败，后端可能正在启动中（冷启动约30-60秒）<br>'
+            + '<button class="btn" onclick="refreshData()" style="margin-top:8px">点击重试</button>'
+            + '</td></tr>';
         document.getElementById('ztCount').textContent = '--';
-        document.getElementById('sectorDist').innerHTML = '<p style="color:#e60012;text-align:center;padding:20px">后端服务不可用</p>';
+        document.getElementById('sectorDist').innerHTML =
+            '<p style="color:#e60012;text-align:center;padding:20px">后端服务不可用</p>';
     }
 }
 
@@ -309,7 +331,10 @@ async function loadWatchlist(page = 1) {
         }
 
     } catch(e) {
-        document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="13" class="empty-cell" style="color:#e60012">API 连接失败，请检查后端服务</td></tr>';
+        document.getElementById('wlTableBody').innerHTML =
+            '<tr><td colspan="13" class="empty-cell" style="color:#e60012">'
+            + 'API 连接失败，后端可能正在启动中（冷启动约30-60秒）'
+            + ' <a href="#" onclick="refreshData();return false" style="color:#3B82F6">点击重试</a></td></tr>';
         document.getElementById('wlPagination').innerHTML = '';
     }
 }
@@ -375,7 +400,9 @@ async function loadRecommendations() {
                 <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value">0</div></div>
             </div>`;
     } catch(e) {
-        document.getElementById('recList').innerHTML = '<p class="empty-state" style="color:#e60012">API 连接失败，请检查后端服务</p>';
+        document.getElementById('recList').innerHTML =
+            '<p class="empty-state" style="color:#e60012">API 连接失败，后端可能正在启动中（冷启动约30-60秒）'
+            + ' <a href="#" onclick="refreshData();return false" style="color:#3B82F6">点击重试</a></p>';
         document.getElementById('recStats').innerHTML = '';
     }
 }
@@ -445,7 +472,7 @@ async function runScreening() {
 
     try {
         // Step 1: 启动后台筛选任务（立即返回，不阻塞）
-        const startResp = await apiFetch(`/screening/run?${params}`, { method: 'POST', timeout: 30000 });
+        const startResp = await apiFetch(`/screening/run?${params}`, { method: 'POST', timeout: 60000, retries: 2 });
         const startData = await startResp.json();
 
         if (startData.status !== 'started') {
@@ -569,7 +596,7 @@ async function manualRun() {
     btn.disabled = true;
     try {
         // 启动后台任务
-        const startResp = await apiFetch('/screening/run', { method: 'POST', timeout: 30000 });
+        const startResp = await apiFetch('/screening/run', { method: 'POST', timeout: 60000, retries: 2 });
         const startData = await startResp.json();
         if (startData.status !== 'started') throw new Error(startData.message || '启动失败');
 

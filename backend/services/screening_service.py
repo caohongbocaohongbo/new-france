@@ -60,15 +60,49 @@ async def run_full_pipeline(
 
     # 获取指数涨幅
     from ..agents.layer1_data_collector.sources.index_data import fetch_index_gain
+    from ..agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
+    from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
     index_gain = fetch_index_gain()
     logger.info(f"  上证指数涨幅: {index_gain:+.2f}%")
+
+    # 获取当日涨停股池
+    zt_pool = fetch_zt_pool()
+    zt_list = []  # 涨停股列表（用于邮件通知）
+    if zt_pool is not None and not zt_pool.empty:
+        zt_codes = zt_pool["代码"].tolist()
+        logger.info(f"  涨停股池: {len(zt_codes)} 只")
+        # 拉取涨停股的实时行情（获取量比、PE等补充字段）
+        zt_quotes = fetch_stock_quotes(zt_codes)
+        zt_quote_map = {}
+        if not zt_quotes.empty:
+            for _, row in zt_quotes.iterrows():
+                zt_quote_map[row["代码"]] = row
+        # 构建涨停股列表
+        for _, zt in zt_pool.iterrows():
+            code = zt["代码"]
+            q = zt_quote_map.get(code, {})
+            zt_list.append({
+                "code": code,
+                "name": zt["名称"],
+                "price": zt.get("最新价", 0) if not isinstance(q, dict) else zt["最新价"],
+                "change_pct": zt.get("涨跌幅", 0),
+                "turnover": q.get("换手率") if not isinstance(q, dict) else zt.get("换手率", 0),
+                "vol_ratio": q.get("量比") if not isinstance(q, dict) else None,
+                "pe": q.get("市盈率") if not isinstance(q, dict) else None,
+                "mcap": zt.get("流通市值", 0),
+                "seal_time": zt.get("封板时间", 0),
+                "break_count": zt.get("炸板次数", 0),
+                "consecutive": zt.get("连板数", 0),
+            })
+    else:
+        logger.info("  涨停股池: 无数据")
 
     # 读取监控列表
     watchlist = _read_watchlist()
     if not watchlist:
         return {
             "total_scored": 0, "strong_buy": 0, "buy": 0, "watch": 0,
-            "results": [], "index_gain": index_gain,
+            "results": [], "index_gain": index_gain, "zt_list": zt_list,
             "errors": ["监控列表为空，请先添加股票"],
         }
 
@@ -156,7 +190,8 @@ async def run_full_pipeline(
     # ---- Layer 3: 生成报告 ----
     logger.info("[Layer 3] 生成报告...")
     recom = RecommendationAgent()
-    summary = await recom.execute(scored, target_date, index_gain, dry_run=dry_run)
+    summary = await recom.execute(scored, target_date, index_gain,
+                                  zt_list=zt_list, dry_run=dry_run)
 
     # ---- 构建响应 ----
     results = []
@@ -188,6 +223,7 @@ async def run_full_pipeline(
     return {
         "date": target_date.strftime("%Y-%m-%d"),
         "index_gain": index_gain,
+        "zt_list": zt_list,
         "total_scored": summary["total_scored"],
         "strong_buy": summary["strong_buy"],
         "buy": summary["buy"],

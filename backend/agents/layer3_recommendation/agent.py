@@ -24,11 +24,14 @@ class RecommendationAgent:
 
     async def execute(self, scored_stocks: List[ScoredStock],
                       target_date: date, index_gain: float = 0.0,
+                      zt_list: list = None,
                       dry_run: bool = False) -> dict:
         """
         执行完整输出流程
         Returns: {report_path, html_path, notify_result, summary}
         """
+        if zt_list is None:
+            zt_list = []
         date_str = target_date.strftime("%Y-%m-%d")
         logger.info(f"RecommendationAgent: 开始输出 {date_str}...")
 
@@ -44,7 +47,8 @@ class RecommendationAgent:
         notify_ok = True
         if not dry_run:
             notify_ok = send_notification(scored_stocks, target_date,
-                                          index_gain, str(md_path))
+                                          index_gain, str(md_path),
+                                          zt_list=zt_list)
 
         # 4. 统计摘要
         summary = {
