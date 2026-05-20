@@ -79,4 +79,12 @@ NOTIFY_CONFIG = {
     "pushplus_enabled": False,
 }
 
+# ---- 邮件涨停列表排序配置 ----
+# sort_by: change_pct(涨幅) / turnover(换手) / vol_ratio(量比) / pe(PE) / mcap(流通市值) / seal_time(封板)
+# sort_order: asc / desc
+ZT_SORT_CONFIG = {
+    "sort_by": "seal_time",     # 默认按封板时间排序（最早封板在前）
+    "sort_order": "asc",
+}
+
 DATA_DIR = str(PROJECT_DIR := __import__("pathlib").Path(__file__).resolve().parent.parent / "data")

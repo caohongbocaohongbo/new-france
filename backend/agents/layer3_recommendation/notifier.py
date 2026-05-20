@@ -23,6 +23,73 @@ BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
 
 WEEKDAY_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
+# 涨停列表排序列名映射
+ZT_SORT_FIELDS = {
+    "change_pct": "change_pct",
+    "turnover": "turnover",
+    "vol_ratio": "vol_ratio",
+    "pe": "pe",
+    "mcap": "mcap",
+    "seal_time": "seal_time",
+}
+ZT_SORT_LABELS = {
+    "change_pct": "涨幅", "turnover": "换手", "vol_ratio": "量比",
+    "pe": "PE", "mcap": "流通市值", "seal_time": "封板",
+}
+
+
+def _get_zt_sort_config():
+    """读取涨停列表排序配置，默认按封板时间升序"""
+    try:
+        from config.strategy_params import ZT_SORT_CONFIG
+        sort_by = ZT_SORT_CONFIG.get("sort_by", "seal_time")
+        sort_order = ZT_SORT_CONFIG.get("sort_order", "asc")
+        if sort_by not in ZT_SORT_FIELDS:
+            sort_by = "seal_time"
+        if sort_order not in ("asc", "desc"):
+            sort_order = "asc"
+        return sort_by, sort_order
+    except Exception:
+        return "seal_time", "asc"
+
+
+def _sort_zt_list(zt_list: list, sort_by: str, sort_order: str) -> list:
+    """对涨停列表排序（None 值排到最后）"""
+    if not zt_list or sort_by not in ZT_SORT_FIELDS:
+        return zt_list
+
+    key_fn = {
+        "change_pct": lambda z: (z.get("change_pct") is None, z.get("change_pct") or 0),
+        "turnover": lambda z: (z.get("turnover") is None, z.get("turnover") or 0),
+        "vol_ratio": lambda z: (z.get("vol_ratio") is None, z.get("vol_ratio") or 0),
+        "pe": lambda z: (z.get("pe") is None, z.get("pe") or 0),
+        "mcap": lambda z: (z.get("mcap") is None, z.get("mcap") or 0),
+        "seal_time": lambda z: (z.get("seal_time") is None or z.get("seal_time") == 0,
+                                z.get("seal_time") or 999999),
+    }[sort_by]
+
+    reverse = sort_order == "desc"
+    return sorted(zt_list, key=key_fn, reverse=reverse)
+
+
+def _get_watchlist_count() -> int:
+    """获取监控列表真实条数（与前端 /watchlist/stats 一致，已去重）"""
+    try:
+        from pathlib import Path
+        import re
+        france_file = Path(__file__).resolve().parent.parent.parent.parent / "data" / "france.md"
+        if not france_file.exists():
+            return 0
+        content = france_file.read_text(encoding="utf-8")
+        entries = []
+        for line in content.splitlines():
+            m = re.match(r"\|\s*(\d{6})\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*\|", line)
+            if m:
+                entries.append(m.group(1))
+        return len(set(entries))  # 去重后条数
+    except Exception:
+        return 0
+
 
 def send_notification(scored_stocks, target_date: date,
                       index_gain: float = 0.0,
@@ -35,8 +102,16 @@ def send_notification(scored_stocks, target_date: date,
 
     if zt_list is None:
         zt_list = []
-    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list)
-    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list)
+
+    # 按配置排序涨停列表
+    sort_by, sort_order = _get_zt_sort_config()
+    zt_list = _sort_zt_list(zt_list, sort_by, sort_order)
+
+    # 监控列表条数（与前端一致）
+    wl_count = _get_watchlist_count()
+
+    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count)
+    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by)
     ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         text_content=text_content,
@@ -49,7 +124,7 @@ def send_notification(scored_stocks, target_date: date,
 # Plain-text content (fallback for email clients that don't render HTML)
 # ---------------------------------------------------------------------------
 
-def _build_text_content(stocks, target_date, index_gain, zt_list: list) -> str:
+def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0) -> str:
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -57,6 +132,7 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list) -> str:
         f"New France 涨停回撤战法 - {date_str} {weekday}",
         "=" * 40,
         f"上证指数涨幅: {index_gain:+.2f}%",
+        f"监控股票总数: {wl_count} 只",
         f"今日新增涨停: {len(zt_list)} 只",
         "",
     ]
@@ -125,7 +201,7 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list) -> str:
 # HTML content (primary — 带样式的表格)
 # ---------------------------------------------------------------------------
 
-def _build_html_content(stocks, target_date, index_gain, zt_list: list) -> str:
+def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time") -> str:
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -135,12 +211,12 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list) -> str:
 
     parts = [
         _html_head(),
-        _html_header(date_str, weekday, index_gain, len(zt_list)),
+        _html_header(date_str, weekday, index_gain, len(zt_list), wl_count),
     ]
 
     # 涨停股列表表格
     if zt_list:
-        parts.append(_html_zt_table(zt_list))
+        parts.append(_html_zt_table(zt_list, sort_by))
 
     # 筛选结果
     parts.append(_html_screening_summary(len(strong), len(buy), len(watch)))
@@ -172,7 +248,7 @@ def _html_head():
 <div style="max-width:800px;margin:0 auto;padding:24px">"""
 
 
-def _html_header(date_str, weekday, index_gain, zt_count):
+def _html_header(date_str, weekday, index_gain, zt_count, wl_count=0):
     gain_color = "#E74C3C" if index_gain > 0 else ("#27AE60" if index_gain < 0 else "#8B95A8")
     return f"""
 <div style="background:linear-gradient(135deg,#0A1628,#132238);border-radius:12px;padding:28px 32px;margin-bottom:24px">
@@ -186,6 +262,11 @@ def _html_header(date_str, weekday, index_gain, zt_count):
       </td>
       <td width="12"></td>
       <td style="padding:12px 20px;background:rgba(212,168,83,0.08);border-radius:8px;text-align:center">
+        <div style="color:#8B95A8;font-size:11px;margin-bottom:4px">监控总数</div>
+        <div style="color:#D4A853;font-size:24px;font-weight:700">{wl_count}<span style="font-size:14px;font-weight:400"> 只</span></div>
+      </td>
+      <td width="12"></td>
+      <td style="padding:12px 20px;background:rgba(212,168,83,0.08);border-radius:8px;text-align:center">
         <div style="color:#8B95A8;font-size:11px;margin-bottom:4px">今日涨停</div>
         <div style="color:#D4A853;font-size:24px;font-weight:700">{zt_count}<span style="font-size:14px;font-weight:400"> 只</span></div>
       </td>
@@ -194,11 +275,37 @@ def _html_header(date_str, weekday, index_gain, zt_count):
 </div>"""
 
 
-def _html_zt_table(zt_list):
-    """涨停股列表 — 表头深色底色 + 斑马纹"""
+def _html_zt_table(zt_list, sort_by="seal_time"):
+    """涨停股列表 — 表头深色底色 + 斑马纹 + 当前排序指示"""
     if not zt_list:
         return ""
 
+    # 列定义: (key, label, align)
+    columns = [
+        ("code", "代码", "left"),
+        ("name", "名称", "left"),
+        ("price", "现价", "right"),
+        ("change_pct", "涨幅", "right"),
+        ("turnover", "换手", "right"),
+        ("vol_ratio", "量比", "right"),
+        ("pe", "PE", "right"),
+        ("mcap", "流通市值", "right"),
+        ("seal_time", "封板", "center"),
+        ("break_count", "炸板", "center"),
+        ("consecutive", "连板", "center"),
+    ]
+
+    # 表头（当前排序列加箭头指示）
+    th_html = ""
+    for i, (key, label, align) in enumerate(columns):
+        radius_start = "border-radius:6px 0 0 0" if i == 0 else ""
+        radius_end = "border-radius:0 6px 0 0" if i == len(columns) - 1 else ""
+        arrow = ""
+        if key == sort_by:
+            arrow = " &#9650;"  # ▲ 升序指示
+        th_html += f'<th style="padding:10px;text-align:{align};font-weight:600;{radius_start}{radius_end}">{label}{arrow}</th>\n'
+
+    # 数据行
     rows_html = ""
     for i, zt in enumerate(zt_list):
         bg = "#FAFBFC" if i % 2 == 0 else "#FFFFFF"
@@ -223,23 +330,16 @@ def _html_zt_table(zt_list):
       <td style="padding:8px 10px;text-align:center;font-size:12px">{int(zt.get('consecutive',0))}</td>
     </tr>"""
 
+    # 当前排序字段中文名
+    sort_label = ZT_SORT_LABELS.get(sort_by, "封板")
+
     return f"""
 <div style="background:#FFFFFF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
-  <h2 style="color:#0A1628;font-size:16px;margin:0 0 16px 0;font-weight:600">今日涨停股列表 <span style="color:#8B95A8;font-weight:400;font-size:13px">({len(zt_list)}只)</span></h2>
+  <h2 style="color:#0A1628;font-size:16px;margin:0 0 4px 0;font-weight:600">今日涨停股列表 <span style="color:#8B95A8;font-weight:400;font-size:13px">({len(zt_list)}只)</span></h2>
+  <p style="color:#8B95A8;font-size:11px;margin:0 0 14px 0">排序: {sort_label} &#9650; 升序</p>
   <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:13px">
     <thead>
-      <tr style="background:#0A1628;color:#D4A853">
-        <th style="padding:10px;text-align:left;font-weight:600;border-radius:6px 0 0 0">代码</th>
-        <th style="padding:10px;text-align:left;font-weight:600">名称</th>
-        <th style="padding:10px;text-align:right;font-weight:600">现价</th>
-        <th style="padding:10px;text-align:right;font-weight:600">涨幅</th>
-        <th style="padding:10px;text-align:right;font-weight:600">换手</th>
-        <th style="padding:10px;text-align:right;font-weight:600">量比</th>
-        <th style="padding:10px;text-align:right;font-weight:600">PE</th>
-        <th style="padding:10px;text-align:right;font-weight:600">流通市值</th>
-        <th style="padding:10px;text-align:center;font-weight:600">封板</th>
-        <th style="padding:10px;text-align:center;font-weight:600">炸板</th>
-        <th style="padding:10px;text-align:center;font-weight:600;border-radius:0 6px 0 0">连板</th>
+      <tr style="background:#0A1628;color:#D4A853">{th_html}
       </tr>
     </thead>
     <tbody>{rows_html}
