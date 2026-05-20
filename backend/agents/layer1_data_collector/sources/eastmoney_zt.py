@@ -59,8 +59,12 @@ def fetch_zt_pool() -> Optional[pd.DataFrame]:
             for item in pool:
                 code = str(item.get("c", "")).zfill(6)
                 name = str(item.get("n", ""))
-                price = float(item.get("p", 0)) / 100  # 分 → 元
+                price = float(item.get("p", 0)) / 1000  # push2ex API: p 需 /1000 得元
                 if price <= 0:
+                    continue
+                # 价格合理性校验：A股正常区间 1-10000 元
+                if price < 1 or price > 10000:
+                    logger.warning(f"  异常价格跳过: {code} {name} price={price}")
                     continue
                 fbt_val = int(item.get("fbt", 0))
                 zbc_val = int(item.get("zbc", 0))
