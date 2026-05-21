@@ -143,8 +143,12 @@ async def run_full_pipeline(
             continue
 
         drop_pct = (current_price - e["ref_price"]) / e["ref_price"] * 100
-        abs_drop = abs(drop_pct)
 
+        # 回撤必须是价格低于参考价（drop_pct < 0），价格上涨的跳过
+        if drop_pct >= 0:
+            continue
+
+        abs_drop = abs(drop_pct)
         if abs_drop < drop_min or abs_drop > drop_max:
             continue
 
