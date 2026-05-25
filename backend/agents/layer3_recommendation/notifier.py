@@ -94,7 +94,8 @@ def _get_watchlist_count() -> int:
 def send_notification(scored_stocks, target_date: date,
                       index_gain: float = 0.0,
                       report_path: str = "",
-                      zt_list: list = None) -> bool:
+                      zt_list: list = None,
+                      audit_results: dict = None) -> bool:
     """发送邮件通知"""
     if not NOTIFY_CONFIG["email_enabled"]:
         logger.info("邮件通知未启用")
@@ -102,6 +103,8 @@ def send_notification(scored_stocks, target_date: date,
 
     if zt_list is None:
         zt_list = []
+    if audit_results is None:
+        audit_results = {}
 
     # 按配置排序涨停列表
     sort_by, sort_order = _get_zt_sort_config()
@@ -110,8 +113,8 @@ def send_notification(scored_stocks, target_date: date,
     # 监控列表条数（与前端一致）
     wl_count = _get_watchlist_count()
 
-    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count)
-    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by)
+    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results)
+    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results)
     ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         text_content=text_content,
@@ -124,7 +127,9 @@ def send_notification(scored_stocks, target_date: date,
 # Plain-text content (fallback for email clients that don't render HTML)
 # ---------------------------------------------------------------------------
 
-def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0) -> str:
+def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None) -> str:
+    if audit_results is None:
+        audit_results = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -160,6 +165,8 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
     watch = [s for s in stocks if s.recommendation == "WATCH"]
 
     lines.append(f"【今日筛选结果】STRONG_BUY {len(strong)} | BUY {len(buy)} | WATCH {len(watch)}")
+    if audit_results.get("stocks"):
+        lines.append(f"审核通过率: {audit_results.get('pass_rate', 100):.0f}% | 降级: {audit_results.get('downgraded', 0)} 只")
     lines.append("")
 
     if not stocks:
@@ -171,10 +178,19 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
             lines.append(f"--- {label} ({len(level_stocks)}只) ---")
             lines.append("")
             for s in level_stocks:
+                # 查审核结果
+                audit_info = {}
+                for a in audit_results.get("stocks", []):
+                    if a.get("code") == s.code:
+                        audit_info = a
+                        break
+
                 stars = "★" * min(4, max(1, int(s.adjusted_score / 25)))
                 level_cn = {"STRONG_BUY": "强烈买入", "BUY": "建议买入", "WATCH": "观察"}
                 lines.append(f"[{level_cn.get(s.recommendation, s.recommendation)}] "
                              f"{s.name}({s.code}) 得分:{s.adjusted_score:.0f} {stars}")
+                if audit_info.get("downgraded"):
+                    lines.append(f"  ⚠ 审核降级: {audit_info['original_rec']} → {audit_info['adjusted_rec']}")
                 lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
                 lines.append("  评分详情:")
                 for key, r in s.factor_scores.items():
@@ -201,7 +217,9 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
 # HTML content (primary — 带样式的表格)
 # ---------------------------------------------------------------------------
 
-def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time") -> str:
+def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None) -> str:
+    if audit_results is None:
+        audit_results = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -219,7 +237,7 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
         parts.append(_html_zt_table(zt_list, sort_by))
 
     # 筛选结果
-    parts.append(_html_screening_summary(len(strong), len(buy), len(watch)))
+    parts.append(_html_screening_summary(len(strong), len(buy), len(watch), audit_results))
 
     if not stocks:
         parts.append('<p style="color:#8B95A8;">今日无符合条件的回撤买入信号。</p>')
@@ -231,7 +249,7 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
         ]:
             if not level_stocks:
                 continue
-            parts.append(_html_recommendation_section(level_stocks, label, color))
+            parts.append(_html_recommendation_section(level_stocks, label, color, audit_results))
 
     parts.append(_html_footer())
     return "\n".join(parts)
@@ -348,12 +366,15 @@ def _html_zt_table(zt_list, sort_by="seal_time"):
 </div>"""
 
 
-def _html_screening_summary(strong, buy, watch):
+def _html_screening_summary(strong, buy, watch, audit_results=None):
     total = strong + buy + watch
+    pass_rate = audit_results.get("pass_rate", 100) if audit_results else 100
+    downgraded = audit_results.get("downgraded", 0) if audit_results else 0
     cards = [
         ("STRONG BUY", strong, "#E74C3C"),
         ("BUY", buy, "#F39C12"),
         ("WATCH", watch, "#3498DB"),
+        ("审核通过", f"{pass_rate:.0f}%", "#27AE60" if pass_rate >= 80 else "#E74C3C"),
     ]
     cards_html = ""
     for label, count, color in cards:
@@ -373,7 +394,7 @@ def _html_screening_summary(strong, buy, watch):
 </div>"""
 
 
-def _html_recommendation_section(level_stocks, label, color):
+def _html_recommendation_section(level_stocks, label, color, audit_results=None):
     items_html = ""
     for s in level_stocks:
         stars = "★" * min(4, max(1, int(s.adjusted_score / 25)))
@@ -388,6 +409,12 @@ def _html_recommendation_section(level_stocks, label, color):
                 f'title="{r.name}: {r.detail} ({r.score:.1f}/10)"></span>'
             )
         drop_color = "#E74C3C" if s.drop_pct < 0 else "#27AE60"
+        # 审核降级标记
+        downgrade_html = ""
+        for a in (audit_results.get("stocks", []) if audit_results else []):
+            if a.get("code") == s.code and a.get("downgraded"):
+                downgrade_html = f'<div style="color:#E74C3C;font-size:11px;margin-top:4px">⚠ 审核降级: {a["original_rec"]} → {a["adjusted_rec"]} (失败{a.get("fail_count",0)}项)</div>'
+                break
         items_html += f"""
     <div style="background:#FAFBFC;border-radius:8px;padding:16px;margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -407,6 +434,7 @@ def _html_recommendation_section(level_stocks, label, color):
         参考价:{s.ref_price:.2f} &nbsp;|&nbsp;
         排名:#{s.rank}
       </div>
+      {downgrade_html}
       <div style="margin-top:4px">{factors_html}</div>
     </div>"""
 

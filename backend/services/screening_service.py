@@ -132,6 +132,9 @@ async def run_full_pipeline(
     for _, row in quotes.iterrows():
         quote_map[row["代码"]] = row
 
+    # 计算每只股票的30天涨停频率
+    from .watchlist_store import count_zt_30days
+
     candidates = []
     for e in watchlist:
         code = e["code"]
@@ -169,6 +172,26 @@ async def run_full_pipeline(
             if not (mc_min <= mc_yi <= mc_max):
                 continue
 
+        # 从 watchlist 读取当日封板数据，不再硬编码为0
+        seal_time_raw = e.get("seal_time", "0")
+        try:
+            seal_time = int(seal_time_raw)
+        except (ValueError, TypeError):
+            seal_time = 0
+        break_count_raw = e.get("break_count", e.get("炸板次数", "0"))
+        try:
+            break_count = int(break_count_raw)
+        except (ValueError, TypeError):
+            break_count = 0
+        zt_count_raw = e.get("zt_count", "0")
+        try:
+            zt_count_stored = int(zt_count_raw)
+        except (ValueError, TypeError):
+            zt_count_stored = 0
+
+        # 30天涨停频率：优先使用存储值，否则动态计算
+        zt_frequency = zt_count_stored if zt_count_stored > 0 else count_zt_30days(code)
+
         candidates.append({
             "code": code,
             "name": e["name"],
@@ -182,9 +205,10 @@ async def run_full_pipeline(
             "量比": q["量比"],
             "总市值": q["总市值"],
             "流通市值": q["流通市值"],
-            "封板时间": 0,
-            "炸板次数": 0,
-            "涨停频率": 0,
+            "封板时间": seal_time,
+            "炸板次数": break_count,
+            "涨停频率": zt_frequency,
+            "added_date": e.get("added_date", e["zt_date"]),
         })
 
     logger.info(f"  回撤检测 + 快速筛选后: {len(candidates)} 只候选")
@@ -194,11 +218,34 @@ async def run_full_pipeline(
     engine = SignalEngineAgent()
     scored = engine.evaluate(candidates, quotes, historical, index_gain, event_map)
 
+    # ---- Layer 2.5: 数据审核 ----
+    logger.info("[Audit] 数据审核...")
+    from ..agents.layer4_audit import AuditAgent
+    auditor = AuditAgent(strict_mode=True)
+    audit_results = auditor.audit_batch(scored, historical)
+
+    # 应用审核降级
+    audit_map = {}
+    for ar in audit_results["stocks"]:
+        audit_map[ar["code"]] = ar
+    for s in scored:
+        ar = audit_map.get(s.code)
+        if ar and ar["downgraded"]:
+            old_rec = s.recommendation
+            s.recommendation = ar["adjusted_rec"]
+            # 降级后重新计算得分上限
+            if old_rec == "STRONG_BUY" and s.recommendation == "BUY":
+                s.adjusted_score = min(s.adjusted_score, 69.0)
+            elif old_rec == "BUY" and s.recommendation == "WATCH":
+                s.adjusted_score = min(s.adjusted_score, 54.0)
+            logger.info(f"  降级: {s.name}({s.code}) {old_rec} → {s.recommendation}")
+
     # ---- Layer 3: 生成报告 ----
     logger.info("[Layer 3] 生成报告...")
     recom = RecommendationAgent()
     summary = await recom.execute(scored, target_date, index_gain,
-                                  zt_list=zt_list, dry_run=dry_run)
+                                  zt_list=zt_list, dry_run=dry_run,
+                                  audit_results=audit_results)
 
     # ---- 构建响应 ----
     results = []

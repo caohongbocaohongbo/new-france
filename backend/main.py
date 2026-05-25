@@ -162,19 +162,46 @@ async def _run_daily_pipeline(args, logger):
     for _, row in zt_pool.iterrows():
         code = str(row["代码"]).strip().zfill(6)
         if code in existing_codes:
+            # 更新已存在记录的封板时间和连板数（同一天多次涨停）
             continue
         name = str(row["名称"]).strip()
         price = float(row["最新价"])
         if price <= 0:
             continue
-        new_entries.append({"code": code, "name": name, "zt_date": today_str, "ref_price": price})
+        fbt = str(row.get("封板时间", 0))
+        zbc = str(row.get("炸板次数", 0))
+        lbc = str(row.get("连板数", 0))
+        new_entries.append({
+            "code": code, "name": name,
+            "zt_date": today_str, "ref_price": price,
+            "added_date": today_str,
+            "seal_time": fbt,
+            "zt_count": "0",  # 新加入时涨停次数为0，后续由统计更新
+            "consecutive": lbc,
+        })
         existing_codes.add(code)
 
     if new_entries:
-        write_watchlist(existing_entries + new_entries, france_file)
+        all_entries = existing_entries + new_entries
+    else:
+        all_entries = existing_entries
+
+    # 更新所有监控股的30天涨停频率统计
+    from .services.watchlist_store import count_zt_30days
+    zt_count_updated = 0
+    for entry in all_entries:
+        freq = count_zt_30days(entry["code"])
+        if int(entry.get("zt_count", "0")) != freq:
+            entry["zt_count"] = str(freq)
+            zt_count_updated += 1
+
+    write_watchlist(all_entries, france_file)
+    if new_entries:
         logger.info(f"  新增 {len(new_entries)} 只监控股票")
     else:
         logger.info("  无新增（全部已监控）")
+    if zt_count_updated:
+        logger.info(f"  更新 {zt_count_updated} 只涨停频率统计")
 
     # 3. 执行完整筛选流水线
     logger.info("[Step 3] 执行筛选流水线...")

@@ -81,6 +81,43 @@ def _parse_response(data: dict) -> list:
     return rows
 
 
+def fetch_single_quote_verified(code: str) -> dict:
+    """对单只股票做交叉验证：东方财富 + 新浪备用源对比价格"""
+    result = {"code": code, "price_eastmoney": None, "price_sina": None,
+              "verified": False, "discrepancy": None}
+
+    # 东方财富源
+    try:
+        df = fetch_stock_quotes([code])
+        if not df.empty:
+            result["price_eastmoney"] = float(df.iloc[0]["最新价"])
+    except Exception:
+        pass
+
+    # 新浪备用源
+    try:
+        import requests
+        prefix = "sh" if code.startswith(("6", "9")) else "sz"
+        url = "https://hq.sinajs.cn/list=" + prefix + code
+        headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.encoding = "gbk"
+        parts = resp.text.split(",")
+        if len(parts) > 3:
+            result["price_sina"] = float(parts[3])
+    except Exception:
+        pass
+
+    # 交叉验证
+    if result["price_eastmoney"] and result["price_sina"]:
+        diff = abs(result["price_eastmoney"] - result["price_sina"])
+        pct = diff / result["price_eastmoney"] * 100
+        result["discrepancy"] = round(pct, 4)
+        result["verified"] = pct < 1.0  # 差异 < 1% 视为验证通过
+
+    return result
+
+
 def fetch_stock_quotes(codes: List[str]) -> pd.DataFrame:
     """批量查询指定股票的实时行情（自动分批，单批失败不影响其他批）"""
     if not codes:

@@ -67,6 +67,7 @@ class DataCollectorAgent:
                                        days: int = 60) -> Dict[str, pd.DataFrame]:
         """批量拉取历史K线（并发，限制 8 并发避免被封）"""
         result = {}
+        failed = []
 
         async def _fetch_one(sym):
             try:
@@ -74,19 +75,40 @@ class DataCollectorAgent:
                     hist = await asyncio.to_thread(fetch_historical, sym, days)
                 if hist is not None and not hist.empty:
                     result[sym] = hist
+                else:
+                    failed.append(sym)
             except Exception as e:
                 logger.debug(f"  {sym} 历史数据失败: {e}")
+                failed.append(sym)
 
         await asyncio.gather(*(_fetch_one(s) for s in symbols))
+        total = len(symbols)
+        success = len(result)
+        if total > 0:
+            logger.info(f"  历史K线: {success}/{total} 成功 ({success/total*100:.0f}%)"
+                        f"{'，失败: '+','.join(failed[:5])+('...' if len(failed)>5 else '') if failed else ''}")
         return result
 
     def _safe_fetch(self, label: str, fn, pack: RawDataPack, **kwargs):
-        try:
-            result = fn(**kwargs)
-            logger.info(f"  {label} 获取成功")
-            return result
-        except Exception as e:
-            msg = f"{label} 获取失败: {e}"
-            logger.warning(f"  {msg}")
-            pack.errors.append(msg)
-            return None
+        max_retries = 3
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                result = fn(**kwargs)
+                if attempt > 0:
+                    logger.info(f"  {label} 第{attempt+1}次重试成功")
+                else:
+                    logger.info(f"  {label} 获取成功")
+                return result
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    import asyncio
+                    wait = (attempt + 1) * 2  # 渐进等待: 2s, 4s
+                    logger.warning(f"  {label} 第{attempt+1}次失败: {e}, {wait}s后重试...")
+                    import time
+                    time.sleep(wait)
+        msg = f"{label} 获取失败({max_retries}次): {last_error}"
+        logger.warning(f"  {msg}")
+        pack.errors.append(msg)
+        return None

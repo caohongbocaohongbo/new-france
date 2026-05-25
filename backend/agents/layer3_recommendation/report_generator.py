@@ -6,9 +6,31 @@ from pathlib import Path
 from typing import List
 
 
+def _format_seal_time(zt_quality: dict) -> str:
+    """格式化封板时间"""
+    fbt = zt_quality.get("封板时间", 0) if zt_quality else 0
+    if not fbt or fbt == 0:
+        return "--"
+    hours = fbt // 10000
+    mins = (fbt % 10000) // 100
+    return f"{hours:02d}:{mins:02d}"
+
+
+def _get_audit_info(audit_results: dict, code: str) -> dict:
+    """获取某只股票的审核信息"""
+    for s in audit_results.get("stocks", []):
+        if s.get("code") == code:
+            return s
+    return {}
+
+
 def generate_markdown_report(stocks, target_date: date,
-                              index_gain: float, output_path: Path):
+                              index_gain: float, output_path: Path,
+                              audit_results: dict = None):
     """生成每日 Markdown 报告"""
+    if audit_results is None:
+        audit_results = {}
+
     date_str = target_date.strftime("%Y-%m-%d")
     lines = [
         f"# New France 尾盘涨停推荐报告",
@@ -35,6 +57,14 @@ def generate_markdown_report(stocks, target_date: date,
         "",
     ])
 
+    # 审核概览
+    if audit_results.get("stocks"):
+        lines.extend([
+            f"| 审核通过率 | {audit_results.get('pass_rate', 100):.0f}% |",
+            f"| 审核降级 | {audit_results.get('downgraded', 0)} 只 |",
+            "",
+        ])
+
     # 推荐详情
     for level_name, level_stocks in [
         ("STRONG_BUY 强烈买入", strong),
@@ -46,7 +76,16 @@ def generate_markdown_report(stocks, target_date: date,
         lines.append(f"## {level_name}")
         lines.append("")
         for s in level_stocks:
+            audit_info = _get_audit_info(audit_results, s.code)
+            # 提取因子中的 zt_quality 获取封板时间
+            ztq = s.factor_scores.get("zt_quality", None)
+            seal_time_str = _format_seal_time({"封板时间": s.extra.get("封板时间", 0)} if hasattr(s, "extra") and s.extra else {})
+
+            # 基本指标
             lines.append(f"### #{s.rank} {s.name}({s.code}) — {s.adjusted_score:.0f}分")
+            if audit_info.get("downgraded"):
+                lines.append(f"> ⚠️ 审核降级: {audit_info['original_rec']} → {audit_info['adjusted_rec']} "
+                             f"(失败{audit_info.get('fail_count',0)}项)")
             lines.append("")
             lines.append(f"| 指标 | 值 |")
             lines.append(f"|------|-----|")
@@ -54,6 +93,7 @@ def generate_markdown_report(stocks, target_date: date,
             lines.append(f"| 涨停日期 | {s.zt_date} |")
             lines.append(f"| 参考价 | {s.ref_price:.2f} |")
             lines.append(f"| 现价 | {s.current_price:.2f} |")
+            lines.append(f"| 数据可信度 | {audit_info.get('pass_count', '--')}/{audit_info.get('pass_count', 0) + audit_info.get('warn_count', 0) + audit_info.get('fail_count', 0)} 项通过 |")
 
             lines.append("")
             lines.append("**因子评分**:")
@@ -67,13 +107,20 @@ def generate_markdown_report(stocks, target_date: date,
             lines.append("---")
             lines.append("")
 
+    # 审核报告
+    if audit_results.get("summary_md"):
+        lines.append(audit_results["summary_md"])
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def generate_html_report(stocks, target_date: date,
-                          index_gain: float, output_path: Path) -> str:
+                          index_gain: float, output_path: Path,
+                          audit_results: dict = None) -> str:
     """生成 HTML 报告（前端展示用）"""
+    if audit_results is None:
+        audit_results = {}
     date_str = target_date.strftime("%Y-%m-%d")
 
     rows_html = ""
@@ -141,6 +188,7 @@ tr:hover td{{background:rgba(212,168,83,0.05)}}
     <div class="stat-card"><div class="stat-value">{sum(1 for s in stocks if s.recommendation=="STRONG_BUY")}</div><div class="stat-label">STRONG BUY</div></div>
     <div class="stat-card"><div class="stat-value">{sum(1 for s in stocks if s.recommendation=="BUY")}</div><div class="stat-label">BUY</div></div>
     <div class="stat-card"><div class="stat-value">{sum(1 for s in stocks if s.recommendation=="WATCH")}</div><div class="stat-label">WATCH</div></div>
+    <div class="stat-card"><div class="stat-value">{audit_results.get('pass_rate', 100):.0f}%</div><div class="stat-label">审核通过率</div></div>
 </div>
 <table>
 <thead><tr><th>#</th><th>代码</th><th>名称</th><th>评级</th><th>得分</th><th>回撤</th><th>推荐</th><th>因子</th></tr></thead>

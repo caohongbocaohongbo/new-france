@@ -292,7 +292,7 @@ async function loadWatchlist(page = 1) {
     updateWatchlistSortHeaders();
 
     // 重置为空状态
-    document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="13" class="empty-cell">加载中...</td></tr>';
+    document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="15" class="empty-cell">加载中...</td></tr>';
     document.getElementById('wlCountAll').textContent = '0';
     document.getElementById('wlCountActive').textContent = '0';
     document.getElementById('wlCountRec').textContent = '0';
@@ -315,7 +315,7 @@ async function loadWatchlist(page = 1) {
             renderWatchlistTable(data.items);
             renderPagination('wlPagination', data.total, data.page, data.size, loadWatchlist);
         } else {
-            document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="13" class="empty-cell">暂无监控数据。每日15:10自动从涨停股池添加。</td></tr>';
+            document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="15" class="empty-cell">暂无监控数据。每日15:10自动从涨停股池添加。</td></tr>';
             document.getElementById('wlPagination').innerHTML = '';
         }
 
@@ -332,7 +332,7 @@ async function loadWatchlist(page = 1) {
 
     } catch(e) {
         document.getElementById('wlTableBody').innerHTML =
-            '<tr><td colspan="13" class="empty-cell" style="color:#e60012">'
+            '<tr><td colspan="15" class="empty-cell" style="color:#e60012">'
             + 'API 连接失败，后端可能正在启动中（冷启动约30-60秒）'
             + ' <a href="#" onclick="refreshData();return false" style="color:#3B82F6">点击重试</a></td></tr>';
         document.getElementById('wlPagination').innerHTML = '';
@@ -345,6 +345,11 @@ function renderWatchlistTable(items) {
         const cp = item.current_price || item.ref_price;
         const dp = item.drop_pct != null ? item.drop_pct : 0;
         const dpColor = dp < 0 ? (Math.abs(dp) >= 5 ? '#e60012' : '#F39C12') : '#009966';
+        // 封板时间格式化
+        const sealTime = item.seal_time && item.seal_time !== '0' && item.seal_time !== 0
+            ? (() => { const s = String(item.seal_time); const h = parseInt(s.substring(0, s.length-4)||'0'); const m = parseInt(s.substring(s.length-4, s.length-2)||'0'); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; })()
+            : '--';
+        const ztCount = item.zt_count && item.zt_count !== '0' ? item.zt_count : '--';
         return `<tr>
             <td><input type="checkbox"></td>
             <td><span class="stock-code">${item.code}</span></td>
@@ -356,6 +361,8 @@ function renderWatchlistTable(items) {
             <td>${item.turnover||'--'}%</td>
             <td>${item.vol_ratio||'--'}</td>
             <td>${item.pe||'--'}</td>
+            <td style="font-size:12px">${sealTime}</td>
+            <td style="font-size:12px">${ztCount}</td>
             <td>${item.mcap||'--'}</td>
             <td><span class="tag tag-${item.status||'active'}">${tags[item.status]||'回撤中'}</span></td>
             <td><button class="btn" onclick="removeWatchlistItem('${item.code}')" style="padding:4px 8px;font-size:11px">移除</button></td>

@@ -25,30 +25,36 @@ class RecommendationAgent:
     async def execute(self, scored_stocks: List[ScoredStock],
                       target_date: date, index_gain: float = 0.0,
                       zt_list: list = None,
-                      dry_run: bool = False) -> dict:
+                      dry_run: bool = False,
+                      audit_results: dict = None) -> dict:
         """
         执行完整输出流程
         Returns: {report_path, html_path, notify_result, summary}
         """
         if zt_list is None:
             zt_list = []
+        if audit_results is None:
+            audit_results = {}
         date_str = target_date.strftime("%Y-%m-%d")
         logger.info(f"RecommendationAgent: 开始输出 {date_str}...")
 
         # 1. 生成 Markdown 报告
         md_path = self._ensure_path(REPORTS_DIR / f"{date_str}.md")
-        generate_markdown_report(scored_stocks, target_date, index_gain, md_path)
+        generate_markdown_report(scored_stocks, target_date, index_gain, md_path,
+                                 audit_results=audit_results)
 
         # 2. 生成 HTML 报告
         html_path = self._ensure_path(REPORTS_DIR / f"{date_str}.html")
-        generate_html_report(scored_stocks, target_date, index_gain, html_path)
+        generate_html_report(scored_stocks, target_date, index_gain, html_path,
+                             audit_results=audit_results)
 
         # 3. 发送邮件（无论有无推荐都发）
         notify_ok = True
         if not dry_run:
             notify_ok = send_notification(scored_stocks, target_date,
                                           index_gain, str(md_path),
-                                          zt_list=zt_list)
+                                          zt_list=zt_list,
+                                          audit_results=audit_results)
 
         # 4. 统计摘要
         summary = {
