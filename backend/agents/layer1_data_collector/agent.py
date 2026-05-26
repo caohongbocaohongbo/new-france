@@ -70,10 +70,20 @@ class DataCollectorAgent:
             if is_available():
                 ts_df = ts_quotes(codes)
                 if not ts_df.empty:
-                    logger.info(f"  Tushare 实时行情: {len(ts_df)} 只")
+                    ts_codes = set(ts_df["代码"].tolist()) if "代码" in ts_df.columns else set()
+                    missing = [c for c in codes if c not in ts_codes]
+                    if missing:
+                        logger.warning(f"  Tushare 仅返回 {len(ts_codes)}/{len(codes)} 只，{len(missing)}只降级到东方财富")
+                        # 降级：对缺失的股票用东方财富补全
+                        fallback = fetch_stock_quotes(missing)
+                        if not fallback.empty:
+                            ts_df = pd.concat([ts_df, fallback], ignore_index=True)
+                            logger.info(f"  合并后行情: {len(ts_df)} 只 (Tushare+东方财富)")
+                    else:
+                        logger.info(f"  Tushare 实时行情: {len(ts_df)} 只")
                     return ts_df
         except Exception as e:
-            logger.debug(f"  Tushare 行情异常: {e}")
+            logger.warning(f"  Tushare 行情异常(降级到东方财富): {e}")
 
         # 2. 降级到东方财富
         df = fetch_stock_quotes(codes)
@@ -100,7 +110,7 @@ class DataCollectorAgent:
                         return result
                     symbols = missing  # 只对缺失的降级
         except Exception as e:
-            logger.debug(f"  Tushare 历史K线异常: {e}")
+            logger.warning(f"  Tushare 历史K线异常(降级到东方财富): {e}")
 
         # 2. 降级到东方财富（单只并发）
         failed = []

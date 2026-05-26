@@ -209,23 +209,40 @@ async def run_full_pipeline(
     for _, row in quotes.iterrows():
         quote_map[row["代码"]] = row
 
-    # 构建降级价格映射：当实时行情失败时，从历史K线和涨停池提取最新价格
+    # 构建降级价格映射：当实时行情失败时，优先使用涨停池(今日实时)，其次历史K线
     price_fallback = {}  # code -> {"最新价": float, "source": str}
+
+    def _safe_fallback_price(val) -> float:
+        """清洗价格：过滤 NaN / None / 非正数"""
+        try:
+            v = float(val)
+        except (TypeError, ValueError):
+            return 0.0
+        if v != v or v <= 0:  # NaN != NaN 为 True
+            return 0.0
+        return v
+
+    # 第一步：涨停池(今日实时数据，最优)
+    if zt_pool is not None and not zt_pool.empty:
+        for _, zt in zt_pool.iterrows():
+            code = zt["代码"]
+            price = _safe_fallback_price(zt.get("最新价", 0))
+            if price > 0:
+                price_fallback[code] = {"最新价": price, "source": "zt_pool"}
+
+    # 第二步：历史K线收盘价(兜底)
     for code, hist in historical.items():
+        if code in price_fallback:
+            continue
         if hist is not None and not hist.empty:
             close_col = "收盘" if "收盘" in hist.columns else ("close" if "close" in hist.columns else None)
             if close_col:
                 try:
-                    last_close = float(hist.iloc[-1][close_col])
+                    last_close = _safe_fallback_price(hist.iloc[-1][close_col])
                     if last_close > 0:
                         price_fallback[code] = {"最新价": last_close, "source": "historical"}
                 except (TypeError, ValueError, IndexError):
                     pass
-    if zt_pool is not None and not zt_pool.empty:
-        for _, zt in zt_pool.iterrows():
-            code = zt["代码"]
-            if code not in price_fallback:
-                price_fallback[code] = {"最新价": zt["最新价"], "source": "zt_pool"}
 
     fallback_used = 0
 

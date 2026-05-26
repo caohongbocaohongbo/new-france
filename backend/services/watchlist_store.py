@@ -8,22 +8,42 @@ FRANCE_FILE = PROJECT_DIR / "data" / "france.md"
 
 WATCHLIST_HEADER = (
     "# 涨停监控列表\n\n"
-    "| 代码 | 名称 | 涨停日期 | 参考价 | 加入时间 | 封板时间 | 涨停次数 | 连板数 |\n"
-    "|------|------|----------|--------|----------|----------|----------|--------|\n"
+    "| 代码 | 名称 | 涨停日期 | 参考价 | 加入时间 | 封板时间 | 炸板次数 | 涨停次数 | 连板数 |\n"
+    "|------|------|----------|--------|----------|----------|----------|----------|--------|\n"
 )
 
 # 默认值（旧格式兼容）
 DEFAULTS = {
     "added_date": "",
     "seal_time": "0",
+    "break_count": "0",
     "zt_count": "0",
     "consecutive": "0",
 }
 
 
 def _parse_line(line: str) -> Optional[Dict]:
-    """解析单行，兼容旧格式(4列)和新格式(8列)"""
-    # 新格式：8列
+    """解析单行，兼容旧格式(4列)、8列、和9列(含炸板次数)"""
+    # 9列格式：含炸板次数
+    match = re.match(
+        r"\|\s*(\d{6})\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*\|"
+        r"\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|",
+        line,
+    )
+    if match:
+        return {
+            "code": match.group(1),
+            "name": match.group(2).strip(),
+            "zt_date": match.group(3),
+            "ref_price": float(match.group(4)),
+            "added_date": match.group(5).strip() or match.group(3),
+            "seal_time": match.group(6).strip() or "0",
+            "break_count": match.group(7).strip() or "0",
+            "zt_count": match.group(8).strip() or "0",
+            "consecutive": match.group(9).strip() or "0",
+        }
+
+    # 8列格式兼容：无炸板次数
     match = re.match(
         r"\|\s*(\d{6})\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([\d.]+)\s*\|"
         r"\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|",
@@ -37,6 +57,7 @@ def _parse_line(line: str) -> Optional[Dict]:
             "ref_price": float(match.group(4)),
             "added_date": match.group(5).strip() or match.group(3),
             "seal_time": match.group(6).strip() or "0",
+            "break_count": "0",
             "zt_count": match.group(7).strip() or "0",
             "consecutive": match.group(8).strip() or "0",
         }
@@ -54,6 +75,7 @@ def _parse_line(line: str) -> Optional[Dict]:
             "ref_price": float(match.group(4)),
             "added_date": match.group(3),
             "seal_time": "0",
+            "break_count": "0",
             "zt_count": "0",
             "consecutive": "0",
         }
@@ -105,6 +127,7 @@ def write_watchlist(entries: List[Dict], path: Path = FRANCE_FILE) -> int:
         f"| {entry['code']} | {entry['name']} | {entry['zt_date']} | {entry['ref_price']:.2f} | "
         f"{entry.get('added_date', entry['zt_date'])} | "
         f"{entry.get('seal_time', '0')} | "
+        f"{entry.get('break_count', '0')} | "
         f"{entry.get('zt_count', '0')} | "
         f"{entry.get('consecutive', '0')} |"
         for entry in unique
@@ -142,8 +165,8 @@ def normalize_watchlist_file(path: Path = FRANCE_FILE) -> Tuple[List[Dict], int]
 
     unique, duplicate_count = dedupe_watchlist_entries(entries)
 
-    # 检查是否需要升级格式（旧格式4列 → 新格式8列）
-    needs_upgrade = "| 加入时间" not in content
+    # 检查是否需要升级格式（旧格式4/8列 → 新格式9列）
+    needs_upgrade = "| 炸板次数" not in content
 
     if duplicate_count or needs_upgrade:
         write_watchlist(unique, path)

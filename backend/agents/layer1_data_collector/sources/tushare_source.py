@@ -56,7 +56,11 @@ def fetch_quotes(codes: List[str]) -> pd.DataFrame:
         return pd.DataFrame()
 
     try:
-        ts_codes = [f"{code}.{'SH' if code.startswith(('6', '9')) else 'SZ'}" for code in codes]
+        def _ts_market(c):
+            if c.startswith('8'): return 'BJ'
+            if c.startswith(('6', '9')): return 'SH'
+            return 'SZ'
+        ts_codes = [f"{code}.{_ts_market(code)}" for code in codes]
         today = datetime.now(BEIJING_TZ).strftime("%Y%m%d")
 
         df = pro.daily_basic(
@@ -68,22 +72,47 @@ def fetch_quotes(codes: List[str]) -> pd.DataFrame:
             logger.debug("Tushare 实时行情返回空数据")
             return pd.DataFrame()
 
+        # 补充股票名称（stock_basic 缓存）
+        codes_in_df = [ts_code.split(".")[0] for ts_code in df["ts_code"].tolist()]
+        name_map = {}
+        try:
+            basic = pro.stock_basic(exchange="", list_status="L", fields="ts_code,name")
+            if basic is not None and not basic.empty:
+                for _, r in basic.iterrows():
+                    c = str(r["ts_code"]).split(".")[0]
+                    name_map[c] = str(r.get("name", ""))
+        except Exception:
+            pass
+
         rows = []
         for _, row in df.iterrows():
             ts_code = str(row["ts_code"])
             code = ts_code.split(".")[0]
+
+            # PE: 优先 pe_ttm，但0.0也是合法值（不能用 or 短路）
+            pe_ttm_val = row.get("pe_ttm")
+            pe_val = row.get("pe")
+            if pd.notna(pe_ttm_val):
+                pe = float(pe_ttm_val)
+            elif pd.notna(pe_val):
+                pe = float(pe_val)
+            else:
+                pe = None
+
             rows.append({
                 "代码": code,
-                "名称": "",  # Tushare daily_basic 不含名称，需从 stock_basic 补充
+                "名称": name_map.get(code, ""),
                 "最新价": float(row["close"]) if pd.notna(row["close"]) else None,
-                "涨跌幅": None,
+                "涨跌幅": None,  # daily_basic 不含涨跌幅，由调用方用东方财富补全
                 "换手率": float(row["turnover_rate"]) if pd.notna(row["turnover_rate"]) else None,
-                "市盈率": float(row["pe_ttm"] or row["pe"]) if pd.notna(row.get("pe_ttm") or row.get("pe")) else None,
+                "市盈率": pe,
                 "量比": float(row["volume_ratio"]) if pd.notna(row["volume_ratio"]) else None,
                 "总市值": float(row["total_mv"]) if pd.notna(row["total_mv"]) else None,
                 "流通市值": float(row["circ_mv"]) if pd.notna(row["circ_mv"]) else None,
                 "source": "tushare",
             })
+
+        return pd.DataFrame(rows)
 
         return pd.DataFrame(rows)
     except Exception as e:
@@ -101,7 +130,11 @@ def fetch_historical(codes: List[str], days: int = 60) -> Dict[str, pd.DataFrame
         return {}
 
     try:
-        ts_codes = [f"{code}.{'SH' if code.startswith(('6', '9')) else 'SZ'}" for code in codes]
+        def _ts_market(c):
+            if c.startswith('8'): return 'BJ'
+            if c.startswith(('6', '9')): return 'SH'
+            return 'SZ'
+        ts_codes = [f"{code}.{_ts_market(code)}" for code in codes]
         end_date = datetime.now(BEIJING_TZ).strftime("%Y%m%d")
         start_date = (datetime.now(BEIJING_TZ) - timedelta(days=days + 10)).strftime("%Y%m%d")
 

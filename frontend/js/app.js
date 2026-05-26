@@ -386,7 +386,7 @@ let _detailCharts = {};
 function showStockDetail(code) {
     const modal = document.getElementById('stockDetailModal');
     if (!modal) return;
-    modal.style.display = 'flex';
+    modal.classList.add('open');
     document.getElementById('modalStockName').textContent = '加载中...';
     document.getElementById('modalStockCode').textContent = code;
     document.getElementById('modalMeta').innerHTML = '';
@@ -402,7 +402,7 @@ function showStockDetail(code) {
 
 function closeStockDetail() {
     const modal = document.getElementById('stockDetailModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.remove('open');
     // 销毁所有图表实例释放内存
     Object.values(_detailCharts).forEach(c => { try { c.dispose(); } catch(e) {} });
     _detailCharts = {};
@@ -428,8 +428,8 @@ function renderStockDetail(data) {
     document.getElementById('modalStockName').textContent = data.name;
     document.getElementById('modalStockCode').textContent = data.code;
     const dp = data.drop_pct;
-    const dpClass = dp !== null && dp < 0 ? 'down' : 'up';
-    const dpVal = dp !== null ? `${dp.toFixed(2)}%` : '--';
+    const dpClass = dp != null && dp < 0 ? 'down' : 'up';
+    const dpVal = dp != null ? `${dp.toFixed(2)}%` : '--';
     document.getElementById('modalMeta').innerHTML =
         `<span>涨停日期: <b class="val">${data.zt_date}</b></span>` +
         `<span>参考价: <b class="val">${data.ref_price.toFixed(2)}</b></span>` +

@@ -213,6 +213,8 @@ async def get_stock_detail(code: str):
 
     # ---- 1. 基础信息 ----
     ref_price = stock["ref_price"]
+    if ref_price <= 0:
+        raise HTTPException(status_code=400, detail=f"参考价异常({ref_price})，请检查监控列表数据")
     zt_date = stock["zt_date"]
 
     # ---- 2. 拉取历史K线（60日）----
@@ -227,16 +229,16 @@ async def get_stock_detail(code: str):
             ts_result = ts_hist([code], days=60)
             if code in ts_result:
                 hist_df = ts_result[code]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"  Tushare历史K线失败: {e}")
 
     # 降级到东方财富
     if hist_df is None:
         try:
             from ..agents.layer1_data_collector.sources.historical_kline import fetch_historical
             hist_df = fetch_historical(code, 60)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"  东方财富历史K线失败: {e}")
 
     # 拉取实时行情
     try:
@@ -246,16 +248,16 @@ async def get_stock_detail(code: str):
             q = quotes.iloc[0]
             current_price = float(q.get("最新价", 0)) if q.get("最新价") else None
             current_change_pct = float(q.get("涨跌幅", 0)) if q.get("涨跌幅") else None
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"  实时行情获取失败: {e}")
 
     # 降级：从K线最后一条取收盘价
     if current_price is None and hist_df is not None and not hist_df.empty:
         close_col = "收盘" if "收盘" in hist_df.columns else "close"
         try:
             current_price = float(hist_df.iloc[-1][close_col])
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"  K线收盘价提取失败: {e}")
 
     # ---- 3. 构建图表数据序列 ----
     dates = []

@@ -178,6 +178,7 @@ async def _run_daily_pipeline(args, logger):
                         entry["seal_time"] = fbt
                         updated_entries += 1
                     entry["consecutive"] = lbc
+                    entry["break_count"] = zbc  # 炸板次数
                     # 更新为今日涨停的最新参考价和涨停日期
                     entry["ref_price"] = price
                     entry["zt_date"] = today_str
@@ -189,6 +190,7 @@ async def _run_daily_pipeline(args, logger):
             "zt_date": today_str, "ref_price": price,
             "added_date": today_str,
             "seal_time": fbt,
+            "break_count": zbc,
             "zt_count": "0",
             "consecutive": lbc,
         })
