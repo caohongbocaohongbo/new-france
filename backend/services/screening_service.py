@@ -121,6 +121,30 @@ async def run_full_pipeline(
     zt_pool = fetch_zt_pool()
     zt_list = []  # 涨停股列表（用于邮件通知）
     zt_meta = zt_pool.attrs.get("source_meta", {}) if zt_pool is not None else {}
+
+    # 交叉验证：Tushare 涨停数据（如已配置 TOKEN）
+    try:
+        from ..agents.layer1_data_collector.sources.tushare_source import fetch_zt_pool as ts_zt, is_available
+        if is_available() and zt_pool is not None and not zt_pool.empty:
+            ts_pool = ts_zt(target_date)
+            if ts_pool is not None and not ts_pool.empty:
+                em_codes = set(zt_pool["代码"].tolist())
+                ts_codes = set(ts_pool["代码"].tolist())
+                overlap = em_codes & ts_codes
+                em_only = em_codes - ts_codes
+                ts_only = ts_codes - em_codes
+                if em_only or ts_only:
+                    logger.warning(f"  涨停池交叉验证差异: 重合{len(overlap)}只, "
+                                   f"仅东方财富{len(em_only)}只, 仅Tushare{len(ts_only)}只")
+                zt_meta["cross_check"] = {
+                    "tushare_count": len(ts_codes),
+                    "overlap": len(overlap),
+                    "eastmoney_only": list(em_only)[:10],
+                    "tushare_only": list(ts_only)[:10],
+                }
+    except Exception as e:
+        logger.debug(f"  Tushare 交叉验证跳过: {e}")
+
     if zt_pool is not None and not zt_pool.empty:
         zt_codes = zt_pool["代码"].tolist()
         logger.info(f"  涨停股池: {len(zt_codes)} 只")
@@ -185,15 +209,41 @@ async def run_full_pipeline(
     for _, row in quotes.iterrows():
         quote_map[row["代码"]] = row
 
+    # 构建降级价格映射：当实时行情失败时，从历史K线和涨停池提取最新价格
+    price_fallback = {}  # code -> {"最新价": float, "source": str}
+    for code, hist in historical.items():
+        if hist is not None and not hist.empty:
+            close_col = "收盘" if "收盘" in hist.columns else ("close" if "close" in hist.columns else None)
+            if close_col:
+                try:
+                    last_close = float(hist.iloc[-1][close_col])
+                    if last_close > 0:
+                        price_fallback[code] = {"最新价": last_close, "source": "historical"}
+                except (TypeError, ValueError, IndexError):
+                    pass
+    if zt_pool is not None and not zt_pool.empty:
+        for _, zt in zt_pool.iterrows():
+            code = zt["代码"]
+            if code not in price_fallback:
+                price_fallback[code] = {"最新价": zt["最新价"], "source": "zt_pool"}
+
+    fallback_used = 0
+
     # 计算每只股票的30天涨停频率
     from .watchlist_store import count_zt_30days
 
     candidates = []
     for e in watchlist:
         code = e["code"]
-        if code not in quote_map:
-            continue
-        q = quote_map[code]
+        q = quote_map.get(code)
+        if q is None:
+            # 降级：从历史K线或涨停池获取价格
+            fb = price_fallback.get(code)
+            if fb is None or fb["最新价"] <= 0:
+                continue
+            q = fb
+            fallback_used += 1
+
         current_price = q["最新价"]
         if current_price is None or current_price <= 0:
             continue
@@ -252,12 +302,12 @@ async def run_full_pipeline(
             "ref_price": e["ref_price"],
             "current_price": current_price,
             "drop_pct": round(drop_pct, 2),
-            "涨跌幅": q["涨跌幅"],
-            "换手率": q["换手率"],
-            "市盈率": q["市盈率"],
-            "量比": q["量比"],
-            "总市值": q["总市值"],
-            "流通市值": q["流通市值"],
+            "涨跌幅": q.get("涨跌幅"),
+            "换手率": q.get("换手率"),
+            "市盈率": q.get("市盈率"),
+            "量比": q.get("量比"),
+            "总市值": q.get("总市值"),
+            "流通市值": q.get("流通市值"),
             "封板时间": seal_time,
             "炸板次数": break_count,
             "涨停频率": zt_frequency,
@@ -271,6 +321,8 @@ async def run_full_pipeline(
             ),
         })
 
+    if fallback_used > 0:
+        logger.warning(f"  实时行情缺失 {fallback_used} 只，已用历史K线/涨停池价格降级")
     logger.info(f"  回撤检测 + 快速筛选后: {len(candidates)} 只候选")
 
     # ---- Layer 2: 多因子评分 ----

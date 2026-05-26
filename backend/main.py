@@ -159,11 +159,9 @@ async def _run_daily_pipeline(args, logger):
     existing_codes = {entry["code"] for entry in existing_entries}
 
     new_entries = []
+    updated_entries = 0  # 已存在但更新了当天涨停数据的记录数
     for _, row in zt_pool.iterrows():
         code = str(row["代码"]).strip().zfill(6)
-        if code in existing_codes:
-            # 更新已存在记录的封板时间和连板数（同一天多次涨停）
-            continue
         name = str(row["名称"]).strip()
         price = float(row["最新价"])
         if price <= 0:
@@ -171,16 +169,33 @@ async def _run_daily_pipeline(args, logger):
         fbt = str(row.get("封板时间", 0))
         zbc = str(row.get("炸板次数", 0))
         lbc = str(row.get("连板数", 0))
+
+        if code in existing_codes:
+            # 更新已存在记录的封板时间/炸板次数/连板数（同一天多次涨停）
+            for entry in existing_entries:
+                if entry["code"] == code:
+                    if entry.get("seal_time") in (None, "0", 0) and fbt not in (None, "0", 0):
+                        entry["seal_time"] = fbt
+                        updated_entries += 1
+                    entry["consecutive"] = lbc
+                    # 更新为今日涨停的最新参考价和涨停日期
+                    entry["ref_price"] = price
+                    entry["zt_date"] = today_str
+                    break
+            continue
+
         new_entries.append({
             "code": code, "name": name,
             "zt_date": today_str, "ref_price": price,
             "added_date": today_str,
             "seal_time": fbt,
-            "zt_count": "0",  # 新加入时涨停次数为0，后续由统计更新
+            "zt_count": "0",
             "consecutive": lbc,
         })
         existing_codes.add(code)
 
+    if updated_entries:
+        logger.info(f"  更新 {updated_entries} 只已有监控股的封板时间")
     if new_entries:
         all_entries = existing_entries + new_entries
     else:
@@ -206,7 +221,15 @@ async def _run_daily_pipeline(args, logger):
     # 3. 执行完整筛选流水线
     logger.info("[Step 3] 执行筛选流水线...")
     from .services.screening_service import run_full_pipeline
+    import json
     result = await run_full_pipeline(target_date=today, dry_run=args.dry_run)
+
+    # 写入 latest.json（CLI 模式也需要更新，供前端轮询）
+    reports_dir = PROJECT_DIR / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    (reports_dir / "latest.json").write_text(
+        json.dumps({"status": "completed", "date": today_str, **result}, ensure_ascii=False, indent=2),
+        encoding="utf-8")
 
     logger.info(f"  结果: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}, WATCH={result['watch']}")
     if result.get("errors"):

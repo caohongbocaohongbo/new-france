@@ -76,7 +76,7 @@ class SignalEngineAgent:
                 if scored.adjusted_score >= self.scorer.thresholds["watch"]:
                     results.append(scored)
             except Exception as e:
-                logger.debug(f"  {code} 评分异常: {e}")
+                logger.error(f"  {code} {c.get('name', '')} 评分异常(已跳过该股): {type(e).__name__}: {e}")
 
         ranked = self.scorer.rank(results)
         logger.info(f"SignalEngine: {len(results)} 只进入推荐池 (WATCH及以上)")
