@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 import logging
+import pandas as pd
 
 from ..services.watchlist_store import parse_watchlist, write_watchlist
 
@@ -197,3 +198,161 @@ async def remove_from_watchlist(code: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"写入文件失败: {e}")
     return {"message": f"已移除 {code}", "remaining": remaining}
+
+
+@router.get("/{code}/detail")
+async def get_stock_detail(code: str):
+    """获取单只股票的详细数据（K线走势 + 回撤序列 + 均线 + 成交量）
+
+    返回 ECharts 可直接消费的数据格式。
+    """
+    entries = _parse_watchlist()
+    stock = next((e for e in entries if e["code"] == code), None)
+    if stock is None:
+        raise HTTPException(status_code=404, detail=f"监控列表中未找到 {code}")
+
+    # ---- 1. 基础信息 ----
+    ref_price = stock["ref_price"]
+    zt_date = stock["zt_date"]
+
+    # ---- 2. 拉取历史K线（60日）----
+    hist_df = None
+    current_price = None
+    current_change_pct = None
+
+    # 尝试 Tushare（主数据源）
+    try:
+        from ..agents.layer1_data_collector.sources.tushare_source import fetch_historical as ts_hist, is_available
+        if is_available():
+            ts_result = ts_hist([code], days=60)
+            if code in ts_result:
+                hist_df = ts_result[code]
+    except Exception:
+        pass
+
+    # 降级到东方财富
+    if hist_df is None:
+        try:
+            from ..agents.layer1_data_collector.sources.historical_kline import fetch_historical
+            hist_df = fetch_historical(code, 60)
+        except Exception:
+            pass
+
+    # 拉取实时行情
+    try:
+        from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
+        quotes = fetch_stock_quotes([code])
+        if not quotes.empty:
+            q = quotes.iloc[0]
+            current_price = float(q.get("最新价", 0)) if q.get("最新价") else None
+            current_change_pct = float(q.get("涨跌幅", 0)) if q.get("涨跌幅") else None
+    except Exception:
+        pass
+
+    # 降级：从K线最后一条取收盘价
+    if current_price is None and hist_df is not None and not hist_df.empty:
+        close_col = "收盘" if "收盘" in hist_df.columns else "close"
+        try:
+            current_price = float(hist_df.iloc[-1][close_col])
+        except Exception:
+            pass
+
+    # ---- 3. 构建图表数据序列 ----
+    dates = []
+    closes = []
+    volumes = []
+    changes = []
+    drawdowns = []
+    ma5 = []
+    ma10 = []
+    ma20 = []
+    ma60 = []
+
+    if hist_df is not None and not hist_df.empty:
+        date_col = "日期" if "日期" in hist_df.columns else "date"
+        close_col = "收盘" if "收盘" in hist_df.columns else "close"
+        vol_col = "成交量" if "成交量" in hist_df.columns else "vol"
+        pct_col = "涨跌幅" if "涨跌幅" in hist_df.columns else "pct_chg"
+
+        if date_col in hist_df.columns and close_col in hist_df.columns:
+            data_rows = hist_df[[date_col, close_col]].copy()
+            if vol_col in hist_df.columns:
+                data_rows[vol_col] = hist_df[vol_col]
+            if pct_col in hist_df.columns:
+                data_rows[pct_col] = hist_df[pct_col]
+
+            for _, row in data_rows.iterrows():
+                day = str(row[date_col])[:10]
+                close = float(row[close_col]) if pd.notna(row[close_col]) else 0
+                vol = float(row.get(vol_col, 0)) if vol_col in row.index and pd.notna(row.get(vol_col, 0)) else 0
+                chg = float(row.get(pct_col, 0)) if pct_col in row.index and pd.notna(row.get(pct_col, 0)) else 0
+
+                if close <= 0:
+                    continue
+
+                dates.append(day)
+                closes.append(round(close, 2))
+                volumes.append(int(vol))
+                changes.append(round(chg, 2))
+                drawdowns.append(round((close - ref_price) / ref_price * 100, 2))
+
+            # 计算均线
+            if len(closes) >= 5:
+                for i in range(len(closes)):
+                    ma5.append(round(sum(closes[max(0, i - 4):i + 1]) / min(i + 1, 5), 2))
+            if len(closes) >= 10:
+                for i in range(len(closes)):
+                    ma10.append(round(sum(closes[max(0, i - 9):i + 1]) / min(i + 1, 10), 2))
+            if len(closes) >= 20:
+                for i in range(len(closes)):
+                    ma20.append(round(sum(closes[max(0, i - 19):i + 1]) / min(i + 1, 20), 2))
+            if len(closes) >= 60:
+                for i in range(len(closes)):
+                    ma60.append(round(sum(closes[max(0, i - 59):i + 1]) / min(i + 1, 60), 2))
+
+    # 回撤分布统计
+    drawdown_distribution = {}
+    if drawdowns:
+        buckets = [("≤-10%", -100, -10), ("-10%~-5%", -10, -5), ("-5%~-3%", -5, -3),
+                   ("-3%~0%", -3, 0), ("0%~+5%", 0, 5), ("+5%+", 5, 1000)]
+        for label, lo, hi in buckets:
+            count = sum(1 for d in drawdowns if lo <= d < hi)
+            if count > 0:
+                drawdown_distribution[label] = count
+
+    # 添加今日价格到序列
+    if current_price and current_price > 0:
+        from datetime import datetime, timezone, timedelta
+        today_str = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+        if not dates or dates[-1] < today_str:
+            dates.append(today_str)
+            closes.append(round(current_price, 2))
+            changes.append(round(current_change_pct or 0, 2))
+            volumes.append(0)
+            dd = round((current_price - ref_price) / ref_price * 100, 2)
+            drawdowns.append(dd)
+
+    return {
+        "code": code,
+        "name": stock["name"],
+        "zt_date": zt_date,
+        "ref_price": ref_price,
+        "current_price": current_price,
+        "drop_pct": round((current_price - ref_price) / ref_price * 100, 2) if current_price and current_price > 0 else None,
+        "seal_time": stock.get("seal_time", "0"),
+        "consecutive": stock.get("consecutive", "0"),
+        "added_date": stock.get("added_date", stock.get("zt_date", "")),
+        # 图表数据
+        "chart_data": {
+            "dates": dates,
+            "closes": closes,
+            "volumes": volumes,
+            "changes": changes,
+            "drawdowns": drawdowns,
+            "ma5": ma5,
+            "ma10": ma10,
+            "ma20": ma20,
+            "ma60": ma60,
+            "drawdown_distribution": drawdown_distribution,
+        },
+    }

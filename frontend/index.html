@@ -247,6 +247,53 @@
     </section>
 </main>
 
+<!-- Stock Detail Modal -->
+<div id="stockDetailModal" class="modal-overlay" onclick="if(event.target===this)closeStockDetail()">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <h2 id="modalStockName">--</h2>
+                <span class="stock-code" id="modalStockCode">--</span>
+                <span class="tag tag-active" id="modalStatus">--</span>
+            </div>
+            <div class="modal-header-meta" id="modalMeta"></div>
+            <button class="modal-close" onclick="closeStockDetail()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><line x1="4" y1="4" x2="16" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="4" x2="4" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="chart-row full">
+                <div class="chart-panel">
+                    <div class="chart-title">价格走势 + 回撤幅度</div>
+                    <div id="chartPrice" class="chart-box"></div>
+                </div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-panel">
+                    <div class="chart-title">成交量趋势</div>
+                    <div id="chartVolume" class="chart-box chart-box-sm"></div>
+                </div>
+                <div class="chart-panel">
+                    <div class="chart-title">均线系统 (MA5/MA10/MA20/MA60)</div>
+                    <div id="chartMA" class="chart-box chart-box-sm"></div>
+                </div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-panel">
+                    <div class="chart-title">价格涨跌幅</div>
+                    <div id="chartChange" class="chart-box chart-box-sm"></div>
+                </div>
+                <div class="chart-panel">
+                    <div class="chart-title">回撤分布统计</div>
+                    <div id="chartDrawdownDist" class="chart-box chart-box-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

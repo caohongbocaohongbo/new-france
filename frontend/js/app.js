@@ -365,7 +365,10 @@ function renderWatchlistTable(items) {
             <td style="font-size:12px">${ztCount}</td>
             <td>${item.mcap||'--'}</td>
             <td><span class="tag tag-${item.status||'active'}">${tags[item.status]||'回撤中'}</span></td>
-            <td><button class="btn" onclick="removeWatchlistItem('${item.code}')" style="padding:4px 8px;font-size:11px">移除</button></td>
+            <td style="white-space:nowrap">
+                <button class="btn btn-sm" style="margin-right:4px" onclick="event.stopPropagation();showStockDetail('${item.code}')">详情</button>
+                <button class="btn btn-sm" onclick="removeWatchlistItem('${item.code}')">移除</button>
+            </td>
         </tr>`;
     }).join('');
 }
@@ -376,6 +379,222 @@ async function removeWatchlistItem(code) {
     loadWatchlist(wlCurrentPage);
 }
 function exportWatchlist() { alert('导出功能开发中'); }
+
+// ---- Stock Detail Modal ----
+let _detailCharts = {};
+
+function showStockDetail(code) {
+    const modal = document.getElementById('stockDetailModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.getElementById('modalStockName').textContent = '加载中...';
+    document.getElementById('modalStockCode').textContent = code;
+    document.getElementById('modalMeta').innerHTML = '';
+
+    // 标记所有图表为加载中
+    ['chartPrice','chartVolume','chartMA','chartChange','chartDrawdownDist'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('loading');
+    });
+
+    loadStockDetailData(code);
+}
+
+function closeStockDetail() {
+    const modal = document.getElementById('stockDetailModal');
+    if (modal) modal.style.display = 'none';
+    // 销毁所有图表实例释放内存
+    Object.values(_detailCharts).forEach(c => { try { c.dispose(); } catch(e) {} });
+    _detailCharts = {};
+}
+
+async function loadStockDetailData(code) {
+    try {
+        const resp = await apiFetch(`/watchlist/${code}/detail`, { timeout: 120000 });
+        const data = await resp.json();
+        if (resp.status === 404) {
+            document.getElementById('modalStockName').textContent = '未找到该股票';
+            return;
+        }
+        renderStockDetail(data);
+    } catch (e) {
+        document.getElementById('modalStockName').textContent = '数据加载失败';
+        console.error('Stock detail error:', e);
+    }
+}
+
+function renderStockDetail(data) {
+    // 标题区
+    document.getElementById('modalStockName').textContent = data.name;
+    document.getElementById('modalStockCode').textContent = data.code;
+    const dp = data.drop_pct;
+    const dpClass = dp !== null && dp < 0 ? 'down' : 'up';
+    const dpVal = dp !== null ? `${dp.toFixed(2)}%` : '--';
+    document.getElementById('modalMeta').innerHTML =
+        `<span>涨停日期: <b class="val">${data.zt_date}</b></span>` +
+        `<span>参考价: <b class="val">${data.ref_price.toFixed(2)}</b></span>` +
+        `<span>现价: <b class="val">${data.current_price ? data.current_price.toFixed(2) : '--'}</b></span>` +
+        `<span>回撤: <b class="val ${dpClass}">${dpVal}</b></span>` +
+        `<span>封板时间: <b class="val">${formatSealTimeForDetail(data.seal_time)}</b></span>` +
+        `<span>连板数: <b class="val">${data.consecutive || '--'}</b></span>` +
+        `<span>加入时间: <b class="val">${data.added_date || '--'}</b></span>`;
+
+    const cd = data.chart_data;
+    if (!cd || !cd.dates || cd.dates.length === 0) {
+        document.getElementById('chartPrice').innerHTML = '<p style="color:#64748B;text-align:center;padding:60px 0">暂无K线数据</p>';
+        return;
+    }
+
+    // 清除loading状态
+    ['chartPrice','chartVolume','chartMA','chartChange','chartDrawdownDist'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('loading');
+    });
+
+    // 销毁旧图表
+    Object.values(_detailCharts).forEach(c => { try { c.dispose(); } catch(e) {} });
+    _detailCharts = {};
+
+    const darkTheme = getEChartsDarkTheme();
+
+    // 1. 价格走势 + 回撤双轴图
+    _detailCharts.price = echarts.init(document.getElementById('chartPrice'), darkTheme);
+    _detailCharts.price.setOption({
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross', crossStyle: { color: '#64748B' } },
+            backgroundColor: 'rgba(15,23,42,0.95)',
+            borderColor: '#1E293B',
+            textStyle: { color: '#F8FAFC', fontSize: 12 }
+        },
+        legend: { data: ['收盘价','回撤%','参考价'], bottom: 0, textStyle: { color: '#94A3B8', fontSize: 11 } },
+        grid: { left: 60, right: 60, top: 20, bottom: 40 },
+        xAxis: {
+            type: 'category', data: cd.dates,
+            axisLine: { lineStyle: { color: '#1E293B' } },
+            axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 },
+        },
+        yAxis: [
+            {
+                type: 'value', name: '价格(元)',
+                nameTextStyle: { color: '#94A3B8', fontSize: 11 },
+                axisLabel: { color: '#64748B', fontSize: 10 },
+                splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } },
+            },
+            {
+                type: 'value', name: '回撤(%)',
+                nameTextStyle: { color: '#94A3B8', fontSize: 11 },
+                axisLabel: { color: '#64748B', fontSize: 10 },
+                splitLine: { show: false },
+            }
+        ],
+        series: [
+            {
+                name: '收盘价', type: 'line', data: cd.closes,
+                smooth: true, symbol: 'none',
+                lineStyle: { color: '#3B82F6', width: 2 },
+                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [{offset:0,color:'rgba(59,130,246,0.15)'},{offset:1,color:'rgba(59,130,246,0)'}] } },
+            },
+            {
+                name: '参考价', type: 'line', yAxisIndex: 0,
+                markLine: { silent: true, symbol: 'none',
+                    lineStyle: { color: '#F59E0B', type: 'dashed', width: 1.5 },
+                    label: { formatter: `参考价 {c}`, color: '#F59E0B', fontSize: 11 },
+                    data: [{ yAxis: data.ref_price }] },
+                data: []
+            },
+            {
+                name: '回撤%', type: 'line', yAxisIndex: 1, data: cd.drawdowns,
+                smooth: true, symbol: 'none',
+                lineStyle: { color: '#EF4444', width: 1.5, type: 'dashed' },
+                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [{offset:0,color:'rgba(239,68,68,0.1)'},{offset:1,color:'rgba(239,68,68,0)'}] } },
+            }
+        ]
+    });
+
+    // 2. 成交量图
+    _detailCharts.volume = echarts.init(document.getElementById('chartVolume'), darkTheme);
+    _detailCharts.volume.setOption({
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
+        grid: { left: 50, right: 16, top: 16, bottom: 30 },
+        xAxis: { type: 'category', data: cd.dates, axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 } },
+        yAxis: { type: 'value', name: '手', axisLabel: { color: '#64748B', fontSize: 10, formatter: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e4 ? (v/1e4).toFixed(0)+'万' : v }, splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } } },
+        series: [{ type: 'bar', data: cd.volumes,
+            itemStyle: { color: params => cd.changes && cd.changes[params.dataIndex] >= 0 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.5)' } }]
+    });
+
+    // 3. 均线图
+    _detailCharts.ma = echarts.init(document.getElementById('chartMA'), darkTheme);
+    const maSeries = [
+        { name: '收盘价', type: 'line', data: cd.closes, smooth: true, symbol: 'none', lineStyle: { color: '#64748B', width: 1, type: 'dotted' } }
+    ];
+    const maColors = { 'MA5': '#F59E0B', 'MA10': '#3B82F6', 'MA20': '#8B5CF6', 'MA60': '#EC4899' };
+    ['ma5','ma10','ma20','ma60'].forEach((k, i) => {
+        if (cd[k] && cd[k].length > 0) {
+            const name = 'MA' + [5,10,20,60][i];
+            maSeries.push({ name, type: 'line', data: cd[k], smooth: true, symbol: 'none', lineStyle: { color: maColors[name], width: 1.5 } });
+        }
+    });
+    _detailCharts.ma.setOption({
+        tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
+        legend: { data: maSeries.map(s => s.name), bottom: 0, textStyle: { color: '#94A3B8', fontSize: 10 } },
+        grid: { left: 55, right: 16, top: 16, bottom: 35 },
+        xAxis: { type: 'category', data: cd.dates, axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 } },
+        yAxis: { type: 'value', name: '元', axisLabel: { color: '#64748B', fontSize: 10 }, splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } } },
+        series: maSeries
+    });
+
+    // 4. 每日涨跌幅
+    if (cd.changes && cd.changes.length > 0) {
+        _detailCharts.change = echarts.init(document.getElementById('chartChange'), darkTheme);
+        _detailCharts.change.setOption({
+            tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
+            grid: { left: 50, right: 16, top: 16, bottom: 30 },
+            xAxis: { type: 'category', data: cd.dates, axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 } },
+            yAxis: { type: 'value', name: '%', axisLabel: { color: '#64748B', fontSize: 10 }, splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } } },
+            series: [{ type: 'bar', data: cd.changes,
+                itemStyle: { color: params => params.value >= 0 ? '#EF4444' : '#22C55E' } }]
+        });
+    }
+
+    // 5. 回撤分布饼图
+    const dist = cd.drawdown_distribution;
+    if (dist && Object.keys(dist).length > 0) {
+        _detailCharts.dist = echarts.init(document.getElementById('chartDrawdownDist'), darkTheme);
+        const distData = Object.entries(dist).map(([k, v]) => ({ name: k, value: v }));
+        _detailCharts.dist.setOption({
+            tooltip: { trigger: 'item', formatter: '{b}: {c} 天 ({d}%)', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
+            legend: { orient: 'vertical', right: 8, top: 'center', textStyle: { color: '#94A3B8', fontSize: 10 } },
+            series: [{
+                type: 'pie', radius: ['40%', '72%'], center: ['40%', '50%'], avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 2, borderColor: '#0A1628', borderWidth: 2 },
+                label: { show: true, formatter: '{b}\n{d}%', color: '#94A3B8', fontSize: 10 },
+                data: distData,
+                color: ['#EF4444','#F59E0B','#F97316','#64748B','#22C55E','#10B981']
+            }]
+        });
+    }
+}
+
+function formatSealTimeForDetail(val) {
+    if (!val || val === '0' || val === 0) return '--';
+    const s = String(val);
+    try {
+        const num = parseInt(s);
+        if (num <= 0) return '--';
+        const t = String(num).padStart(6, '0');
+        return t.substring(0,2) + ':' + t.substring(2,4);
+    } catch(e) { return '--'; }
+}
+
+function getEChartsDarkTheme() {
+    return {
+        backgroundColor: 'transparent',
+        textStyle: { color: '#94A3B8' },
+    };
+}
 
 // ---- Recommendations ----
 async function loadRecommendations() {
