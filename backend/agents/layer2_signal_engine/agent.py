@@ -56,6 +56,19 @@ class SignalEngineAgent:
                     "炸板次数": c.get("炸板次数", 0),
                     "涨停频率": c.get("涨停频率", 0),
                 },
+                "extra": {
+                    "封板时间": c.get("封板时间", 0),
+                    "炸板次数": c.get("炸板次数", 0),
+                    "涨停频率": c.get("涨停频率", 0),
+                    "added_date": c.get("added_date", c.get("zt_date", "")),
+                    "price_history": c.get("price_history", []),
+                    "quote_metrics": {
+                        "pe": q.get("市盈率"),
+                        "volume_ratio": q.get("量比"),
+                        "turnover": q.get("换手率"),
+                        "market_cap": q.get("流通市值"),
+                    },
+                },
             }
 
             try:

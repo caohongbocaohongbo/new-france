@@ -26,7 +26,8 @@ class RecommendationAgent:
                       target_date: date, index_gain: float = 0.0,
                       zt_list: list = None,
                       dry_run: bool = False,
-                      audit_results: dict = None) -> dict:
+                      audit_results: dict = None,
+                      zt_meta: dict = None) -> dict:
         """
         执行完整输出流程
         Returns: {report_path, html_path, notify_result, summary}
@@ -35,6 +36,8 @@ class RecommendationAgent:
             zt_list = []
         if audit_results is None:
             audit_results = {}
+        if zt_meta is None:
+            zt_meta = {}
         date_str = target_date.strftime("%Y-%m-%d")
         logger.info(f"RecommendationAgent: 开始输出 {date_str}...")
 
@@ -54,7 +57,8 @@ class RecommendationAgent:
             notify_ok = send_notification(scored_stocks, target_date,
                                           index_gain, str(md_path),
                                           zt_list=zt_list,
-                                          audit_results=audit_results)
+                                          audit_results=audit_results,
+                                          zt_meta=zt_meta)
 
         # 4. 统计摘要
         summary = {

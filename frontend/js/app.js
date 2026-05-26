@@ -435,6 +435,8 @@ function renderRecommendationCards(stocks) {
             const f = s.factors[k]; if (!f) return;
             dots += `<span class="factor-dot ${f.passed?'pass':'fail'}" title="${f.name}: ${f.detail} (${f.score}/10)"></span>`;
         });
+        const auditHtml = renderAuditFailures(s.audit);
+        const historyHtml = renderPriceHistory(s.price_history);
         return `<div class="rec-card">
             <div class="rec-card-header">
                 <div class="rec-rank">${s.rank}</div>
@@ -449,9 +451,42 @@ function renderRecommendationCards(stocks) {
                 <span>涨停日: ${s.zt_date}</span>
                 <span>参考价: ${s.ref_price}</span>
             </div>
+            ${auditHtml}
+            ${historyHtml}
             <div>${dots}</div>
         </div>`;
     }).join('');
+}
+
+function renderAuditFailures(audit) {
+    if (!audit || !audit.downgraded) return '';
+    const failures = (audit.validations || []).filter(v => v.status === 'fail');
+    const items = failures.map(v => `<li><b>${v.name}</b>: ${v.detail}</li>`).join('');
+    return `<div class="audit-failures">
+        <div>审核降级: ${audit.original_rec} → ${audit.adjusted_rec}（失败${audit.fail_count || failures.length}项）</div>
+        ${items ? `<ul>${items}</ul>` : ''}
+    </div>`;
+}
+
+function renderPriceHistory(rows) {
+    if (!rows || rows.length === 0) return '';
+    const body = rows.slice(-12).map(row => {
+        const draw = Number(row.drawdown_pct || 0);
+        const change = Number(row.change_pct || 0);
+        return `<tr>
+            <td>${row.date}</td>
+            <td>${Number(row.close || 0).toFixed(2)}</td>
+            <td class="${change >= 0 ? 'up-text' : 'down-text'}">${change.toFixed(2)}%</td>
+            <td class="${draw < 0 ? 'down-text' : 'up-text'}">${draw.toFixed(2)}%</td>
+        </tr>`;
+    }).join('');
+    return `<div class="price-history">
+        <div class="price-history-title">价格/回撤走势</div>
+        <table>
+            <thead><tr><th>日期</th><th>收盘</th><th>涨跌</th><th>回撤</th></tr></thead>
+            <tbody>${body}</tbody>
+        </table>
+    </div>`;
 }
 
 // ---- Screening ----

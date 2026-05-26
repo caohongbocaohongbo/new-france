@@ -113,6 +113,8 @@ class AuditAgent:
         passed_validations = 0
 
         for s in stocks:
+            extra = getattr(s, "extra", {}) or {}
+            quote_metrics = extra.get("quote_metrics", {}) or {}
             # 构建审核上下文
             ctx = {
                 "code": s.code,
@@ -120,17 +122,17 @@ class AuditAgent:
                 "current_price": s.current_price,
                 "ref_price": s.ref_price,
                 "drop_pct": s.drop_pct,
-                "市盈率": s.factor_scores.get("pe", None),
-                "量比": s.factor_scores.get("volume_ratio", None),
-                "换手率": s.factor_scores.get("turnover", None),
+                "市盈率": quote_metrics.get("pe"),
+                "量比": quote_metrics.get("volume_ratio"),
+                "换手率": quote_metrics.get("turnover"),
                 "zt_quality": {
-                    "封板时间": getattr(s, "extra", {}).get("封板时间", 0),
+                    "封板时间": extra.get("封板时间", 0),
                 },
                 "history": historical.get(s.code) if historical else None,
             }
             # 从extra字段补充zt_quality数据
-            if hasattr(s, "extra") and s.extra:
-                ctx["zt_quality"]["封板时间"] = s.extra.get("封板时间", 0)
+            if extra:
+                ctx["zt_quality"]["封板时间"] = extra.get("封板时间", 0)
 
             # 从factor_scores中提取实际值
             for key in ["pe", "volume_ratio", "turnover"]:

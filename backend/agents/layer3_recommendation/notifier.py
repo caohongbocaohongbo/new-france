@@ -6,6 +6,7 @@ import os
 import json
 import smtplib
 import logging
+import html
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import date
@@ -72,6 +73,96 @@ def _sort_zt_list(zt_list: list, sort_by: str, sort_order: str) -> list:
     return sorted(zt_list, key=key_fn, reverse=reverse)
 
 
+def _format_seal_time(value) -> str:
+    if not value:
+        return "--"
+    try:
+        num = int(float(value))
+    except (TypeError, ValueError):
+        return "--"
+    if num <= 0:
+        return "--"
+    text = str(num).zfill(6)
+    if len(text) > 6:
+        text = text[:6]
+    return f"{text[:2]}:{text[2:4]}"
+
+
+def _fmt_num(value, digits=1, suffix=""):
+    if value is None or value == "":
+        return "--"
+    try:
+        return f"{float(value):.{digits}f}{suffix}"
+    except (TypeError, ValueError):
+        return "--"
+
+
+def _build_price_history_series(hist, watch_date: str, ref_price: float) -> list:
+    """邮件渲染用的轻量序列生成，便于独立测试。"""
+    if hist is None or getattr(hist, "empty", True) or ref_price <= 0:
+        return []
+    date_col = "日期" if "日期" in hist.columns else ("date" if "date" in hist.columns else None)
+    close_col = "收盘" if "收盘" in hist.columns else ("close" if "close" in hist.columns else None)
+    pct_col = "涨跌幅" if "涨跌幅" in hist.columns else ("pctChg" if "pctChg" in hist.columns else None)
+    if date_col is None or close_col is None:
+        return []
+    series = []
+    for _, row in hist.iterrows():
+        day = str(row.get(date_col, ""))[:10]
+        if not day or day < watch_date:
+            continue
+        try:
+            close = float(row.get(close_col, 0))
+        except (TypeError, ValueError):
+            continue
+        if close <= 0:
+            continue
+        try:
+            pct = float(row.get(pct_col, 0)) if pct_col else 0.0
+        except (TypeError, ValueError):
+            pct = 0.0
+        series.append({
+            "date": day,
+            "close": round(close, 2),
+            "change_pct": round(pct, 2),
+            "drawdown_pct": round((close - ref_price) / ref_price * 100, 2),
+        })
+    return series[-12:]
+
+
+def _stock_price_history(stock) -> list:
+    extra = getattr(stock, "extra", {}) or {}
+    rows = extra.get("price_history") or []
+    if not rows:
+        return []
+    normalized = []
+    for row in rows[-12:]:
+        try:
+            normalized.append({
+                "date": str(row.get("date", ""))[:10],
+                "close": float(row.get("close", 0)),
+                "change_pct": float(row.get("change_pct", 0)),
+                "drawdown_pct": float(row.get("drawdown_pct", 0)),
+            })
+        except (TypeError, ValueError):
+            continue
+    return normalized
+
+
+def _audit_info_for(audit_results, code: str) -> dict:
+    for item in (audit_results.get("stocks", []) if audit_results else []):
+        if item.get("code") == code:
+            return item
+    return {}
+
+
+def _failed_audit_items(audit_info: dict) -> list:
+    return [
+        item for item in audit_info.get("validations", [])
+        if item.get("status") == "fail"
+    ]
+
+
 def _get_watchlist_count() -> int:
     """获取监控列表真实条数（与前端 /watchlist/stats 一致，已去重）"""
     try:
@@ -95,7 +186,8 @@ def send_notification(scored_stocks, target_date: date,
                       index_gain: float = 0.0,
                       report_path: str = "",
                       zt_list: list = None,
-                      audit_results: dict = None) -> bool:
+                      audit_results: dict = None,
+                      zt_meta: dict = None) -> bool:
     """发送邮件通知"""
     if not NOTIFY_CONFIG["email_enabled"]:
         logger.info("邮件通知未启用")
@@ -105,6 +197,8 @@ def send_notification(scored_stocks, target_date: date,
         zt_list = []
     if audit_results is None:
         audit_results = {}
+    if zt_meta is None:
+        zt_meta = {}
 
     # 按配置排序涨停列表
     sort_by, sort_order = _get_zt_sort_config()
@@ -113,8 +207,8 @@ def send_notification(scored_stocks, target_date: date,
     # 监控列表条数（与前端一致）
     wl_count = _get_watchlist_count()
 
-    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results)
-    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results)
+    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results, zt_meta)
+    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results, zt_meta)
     ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         text_content=text_content,
@@ -127,9 +221,11 @@ def send_notification(scored_stocks, target_date: date,
 # Plain-text content (fallback for email clients that don't render HTML)
 # ---------------------------------------------------------------------------
 
-def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None) -> str:
+def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None, zt_meta: dict = None) -> str:
     if audit_results is None:
         audit_results = {}
+    if zt_meta is None:
+        zt_meta = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -139,6 +235,7 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
         f"上证指数涨幅: {index_gain:+.2f}%",
         f"监控股票总数: {wl_count} 只",
         f"今日新增涨停: {len(zt_list)} 只",
+        f"涨停数据口径: 数据源={zt_meta.get('source','--')} 原始={zt_meta.get('raw_count', len(zt_list))}只 展示={zt_meta.get('final_count', len(zt_list))}只 过滤={zt_meta.get('filtered_count', 0)}只 采集={zt_meta.get('fetched_at','--')}",
         "",
     ]
 
@@ -148,8 +245,7 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
         for zt in zt_list:
             mcap = zt.get('mcap', 0)
             mcap_str = f"{mcap/1e8:.1f}亿" if mcap and mcap > 0 else "--"
-            fbt = zt.get('seal_time', 0)
-            fbt_str = f"{fbt//1000000:02d}:{(fbt%1000000)//10000:02d}" if fbt and fbt > 0 else "--"
+            fbt_str = _format_seal_time(zt.get('seal_time', 0))
             lines.append(
                 f"  {zt['code']} {zt['name']}  "
                 f"现价:{zt.get('price',0):.2f}  涨幅:{zt.get('change_pct',0):+.2f}%  "
@@ -191,7 +287,20 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
                              f"{s.name}({s.code}) 得分:{s.adjusted_score:.0f} {stars}")
                 if audit_info.get("downgraded"):
                     lines.append(f"  ⚠ 审核降级: {audit_info['original_rec']} → {audit_info['adjusted_rec']}")
+                    failed = _failed_audit_items(audit_info)
+                    if failed:
+                        lines.append("  未满足项:")
+                        for item in failed:
+                            lines.append(f"    - {item.get('name')}: {item.get('detail')}")
                 lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
+                history_rows = _stock_price_history(s)
+                if history_rows:
+                    lines.append("  价格/回撤走势:")
+                    for row in history_rows:
+                        lines.append(
+                            f"    {row['date']} 收盘:{row['close']:.2f} "
+                            f"涨跌:{row['change_pct']:+.2f}% 回撤:{row['drawdown_pct']:+.2f}%"
+                        )
                 lines.append("  评分详情:")
                 for key, r in s.factor_scores.items():
                     if key == "event_bonus":
@@ -217,9 +326,11 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
 # HTML content (primary — 带样式的表格)
 # ---------------------------------------------------------------------------
 
-def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None) -> str:
+def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None, zt_meta: dict = None) -> str:
     if audit_results is None:
         audit_results = {}
+    if zt_meta is None:
+        zt_meta = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -229,12 +340,12 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
 
     parts = [
         _html_head(),
-        _html_header(date_str, weekday, index_gain, len(zt_list), wl_count),
+        _html_header(date_str, weekday, index_gain, len(zt_list), wl_count, zt_meta),
     ]
 
     # 涨停股列表表格
     if zt_list:
-        parts.append(_html_zt_table(zt_list, sort_by))
+        parts.append(_html_zt_table(zt_list, sort_by, zt_meta))
 
     # 筛选结果
     parts.append(_html_screening_summary(len(strong), len(buy), len(watch), audit_results))
@@ -266,8 +377,16 @@ def _html_head():
 <div style="max-width:800px;margin:0 auto;padding:24px">"""
 
 
-def _html_header(date_str, weekday, index_gain, zt_count, wl_count=0):
+def _html_header(date_str, weekday, index_gain, zt_count, wl_count=0, zt_meta=None):
     gain_color = "#E74C3C" if index_gain > 0 else ("#27AE60" if index_gain < 0 else "#8B95A8")
+    zt_meta = zt_meta or {}
+    zt_note = (
+        f"数据源:{html.escape(str(zt_meta.get('source', '--')))} | "
+        f"原始{zt_meta.get('raw_count', zt_count)}只 | "
+        f"展示{zt_meta.get('final_count', zt_count)}只 | "
+        f"过滤{zt_meta.get('filtered_count', 0)}只 | "
+        f"采集:{html.escape(str(zt_meta.get('fetched_at', '--')))}"
+    )
     return f"""
 <div style="background:linear-gradient(135deg,#0A1628,#132238);border-radius:12px;padding:28px 32px;margin-bottom:24px">
   <h1 style="color:#D4A853;font-size:22px;margin:0 0 4px 0;font-weight:700">New France 涨停回撤战法</h1>
@@ -290,10 +409,11 @@ def _html_header(date_str, weekday, index_gain, zt_count, wl_count=0):
       </td>
     </tr>
   </table>
+  <p style="color:#8B95A8;font-size:11px;line-height:1.6;margin:12px 0 0 0">今日涨停为采集时点的涨停池有效数据，不是 STRONG BUY/BUY/WATCH 筛选通过数。{zt_note}</p>
 </div>"""
 
 
-def _html_zt_table(zt_list, sort_by="seal_time"):
+def _html_zt_table(zt_list, sort_by="seal_time", zt_meta=None):
     """涨停股列表 — 表头深色底色 + 斑马纹 + 当前排序指示"""
     if not zt_list:
         return ""
@@ -329,8 +449,7 @@ def _html_zt_table(zt_list, sort_by="seal_time"):
         bg = "#FAFBFC" if i % 2 == 0 else "#FFFFFF"
         mcap = zt.get('mcap', 0)
         mcap_str = f"{mcap/1e8:.1f}亿" if mcap and mcap > 0 else "--"
-        fbt = zt.get('seal_time', 0)
-        fbt_str = f"{fbt//1000000:02d}:{(fbt%1000000)//10000:02d}" if fbt and fbt > 0 else "--"
+        fbt_str = _format_seal_time(zt.get('seal_time', 0))
         chg = zt.get('change_pct', 0)
         chg_color = "#E74C3C" if chg > 0 else "#27AE60"
         rows_html += f"""
@@ -350,11 +469,19 @@ def _html_zt_table(zt_list, sort_by="seal_time"):
 
     # 当前排序字段中文名
     sort_label = ZT_SORT_LABELS.get(sort_by, "封板")
+    zt_meta = zt_meta or {}
+    source_note = (
+        f"数据源:{html.escape(str(zt_meta.get('source', '--')))} | "
+        f"原始{zt_meta.get('raw_count', len(zt_list))}只 | "
+        f"展示{zt_meta.get('final_count', len(zt_list))}只 | "
+        f"过滤{zt_meta.get('filtered_count', 0)}只"
+    )
 
     return f"""
 <div style="background:#FFFFFF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
   <h2 style="color:#0A1628;font-size:16px;margin:0 0 4px 0;font-weight:600">今日涨停股列表 <span style="color:#8B95A8;font-weight:400;font-size:13px">({len(zt_list)}只)</span></h2>
-  <p style="color:#8B95A8;font-size:11px;margin:0 0 14px 0">排序: {sort_label} &#9650; 升序</p>
+  <p style="color:#8B95A8;font-size:11px;margin:0 0 6px 0">排序: {sort_label} &#9650; 升序</p>
+  <p style="color:#8B95A8;font-size:11px;margin:0 0 14px 0">{source_note}</p>
   <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:13px">
     <thead>
       <tr style="background:#0A1628;color:#D4A853">{th_html}
@@ -411,10 +538,22 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None)
         drop_color = "#E74C3C" if s.drop_pct < 0 else "#27AE60"
         # 审核降级标记
         downgrade_html = ""
-        for a in (audit_results.get("stocks", []) if audit_results else []):
-            if a.get("code") == s.code and a.get("downgraded"):
-                downgrade_html = f'<div style="color:#E74C3C;font-size:11px;margin-top:4px">⚠ 审核降级: {a["original_rec"]} → {a["adjusted_rec"]} (失败{a.get("fail_count",0)}项)</div>'
-                break
+        audit_info = _audit_info_for(audit_results, s.code)
+        if audit_info.get("downgraded"):
+            failed = _failed_audit_items(audit_info)
+            failed_html = ""
+            if failed:
+                failed_items = "".join(
+                    f'<li style="margin:2px 0"><b>{html.escape(str(item.get("name", "")))}</b>: {html.escape(str(item.get("detail", "")))}</li>'
+                    for item in failed
+                )
+                failed_html = f'<div style="margin-top:4px;color:#5B6472">未满足项<ul style="margin:4px 0 0 16px;padding:0">{failed_items}</ul></div>'
+            downgrade_html = (
+                f'<div style="color:#E74C3C;font-size:11px;margin-top:4px">'
+                f'审核降级: {audit_info["original_rec"]} → {audit_info["adjusted_rec"]} '
+                f'(失败{audit_info.get("fail_count",0)}项){failed_html}</div>'
+            )
+        history_html = _html_price_history(_stock_price_history(s))
         items_html += f"""
     <div style="background:#FAFBFC;border-radius:8px;padding:16px;margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -435,6 +574,7 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None)
         排名:#{s.rank}
       </div>
       {downgrade_html}
+      {history_html}
       <div style="margin-top:4px">{factors_html}</div>
     </div>"""
 
@@ -443,6 +583,40 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None)
   <h2 style="color:{color};font-size:16px;margin:0 0 14px 0;font-weight:600">{label} <span style="color:#8B95A8;font-weight:400;font-size:13px">({len(level_stocks)}只)</span></h2>
   {items_html}
 </div>"""
+
+
+def _html_price_history(rows: list) -> str:
+    if not rows:
+        return ""
+    cells = ""
+    for row in rows:
+        draw = row["drawdown_pct"]
+        draw_color = "#E74C3C" if draw < 0 else "#27AE60"
+        change = row["change_pct"]
+        change_color = "#E74C3C" if change > 0 else ("#27AE60" if change < 0 else "#8B95A8")
+        cells += f"""
+        <tr>
+          <td style="padding:4px 6px;color:#5B6472">{html.escape(row['date'])}</td>
+          <td style="padding:4px 6px;text-align:right;color:#0A1628">{row['close']:.2f}</td>
+          <td style="padding:4px 6px;text-align:right;color:{change_color}">{change:+.2f}%</td>
+          <td style="padding:4px 6px;text-align:right;color:{draw_color};font-weight:600">{draw:+.2f}%</td>
+        </tr>"""
+    return f"""
+      <div style="margin-top:10px">
+        <div style="font-size:11px;color:#0A1628;font-weight:600;margin-bottom:4px">价格/回撤走势</div>
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:11px;background:#FFFFFF;border-radius:6px;overflow:hidden">
+          <thead>
+            <tr style="background:#EEF2F6;color:#5B6472">
+              <th style="padding:5px 6px;text-align:left;font-weight:600">日期</th>
+              <th style="padding:5px 6px;text-align:right;font-weight:600">收盘</th>
+              <th style="padding:5px 6px;text-align:right;font-weight:600">涨跌</th>
+              <th style="padding:5px 6px;text-align:right;font-weight:600">回撤</th>
+            </tr>
+          </thead>
+          <tbody>{cells}
+          </tbody>
+        </table>
+      </div>"""
 
 
 def _html_footer():

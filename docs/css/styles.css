@@ -455,6 +455,73 @@ body {
     color: var(--muted-soft);
 }
 
+.audit-failures {
+    margin: 8px 0 10px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--up);
+    background: rgba(230, 0, 18, 0.05);
+    color: var(--up);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.audit-failures ul {
+    margin: 4px 0 0 18px;
+    padding: 0;
+    color: var(--body);
+}
+
+.price-history {
+    margin: 10px 0;
+}
+
+.price-history-title {
+    margin-bottom: 6px;
+    color: var(--body);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.price-history table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 12px;
+}
+
+.price-history th,
+.price-history td {
+    padding: 6px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.price-history th:first-child,
+.price-history td:first-child {
+    text-align: left;
+}
+
+.price-history th {
+    background: var(--surface-strong);
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.price-history tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.up-text {
+    color: var(--up);
+}
+
+.down-text {
+    color: var(--down);
+}
+
 /* ===== Market Overview ===== */
 .market-overview {
     display: flex;

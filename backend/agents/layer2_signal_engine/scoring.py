@@ -72,6 +72,7 @@ class MultiFactorScorer:
             event_impact=round(event_impact, 1),
             adjusted_score=round(adjusted, 1),
             recommendation=recommendation,
+            extra=ctx.get("extra", {}),
         )
 
     def rank(self, stocks: List[ScoredStock]) -> List[ScoredStock]:
