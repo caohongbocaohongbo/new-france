@@ -13,6 +13,9 @@ class ZTQualitySkill(BaseSkill):
         fbt = ztq.get("封板时间", 0)       # HHMMSS
         zbc = ztq.get("炸板次数", 0)
         freq = ztq.get("涨停频率", 0)
+        latest_fbt = int(ztq.get("latest_fbt") or 140000)
+        max_zbc = int(ztq.get("max_zbc") if ztq.get("max_zbc") is not None else 0)
+        max_freq = int(ztq.get("max_zt_frequency") if ztq.get("max_zt_frequency") is not None else 2)
 
         s = 0.0
         parts = []
@@ -24,7 +27,7 @@ class ZTQualitySkill(BaseSkill):
         elif fbt <= 113000:     # 11:30前
             s += 3.5
             parts.append(f"封板{fbt//10000:02d}:{(fbt%10000)//100:02d}，上午封板")
-        elif fbt <= 140000:     # 14:00前
+        elif fbt <= latest_fbt:
             s += 2.0
             parts.append(f"封板{fbt//10000:02d}:{(fbt%10000)//100:02d}，午后封板")
         elif fbt > 0:
@@ -34,10 +37,10 @@ class ZTQualitySkill(BaseSkill):
             parts.append("无封板时间数据")
 
         # 炸板评分
-        if zbc == 0:
+        if zbc <= max_zbc:
             s += 3.0
-            parts.append("零炸板")
-        elif zbc == 1:
+            parts.append(f"炸板{zbc}次，未超过配置上限")
+        elif zbc == max_zbc + 1:
             s += 1.0
             parts.append(f"炸板{zbc}次")
         else:
@@ -50,7 +53,7 @@ class ZTQualitySkill(BaseSkill):
         elif freq == 1:
             s += 1.5
             parts.append(f"30天内{freq}次涨停")
-        elif freq <= 2:
+        elif freq <= max_freq:
             s += 0.5
             parts.append(f"30天内{freq}次涨停，略频繁")
         else:

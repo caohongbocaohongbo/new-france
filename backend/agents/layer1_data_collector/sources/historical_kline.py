@@ -13,6 +13,19 @@ logger = logging.getLogger(__name__)
 
 def fetch_historical(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
     """获取个股历史日线数据（前复权）"""
+    result = fetch_historical_with_source(symbol, days)
+    if result is None:
+        return None
+    df, _source = result
+    return df
+
+
+def fetch_historical_with_source(symbol: str, days: int = 60) -> Optional[tuple[pd.DataFrame, str]]:
+    """获取个股历史日线数据，并返回可追溯数据源名称。"""
+    df = _fetch_hist_eastmoney_direct(symbol, days)
+    if df is not None and not df.empty:
+        return df, "东方财富历史K线API(push2his)"
+
     try:
         import akshare as ak
         end = datetime.now(BEIJING_TZ)
@@ -23,11 +36,73 @@ def fetch_historical(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
             end_date=end.strftime("%Y%m%d"), adjust="qfq",
         )
         if df is not None and not df.empty:
-            return df
+            return df, "akshare.stock_zh_a_hist(东方财富历史行情)"
     except Exception as e:
         logger.debug(f"akshare历史数据 {symbol} 失败: {e}")
 
-    return _fetch_hist_sina(symbol, days)
+    df = _fetch_hist_sina(symbol, days)
+    if df is not None and not df.empty:
+        return df, "新浪财经K线API"
+    return None
+
+
+def _parse_eastmoney_kline_rows(rows: list[str]) -> pd.DataFrame:
+    """解析东方财富 push2his K 线行，保留真实换手率字段。"""
+    parsed = []
+    for item in rows or []:
+        parts = str(item).split(",")
+        if len(parts) < 11:
+            continue
+        try:
+            parsed.append({
+                "日期": parts[0],
+                "开盘": float(parts[1]),
+                "收盘": float(parts[2]),
+                "最高": float(parts[3]),
+                "最低": float(parts[4]),
+                "成交量": float(parts[5]),
+                "成交额": float(parts[6]),
+                "振幅": float(parts[7]),
+                "涨跌幅": float(parts[8]),
+                "涨跌额": float(parts[9]),
+                "换手率": float(parts[10]),
+            })
+        except (TypeError, ValueError):
+            continue
+    return pd.DataFrame(parsed)
+
+
+def _fetch_hist_eastmoney_direct(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
+    """直接调用东方财富历史 K 线接口，避免 akshare 包装失败时丢失换手率。"""
+    import requests as req
+
+    market = "1" if symbol.startswith(("6", "9")) else "0"
+    end = datetime.now(BEIJING_TZ)
+    start = end - timedelta(days=days + 30)
+    url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+    params = {
+        "secid": f"{market}.{symbol}",
+        "fields1": "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13",
+        "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
+        "klt": "101",
+        "fqt": "1",
+        "beg": start.strftime("%Y%m%d"),
+        "end": end.strftime("%Y%m%d"),
+    }
+    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"}
+
+    try:
+        resp = req.get(url, params=params, headers=headers, timeout=12)
+        resp.raise_for_status()
+        rows = resp.json().get("data", {}).get("klines") or []
+        df = _parse_eastmoney_kline_rows(rows)
+        if df.empty:
+            return None
+        logger.debug(f"  东方财富K线 {symbol} 获取成功, {len(df)}行")
+        return df.tail(days)
+    except Exception as e:
+        logger.debug(f"东方财富K线直接接口 {symbol} 失败: {e}")
+        return None
 
 
 def _fetch_hist_sina(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:

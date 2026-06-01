@@ -13,6 +13,7 @@ from ..agents.layer1_data_collector.agent import DataCollectorAgent
 from ..agents.layer2_signal_engine.agent import SignalEngineAgent
 from ..agents.layer3_recommendation.agent import RecommendationAgent
 from ..events.engine import EventEngine
+from .runtime_config import get_effective_config, get_factor_weights_decimal
 from .watchlist_store import FRANCE_FILE, parse_watchlist
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,12 @@ logger = logging.getLogger(__name__)
 def _read_watchlist() -> List[Dict]:
     """从 france.md 读取监控列表"""
     return parse_watchlist(FRANCE_FILE)
+
+
+def _fetch_index_snapshot() -> dict:
+    """获取上证指数真实快照，失败时保留空值而不是伪造点位。"""
+    from ..agents.layer1_data_collector.sources.index_data import fetch_index_snapshot
+    return fetch_index_snapshot()
 
 
 def _build_price_history_series(hist: Optional[pd.DataFrame],
@@ -102,6 +109,7 @@ async def run_full_pipeline(
         target_date = date.today()
 
     errors = []
+    runtime_config = get_effective_config()["config"]
     logger.info("=" * 50)
     logger.info(f"New France 筛选流水线启动 — {target_date}")
     logger.info("=" * 50)
@@ -111,11 +119,16 @@ async def run_full_pipeline(
     collector = DataCollectorAgent()
 
     # 获取指数涨幅
-    from ..agents.layer1_data_collector.sources.index_data import fetch_index_gain
     from ..agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
     from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
-    index_gain = fetch_index_gain()
-    logger.info(f"  上证指数涨幅: {index_gain:+.2f}%")
+    index_snapshot = _fetch_index_snapshot()
+    index_gain = index_snapshot.get("gain_pct") or 0.0
+    logger.info(
+        "  上证指数: %s (%+.2f%%, %s)",
+        index_snapshot.get("value") if index_snapshot.get("value") is not None else "--",
+        index_gain,
+        index_snapshot.get("source") or "--",
+    )
 
     # 获取当日涨停股池
     zt_pool = fetch_zt_pool()
@@ -182,7 +195,8 @@ async def run_full_pipeline(
     if not watchlist:
         return {
             "total_scored": 0, "strong_buy": 0, "buy": 0, "watch": 0,
-            "results": [], "index_gain": index_gain, "zt_list": zt_list,
+            "results": [], "index_gain": index_gain, "index_value": index_snapshot.get("value"),
+            "index_snapshot": index_snapshot, "zt_list": zt_list,
             "errors": ["监控列表为空，请先添加股票"],
         }
 
@@ -246,7 +260,9 @@ async def run_full_pipeline(
 
     fallback_used = 0
 
-    # 计算每只股票的30天涨停频率
+    tracking_days = int(runtime_config["strategy"].get("trackingDays", 30))
+
+    # 计算每只股票在配置周期内的涨停频率
     from .watchlist_store import count_zt_30days
 
     candidates = []
@@ -309,8 +325,8 @@ async def run_full_pipeline(
         except (ValueError, TypeError):
             zt_count_stored = 0
 
-        # 30天涨停频率：优先使用存储值，否则动态计算
-        zt_frequency = zt_count_stored if zt_count_stored > 0 else count_zt_30days(code)
+        # 配置周期涨停频率：优先使用存储值，否则动态计算
+        zt_frequency = zt_count_stored if zt_count_stored > 0 else count_zt_30days(code, days=tracking_days)
 
         candidates.append({
             "code": code,
@@ -344,7 +360,8 @@ async def run_full_pipeline(
 
     # ---- Layer 2: 多因子评分 ----
     logger.info("[Layer 2] 多因子评分...")
-    engine = SignalEngineAgent()
+    engine = SignalEngineAgent(factor_weights=get_factor_weights_decimal(runtime_config),
+                               strategy_config=runtime_config["strategy"])
     scored = engine.evaluate(candidates, quotes, historical, index_gain, event_map)
 
     # ---- Layer 2.5: 数据审核 ----
@@ -375,7 +392,8 @@ async def run_full_pipeline(
     summary = await recom.execute(scored, target_date, index_gain,
                                   zt_list=zt_list, dry_run=dry_run,
                                   audit_results=audit_results,
-                                  zt_meta=zt_meta)
+                                  zt_meta=zt_meta,
+                                  index_snapshot=index_snapshot)
 
     # ---- 构建响应 ----
     results = []
@@ -409,6 +427,8 @@ async def run_full_pipeline(
     return {
         "date": target_date.strftime("%Y-%m-%d"),
         "index_gain": index_gain,
+        "index_value": index_snapshot.get("value"),
+        "index_snapshot": index_snapshot,
         "zt_list": zt_list,
         "zt_meta": zt_meta,
         "total_scored": summary["total_scored"],

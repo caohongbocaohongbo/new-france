@@ -118,6 +118,20 @@ class StockEvent(Base):
     )
 
 
+class SystemConfig(Base):
+    """运行时配置表：保存前端策略页写入的真实业务参数"""
+    __tablename__ = "system_configs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String(80), unique=True, nullable=False)
+    value = Column(Text, nullable=False)
+    updated_at = Column(DateTime, default=beijing_now, onupdate=beijing_now)
+
+    __table_args__ = (
+        Index("idx_system_configs_key", "key"),
+    )
+
+
 def register_models():
     """确保所有模型已导入（供 init_db 使用）"""
     pass

@@ -3,12 +3,16 @@
 requests 优先，curl_cffi 备选（GitHub Actions 环境 curl_cffi 易超时）
 """
 import logging
+import os
+import time
 from typing import List
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 80  # 每批最多80只，避免URL过长
+ALLOW_STALE_QUOTE_CACHE = os.getenv("ALLOW_STALE_QUOTE_CACHE", "").lower() in {"1", "true", "yes"}
+_QUOTE_CACHE = {}
 
 
 def _fetch_one_batch(secids_batch: List[str]) -> list:
@@ -29,25 +33,32 @@ def _fetch_one_batch(secids_batch: List[str]) -> list:
         "Referer": "https://quote.eastmoney.com/",
     }
 
-    # ---- 方案1: 标准 requests（GitHub Actions 环境更稳定） ----
-    try:
-        import requests
-        resp = requests.get(url, params=params, headers=headers, timeout=15)
-        resp.raise_for_status()
-        return _parse_response(resp.json())
-    except Exception as e:
-        logger.debug(f"  requests 请求失败: {e}")
+    last_error = None
+    for attempt in range(2):
+        # ---- 方案1: 标准 requests（GitHub Actions 环境更稳定） ----
+        try:
+            import requests
+            resp = requests.get(url, params=params, headers=headers, timeout=15)
+            resp.raise_for_status()
+            return _parse_response(resp.json())
+        except Exception as e:
+            last_error = e
+            logger.debug(f"  requests 请求失败: {e}")
 
-    # ---- 方案2: curl_cffi 模拟 Chrome ----
-    try:
-        from curl_cffi import requests as curl_req
-        resp = curl_req.get(url, params=params, headers=headers,
-                           impersonate="chrome120", timeout=15)
-        return _parse_response(resp.json())
-    except Exception as e:
-        logger.debug(f"  curl_cffi 请求也失败: {e}")
+        # ---- 方案2: curl_cffi 模拟 Chrome ----
+        try:
+            from curl_cffi import requests as curl_req
+            resp = curl_req.get(url, params=params, headers=headers,
+                               impersonate="chrome120", timeout=15)
+            return _parse_response(resp.json())
+        except Exception as e:
+            last_error = e
+            logger.debug(f"  curl_cffi 请求也失败: {e}")
 
-    raise RuntimeError("所有请求方式均失败")
+        if attempt == 0:
+            time.sleep(0.35)
+
+    raise RuntimeError(f"所有请求方式均失败: {last_error}")
 
 
 def _parse_response(data: dict) -> list:
@@ -136,9 +147,19 @@ def fetch_stock_quotes(codes: List[str]) -> pd.DataFrame:
         try:
             batch_rows = _fetch_one_batch(batch)
             all_rows.extend(batch_rows)
+            for row in batch_rows:
+                _QUOTE_CACHE[row["代码"]] = row
         except Exception as e:
             failed_batches += 1
             logger.warning(f"  行情批次 {i // BATCH_SIZE + 1} 失败: {e}")
+
+    if ALLOW_STALE_QUOTE_CACHE:
+        found_codes = {row["代码"] for row in all_rows}
+        cached_rows = [_QUOTE_CACHE[code] for code in codes
+                       if code not in found_codes and code in _QUOTE_CACHE]
+        if cached_rows:
+            all_rows.extend(cached_rows)
+            logger.warning(f"  使用进程内缓存行情补齐: {len(cached_rows)} 只")
 
     logger.info(f"  行情获取完成: {len(all_rows)}/{len(codes)} 只"
                 + (f" (失败 {failed_batches} 批)" if failed_batches else ""))

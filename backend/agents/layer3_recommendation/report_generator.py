@@ -24,17 +24,28 @@ def _get_audit_info(audit_results: dict, code: str) -> dict:
     return {}
 
 
+def _format_index_value(index_snapshot: dict) -> str:
+    value = (index_snapshot or {}).get("value")
+    try:
+        return f"{float(value):.2f}"
+    except (TypeError, ValueError):
+        return "--"
+
+
 def generate_markdown_report(stocks, target_date: date,
                               index_gain: float, output_path: Path,
-                              audit_results: dict = None):
+                              audit_results: dict = None,
+                              index_snapshot: dict = None):
     """生成每日 Markdown 报告"""
     if audit_results is None:
         audit_results = {}
+    if index_snapshot is None:
+        index_snapshot = {}
 
     date_str = target_date.strftime("%Y-%m-%d")
     lines = [
         f"# New France 尾盘涨停推荐报告",
-        f"**日期**: {date_str} | **上证指数**: {index_gain:+.2f}%",
+        f"**日期**: {date_str} | **上证指数**: {_format_index_value(index_snapshot)} | **涨跌幅**: {index_gain:+.2f}%",
         "",
         "---",
         "",
@@ -117,11 +128,15 @@ def generate_markdown_report(stocks, target_date: date,
 
 def generate_html_report(stocks, target_date: date,
                           index_gain: float, output_path: Path,
-                          audit_results: dict = None) -> str:
+                          audit_results: dict = None,
+                          index_snapshot: dict = None) -> str:
     """生成 HTML 报告（前端展示用）"""
     if audit_results is None:
         audit_results = {}
+    if index_snapshot is None:
+        index_snapshot = {}
     date_str = target_date.strftime("%Y-%m-%d")
+    index_value = _format_index_value(index_snapshot)
 
     rows_html = ""
     for s in stocks:
@@ -182,7 +197,7 @@ tr:hover td{{background:rgba(212,168,83,0.05)}}
 </head>
 <body>
 <h1>New France 尾盘涨停推荐报告</h1>
-<p class="subtitle">{date_str} | 上证指数: {index_gain:+.2f}%</p>
+<p class="subtitle">{date_str} | 上证指数: {index_value} | 涨跌幅: {index_gain:+.2f}%</p>
 <div class="stats">
     <div class="stat-card"><div class="stat-value">{len(stocks)}</div><div class="stat-label">总计</div></div>
     <div class="stat-card"><div class="stat-value">{sum(1 for s in stocks if s.recommendation=="STRONG_BUY")}</div><div class="stat-label">STRONG BUY</div></div>

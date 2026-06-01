@@ -19,12 +19,21 @@ async def system_status():
     """系统运行状态（北京时间）"""
     now = datetime.now(BEIJING_TZ)
     is_trading = now.weekday() < 5 and 9 <= now.hour <= 15
+    index_snapshot = {}
+    try:
+        from ..agents.layer1_data_collector.sources.index_data import fetch_index_snapshot
+        index_snapshot = fetch_index_snapshot() or {}
+    except Exception as exc:
+        logger.warning(f"获取指数快照失败: {exc}")
     return {
         "is_trading_day": now.weekday() < 5,
         "is_trading_hours": is_trading,
         "next_execution": "15:10 (北京时间, 交易日)",
         "cron_expression": "每个交易日 15:10 (北京时间)",
         "timestamp": now.isoformat(),
+        "index_snapshot": index_snapshot,
+        "index_value": index_snapshot.get("value"),
+        "index_gain": index_snapshot.get("gain_pct"),
     }
 
 
@@ -32,12 +41,14 @@ async def system_status():
 async def test_email_endpoint():
     """发送测试邮件"""
     try:
+        from ..services.runtime_config import get_effective_config
         from ..agents.layer3_recommendation.notifier import test_email
+        notify = get_effective_config()["config"]["notification"]
         ok, msg = test_email()
         if ok:
-            return {"status": "ok", "message": "测试邮件已发送，请检查收件箱"}
+            return {"status": "ok", "message": "测试邮件已发送，请检查收件箱", "email_to": notify.get("emailTo")}
         else:
-            return {"status": "error", "message": msg}
+            return {"status": "error", "message": msg, "email_to": notify.get("emailTo")}
     except Exception as e:
         logger.error(f"测试邮件失败: {e}")
         return {"status": "error", "message": f"发送失败: {str(e)}"}

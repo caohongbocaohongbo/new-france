@@ -1,6 +1,7 @@
 """New France — 尾盘涨停选股系统入口 (CLI + API)"""
 import sys
 import os
+import math
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
@@ -20,6 +21,17 @@ except ImportError:
 _app = None
 
 
+def _json_safe(value):
+    """清理 NaN/Infinity，保证 latest.json 可被 FastAPI 直接响应。"""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
+
+
 def get_app():
     """延迟加载 FastAPI，避免 CLI 模式强依赖 fastapi/uvicorn"""
     global _app
@@ -34,6 +46,7 @@ def get_app():
     from .api.router_events import router as events_router
     from .api.router_reports import router as reports_router
     from .api.router_system import router as system_router
+    from .api.router_config import router as config_router
 
     _app = FastAPI(
         title="New France — 尾盘涨停选股系统",
@@ -51,6 +64,7 @@ def get_app():
     _app.include_router(events_router, prefix="/api/v1/events", tags=["事件"])
     _app.include_router(reports_router, prefix="/api/v1/reports", tags=["报告"])
     _app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
+    _app.include_router(config_router, prefix="/api/v1/config", tags=["配置"])
 
     # 托管前端静态文件
     frontend_dir = PROJECT_DIR / "frontend"
@@ -112,6 +126,8 @@ def main():
         return
 
     if args.test_email:
+        from .db.database import init_db
+        init_db()
         from .agents.layer3_recommendation.notifier import test_email
         test_email()
         return
@@ -123,8 +139,10 @@ def main():
 async def _run_daily_pipeline(args, logger):
     """完整的每日定时任务"""
     from datetime import datetime, timezone, timedelta
+    from .db.database import init_db
     BEIJING_TZ = timezone(timedelta(hours=8))
 
+    init_db()
     logger.info("New France v1.0 每日流水线启动")
     today = datetime.now(BEIJING_TZ).date()
     weekday = today.weekday()
@@ -150,6 +168,10 @@ async def _run_daily_pipeline(args, logger):
     logger.info("[Step 2] 更新监控列表...")
     france_file = PROJECT_DIR / "data" / "france.md"
     today_str = today.strftime("%Y-%m-%d")
+    from .services.runtime_config import get_effective_config, resolve_screening_params
+    runtime_config = get_effective_config()["config"]
+    screening_params = resolve_screening_params()
+    tracking_days = int(runtime_config["strategy"].get("trackingDays", 30))
 
     from .services.watchlist_store import normalize_watchlist_file, write_watchlist
 
@@ -203,11 +225,11 @@ async def _run_daily_pipeline(args, logger):
     else:
         all_entries = existing_entries
 
-    # 更新所有监控股的30天涨停频率统计
+    # 更新所有监控股在配置周期内的涨停频率统计
     from .services.watchlist_store import count_zt_30days
     zt_count_updated = 0
     for entry in all_entries:
-        freq = count_zt_30days(entry["code"])
+        freq = count_zt_30days(entry["code"], days=tracking_days)
         if int(entry.get("zt_count", "0")) != freq:
             entry["zt_count"] = str(freq)
             zt_count_updated += 1
@@ -224,13 +246,13 @@ async def _run_daily_pipeline(args, logger):
     logger.info("[Step 3] 执行筛选流水线...")
     from .services.screening_service import run_full_pipeline
     import json
-    result = await run_full_pipeline(target_date=today, dry_run=args.dry_run)
+    result = await run_full_pipeline(target_date=today, dry_run=args.dry_run, **screening_params)
 
     # 写入 latest.json（CLI 模式也需要更新，供前端轮询）
     reports_dir = PROJECT_DIR / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     (reports_dir / "latest.json").write_text(
-        json.dumps({"status": "completed", "date": today_str, **result}, ensure_ascii=False, indent=2),
+        json.dumps(_json_safe({"status": "completed", "date": today_str, **result}), ensure_ascii=False, indent=2),
         encoding="utf-8")
 
     logger.info(f"  结果: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}, WATCH={result['watch']}")

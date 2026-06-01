@@ -17,8 +17,14 @@ logger = logging.getLogger(__name__)
 class SignalEngineAgent:
     """纯计算信号引擎 — 禁止任何IO操作"""
 
-    def __init__(self):
-        self.scorer = MultiFactorScorer(skills=build_skills())
+    def __init__(self, factor_weights: Optional[Dict[str, float]] = None,
+                 strategy_config: Optional[Dict[str, Any]] = None):
+        self.strategy_config = strategy_config or {}
+        skills = build_skills()
+        for skill in skills:
+            if factor_weights and skill.key in factor_weights:
+                skill.weight = float(factor_weights[skill.key])
+        self.scorer = MultiFactorScorer(skills=skills)
 
     def evaluate(self, candidates: List[Dict], quotes: pd.DataFrame,
                  historical: Dict[str, pd.DataFrame], index_gain: float,
@@ -55,7 +61,11 @@ class SignalEngineAgent:
                     "封板时间": c.get("封板时间", 0),
                     "炸板次数": c.get("炸板次数", 0),
                     "涨停频率": c.get("涨停频率", 0),
+                    "latest_fbt": self.strategy_config.get("latestFbt"),
+                    "max_zbc": self.strategy_config.get("maxZbc"),
+                    "max_zt_frequency": self.strategy_config.get("maxZtFrequency"),
                 },
+                "strategy_params": self.strategy_config,
                 "extra": {
                     "封板时间": c.get("封板时间", 0),
                     "炸板次数": c.get("炸板次数", 0),

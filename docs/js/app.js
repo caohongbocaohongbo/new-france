@@ -32,10 +32,118 @@ async function apiFetch(path, opts = {}) {
 
 // 所有数据均来自后台API，无本地DEMO数据
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+}
+
+function jsString(value) {
+    return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+}
+
+function toNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function isRealNumber(value) {
+    return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+}
+
+function formatNumber(value, digits = 2, suffix = '') {
+    return isRealNumber(value) ? `${Number(value).toFixed(digits)}${suffix}` : '--';
+}
+
+function formatMaybePct(value, digits = 2) {
+    return isRealNumber(value) ? `${Number(value).toFixed(digits)}%` : '--';
+}
+
+function valueClass(value) {
+    if (!isRealNumber(value)) return '';
+    return Number(value) >= 0 ? 'up-text' : 'down-text';
+}
+
+function parseDecoratedNumber(value, fallback = 0) {
+    const raw = String(value ?? '').replace(/[,%％亿只分\s]/g, '');
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function setInlineStatus(id, message, type = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = ['inline-status', type].filter(Boolean).join(' ');
+}
+
+function setFormStatus(id, message, type = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message || '';
+    el.className = ['form-status', type].filter(Boolean).join(' ');
+}
+
+function emptyChart(el, message) {
+    if (!el) return;
+    el.classList.remove('loading');
+    el.innerHTML = `<div class="detail-empty">${escapeHtml(message)}</div>`;
+}
+
+function formatDateShort(value) {
+    if (!value) return '--';
+    const s = String(value);
+    return s.length >= 10 ? s.slice(5, 10) : s;
+}
+
+function formatDateTimeShort(value) {
+    if (!value) return '--';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return String(value).replace('T', ' ').slice(0, 16);
+    }
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function pad2(value) {
+    return String(value ?? 0).padStart(2, '0');
+}
+
+function clampInt(value, min, max) {
+    const n = Number.parseInt(value, 10);
+    if (!Number.isFinite(n)) return min;
+    return Math.min(max, Math.max(min, n));
+}
+
+function buildClockOptions(max, selected, label) {
+    return Array.from({ length: max + 1 }, (_, value) => {
+        const text = pad2(value);
+        const isSelected = value === selected ? ' selected' : '';
+        return `<option value="${pad2(value)}"${isSelected}>${text}</option>`;
+    }).join('');
+}
+
+function getLatestFbtParts(value) {
+    const digits = String(Math.trunc(Number(value) || 0)).replace(/\D/g, '').padStart(6, '0').slice(-6);
+    return {
+        hour: clampInt(digits.slice(0, 2), 0, 23),
+        minute: clampInt(digits.slice(2, 4), 0, 59),
+        second: clampInt(digits.slice(4, 6), 0, 59),
+    };
+}
+
+function readLatestFbtFromForm() {
+    const hour = clampInt(document.querySelector('#strategyForm [data-config-key="latestFbtHour"]')?.value, 0, 23);
+    const minute = clampInt(document.querySelector('#strategyForm [data-config-key="latestFbtMinute"]')?.value, 0, 59);
+    const second = clampInt(document.querySelector('#strategyForm [data-config-key="latestFbtSecond"]')?.value, 0, 59);
+    return hour * 10000 + minute * 100 + second;
+}
+
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initWatchlistTabs();
+    initRecommendationControls();
     updateDateTime();
     checkSystemStatus();
     // loadDashboard() 由 initNavigation() → navigateTo('dashboard') 触发, 避免重复调用
@@ -57,8 +165,10 @@ function initNavigation() {
 }
 
 let _currentPage = '';
-function navigateTo(page, pushState = true, force = false) {
-    if (!force && page === _currentPage) return;
+function navigateTo(route, pushState = true, force = false) {
+    const [page, queryString] = String(route || 'dashboard').split('?');
+    if (page === 'watchlist' && queryString) applyWatchlistQuery(queryString);
+    if (!force && page === _currentPage && !queryString) return;
     _currentPage = page;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -66,18 +176,39 @@ function navigateTo(page, pushState = true, force = false) {
     if (nav) nav.classList.add('active');
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
-    if (pushState) history.replaceState(null, '', '#' + page);
+    if (pushState) history.replaceState(null, '', '#' + route);
     document.getElementById('pageTitle').textContent = {
         dashboard:'Dashboard 市场总览',watchlist:'监控列表',
         recommendations:'推荐结果',screening:'手动筛选',settings:'策略配置'
     }[page] || page;
+    setTopbarMeta(page);
     if (page === 'dashboard') loadDashboard();
     if (page === 'watchlist') loadWatchlist();
     if (page === 'recommendations') loadRecommendations();
+    if (page === 'screening') setupScreeningPage();
     if (page === 'settings') setupSettingsPage();
 }
 
 let wlCurrentStatus = ''; // current tab filter
+let recommendationLastData = null;
+let recommendationCurrentLevel = '';
+let recommendationEnrichedResults = [];
+
+function applyWatchlistQuery(queryString) {
+    const params = new URLSearchParams(queryString);
+    const search = params.get('search') || params.get('code') || params.get('name') || '';
+    const status = params.get('status') || '';
+    const searchInput = document.getElementById('wlSearch');
+    const statusSelect = document.getElementById('wlStatus');
+    if (searchInput) searchInput.value = search;
+    if (statusSelect) statusSelect.value = status;
+    wlCurrentStatus = status;
+    syncWatchlistTabs();
+    if (search) {
+        const name = params.get('name');
+        setInlineStatus('wlQueryHint', `已按 ${name ? `${name} ` : ''}${search} 过滤`);
+    }
+}
 
 function initWatchlistTabs() {
     document.querySelectorAll('#wlTabs .tab').forEach(tab => {
@@ -112,6 +243,13 @@ function syncWatchlistTabs() {
     });
 }
 
+function initRecommendationControls() {
+    const levelSelect = document.getElementById('recLevel');
+    if (levelSelect) {
+        levelSelect.addEventListener('change', () => setRecommendationLevel(levelSelect.value, false));
+    }
+}
+
 // ---- System Status ----
 async function checkSystemStatus() {
     const dot = document.getElementById('statusDot');
@@ -139,8 +277,23 @@ async function checkSystemStatus() {
 function updateDateTime() {
     const now = new Date();
     const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-    document.getElementById('dateDisplay').textContent =
-        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${weekdays[now.getDay()]}`;
+    if (_currentPage === 'dashboard' || !_currentPage) {
+        document.getElementById('dateDisplay').textContent =
+            `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${weekdays[now.getDay()]}`;
+    }
+}
+
+function setTopbarMeta(page, text = '') {
+    const el = document.getElementById('dateDisplay');
+    if (!el) return;
+    if (text) {
+        el.textContent = text;
+        return;
+    }
+    if (page === 'watchlist') el.textContent = '数据源: 东方财富涨停股池';
+    else if (page === 'recommendations') el.textContent = '筛选日期: -- | 审核通过率: --';
+    else if (page === 'screening') el.textContent = '';
+    else updateDateTime();
 }
 
 // ---- Dashboard ----
@@ -150,33 +303,46 @@ async function loadDashboard() {
     document.getElementById('metricNewZT').textContent = '--';
     document.getElementById('metricRecs').textContent = '--';
     document.getElementById('metricIndex').textContent = '--';
+    document.getElementById('metricIndexMeta').textContent = '等待收盘快照';
     document.getElementById('recentRecsBody').innerHTML = '<tr><td colspan="6" class="empty-cell">加载中...</td></tr>';
+    document.getElementById('recentRecAudit').textContent = '';
     document.getElementById('ztCount').textContent = '--';
+    document.getElementById('limitSource').textContent = '数据源: --';
+    document.getElementById('limitSummary').textContent = '';
     document.getElementById('sectorDist').innerHTML = '<p style="color:#8B95A8;text-align:center;padding:20px">加载中...</p>';
+    document.getElementById('marketTrend').innerHTML = '<div class="detail-empty">加载中...</div>';
 
     try {
         // 并行请求 watchlist stats 和最新筛选结果
-        const [wlResp, recResp] = await Promise.all([
+        const [wlResp, recResp, statusResp] = await Promise.all([
             apiFetch('/watchlist/stats'),
-            apiFetch('/screening/latest')
+            apiFetch('/screening/latest'),
+            apiFetch('/system/status')
         ]);
         const wl = await wlResp.json();
         const rec = await recResp.json();
+        const status = await statusResp.json();
+        const indexSnapshot = status?.index_snapshot || rec.index_snapshot || {};
+        const indexData = {
+            ...rec,
+            index_snapshot: indexSnapshot,
+            index_value: indexSnapshot.value ?? rec.index_value,
+            index_gain: indexSnapshot.gain_pct ?? rec.index_gain,
+        };
 
         // 监控股票数
         document.getElementById('metricWatchlist').textContent = wl.total || 0;
         document.getElementById('metricNewZT').textContent = wl.new_today || 0;
+        renderDashboardIndex(indexData);
 
         // 推荐数和指数
         if (rec.results && rec.results.length > 0) {
-            document.getElementById('metricRecs').textContent = rec.total_scored || rec.results.length;
-            if (rec.index_gain != null) {
-                const el = document.getElementById('metricIndex');
-                el.textContent = `${rec.index_gain >= 0 ? '+' : ''}${rec.index_gain.toFixed(2)}%`;
-                el.className = 'metric-value ' + (rec.index_gain >= 0 ? 'up' : 'down');
-            }
-            renderRecentRecommendations(rec.results.slice(0, 5));
-            document.getElementById('ztCount').textContent = rec.total_scored || rec.results.length;
+            const approvedRecs = rec.results.filter(r => ['STRONG_BUY', 'BUY', 'WATCH'].includes(r.recommendation));
+            document.getElementById('metricRecs').textContent = approvedRecs.length;
+            if (approvedRecs.length) renderRecentRecommendations(approvedRecs.slice(0, 5));
+            else document.getElementById('recentRecsBody').innerHTML = '<tr><td colspan="6" class="empty-cell">暂无审核通过推荐</td></tr>';
+            document.getElementById('ztCount').textContent = rec.zt_list?.length || rec.total_scored || rec.results.length;
+            renderRecentAudit(rec);
         } else {
             document.getElementById('metricRecs').textContent = '0';
             document.getElementById('ztCount').textContent = '0';
@@ -186,15 +352,12 @@ async function loadDashboard() {
                 const idxResp = await apiFetch('/system/status');
                 const idx = await idxResp.json();
                 document.getElementById('metricIndex').textContent = '--';
+                document.getElementById('metricIndexMeta').textContent = idx?.is_trading_day ? '等待筛选快照' : '休市无快照';
             } catch(e) {}
         }
 
-        // 板块分布 - 从筛选结果的行业统计中获取
-        if (rec.sector_dist) {
-            renderSectorDist(rec.sector_dist);
-        } else {
-            document.getElementById('sectorDist').innerHTML = '<p style="color:#8B95A8;text-align:center;padding:20px">暂无板块分布数据</p>';
-        }
+        renderLimitOverview(rec);
+        renderMarketTrend(rec);
 
     } catch(e) {
         // API 不可用（可能是 Render 冷启动），提供重试
@@ -202,15 +365,43 @@ async function loadDashboard() {
         document.getElementById('metricNewZT').textContent = '--';
         document.getElementById('metricRecs').textContent = '--';
         document.getElementById('metricIndex').textContent = '--';
+        document.getElementById('metricIndexMeta').textContent = '行情源暂不可用';
         document.getElementById('recentRecsBody').innerHTML =
             '<tr><td colspan="6" class="empty-cell" style="color:#e60012">'
             + 'API 连接失败，后端可能正在启动中（冷启动约30-60秒）<br>'
             + '<button class="btn" onclick="refreshData()" style="margin-top:8px">点击重试</button>'
             + '</td></tr>';
         document.getElementById('ztCount').textContent = '--';
+        document.getElementById('limitSource').textContent = '数据源: 后端服务不可用';
+        document.getElementById('limitSummary').textContent = '';
         document.getElementById('sectorDist').innerHTML =
             '<p style="color:#e60012;text-align:center;padding:20px">后端服务不可用</p>';
+        document.getElementById('marketTrend').innerHTML =
+            '<div class="detail-empty" style="color:#e60012">后端服务不可用</div>';
     }
+}
+
+function renderDashboardIndex(data) {
+    const snapshot = data?.index_snapshot || {};
+    const value = isRealNumber(snapshot.value) ? Number(snapshot.value) : (isRealNumber(data?.index_value) ? Number(data.index_value) : null);
+    const gain = isRealNumber(snapshot.gain_pct) ? Number(snapshot.gain_pct) : (isRealNumber(data?.index_gain) ? Number(data.index_gain) : null);
+    const valueEl = document.getElementById('metricIndex');
+    const metaEl = document.getElementById('metricIndexMeta');
+    if (!valueEl || !metaEl) return;
+
+    valueEl.textContent = value === null ? '--' : value.toFixed(2);
+    valueEl.className = 'metric-value';
+    if (gain !== null) valueEl.classList.add(gain >= 0 ? 'up' : 'down');
+
+    if (value === null && gain === null) {
+        metaEl.textContent = '行情源暂不可用';
+        return;
+    }
+
+    const gainText = gain === null ? '涨跌幅--' : `${gain >= 0 ? '+' : ''}${gain.toFixed(2)}%`;
+    const source = snapshot.source || '真实行情快照';
+    const fetched = snapshot.fetched_at ? ` · ${formatDateTimeShort(snapshot.fetched_at)}` : '';
+    metaEl.textContent = `${gainText} · ${source}${fetched}`;
 }
 
 function renderSectorDist(sectors) {
@@ -219,15 +410,136 @@ function renderSectorDist(sectors) {
         return;
     }
     const total = Object.values(sectors).reduce((a,b)=>a+b,0);
-    const colors = ['#2932e1','#e60012','#009966','#F39C12','#5A6680','#8B95A8'];
+    const colors = ['#3897f0','#2eb9ee','#f5a400','#6273f5','#009a70','#8B95A8'];
     let i = 0;
     document.getElementById('sectorDist').innerHTML = Object.entries(sectors)
         .sort((a,b) => b[1]-a[1])
         .map(([name, count]) => {
             const pct = total > 0 ? Math.round(count/total*100) : 0;
             const c = colors[i++ % colors.length];
-            return `<div class="sector-bar"><div class="sector-bar-label"><span>${name}</span><span>${pct}%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:${pct}%;background:${c}"></div></div></div>`;
+            return `<div class="sector-bar"><div class="sector-bar-label"><span>${name}: ${count}只</span><span>${pct}%</span></div><div class="sector-bar-track"><div class="sector-bar-fill" style="width:${pct}%;background:${c}"></div></div></div>`;
         }).join('');
+}
+
+function renderRecentAudit(data) {
+    const el = document.getElementById('recentRecAudit');
+    if (!el) return;
+    const strong = data.strong_buy || 0;
+    const buy = data.buy || 0;
+    const watch = data.watch || 0;
+    const total = data.total_scored || (data.results?.length || 0);
+    const passRate = total ? Math.round((strong + buy + watch) / total * 100) : 0;
+    const downgraded = (data.results || []).filter(s => s.audit?.downgraded).length;
+    el.textContent = `审核后: STRONG_BUY=${strong} · BUY=${buy} · WATCH=${watch} | 审核通过率 ${passRate}% | 降级 ${downgraded}只`;
+}
+
+function renderLimitOverview(data) {
+    const ztList = data.zt_list || [];
+    const meta = data.zt_meta || {};
+    const count = ztList.length || data.total_scored || 0;
+    document.getElementById('ztCount').textContent = `${count} 只`;
+    const fetched = meta.fetched_at ? String(meta.fetched_at).replace('T', ' ').slice(0, 16) : (data.date || '--');
+    document.getElementById('limitSource').textContent = `数据源: ${meta.source || '东方财富 push2ex'} · 采集: ${fetched}`;
+
+    const sectors = data.sector_dist || inferBoardDistribution(ztList);
+    renderSectorDist(sectors);
+    trimSectorBarsForDashboard();
+    document.getElementById('limitSummary').textContent = `总计 ${count} 只涨停股 · 覆盖 ${Object.keys(sectors || {}).length || '--'} 个行业板块`;
+}
+
+function trimSectorBarsForDashboard() {
+    const container = document.getElementById('sectorDist');
+    if (!container) return;
+    [...container.querySelectorAll('.sector-bar')].forEach((bar, index) => {
+        bar.style.display = index < 4 ? '' : 'none';
+    });
+}
+
+function inferBoardDistribution(items) {
+    const dist = {};
+    for (const item of items || []) {
+        const code = String(item.code || '');
+        let name = '深圳主板';
+        if (code.startsWith('688')) name = '科创板';
+        else if (code.startsWith('6')) name = '上海主板';
+        else if (code.startsWith('3')) name = '创业板';
+        else if (code.startsWith('8') || code.startsWith('9')) name = '北交所';
+        dist[name] = (dist[name] || 0) + 1;
+    }
+    return dist;
+}
+
+function renderMarketTrend(data) {
+    const el = document.getElementById('marketTrend');
+    if (!el) return;
+    const ztList = data.zt_list || [];
+    const timeSlots = [
+        ['09:25', 92500], ['09:30', 93000], ['09:45', 94500], ['10:00', 100000],
+        ['10:30', 103000], ['11:00', 110000], ['13:00', 130000], ['13:30', 133000],
+        ['14:00', 140000], ['14:30', 143000], ['14:45', 144500], ['15:00', 150000]
+    ];
+    const buckets = Object.fromEntries(timeSlots.map(([label]) => [label, 0]));
+    for (const item of ztList) {
+        if (!isRealNumber(item.seal_time)) continue;
+        const seal = Number(item.seal_time);
+        const slot = [...timeSlots].reverse().find(([, threshold]) => seal >= threshold)?.[0] || timeSlots[0][0];
+        buckets[slot] = (buckets[slot] || 0) + 1;
+    }
+    const points = Object.entries(buckets);
+    if (!ztList.length || points.every(([, v]) => !v)) {
+        emptyChart(el, '接口未返回封板时间明细，未使用本地假数据补绘');
+        return;
+    }
+    el.innerHTML = '';
+    el.classList.remove('loading');
+    disposeChart(dashboardTrendChart);
+    dashboardTrendChart = echarts.init(el, getEChartsLightTheme(), { renderer: 'canvas' });
+    dashboardTrendChart.setOption(mergeChartOption({
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'line' },
+            backgroundColor: 'rgba(255,255,255,0.98)',
+            borderColor: '#e5e7eb',
+            textStyle: { color: '#1f2937' },
+        },
+        grid: chartGrid({ top: 24, bottom: 42, left: 44, right: 20 }),
+        xAxis: {
+            type: 'category',
+            data: points.map(([label]) => label),
+            axisLabel: { interval: 0, fontSize: 11, color: '#6b7280' },
+            axisTick: { alignWithLabel: true },
+        },
+        yAxis: {
+            type: 'value',
+            minInterval: 1,
+            axisLabel: { fontSize: 11, color: '#6b7280' },
+            splitLine: { lineStyle: { color: '#eef0f4' } },
+        },
+        series: [
+            {
+                type: 'bar',
+                data: points.map(([, value]) => value),
+                barWidth: '42%',
+                itemStyle: {
+                    color: params => (params.dataIndex >= 8 ? '#f5a400' : '#f5222d'),
+                    borderRadius: [4, 4, 0, 0],
+                },
+            },
+            {
+                type: 'line',
+                data: points.map(([, value]) => value),
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 7,
+                lineStyle: { color: '#2932e1', width: 2.5 },
+                itemStyle: { color: '#2932e1' },
+                areaStyle: { color: 'rgba(41, 50, 225, 0.08)' },
+            },
+        ],
+    }));
+    requestAnimationFrame(() => {
+        try { dashboardTrendChart?.resize(); } catch (e) {}
+    });
 }
 
 function renderRecentRecommendations(results) {
@@ -236,8 +548,8 @@ function renderRecentRecommendations(results) {
         <tr>
             <td><span class="stock-code">${s.code}</span></td>
             <td>${s.name}</td>
-            <td>${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))} ${s.adjusted_score}</td>
-            <td style="color:${s.drop_pct<0?'#e60012':'#009966'}">${(s.drop_pct||0).toFixed(2)}%</td>
+            <td>${formatNumber(s.adjusted_score, 0)}分</td>
+            <td><span class="${valueClass(s.drop_pct)}">${formatMaybePct(s.drop_pct, 2)}</span></td>
             <td><span class="tag tag-${(s.recommendation||'pass').toLowerCase()}">${names[(s.recommendation||'pass').toLowerCase()]}</span></td>
             <td>${s.zt_date||'--'}</td>
         </tr>`).join('');
@@ -246,8 +558,13 @@ function renderRecentRecommendations(results) {
 // ---- Watchlist ----
 let wlCurrentPage = 1;
 let wlFullCache = null; // 全量数据缓存（用于状态分类计数）
+let wlLastItems = [];
 let wlSortKey = '';
 let wlSortOrder = 'asc';
+let wlRequestSeq = 0;
+let dashboardTrendChart = null;
+let recommendationTrendCharts = {};
+let chartResizeTimer = null;
 
 function setWatchlistSort(key) {
     if (wlSortKey === key) {
@@ -259,6 +576,51 @@ function setWatchlistSort(key) {
     updateWatchlistSortHeaders();
     loadWatchlist(1);
 }
+
+function formatFbtToClock(value) {
+    if (value === null || value === undefined || value === '') return '';
+    const digits = String(Math.trunc(Number(value) || 0)).replace(/\D/g, '').padStart(6, '0').slice(-6);
+    return `${digits.slice(0, 2)}:${digits.slice(2, 4)}:${digits.slice(4, 6)}`;
+}
+
+function parseClockToFbt(value) {
+    if (value === null || value === undefined || value === '') return 0;
+    const match = String(value).trim().match(/^(\d{2}):(\d{2}):(\d{2})$/);
+    if (match) {
+        const hours = Number(match[1]);
+        const mins = Number(match[2]);
+        const secs = Number(match[3]);
+        return hours * 10000 + mins * 100 + secs;
+    }
+    const digits = String(value).replace(/\D/g, '');
+    if (digits.length === 6) return Number(digits);
+    return toNumber(value, 0);
+}
+
+function makeChartId(prefix, value) {
+    return `${prefix}-${String(value ?? '').replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+}
+
+function disposeChart(chart) {
+    if (!chart) return;
+    try {
+        chart.dispose();
+    } catch (e) {}
+}
+
+function scheduleChartResize() {
+    clearTimeout(chartResizeTimer);
+    chartResizeTimer = setTimeout(() => {
+        if (dashboardTrendChart) {
+            try { dashboardTrendChart.resize(); } catch (e) {}
+        }
+        Object.values(recommendationTrendCharts).forEach(chart => {
+            try { chart.resize(); } catch (e) {}
+        });
+    }, 120);
+}
+
+window.addEventListener('resize', scheduleChartResize);
 
 function updateWatchlistSortHeaders() {
     document.querySelectorAll('.sort-header[data-sort-key]').forEach(button => {
@@ -272,7 +634,7 @@ function updateWatchlistSortHeaders() {
 }
 
 function buildWatchlistParams(page, includeStatus = true) {
-    const params = new URLSearchParams({ page: String(page), size: '20' });
+    const params = new URLSearchParams({ page: String(page), size: '15' });
     const search = document.getElementById('wlSearch')?.value.trim();
     const selectedStatus = document.getElementById('wlStatus')?.value ?? wlCurrentStatus;
     wlCurrentStatus = selectedStatus;
@@ -287,12 +649,15 @@ function buildWatchlistParams(page, includeStatus = true) {
 }
 
 async function loadWatchlist(page = 1) {
+    const requestSeq = ++wlRequestSeq;
     wlCurrentPage = page;
     syncWatchlistTabs();
     updateWatchlistSortHeaders();
+    const currentSearch = document.getElementById('wlSearch')?.value.trim();
+    if (!currentSearch) setInlineStatus('wlQueryHint', '');
 
     // 重置为空状态
-    document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="15" class="empty-cell">加载中...</td></tr>';
+    document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="14" class="empty-cell">加载中...</td></tr>';
     document.getElementById('wlCountAll').textContent = '0';
     document.getElementById('wlCountActive').textContent = '0';
     document.getElementById('wlCountRec').textContent = '0';
@@ -300,40 +665,43 @@ async function loadWatchlist(page = 1) {
 
     try {
         const pageParams = buildWatchlistParams(page, true);
-        const statsParams = buildWatchlistParams(1, false);
-        statsParams.set('size', '500');
-
-        // 同时获取分页数据和全量统计（全量用于tab计数）
+        // 同时获取分页数据和真实状态统计
         const [pageResp, statsResp] = await Promise.all([
             apiFetch(`/watchlist?${pageParams.toString()}`),
-            apiFetch(`/watchlist?${statsParams.toString()}`)  // 一次获取全量用于状态统计
+            apiFetch('/watchlist/stats')
         ]);
+        if (!pageResp.ok) {
+            const err = await pageResp.json().catch(() => ({}));
+            throw new Error(err.detail || '监控列表加载失败');
+        }
         const data = await pageResp.json();
-        const allData = await statsResp.json();
+        const statsData = await statsResp.json();
+        if (requestSeq !== wlRequestSeq) return;
+        wlLastItems = data.items || [];
 
         if (data.items && data.items.length > 0) {
             renderWatchlistTable(data.items);
             renderPagination('wlPagination', data.total, data.page, data.size, loadWatchlist);
+            if (currentSearch) setInlineStatus('wlQueryHint', `当前按「${currentSearch}」过滤，共 ${data.total} 条`);
         } else {
-            document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="15" class="empty-cell">暂无监控数据。每日15:10自动从涨停股池添加。</td></tr>';
+            document.getElementById('wlTableBody').innerHTML = '<tr><td colspan="14" class="empty-cell">暂无监控数据。每日15:10自动从涨停股池添加。</td></tr>';
             document.getElementById('wlPagination').innerHTML = '';
+            if (currentSearch) setInlineStatus('wlQueryHint', `当前按「${currentSearch}」过滤，无匹配股票`, 'error');
         }
 
-        // 从全量数据计算各状态数量
-        if (allData.items && allData.items.length > 0) {
-            wlFullCache = allData.items;
-            document.getElementById('wlCountAll').textContent = allData.total;
-            document.getElementById('wlCountActive').textContent = allData.items.filter(i => i.status === 'active').length;
-            document.getElementById('wlCountRec').textContent = allData.items.filter(i => i.status === 'recommended').length;
-            document.getElementById('wlCountExpired').textContent = allData.items.filter(i => i.status === 'expired').length;
-        } else {
-            document.getElementById('wlCountAll').textContent = allData.total || 0;
-        }
+        const counts = statsData.status_counts || {};
+        document.getElementById('wlCountAll').textContent = statsData.total || data.total || 0;
+        document.getElementById('wlCountActive').textContent = counts.active || 0;
+        document.getElementById('wlCountRec').textContent = counts.recommended || 0;
+        document.getElementById('wlCountExpired').textContent = counts.expired || 0;
 
     } catch(e) {
+        if (requestSeq !== wlRequestSeq) return;
+        wlLastItems = [];
+        const message = e?.message || 'API 连接失败，后端可能正在启动中（冷启动约30-60秒）';
         document.getElementById('wlTableBody').innerHTML =
-            '<tr><td colspan="15" class="empty-cell" style="color:#e60012">'
-            + 'API 连接失败，后端可能正在启动中（冷启动约30-60秒）'
+            '<tr><td colspan="14" class="empty-cell" style="color:#e60012">'
+            + escapeHtml(message)
             + ' <a href="#" onclick="refreshData();return false" style="color:#3B82F6">点击重试</a></td></tr>';
         document.getElementById('wlPagination').innerHTML = '';
     }
@@ -342,29 +710,28 @@ async function loadWatchlist(page = 1) {
 function renderWatchlistTable(items) {
     const tags = {active:'回撤中',recommended:'已推荐',expired:'已过期'};
     document.getElementById('wlTableBody').innerHTML = items.map(item => {
-        const cp = item.current_price || item.ref_price;
-        const dp = item.drop_pct != null ? item.drop_pct : 0;
-        const dpColor = dp < 0 ? (Math.abs(dp) >= 5 ? '#e60012' : '#F39C12') : '#009966';
+        const dpColor = isRealNumber(item.drop_pct) ? (Number(item.drop_pct) < 0 ? '#009a70' : '#f5222d') : '#999999';
         // 封板时间格式化
         const sealTime = item.seal_time && item.seal_time !== '0' && item.seal_time !== 0
             ? (() => { const s = String(item.seal_time); const h = parseInt(s.substring(0, s.length-4)||'0'); const m = parseInt(s.substring(s.length-4, s.length-2)||'0'); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; })()
             : '--';
-        const ztCount = item.zt_count && item.zt_count !== '0' ? item.zt_count : '--';
+        const ztCount = item.zt_count !== undefined && item.zt_count !== null && item.zt_count !== ''
+            ? item.zt_count
+            : '--';
         return `<tr>
-            <td><input type="checkbox"></td>
-            <td><span class="stock-code">${item.code}</span></td>
-            <td>${item.name}${item.zt_time ? '<div style="font-size:10px;color:#999999">封板'+item.zt_time+(item.zbc>0?' 炸板'+item.zbc+'次':'')+'</div>' : ''}</td>
-            <td>${item.zt_date}</td>
-            <td>${item.ref_price.toFixed(2)}</td>
-            <td>${cp.toFixed(2)}</td>
-            <td style="color:${dpColor};font-weight:600">${dp.toFixed(2)}%</td>
-            <td>${item.turnover||'--'}%</td>
-            <td>${item.vol_ratio||'--'}</td>
-            <td>${item.pe||'--'}</td>
+            <td><span class="stock-code">${escapeHtml(item.code)}</span></td>
+            <td>${escapeHtml(item.name)}${item.zt_time ? '<div style="font-size:10px;color:#999999">封板'+escapeHtml(item.zt_time)+(item.zbc>0?' 炸板'+escapeHtml(item.zbc)+'次':'')+'</div>' : ''}</td>
+            <td>${escapeHtml(item.zt_date)}</td>
+            <td>${formatNumber(item.ref_price, 2)}</td>
+            <td>${formatNumber(item.current_price, 2)}</td>
+            <td style="color:${dpColor};font-weight:600">${formatMaybePct(item.drop_pct, 2)}</td>
+            <td>${formatMaybePct(item.turnover, 2)}</td>
+            <td>${formatNumber(item.vol_ratio, 2)}</td>
+            <td>${formatNumber(item.pe, 2)}</td>
             <td style="font-size:12px">${sealTime}</td>
             <td style="font-size:12px">${ztCount}</td>
-            <td>${item.mcap||'--'}</td>
-            <td><span class="tag tag-${item.status||'active'}">${tags[item.status]||'回撤中'}</span></td>
+            <td>${escapeHtml(item.mcap||'--')}</td>
+            <td><span class="tag tag-${item.status||'active'}">${tags[item.status || 'active']||'回撤中'}</span></td>
             <td style="white-space:nowrap">
                 <button class="btn btn-sm" style="margin-right:4px" onclick="event.stopPropagation();showStockDetail('${item.code}')">详情</button>
                 <button class="btn btn-sm" onclick="removeWatchlistItem('${item.code}')">移除</button>
@@ -374,11 +741,38 @@ function renderWatchlistTable(items) {
 }
 
 async function removeWatchlistItem(code) {
-    if (!confirm(`确认从监控列表中移除 ${code}？`)) return;
-    try { await apiFetch(`/watchlist/${code}`, { method: 'DELETE' }); } catch(e) {}
+    setInlineStatus('wlQueryHint', `正在移除 ${code}...`);
+    try {
+        await apiFetch(`/watchlist/${code}`, { method: 'DELETE' });
+        setInlineStatus('wlQueryHint', `已移除 ${code}`);
+    } catch(e) {
+        setInlineStatus('wlQueryHint', `移除 ${code} 失败，请检查后端服务`, 'error');
+    }
     loadWatchlist(wlCurrentPage);
 }
-function exportWatchlist() { alert('导出功能开发中'); }
+function exportWatchlist() {
+    if (!wlLastItems.length) {
+        setInlineStatus('wlQueryHint', '当前没有可导出的列表数据', 'error');
+        return;
+    }
+    const headers = ['代码','名称','涨停日期','参考价','现价','回撤%','换手率','量比','PE','封板时间','涨停次数','流通市值','状态'];
+    const rows = wlLastItems.map(item => [
+        item.code, item.name, item.zt_date, item.ref_price, item.current_price,
+        item.drop_pct, item.turnover, item.vol_ratio, item.pe, item.seal_time,
+        item.zt_count, item.mcap, item.status
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `new-france-watchlist-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setInlineStatus('wlQueryHint', `已导出当前 ${wlLastItems.length} 条列表数据`);
+}
 
 // ---- Stock Detail Modal ----
 let _detailCharts = {};
@@ -387,17 +781,42 @@ function showStockDetail(code) {
     const modal = document.getElementById('stockDetailModal');
     if (!modal) return;
     modal.classList.add('open');
+    resetDetailChartPanels();
     document.getElementById('modalStockName').textContent = '加载中...';
     document.getElementById('modalStockCode').textContent = code;
     document.getElementById('modalMeta').innerHTML = '';
+    document.getElementById('modalDataSources').innerHTML = '';
 
     // 标记所有图表为加载中
-    ['chartPrice','chartVolume','chartMA','chartChange','chartDrawdownDist'].forEach(id => {
+    ['chartPrice','chartVolume','chartMA','chartChange','chartDrawdownDist','chartTurnover','chartVolRatio','chartPE','chartSeal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('loading');
     });
+    const timeline = document.getElementById('chartLimitTimeline');
+    if (timeline) timeline.innerHTML = '<div class="detail-empty">加载中...</div>';
 
     loadStockDetailData(code);
+}
+
+function resetDetailChartPanels() {
+    document.querySelectorAll('#stockDetailModal .chart-panel').forEach(panel => {
+        panel.style.display = '';
+    });
+    document.querySelectorAll('#stockDetailModal .chart-row').forEach(row => {
+        row.style.display = '';
+    });
+}
+
+function setDetailChartPanelVisible(id, visible) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const panel = el.closest('.chart-panel');
+    if (panel) panel.style.display = visible ? '' : 'none';
+    const row = panel?.closest('.chart-row');
+    if (row) {
+        const panels = Array.from(row.querySelectorAll('.chart-panel'));
+        row.style.display = panels.length && panels.every(item => item.style.display === 'none') ? 'none' : '';
+    }
 }
 
 function closeStockDetail() {
@@ -428,20 +847,29 @@ function renderStockDetail(data) {
     document.getElementById('modalStockName').textContent = data.name;
     document.getElementById('modalStockCode').textContent = data.code;
     const dp = data.drop_pct;
-    const dpClass = dp != null && dp < 0 ? 'down' : 'up';
-    const dpVal = dp != null ? `${dp.toFixed(2)}%` : '--';
+    const dpClass = isRealNumber(dp) ? (Number(dp) < 0 ? 'down' : 'up') : '';
+    const dpVal = formatMaybePct(dp, 2);
     document.getElementById('modalMeta').innerHTML =
         `<span>涨停日期: <b class="val">${data.zt_date}</b></span>` +
-        `<span>参考价: <b class="val">${data.ref_price.toFixed(2)}</b></span>` +
-        `<span>现价: <b class="val">${data.current_price ? data.current_price.toFixed(2) : '--'}</b></span>` +
+        `<span>参考价: <b class="val">${formatNumber(data.ref_price, 2)}</b></span>` +
+        `<span>现价: <b class="val">${formatNumber(data.current_price, 2)}</b></span>` +
         `<span>回撤: <b class="val ${dpClass}">${dpVal}</b></span>` +
         `<span>封板时间: <b class="val">${formatSealTimeForDetail(data.seal_time)}</b></span>` +
         `<span>连板数: <b class="val">${data.consecutive || '--'}</b></span>` +
         `<span>加入时间: <b class="val">${data.added_date || '--'}</b></span>`;
+    renderDetailSources(data);
 
-    const cd = data.chart_data;
-    if (!cd || !cd.dates || cd.dates.length === 0) {
-        document.getElementById('chartPrice').innerHTML = '<p style="color:#64748B;text-align:center;padding:60px 0">暂无K线数据</p>';
+    // 销毁旧图表
+    Object.values(_detailCharts).forEach(c => { try { c.dispose(); } catch(e) {} });
+    _detailCharts = {};
+
+    const cd = data.chart_data || {};
+    const klineText = sourceEmptyText(data.data_sources?.kline, '历史K线数据');
+    if (!cd.dates?.length || !hasFiniteSeries(cd.closes)) {
+        ['chartPrice','chartVolume','chartMA','chartChange','chartDrawdownDist'].forEach(id => {
+            emptyChart(document.getElementById(id), klineText);
+        });
+        renderSupplementCharts(data);
         return;
     }
 
@@ -451,40 +879,25 @@ function renderStockDetail(data) {
         if (el) el.classList.remove('loading');
     });
 
-    // 销毁旧图表
-    Object.values(_detailCharts).forEach(c => { try { c.dispose(); } catch(e) {} });
-    _detailCharts = {};
-
-    const darkTheme = getEChartsDarkTheme();
+    const chartTheme = getEChartsLightTheme();
 
     // 1. 价格走势 + 回撤双轴图
-    _detailCharts.price = echarts.init(document.getElementById('chartPrice'), darkTheme);
-    _detailCharts.price.setOption({
+    _detailCharts.price = echarts.init(document.getElementById('chartPrice'), chartTheme);
+    _detailCharts.price.setOption(mergeChartOption({
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'cross', crossStyle: { color: '#64748B' } },
-            backgroundColor: 'rgba(15,23,42,0.95)',
-            borderColor: '#1E293B',
-            textStyle: { color: '#F8FAFC', fontSize: 12 }
+            axisPointer: { type: 'cross', crossStyle: { color: '#999' } },
         },
-        legend: { data: ['收盘价','回撤%','参考价'], bottom: 0, textStyle: { color: '#94A3B8', fontSize: 11 } },
-        grid: { left: 60, right: 60, top: 20, bottom: 40 },
-        xAxis: {
-            type: 'category', data: cd.dates,
-            axisLine: { lineStyle: { color: '#1E293B' } },
-            axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 },
-        },
+        legend: chartLegend(['收盘价','回撤%','参考价']),
+        grid: chartGrid({ right: 56, top: 44 }),
+        xAxis: detailCategoryAxis(cd.dates),
         yAxis: [
             {
-                type: 'value', name: '价格(元)',
-                nameTextStyle: { color: '#94A3B8', fontSize: 11 },
-                axisLabel: { color: '#64748B', fontSize: 10 },
-                splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } },
+                type: 'value',
             },
             {
-                type: 'value', name: '回撤(%)',
-                nameTextStyle: { color: '#94A3B8', fontSize: 11 },
-                axisLabel: { color: '#64748B', fontSize: 10 },
+                type: 'value',
+                axisLabel: { formatter: '{value}%', margin: 8 },
                 splitLine: { show: false },
             }
         ],
@@ -492,90 +905,90 @@ function renderStockDetail(data) {
             {
                 name: '收盘价', type: 'line', data: cd.closes,
                 smooth: true, symbol: 'none',
-                lineStyle: { color: '#3B82F6', width: 2 },
-                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-                    colorStops: [{offset:0,color:'rgba(59,130,246,0.15)'},{offset:1,color:'rgba(59,130,246,0)'}] } },
+                lineStyle: { color: '#006fd6', width: 2 },
             },
             {
                 name: '参考价', type: 'line', yAxisIndex: 0,
                 markLine: { silent: true, symbol: 'none',
-                    lineStyle: { color: '#F59E0B', type: 'dashed', width: 1.5 },
-                    label: { formatter: `参考价 {c}`, color: '#F59E0B', fontSize: 11 },
+                    lineStyle: { color: '#9aa0a6', type: 'dashed', width: 1.2 },
+                    label: { show: false },
                     data: [{ yAxis: data.ref_price }] },
                 data: []
             },
             {
                 name: '回撤%', type: 'line', yAxisIndex: 1, data: cd.drawdowns,
                 smooth: true, symbol: 'none',
-                lineStyle: { color: '#EF4444', width: 1.5, type: 'dashed' },
-                areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-                    colorStops: [{offset:0,color:'rgba(239,68,68,0.1)'},{offset:1,color:'rgba(239,68,68,0)'}] } },
+                lineStyle: { color: '#6375ff', width: 1.5 },
             }
         ]
-    });
+    }));
 
     // 2. 成交量图
-    _detailCharts.volume = echarts.init(document.getElementById('chartVolume'), darkTheme);
-    _detailCharts.volume.setOption({
-        tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
-        grid: { left: 50, right: 16, top: 16, bottom: 30 },
-        xAxis: { type: 'category', data: cd.dates, axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 } },
-        yAxis: { type: 'value', name: '手', axisLabel: { color: '#64748B', fontSize: 10, formatter: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e4 ? (v/1e4).toFixed(0)+'万' : v }, splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } } },
+    _detailCharts.volume = echarts.init(document.getElementById('chartVolume'), chartTheme);
+    _detailCharts.volume.setOption(mergeChartOption({
+        tooltip: { trigger: 'axis' },
+        grid: chartGrid({ top: 28 }),
+        xAxis: detailCategoryAxis(cd.dates),
+        yAxis: { type: 'value', axisLabel: { formatter: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e4 ? (v/1e4).toFixed(0)+'万' : v } },
         series: [{ type: 'bar', data: cd.volumes,
-            itemStyle: { color: params => cd.changes && cd.changes[params.dataIndex] >= 0 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.5)' } }]
-    });
+            barWidth: 12,
+            itemStyle: { color: params => cd.changes && cd.changes[params.dataIndex] >= 0 ? 'rgba(245,34,45,0.72)' : 'rgba(82,196,26,0.72)' } }]
+    }));
 
     // 3. 均线图
-    _detailCharts.ma = echarts.init(document.getElementById('chartMA'), darkTheme);
+    _detailCharts.ma = echarts.init(document.getElementById('chartMA'), chartTheme);
     const maSeries = [
-        { name: '收盘价', type: 'line', data: cd.closes, smooth: true, symbol: 'none', lineStyle: { color: '#64748B', width: 1, type: 'dotted' } }
+        { name: '收盘价', type: 'line', data: cd.closes, smooth: true, symbol: 'none', lineStyle: { color: '#9aa0a6', width: 1, type: 'dotted' } }
     ];
-    const maColors = { 'MA5': '#F59E0B', 'MA10': '#3B82F6', 'MA20': '#8B5CF6', 'MA60': '#EC4899' };
+    const maColors = { 'MA5': '#006fd6', 'MA10': '#24b8ef', 'MA20': '#28c7c9', 'MA60': '#27d6a3' };
     ['ma5','ma10','ma20','ma60'].forEach((k, i) => {
         if (cd[k] && cd[k].length > 0) {
             const name = 'MA' + [5,10,20,60][i];
             maSeries.push({ name, type: 'line', data: cd[k], smooth: true, symbol: 'none', lineStyle: { color: maColors[name], width: 1.5 } });
         }
     });
-    _detailCharts.ma.setOption({
-        tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
-        legend: { data: maSeries.map(s => s.name), bottom: 0, textStyle: { color: '#94A3B8', fontSize: 10 } },
-        grid: { left: 55, right: 16, top: 16, bottom: 35 },
-        xAxis: { type: 'category', data: cd.dates, axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 } },
-        yAxis: { type: 'value', name: '元', axisLabel: { color: '#64748B', fontSize: 10 }, splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } } },
+    _detailCharts.ma.setOption(mergeChartOption({
+        tooltip: { trigger: 'axis' },
+        legend: chartLegend(maSeries.map(s => s.name)),
+        grid: chartGrid({ top: 44 }),
+        xAxis: detailCategoryAxis(cd.dates),
+        yAxis: { type: 'value' },
         series: maSeries
-    });
+    }));
 
     // 4. 每日涨跌幅
     if (cd.changes && cd.changes.length > 0) {
-        _detailCharts.change = echarts.init(document.getElementById('chartChange'), darkTheme);
-        _detailCharts.change.setOption({
-            tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
-            grid: { left: 50, right: 16, top: 16, bottom: 30 },
-            xAxis: { type: 'category', data: cd.dates, axisLabel: { color: '#64748B', fontSize: 10, rotate: cd.dates.length > 30 ? 45 : 0 } },
-            yAxis: { type: 'value', name: '%', axisLabel: { color: '#64748B', fontSize: 10 }, splitLine: { lineStyle: { color: '#1E293B', type: 'dashed' } } },
+        _detailCharts.change = echarts.init(document.getElementById('chartChange'), chartTheme);
+        _detailCharts.change.setOption(mergeChartOption({
+            tooltip: { trigger: 'axis' },
+            grid: chartGrid({ top: 28 }),
+            xAxis: detailCategoryAxis(cd.dates),
+            yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
             series: [{ type: 'bar', data: cd.changes,
-                itemStyle: { color: params => params.value >= 0 ? '#EF4444' : '#22C55E' } }]
-        });
+                barWidth: 12,
+                itemStyle: { color: params => params.value >= 0 ? '#f5222d' : '#7ed367' } }]
+        }));
+    } else {
+        emptyChart(document.getElementById('chartChange'), '接口未返回涨跌幅序列');
     }
 
-    // 5. 回撤分布饼图
+    // 5. 回撤分布横向柱图
     const dist = cd.drawdown_distribution;
     if (dist && Object.keys(dist).length > 0) {
-        _detailCharts.dist = echarts.init(document.getElementById('chartDrawdownDist'), darkTheme);
-        const distData = Object.entries(dist).map(([k, v]) => ({ name: k, value: v }));
-        _detailCharts.dist.setOption({
-            tooltip: { trigger: 'item', formatter: '{b}: {c} 天 ({d}%)', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: '#1E293B', textStyle: { color: '#F8FAFC', fontSize: 12 } },
-            legend: { orient: 'vertical', right: 8, top: 'center', textStyle: { color: '#94A3B8', fontSize: 10 } },
-            series: [{
-                type: 'pie', radius: ['40%', '72%'], center: ['40%', '50%'], avoidLabelOverlap: false,
-                itemStyle: { borderRadius: 2, borderColor: '#0A1628', borderWidth: 2 },
-                label: { show: true, formatter: '{b}\n{d}%', color: '#94A3B8', fontSize: 10 },
-                data: distData,
-                color: ['#EF4444','#F59E0B','#F97316','#64748B','#22C55E','#10B981']
-            }]
-        });
+        _detailCharts.dist = echarts.init(document.getElementById('chartDrawdownDist'), chartTheme);
+        const distEntries = Object.entries(dist);
+        _detailCharts.dist.setOption(mergeChartOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: 86, right: 38, top: 22, bottom: 18, containLabel: true },
+            xAxis: { type: 'value', show: false },
+            yAxis: { type: 'category', data: distEntries.map(([k]) => k), axisLabel: { color: '#666', fontSize: 11 }, axisTick: { show: false }, axisLine: { show: false } },
+            series: [{ type: 'bar', data: distEntries.map(([,v]) => v), barWidth: 12, itemStyle: { color: params => ['#2d88d8','#29b6df','#25c9c8','#28d69f','#6273f5'][params.dataIndex % 5], borderRadius: 6 }, label: { show: true, position: 'right', formatter: '{c}天', color: '#202124', fontSize: 11 } }]
+        }));
+    } else {
+        emptyChart(document.getElementById('chartDrawdownDist'), '接口未返回回撤分布');
     }
+
+    renderSupplementCharts(data);
 }
 
 function formatSealTimeForDetail(val) {
@@ -589,33 +1002,222 @@ function formatSealTimeForDetail(val) {
     } catch(e) { return '--'; }
 }
 
-function getEChartsDarkTheme() {
+function getEChartsLightTheme() {
     return {
         backgroundColor: 'transparent',
-        textStyle: { color: '#94A3B8' },
+        textStyle: { color: '#666' },
     };
+}
+
+function chartGrid(overrides = {}) {
+    return { top: 34, right: 22, bottom: 34, left: 42, containLabel: true, ...overrides };
+}
+
+function chartLegend(data, overrides = {}) {
+    return {
+        data,
+        top: 2,
+        left: 0,
+        itemWidth: 18,
+        itemHeight: 8,
+        icon: 'circle',
+        textStyle: { color: '#666', fontSize: 11, lineHeight: 14 },
+        ...overrides
+    };
+}
+
+function detailCategoryAxis(dates) {
+    const values = Array.isArray(dates) ? dates : [];
+    const interval = values.length > 18 ? Math.ceil(values.length / 12) - 1 : 0;
+    return {
+        type: 'category',
+        data: values,
+        axisLabel: {
+            interval: Math.max(0, interval),
+            rotate: values.length > 18 ? 40 : 0,
+            formatter: value => formatDateShort(value),
+            margin: 10,
+        },
+    };
+}
+
+function mergeChartOption(opt) {
+    return {
+        backgroundColor: 'transparent',
+        textStyle: { fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', color: '#666' },
+        ...opt,
+        grid: { top: 16, right: 16, bottom: 24, left: 48, ...(opt.grid || {}) },
+        tooltip: {
+            backgroundColor: '#fff',
+            borderColor: 'rgba(0,0,0,0.07)',
+            borderWidth: 1,
+            borderRadius: 6,
+            padding: [8,12],
+            textStyle: { color: 'rgba(0,0,0,0.85)', fontSize: 12 },
+            ...(opt.tooltip || {})
+        },
+        xAxis: normalizeAxis(opt.xAxis, true),
+        yAxis: Array.isArray(opt.yAxis) ? opt.yAxis.map(axis => normalizeAxis(axis, false)) : normalizeAxis(opt.yAxis, false),
+    };
+}
+
+function normalizeAxis(axis = {}, isX) {
+    return {
+        ...axis,
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.12)' }, ...(axis.axisLine || {}) },
+        axisTick: { show: false, ...(axis.axisTick || {}) },
+        axisLabel: { color: 'rgba(0,0,0,0.45)', fontSize: 11, ...(axis.axisLabel || {}) },
+        splitLine: isX ? { show: false, ...(axis.splitLine || {}) } : { lineStyle: { color: 'rgba(0,0,0,0.06)', type: 'dashed' }, ...(axis.splitLine || {}) },
+    };
+}
+
+function renderSupplementCharts(data) {
+    const cd = data.chart_data || {};
+    const sources = data.data_sources || {};
+    renderMetricLineChart('chartTurnover', 'turnover', cd, '换手率 %', '#149b9a', sourceEmptyText(sources.turnover, '换手率历史序列'));
+    renderMetricLineChart('chartVolRatio', 'vol_ratio', cd, '量比', '#006fd6', sourceEmptyText(sources.vol_ratio, '量比历史序列'));
+    renderMetricLineChart('chartPE', 'pe', cd, 'PE', '#4e6ef2', sourceEmptyText(sources.pe, 'PE 历史序列'));
+    renderSealTrend(cd, sources.seal_time);
+    renderLimitTimeline(data);
+}
+
+function renderDetailSources(data) {
+    const el = document.getElementById('modalDataSources');
+    if (!el) return;
+    const sources = data.data_sources || {};
+    const rows = [
+        ['K线', sources.kline],
+        ['实时行情', sources.quote],
+        ['换手率', sources.turnover],
+        ['量比', sources.vol_ratio],
+        ['PE', sources.pe],
+        ['封板/涨停', sources.limit_events],
+    ].filter(([, item]) => item && item.available && item.source);
+    el.innerHTML = rows.map(([label, item]) => {
+        const source = item.source;
+        const note = item?.note || '';
+        return `<span class="ok" title="${escapeHtml(note)}">${escapeHtml(label)}: ${escapeHtml(source)}</span>`;
+    }).join('');
+}
+
+function sourceEmptyText(source, label) {
+    if (!source) return `接口未返回${label}`;
+    return `${source.note || `接口未返回${label}`}${source.source ? `（来源: ${source.source}）` : ''}`;
+}
+
+function hasFiniteSeries(values) {
+    return Array.isArray(values) && values.some(value => isRealNumber(value));
+}
+
+function renderMetricLineChart(id, key, cd, name, color, emptyText) {
+    const el = document.getElementById(id);
+    const values = cd[key] || cd[`${key}s`] || [];
+    if (!el || !values.length || !cd.dates?.length || !hasFiniteSeries(values)) {
+        if (el) {
+            el.innerHTML = '';
+            el.classList.remove('loading');
+        }
+        setDetailChartPanelVisible(id, false);
+        return;
+    }
+    setDetailChartPanelVisible(id, true);
+    el.innerHTML = '';
+    el.classList.remove('loading');
+    const chart = echarts.init(el, getEChartsLightTheme());
+    _detailCharts[id] = chart;
+    chart.setOption(mergeChartOption({
+        tooltip: { trigger: 'axis' },
+        grid: chartGrid({ left: 38, right: 18, top: 22, bottom: 30 }),
+        xAxis: detailCategoryAxis(cd.dates),
+        yAxis: { type: 'value' },
+        series: [{ type: 'line', name, data: values, symbolSize: 5, lineStyle: { color, width: 2 }, itemStyle: { color }, smooth: false }]
+    }));
+}
+
+function renderSealTrend(cd, source) {
+    const el = document.getElementById('chartSeal');
+    const values = cd.seal_times || [];
+    const finiteCount = Array.isArray(values)
+        ? values.filter(value => isRealNumber(value)).length
+        : 0;
+    if (!el || !values.length || !cd.dates?.length || finiteCount < 1) {
+        if (el) {
+            el.innerHTML = '';
+            el.classList.remove('loading');
+        }
+        setDetailChartPanelVisible('chartSeal', false);
+        return;
+    }
+    setDetailChartPanelVisible('chartSeal', true);
+    el.innerHTML = '';
+    el.classList.remove('loading');
+    const chart = echarts.init(el, getEChartsLightTheme());
+    _detailCharts.seal = chart;
+    chart.setOption(mergeChartOption({
+        tooltip: { trigger: 'axis', valueFormatter: v => formatSealTimeForDetail(v) },
+        grid: chartGrid({ left: 40, right: 18, top: 22, bottom: 30 }),
+        xAxis: detailCategoryAxis(cd.dates),
+        yAxis: { type: 'value', inverse: true, axisLabel: { formatter: v => formatSealTimeForDetail(v) } },
+        series: [{ type: 'line', name: '封板时间', data: values, symbolSize: 5, lineStyle: { color: '#f5a400', width: 2 }, itemStyle: { color: '#f5a400' } }]
+    }));
+}
+
+function renderLimitTimeline(data) {
+    const el = document.getElementById('chartLimitTimeline');
+    if (!el) return;
+    const cd = data.chart_data || {};
+    let events = cd.limit_events || data.limit_events || [];
+    if (!events.length && data.zt_date) {
+        events = [{
+            date: data.zt_date,
+            seal_time: data.seal_time,
+            label: data.consecutive && data.consecutive !== '0' ? `${data.consecutive}板` : '涨停'
+        }];
+    }
+    if (!events.length) {
+        emptyChart(el, '接口未返回历史涨停日期序列');
+        return;
+    }
+    el.classList.remove('loading');
+    const items = events.slice(-5);
+    const repeat = items.length === 1 ? ' single' : '';
+    el.innerHTML = `<div class="timeline-track">${items.map((item, i) => {
+        const colors = ['#f5222d','#f5222d','#f5a400','#1890ff','#4e6ef2'];
+        return `<div class="timeline-item">
+            <span class="timeline-dot" style="background:${colors[i % colors.length]}">${i + 1}</span>
+            <span class="timeline-date">${escapeHtml(formatDateShort(item.date || item.zt_date))}</span>
+            <span class="timeline-time">${escapeHtml(formatSealTimeForDetail(item.seal_time))}</span>
+            <span class="timeline-tag">${escapeHtml(item.label || item.tag || `${item.board || item.consecutive || 1}板`)}</span>
+        </div>`;
+    }).join('')}</div>`;
+    const track = el.querySelector('.timeline-track');
+    if (track) track.className += repeat;
 }
 
 // ---- Recommendations ----
 async function loadRecommendations() {
-    const level = document.getElementById('recLevel').value;
+    const level = document.getElementById('recLevel')?.value || '';
+    recommendationCurrentLevel = level;
     document.getElementById('recList').innerHTML = '<p class="empty-state">加载中...</p>';
     document.getElementById('recStats').innerHTML = '';
 
     try {
         const resp = await apiFetch('/screening/latest');
         const data = await resp.json();
+        recommendationLastData = data;
+        if (data.date) {
+            const dateInput = document.getElementById('recDate');
+            if (dateInput && !dateInput.value) dateInput.value = data.date;
+        }
         if (data.results && data.results.length > 0) {
-            let filtered = data.results;
-            if (level) filtered = filtered.filter(r => r.recommendation === level);
-            if (filtered.length > 0) {
-                renderRecommendationCards(filtered);
-            } else {
-                document.getElementById('recList').innerHTML = '<p class="empty-state">该等级暂无推荐结果</p>';
-            }
+            const visible = data.results.filter(r => ['STRONG_BUY', 'BUY', 'WATCH'].includes(r.recommendation));
             renderRecStats(data);
+            recommendationEnrichedResults = await enrichRecommendationResults(visible);
+            renderRecommendationView();
             return;
         }
+        setTopbarMeta('recommendations', `筛选日期: ${data.date || '--'}  |  审核通过率: 0%`);
+        recommendationEnrichedResults = [];
         // 无筛选结果
         document.getElementById('recList').innerHTML = '<p class="empty-state">暂无推荐数据。每日15:10自动筛选，请耐心等待。</p>';
         document.getElementById('recStats').innerHTML = `
@@ -633,82 +1235,438 @@ async function loadRecommendations() {
     }
 }
 
+async function enrichRecommendationResults(stocks) {
+    if (!stocks.length) return [];
+    const enriched = await Promise.all(stocks.map(async (stock) => {
+        const item = { ...stock };
+        const detail = await fetchRecommendationDetail(item.code);
+        if (detail) {
+            item.detail_source = '/api/v1/watchlist/{code}/detail';
+            item.price_history = item.price_history?.length ? item.price_history : buildPriceHistoryFromDetail(detail);
+            const events = detail.chart_data?.limit_events || detail.limit_events || [];
+            if (events.length) item.limit_events = events;
+            item.added_date = item.added_date || detail.added_date;
+            const detailCount = detail.follow_limit_up_count ?? detail.zt_count;
+            if (isRealNumber(detailCount)) {
+                if (!isRealNumber(item.follow_limit_up_count) || Number(detailCount) > Number(item.follow_limit_up_count)) {
+                    item.follow_limit_up_count = detailCount;
+                }
+                if (!isRealNumber(item.zt_count) || Number(detailCount) > Number(item.zt_count)) {
+                    item.zt_count = detailCount;
+                }
+            }
+            item.seal_time = item.seal_time || detail.seal_time;
+            item.consecutive = item.consecutive || detail.consecutive;
+            if (!isRealNumber(item.current_price) && isRealNumber(detail.current_price)) item.current_price = detail.current_price;
+            if (!isRealNumber(item.drop_pct) && isRealNumber(detail.drop_pct)) item.drop_pct = detail.drop_pct;
+        }
+
+        const watch = await fetchRecommendationWatchlistRow(item.code);
+        if (watch) {
+            item.watchlist_source = '/api/v1/watchlist?search=' + encodeURIComponent(item.code);
+            item.added_date = item.added_date || watch.added_date;
+            item.zt_count = item.zt_count ?? watch.zt_count;
+            item.follow_limit_up_count = item.follow_limit_up_count ?? watch.zt_count;
+            item.seal_time = item.seal_time || watch.seal_time;
+            item.consecutive = item.consecutive || watch.consecutive;
+            item.break_count = item.break_count ?? watch.break_count;
+            if (!isRealNumber(item.current_price) && isRealNumber(watch.current_price)) item.current_price = watch.current_price;
+            if (!isRealNumber(item.drop_pct) && isRealNumber(watch.drop_pct)) item.drop_pct = watch.drop_pct;
+        }
+
+        if (!item.limit_events?.length && item.zt_date) {
+            item.limit_events = [{
+                date: item.zt_date,
+                seal_time: item.seal_time,
+                label: item.consecutive && item.consecutive !== '0' ? `${item.consecutive}板` : '涨停',
+            }];
+        }
+        return item;
+    }));
+    return enriched;
+}
+
+async function fetchRecommendationDetail(code) {
+    if (!code) return null;
+    try {
+        const resp = await apiFetch(`/watchlist/${encodeURIComponent(code)}/detail`, { timeout: 120000, retries: 0 });
+        if (!resp.ok) return null;
+        return await resp.json();
+    } catch (e) {
+        return null;
+    }
+}
+
+async function fetchRecommendationWatchlistRow(code) {
+    if (!code) return null;
+    try {
+        const params = new URLSearchParams({ search: code, size: '1' });
+        const resp = await apiFetch(`/watchlist?${params.toString()}`, { timeout: 30000, retries: 0 });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        return (data.items || [])[0] || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function buildPriceHistoryFromDetail(detail) {
+    const cd = detail?.chart_data || {};
+    const dates = cd.dates || [];
+    const closes = cd.closes || [];
+    if (!dates.length || !closes.length) return [];
+    return dates.map((date, index) => ({
+        date,
+        close: closes[index],
+        change_pct: cd.changes?.[index],
+        drawdown_pct: cd.drawdowns?.[index],
+    })).filter(row => Number.isFinite(Number(row.close))).slice(-12);
+}
+
+function setRecommendationLevel(level, reload = false) {
+    recommendationCurrentLevel = level || '';
+    const select = document.getElementById('recLevel');
+    if (select && select.value !== recommendationCurrentLevel) select.value = recommendationCurrentLevel;
+    if (reload || !recommendationLastData) loadRecommendations();
+    else renderRecommendationView();
+}
+
+function renderRecommendationView() {
+    const level = recommendationCurrentLevel;
+    syncRecommendationStatsActive(level);
+    const filtered = level
+        ? recommendationEnrichedResults.filter(r => r.recommendation === level)
+        : recommendationEnrichedResults;
+    if (filtered.length > 0) {
+        renderRecommendationCards(filtered);
+    } else {
+        const label = level || '全部等级';
+        document.getElementById('recList').innerHTML = `<p class="empty-state">${escapeHtml(label)}暂无推荐结果</p>`;
+    }
+}
+
+function syncRecommendationStatsActive(level = recommendationCurrentLevel) {
+    document.querySelectorAll('#recStats .metric-card[data-rec-level]').forEach(card => {
+        card.classList.toggle('active', card.dataset.recLevel === level);
+    });
+}
+
 function renderRecStats(data) {
+    const total = data.total_scored || 0;
+    const approved = (data.strong_buy || 0) + (data.buy || 0) + (data.watch || 0);
+    const passRate = total ? Math.round(approved / total * 100) : 0;
+    setTopbarMeta('recommendations', `筛选日期: ${data.date || '--'}  |  审核通过率: ${passRate}%`);
     document.getElementById('recStats').innerHTML = `
         <div class="metric-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
-            <div class="metric-card"><div class="metric-label">总推荐数</div><div class="metric-value highlight">${data.total_scored||0}</div></div>
-            <div class="metric-card"><div class="metric-label">STRONG BUY</div><div class="metric-value up">${data.strong_buy||0}</div></div>
-            <div class="metric-card"><div class="metric-label">BUY</div><div class="metric-value" style="color:#F39C12">${data.buy||0}</div></div>
-            <div class="metric-card"><div class="metric-label">WATCH</div><div class="metric-value" style="color:#2932e1">${data.watch||0}</div></div>
+            <button type="button" class="metric-card rec-stat-card" data-rec-level="STRONG_BUY" onclick="setRecommendationLevel('STRONG_BUY')"><div class="metric-label">STRONG BUY</div><div class="metric-value up">${data.strong_buy||0}</div></button>
+            <button type="button" class="metric-card rec-stat-card" data-rec-level="BUY" onclick="setRecommendationLevel('BUY')"><div class="metric-label">BUY</div><div class="metric-value" style="color:#F39C12">${data.buy||0}</div></button>
+            <button type="button" class="metric-card rec-stat-card" data-rec-level="WATCH" onclick="setRecommendationLevel('WATCH')"><div class="metric-label">WATCH</div><div class="metric-value" style="color:#2932e1">${data.watch||0}</div></button>
+            <button type="button" class="metric-card rec-stat-card" data-rec-level="" onclick="setRecommendationLevel('')"><div class="metric-label">总计评分</div><div class="metric-value">${total}只</div><div class="metric-foot">审核降级后: ${approved}只</div></button>
         </div>`;
+    syncRecommendationStatsActive();
 }
 
 function renderRecommendationCards(stocks) {
+    disposeRecommendationCharts();
     const names = {STRONG_BUY:'STRONG BUY',BUY:'BUY',WATCH:'WATCH',PASS:'PASS'};
     const colors = {STRONG_BUY:'#e60012',BUY:'#F39C12',WATCH:'#2932e1',PASS:'#999999'};
     const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
     const el = document.getElementById('recList');
-    el.innerHTML = stocks.map(s => {
+    const cards = stocks.map(s => {
         let dots = '';
         if (s.factors) keys.forEach(k => {
             const f = s.factors[k]; if (!f) return;
-            dots += `<span class="factor-dot ${f.passed?'pass':'fail'}" title="${f.name}: ${f.detail} (${f.score}/10)"></span>`;
+            dots += `<span class="factor-chip ${f.passed?'pass':'fail'}" title="${escapeHtml(f.name)}: ${escapeHtml(f.detail)} (${f.score}/10)">${escapeHtml(f.name)} ${f.score}/10</span>`;
         });
         const auditHtml = renderAuditFailures(s.audit);
-        const historyHtml = renderPriceHistory(s.price_history);
+        const chartHtml = renderRecommendationTrendChart(s);
+        const rec = s.recommendation || 'WATCH';
+        const label = names[rec] || rec;
+        const actionLabel = rec === 'STRONG_BUY' ? 'STRONG_BUY' : label;
+        const score = isRealNumber(s.adjusted_score) ? Math.round(Number(s.adjusted_score)) : '--';
+        const followCount = formatCountValue(s.follow_limit_up_count ?? s.zt_count);
+        const addedDate = s.added_date || '--';
+        const sourceText = s.watchlist_source ? '来源: 监控列表接口' : '来源: 筛选报告';
         return `<div class="rec-card">
             <div class="rec-card-header">
-                <div class="rec-rank">${s.rank}</div>
-                <div style="margin-left:8px"><span class="stock-code" style="font-size:15px">${s.code}</span> <span style="font-size:15px;font-weight:600">${s.name}</span></div>
+                <div class="rec-rank">#${escapeHtml(s.rank || '--')}</div>
+                <div class="rec-stock-main"><span class="rec-stock-name">${escapeHtml(s.name)}</span> <span class="stock-code" style="font-size:15px">${escapeHtml(s.code)}</span></div>
                 <div style="flex:1"></div>
-                <div class="rec-stars">${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))}</div>
-                <span style="font-size:20px;font-weight:700;color:${colors[s.recommendation]||'#999999'};min-width:36px;text-align:right">${s.adjusted_score}</span>
-                <span class="tag tag-${s.recommendation.toLowerCase()}">${names[s.recommendation]}</span>
+                <div class="rec-stars">${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(toNumber(s.adjusted_score, 0)/25))))}</div>
+                <span class="rec-score" style="color:${colors[rec]||'#999999'}">${s.adjusted_score}</span>
+                <span class="tag tag-${rec.toLowerCase()}">${label}</span>
+                <button class="btn rec-action" onclick="observeStock('${jsString(s.code)}','${jsString(s.name)}','${jsString(actionLabel)}')">${actionLabel} 观察</button>
             </div>
-            <div style="display:flex;gap:24px;margin:8px 0;font-size:13px;color:#999999">
-                <span>回撤: <b style="color:${s.drop_pct<0?'#e60012':'#009966'}">${(s.drop_pct||0).toFixed(2)}%</b></span>
-                <span>涨停日: ${s.zt_date}</span>
-                <span>参考价: ${s.ref_price}</span>
+            <div class="rec-meta">
+                <span>评分:${score}分</span>
+                <span>回撤:<b class="${valueClass(s.drop_pct)}">${formatMaybePct(s.drop_pct, 2)}</b></span>
+                <span>涨停日: ${escapeHtml(s.zt_date)}</span>
+                <span>关注日:${escapeHtml(addedDate)}</span>
+                <span>关注至今涨停:<b>${followCount}</b></span>
+                <span>参考价:${formatNumber(s.ref_price, 2)}</span>
+                <span>现价:${formatNumber(s.current_price, 2)}</span>
             </div>
+            <div class="rec-source-line">${escapeHtml(sourceText)} · ${escapeHtml(s.detail_source ? 'K线来自详情接口' : 'K线来自筛选报告')}</div>
             ${auditHtml}
-            ${historyHtml}
-            <div>${dots}</div>
+            <div class="rec-factor-list">${dots}</div>
+            ${chartHtml}
         </div>`;
     }).join('');
+    el.innerHTML = `<div class="rec-list-heading">WATCH LIST <span>${stocks.length} 条结果</span></div>${cards}`;
+    renderRecommendationCharts(stocks);
+    requestAnimationFrame(() => scheduleChartResize());
+}
+
+function disposeRecommendationCharts() {
+    Object.values(recommendationTrendCharts).forEach(chart => disposeChart(chart));
+    recommendationTrendCharts = {};
+}
+
+function renderRecommendationCharts(stocks) {
+    const chartTheme = getEChartsLightTheme();
+    stocks.forEach(stock => {
+        const chartId = makeChartId('recChart', stock.code);
+        const el = document.getElementById(chartId);
+        if (!el) return;
+        const rows = (stock.price_history || [])
+            .slice(-12)
+            .filter(row => Number.isFinite(Number(row.close)));
+        if (!rows.length) return;
+        const refPrice = toNumber(stock.ref_price, 0);
+        const drawVals = rows.map(row => toNumber(row.drawdown_pct, 0));
+        const closeVals = rows.map(row => Number(row.close));
+        if (refPrice > 0) closeVals.push(refPrice);
+        let minClose = Math.min(...closeVals);
+        let maxClose = Math.max(...closeVals);
+        if (minClose === maxClose) {
+            minClose -= 1;
+            maxClose += 1;
+        }
+        const closePad = (maxClose - minClose) * 0.12;
+        minClose -= closePad;
+        maxClose += closePad;
+
+        let minDraw = Math.min(...drawVals);
+        let maxDraw = Math.max(...drawVals);
+        if (minDraw === maxDraw) {
+            minDraw -= 1;
+            maxDraw += 1;
+        }
+        const drawPad = Math.max((maxDraw - minDraw) * 0.12, 0.5);
+        minDraw -= drawPad;
+        maxDraw += drawPad;
+
+        const chart = echarts.init(el, chartTheme, { renderer: 'canvas' });
+        recommendationTrendCharts[stock.code] = chart;
+        const events = (stock.limit_events || []).slice(-6);
+        const xAxis = detailCategoryAxis(rows.map(row => row.date));
+        xAxis.axisLabel = {
+            ...xAxis.axisLabel,
+            color: '#5f6673',
+            fontSize: 14,
+            margin: 14,
+        };
+        chart.setOption(mergeChartOption({
+            animation: false,
+            textStyle: { fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif', color: '#5f6673', fontSize: 14 },
+            tooltip: {
+                trigger: 'axis',
+                confine: true,
+                axisPointer: {
+                    type: 'cross',
+                    lineStyle: { color: 'rgba(41,50,225,0.25)' },
+                    crossStyle: { color: 'rgba(41,50,225,0.18)' },
+                },
+                textStyle: { color: 'rgba(0,0,0,0.85)', fontSize: 14, lineHeight: 21 },
+            },
+            grid: chartGrid({ top: 24, left: 8, right: 8, bottom: 46 }),
+            legend: { show: false },
+            xAxis,
+            yAxis: [
+                {
+                    type: 'value',
+                    min: minClose,
+                    max: maxClose,
+                    axisLabel: {
+                        formatter: v => Number(v).toFixed(2),
+                        color: '#5f6673',
+                        fontSize: 14,
+                    },
+                },
+                {
+                    type: 'value',
+                    min: minDraw,
+                    max: maxDraw,
+                    inverse: true,
+                    axisLabel: {
+                        formatter: v => `${Number(v).toFixed(1)}%`,
+                        color: '#5f6673',
+                        fontSize: 14,
+                    },
+                    splitLine: { show: false },
+                }
+            ],
+            series: [
+                {
+                    type: 'line',
+                    name: '收盘价',
+                    data: rows.map(row => Number(row.close)),
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 9,
+                    yAxisIndex: 0,
+                    lineStyle: { color: '#2932e1', width: 3.8 },
+                    itemStyle: { color: '#2932e1' },
+                    emphasis: { focus: 'series' },
+                },
+                {
+                    type: 'line',
+                    name: '回撤%',
+                    data: rows.map(row => toNumber(row.drawdown_pct, 0)),
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    yAxisIndex: 1,
+                    lineStyle: { color: '#f5a400', width: 3.2 },
+                    itemStyle: { color: '#f5a400' },
+                    emphasis: { focus: 'series' },
+                },
+                ...(refPrice > 0 ? [{
+                    type: 'line',
+                    name: '参考价',
+                    data: rows.map(() => refPrice),
+                    symbol: 'none',
+                    yAxisIndex: 0,
+                    lineStyle: { color: '#8a9099', width: 2, type: 'dashed' },
+                    itemStyle: { color: '#8a9099' },
+                }] : []),
+                ...(events.length ? [{
+                    type: 'scatter',
+                    name: '涨停次数',
+                    data: events.map(event => {
+                        const date = String(event.date || event.zt_date || '');
+                        const index = rows.findIndex(row => row.date === date);
+                        return index >= 0 ? [date, rows[index].close] : null;
+                    }).filter(Boolean),
+                    symbolSize: 12,
+                    itemStyle: { color: '#f5222d' },
+                    emphasis: { scale: 1.4 },
+                    label: {
+                        show: true,
+                        formatter: params => formatDateShort(params.value?.[0]),
+                        position: 'top',
+                        color: '#f5222d',
+                        fontSize: 13,
+                        fontWeight: 600,
+                    },
+                }] : []),
+            ],
+        }));
+    });
+}
+
+function formatCountValue(value) {
+    return isRealNumber(value) ? `${Number(value)}次` : '--';
 }
 
 function renderAuditFailures(audit) {
     if (!audit || !audit.downgraded) return '';
     const failures = (audit.validations || []).filter(v => v.status === 'fail');
-    const items = failures.map(v => `<li><b>${v.name}</b>: ${v.detail}</li>`).join('');
+    const items = failures.map(v => `<li><b>${escapeHtml(v.name)}</b>: ${escapeHtml(v.detail)}</li>`).join('');
     return `<div class="audit-failures">
-        <div>审核降级: ${audit.original_rec} → ${audit.adjusted_rec}（失败${audit.fail_count || failures.length}项）</div>
+        <div>审核降级: ${escapeHtml(audit.original_rec)} → ${escapeHtml(audit.adjusted_rec)}（失败${audit.fail_count || failures.length}项）</div>
         ${items ? `<ul>${items}</ul>` : ''}
     </div>`;
 }
 
-function renderPriceHistory(rows) {
-    if (!rows || rows.length === 0) return '';
-    const body = rows.slice(-12).map(row => {
-        const draw = Number(row.drawdown_pct || 0);
-        const change = Number(row.change_pct || 0);
-        return `<tr>
-            <td>${row.date}</td>
-            <td>${Number(row.close || 0).toFixed(2)}</td>
-            <td class="${change >= 0 ? 'up-text' : 'down-text'}">${change.toFixed(2)}%</td>
-            <td class="${draw < 0 ? 'down-text' : 'up-text'}">${draw.toFixed(2)}%</td>
-        </tr>`;
-    }).join('');
-    return `<div class="price-history">
-        <div class="price-history-title">价格/回撤走势</div>
-        <table>
-            <thead><tr><th>日期</th><th>收盘</th><th>涨跌</th><th>回撤</th></tr></thead>
-            <tbody>${body}</tbody>
-        </table>
+function renderRecommendationTrendChart(stock) {
+    const rows = (stock.price_history || [])
+        .slice(-12)
+        .filter(row => Number.isFinite(Number(row.close)));
+    const refPrice = toNumber(stock.ref_price, 0);
+    const followCount = stock.follow_limit_up_count ?? stock.zt_count;
+    const events = (stock.limit_events || []).slice(-6);
+    const title = '关注后交易日趋势图';
+    const titleSub = `( 价格走势 + 回撤幅度 + 涨停次数${isRealNumber(followCount) ? ` ${Number(followCount)}次` : ''} )`;
+    const subParts = [];
+    if (refPrice > 0) subParts.push(`参考价${refPrice.toFixed(2)} 以虚线标记`);
+    if (isRealNumber(followCount)) subParts.push(`关注至今涨停板次数 ${Number(followCount)} 次`);
+    if (events.length) subParts.push(`涨停日期 ${events.map(e => formatDateShort(e.date || e.zt_date)).join('、')}`);
+    const sub = subParts.join(' · ') || '接口未返回参考价';
+    const eventBar = renderRecommendationLimitEvents(stock, rows);
+
+    if (!rows.length) {
+        return `<div class="rec-trend-chart">
+            <div class="rec-chart-head">
+                <div>
+                    <div class="rec-chart-title">${title}<span>${titleSub}</span></div>
+                    <div class="rec-chart-sub">${sub}</div>
+                </div>
+                <div class="rec-chart-legend">
+                    <span class="legend-item" style="color:#3d65fe"><span class="legend-dot"></span>收盘价</span>
+                    <span class="legend-item" style="color:#faad14"><span class="legend-dot"></span>回撤%</span>
+                    <span class="legend-item" style="color:#8a9099"><span class="legend-dot"></span>参考价</span>
+                    <span class="legend-item" style="color:#f5222d"><span class="legend-dot"></span>涨停次数</span>
+                </div>
+            </div>
+            <div class="rec-chart-empty">接口未返回价格历史，未使用本地假数据补绘</div>
+            ${eventBar}
+        </div>`;
+    }
+    const chartId = makeChartId('recChart', stock.code);
+    return `<div class="rec-trend-chart">
+        <div class="rec-chart-head">
+            <div>
+                <div class="rec-chart-title">${title}<span>${titleSub}</span></div>
+                <div class="rec-chart-sub">${sub}</div>
+            </div>
+            <div class="rec-chart-legend">
+                <span class="legend-item" style="color:#3d65fe"><span class="legend-dot"></span>收盘价</span>
+                <span class="legend-item" style="color:#faad14"><span class="legend-dot"></span>回撤%</span>
+                <span class="legend-item" style="color:#8a9099"><span class="legend-dot"></span>参考价${refPrice > 0 ? refPrice.toFixed(2) : ''}</span>
+                <span class="legend-item" style="color:#f5222d"><span class="legend-dot"></span>涨停次数${isRealNumber(followCount) ? Number(followCount) : '--'}次</span>
+            </div>
+        </div>
+        <div class="rec-chart-canvas" id="${chartId}" role="img" aria-label="${escapeHtml(stock.name)}价格与回撤趋势"></div>
+        ${eventBar}
     </div>`;
 }
 
+function renderRecommendationLimitEvents(stock, rows = []) {
+    const followCount = stock.follow_limit_up_count ?? stock.zt_count;
+    const events = (stock.limit_events || []).slice(-6);
+    if (!isRealNumber(followCount) && !events.length) return '';
+    const eventDates = events.length
+        ? events.map(event => `<span>${escapeHtml(formatDateShort(event.date || event.zt_date))}<b>${escapeHtml(event.label || '涨停')}</b></span>`).join('')
+        : '<span>接口未返回涨停日期序列</span>';
+    const count = isRealNumber(followCount) ? Number(followCount) : events.length;
+    return `<div class="rec-limit-events">
+        <div class="rec-limit-count"><strong>${count}</strong><span>关注至今涨停板次数</span></div>
+        <div class="rec-limit-dates">${eventDates}</div>
+    </div>`;
+}
+
+function observeStock(code, name, level) {
+    const search = code || name;
+    const params = new URLSearchParams({ search });
+    if (name) params.set('name', name);
+    const route = `watchlist?${params.toString()}`;
+    applyWatchlistQuery(params.toString());
+    history.replaceState(null, '', '#' + route);
+    navigateTo(route, false, true);
+    setInlineStatus('wlQueryHint', `来自推荐结果：${level} 观察，已过滤 ${name ? `${name} ` : ''}${code}`);
+}
+
+function scrollWatchlistTable(direction) {
+    const scroller = document.getElementById('wlTableScroll') || document.querySelector('.watchlist-panel .table-scroll');
+    if (!scroller) return;
+    const distance = Math.max(240, Math.round(scroller.clientWidth * 0.75));
+    scroller.scrollBy({ left: direction < 0 ? -distance : distance, behavior: 'smooth' });
+}
+
 // ---- Screening ----
+let screeningLastResults = [];
+
 async function runScreening() {
     const body = document.getElementById('scrResultBody');
     const countEl = document.getElementById('scrResultCount');
@@ -719,17 +1677,15 @@ async function runScreening() {
     body.innerHTML = '<div class="empty-state"><p>筛选任务已提交，等待结果...</p><p style="font-size:12px;color:#999">流水线运行中（约 1-3 分钟），结果将自动刷新</p></div>';
 
     const params = new URLSearchParams();
-    params.set('gain_min', document.getElementById('scrGainMin').value||3);
-    params.set('gain_max', document.getElementById('scrGainMax').value||10);
-    params.set('drop_min', document.getElementById('scrDropMin').value||3);
-    params.set('drop_max', document.getElementById('scrDropMax').value||10);
-    params.set('vol_min', document.getElementById('scrVolMin').value||1);
-    params.set('vol_max', document.getElementById('scrVolMax').value||5);
-    params.set('turnover_min', document.getElementById('scrToMin').value||5);
-    params.set('turnover_max', document.getElementById('scrToMax').value||10);
-    params.set('mc_min', document.getElementById('scrMcMin').value||50);
-    params.set('mc_max', document.getElementById('scrMcMax').value||200);
-    params.set('pe_max', document.getElementById('scrPeMax').value||50);
+    params.set('drop_min', parseDecoratedNumber(document.getElementById('scrDropMin').value, 3));
+    params.set('drop_max', parseDecoratedNumber(document.getElementById('scrDropMax').value, 10));
+    params.set('vol_min', parseDecoratedNumber(document.getElementById('scrVolMin').value, 1));
+    params.set('vol_max', parseDecoratedNumber(document.getElementById('scrVolMax').value, 5));
+    params.set('turnover_min', parseDecoratedNumber(document.getElementById('scrToMin').value, 5));
+    params.set('turnover_max', parseDecoratedNumber(document.getElementById('scrToMax').value, 10));
+    params.set('mc_min', parseDecoratedNumber(document.getElementById('scrMcMin').value, 50));
+    params.set('mc_max', parseDecoratedNumber(document.getElementById('scrMcMax').value, 200));
+    params.set('pe_max', parseDecoratedNumber(document.getElementById('scrPeMax').value, 50));
 
     try {
         // Step 1: 启动后台筛选任务（立即返回，不阻塞）
@@ -756,6 +1712,7 @@ async function runScreening() {
             if (pollData.status === 'completed') {
                 if (pollData.results && pollData.results.length > 0) {
                     countEl.textContent = `${pollData.results.length} 条结果`;
+                    screeningLastResults = pollData.results;
                     renderScreeningResults(pollData.results);
                     return;
                 }
@@ -784,6 +1741,7 @@ async function runScreening() {
 }
 
 function renderScreeningResults(results) {
+    screeningLastResults = results || [];
     const names = {strong_buy:'STRONG BUY',buy:'BUY',watch:'WATCH',pass:'PASS'};
     const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
     let rows = results.map(s => {
@@ -794,67 +1752,342 @@ function renderScreeningResults(results) {
         });
         return `<tr><td>${s.rank}</td><td><span class="stock-code">${s.code}</span></td><td>${s.name}</td>
             <td>${'\u2605'.repeat(Math.min(4,Math.max(1,Math.round(s.adjusted_score/25))))} <b>${s.adjusted_score}</b></td>
-            <td style="color:${s.drop_pct<0?'#e60012':'#009966'}">${(s.drop_pct||0).toFixed(2)}%</td>
+            <td><span class="${valueClass(s.drop_pct)}">${formatMaybePct(s.drop_pct, 2)}</span></td>
             <td><span class="tag tag-${(s.recommendation||'pass').toLowerCase()}">${names[(s.recommendation||'pass').toLowerCase()]}</span></td>
             <td>${s.zt_date||'--'}</td><td>${dots}</td></tr>`;
     }).join('');
     document.getElementById('scrResultBody').innerHTML = `<table class="data-table"><thead><tr><th>#</th><th>代码</th><th>名称</th><th>得分</th><th>回撤</th><th>推荐</th><th>日期</th><th>因子</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+function filterScreeningResults() {
+    const keyword = document.getElementById('scrSearch')?.value.trim().toLowerCase();
+    if (!keyword) {
+        renderScreeningResults(screeningLastResults);
+        document.getElementById('scrResultCount').textContent = `${screeningLastResults.length} 条结果`;
+        return;
+    }
+    const filtered = screeningLastResults.filter(s => String(s.code || '').includes(keyword) || String(s.name || '').toLowerCase().includes(keyword));
+    document.getElementById('scrResultCount').textContent = `${filtered.length} 条结果`;
+    if (filtered.length) renderScreeningResults(filtered);
+    else document.getElementById('scrResultBody').innerHTML = '<div class="empty-state"><p>无匹配筛选结果</p></div>';
+}
+
 function resetScreening() {
-    document.getElementById('scrGainMin').value=3; document.getElementById('scrGainMax').value=10;
-    document.getElementById('scrDropMin').value=3; document.getElementById('scrDropMax').value=10;
-    document.getElementById('scrVolMin').value=1; document.getElementById('scrVolMax').value=5;
-    document.getElementById('scrToMin').value=5; document.getElementById('scrToMax').value=10;
-    document.getElementById('scrMcMin').value=50; document.getElementById('scrMcMax').value=200;
-    document.getElementById('scrPeMax').value=50;
-    document.getElementById('scrResultBody').innerHTML='<p class="empty-state">设置筛选条件后点击「执行筛选」</p>';
-    document.getElementById('scrResultCount').textContent='';
+    document.getElementById('scrDropMin').value='3.0%'; document.getElementById('scrDropMax').value='10.0%';
+    document.getElementById('scrVolMin').value='1.0'; document.getElementById('scrVolMax').value='5.0';
+    document.getElementById('scrToMin').value='5.0%'; document.getElementById('scrToMax').value='10.0%';
+    document.getElementById('scrMcMin').value='50亿'; document.getElementById('scrMcMax').value='200亿';
+    document.getElementById('scrPeMax').value='50';
+    screeningLastResults = [];
+    document.getElementById('scrResultBody').innerHTML = renderScreeningEmptyState();
+    document.getElementById('scrResultCount').textContent='0 条结果';
+}
+
+function renderScreeningEmptyState() {
+    return `<div class="empty-state screening-empty">
+        <div class="empty-illustration" aria-hidden="true">
+            <span class="lens"></span>
+            <span class="handle"></span>
+        </div>
+        <p>设置筛选条件后点击「执行筛选」</p>
+        <p>筛选结果将在此处展示</p>
+        <p>筛选结果包含 STRONG_BUY / BUY / WATCH 三级推荐及审核降级详情</p>
+    </div>`;
 }
 
 // ---- Settings ----
 let factorWeights = { pullback:15,volume_trend:12,ma_alignment:12,strength:10,entry_point:10,market_cap:10,volume_ratio:8,turnover:8,pe:8,zt_quality:7 };
+let strategyDraft = { dropMin:5, dropMax:10, peMax:50, volMin:1, volMax:5, turnoverMin:5, turnoverMax:10, mcMin:50, mcMax:200, trackingDays:30, latestFbt:140000, maxZbc:0, maxZtFrequency:2 };
+let notificationDraft = { emailEnabled:true, emailHost:'smtp.qq.com', emailPort:465, emailUser:'', emailTo:'' };
+let ztSortDraft = { sortBy:'seal_time', sortOrder:'asc' };
+let runtimeConfigState = { config:null, previous_config:null, saved_at:null, source:'config/strategy_params.py' };
+const factorNames = {pullback:'回撤幅度',volume_trend:'量能趋势',ma_alignment:'均线多头',strength:'强势确认',entry_point:'尾盘买点',market_cap:'流通市值',volume_ratio:'量比',turnover:'换手率',pe:'市盈率',zt_quality:'涨停质量'};
+const strategyLabels = {
+    dropMin:'回撤下限', dropMax:'回撤上限', peMax:'PE上限', volMin:'量比下限', volMax:'量比上限',
+    turnoverMin:'换手率下限', turnoverMax:'换手率上限', mcMin:'流通市值下限', mcMax:'流通市值上限',
+    trackingDays:'监控周期', latestFbt:'最晚封板时间', maxZbc:'最大炸板次数', maxZtFrequency:'周期内最大涨停次数'
+};
+
 function setupSettingsPage() {
-    document.getElementById('strategyForm').innerHTML = `
-        <div class="form-row"><label>回撤区间</label><input type="number" class="input input-sm" value="5"> - <input type="number" class="input input-sm" value="10"> %</div>
-        <div class="form-row"><label>PE上限</label><input type="number" class="input input-sm" value="50"></div>
-        <div class="form-row"><label>量比区间</label><input type="number" class="input input-sm" value="1"> - <input type="number" class="input input-sm" value="5"></div>
-        <div class="form-row"><label>换手率区间</label><input type="number" class="input input-sm" value="5"> - <input type="number" class="input input-sm" value="10"> %</div>
-        <div class="form-row"><label>流通市值区间</label><input type="number" class="input input-sm" value="50"> - <input type="number" class="input input-sm" value="200"> 亿</div>
-        <div class="form-row"><label>监控周期</label><input type="number" class="input input-sm" value="30"> 天</div>`;
-    const names = {pullback:'回撤幅度',volume_trend:'量能趋势',ma_alignment:'均线多头',strength:'强势确认',entry_point:'尾盘买点',market_cap:'流通市值',volume_ratio:'量比',turnover:'换手率',pe:'市盈率',zt_quality:'涨停质量'};
-    document.getElementById('factorWeightsForm').innerHTML = Object.entries(factorWeights).map(([k,v]) =>
-        `<div class="form-row"><label>${names[k]||k}</label><input type="range" min="0" max="25" value="${v}" class="weight-slider" data-key="${k}" oninput="updateWeight(this)"><span id="wv_${k}">${v}%</span></div>`
-    ).join('');
-    updateWeightSum();
-    // 计算下一个交易日
-    const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-    const next = new Date();
-    do { next.setDate(next.getDate() + 1); } while (next.getDay() === 0 || next.getDay() === 6);
-    document.getElementById('cfgNextRun').textContent =
-        `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')} (${weekdays[next.getDay()]}) 15:10`;
+    renderSettingsLoading();
+    loadRuntimeConfig();
+    updateNextRun();
 }
-function updateWeight(s) { factorWeights[s.dataset.key]=parseInt(s.value); document.getElementById('wv_'+s.dataset.key).textContent=s.value+'%'; updateWeightSum(); }
-function updateWeightSum() { const sum=Object.values(factorWeights).reduce((a,b)=>a+b,0); const el=document.getElementById('weightSum'); el.textContent='当前总权重: '+sum+'%'; el.className='weight-sum'+(sum!==100?' warn':''); }
-async function testEmail() {
+
+function renderSettingsLoading() {
+    const strategyEl = document.getElementById('strategyForm');
+    const weightsEl = document.getElementById('factorWeightsForm');
+    const compareEl = document.getElementById('settingsCompare');
+    if (strategyEl) strategyEl.innerHTML = '<div class="form-status">正在从后端读取策略配置...</div>';
+    if (weightsEl) weightsEl.innerHTML = '<div class="form-status">正在读取因子权重...</div>';
+    if (compareEl) compareEl.textContent = '正在读取配置...';
+}
+
+async function loadRuntimeConfig() {
     try {
-        const resp = await apiFetch('/system/test-email', { method: 'POST', timeout: 30000 });
-        const data = await resp.json();
-        if (data.status === 'ok') {
-            alert('测试邮件已发送，请检查收件箱');
-        } else {
-            alert('发送失败: ' + (data.message || '未知错误'));
-        }
-    } catch(e) {
-        alert('请求超时或后端异常，请稍后重试');
+        const resp = await apiFetch('/config/strategy', { timeout: 15000, retries: 1 });
+        const data = await readJsonResponse(resp);
+        applyRuntimeConfig(data);
+        setFormStatus('settingsStatus', `配置来源: ${data.source || '后端配置'}${data.saved_at ? '，上次保存 ' + formatSavedAt(data.saved_at) : ''}`, 'ok');
+    } catch (e) {
+        setFormStatus('settingsStatus', `配置读取失败: ${e.message || '请检查后端服务'}`, 'error');
+        renderSettingsForms();
     }
 }
 
-async function manualRun() {
-    const btn = event.target;
+async function readJsonResponse(resp) {
+    let data = {};
+    try {
+        data = await resp.json();
+    } catch (e) {
+        data = {};
+    }
+    if (!resp.ok) {
+        throw new Error(data.detail || data.message || `HTTP ${resp.status}`);
+    }
+    return data;
+}
+
+function applyRuntimeConfig(data) {
+    runtimeConfigState = data || runtimeConfigState;
+    const config = data.config || {};
+    strategyDraft = { ...strategyDraft, ...(config.strategy || {}) };
+    factorWeights = { ...factorWeights, ...(config.factorWeights || {}) };
+    notificationDraft = { ...notificationDraft, ...(config.notification || {}) };
+    ztSortDraft = { ...ztSortDraft, ...(config.ztSort || {}) };
+    renderSettingsForms();
+}
+
+function renderSettingsForms() {
+    const strategyEl = document.getElementById('strategyForm');
+    if (strategyEl) {
+        const latestFbt = getLatestFbtParts(strategyDraft.latestFbt);
+        strategyEl.innerHTML = `
+        <div class="form-row"><label>回撤区间</label><input type="number" step="0.1" class="input input-sm" data-config-key="dropMin" value="${strategyDraft.dropMin}"> - <input type="number" step="0.1" class="input input-sm" data-config-key="dropMax" value="${strategyDraft.dropMax}"> %</div>
+        <div class="form-row"><label>PE上限</label><input type="number" step="0.1" class="input input-sm" data-config-key="peMax" value="${strategyDraft.peMax}"></div>
+        <div class="form-row"><label>量比区间</label><input type="number" step="0.1" class="input input-sm" data-config-key="volMin" value="${strategyDraft.volMin}"> - <input type="number" step="0.1" class="input input-sm" data-config-key="volMax" value="${strategyDraft.volMax}"></div>
+        <div class="form-row"><label>换手率区间</label><input type="number" step="0.1" class="input input-sm" data-config-key="turnoverMin" value="${strategyDraft.turnoverMin}"> - <input type="number" step="0.1" class="input input-sm" data-config-key="turnoverMax" value="${strategyDraft.turnoverMax}"> %</div>
+        <div class="form-row"><label>流通市值区间</label><input type="number" step="1" class="input input-sm" data-config-key="mcMin" value="${strategyDraft.mcMin}"> - <input type="number" step="1" class="input input-sm" data-config-key="mcMax" value="${strategyDraft.mcMax}"> 亿</div>
+        <div class="form-row"><label>监控周期</label><input type="number" step="1" class="input input-sm" data-config-key="trackingDays" value="${strategyDraft.trackingDays}"> 天</div>
+        <div class="form-row clock-row">
+            <label>最晚封板</label>
+            <div class="clock-selects" data-config-key="latestFbt">
+                <select class="input input-sm clock-select" data-config-key="latestFbtHour">${buildClockOptions(23, latestFbt.hour, '时')}</select>
+                <span class="clock-separator">:</span>
+                <select class="input input-sm clock-select" data-config-key="latestFbtMinute">${buildClockOptions(59, latestFbt.minute, '分')}</select>
+                <span class="clock-separator">:</span>
+                <select class="input input-sm clock-select" data-config-key="latestFbtSecond">${buildClockOptions(59, latestFbt.second, '秒')}</select>
+            </div>
+            <span class="field-hint">HH:MM:SS</span>
+        </div>
+        <div class="form-row"><label>炸板上限</label><input type="number" step="1" class="input input-sm" data-config-key="maxZbc" value="${strategyDraft.maxZbc}"> 次</div>
+        <div class="form-row"><label>涨停频率上限</label><input type="number" step="1" class="input input-sm" data-config-key="maxZtFrequency" value="${strategyDraft.maxZtFrequency}"> 次</div>
+        <div class="form-row"><label>涨停列表排序</label><select class="input input-sm" data-sort-key="sortBy">
+            <option value="seal_time">封板时间</option><option value="turnover">换手率</option><option value="vol_ratio">量比</option><option value="pe">PE</option><option value="mcap">流通市值</option><option value="change_pct">涨幅</option>
+        </select><select class="input input-sm" data-sort-key="sortOrder"><option value="asc">升序</option><option value="desc">降序</option></select></div>`;
+        strategyEl.querySelector('[data-sort-key="sortBy"]').value = ztSortDraft.sortBy;
+        strategyEl.querySelector('[data-sort-key="sortOrder"]').value = ztSortDraft.sortOrder;
+        strategyEl.querySelectorAll('input,select').forEach(el => {
+            el.addEventListener('input', renderSettingsCompare);
+            el.addEventListener('change', renderSettingsCompare);
+        });
+    }
+
+    const notifyEl = document.getElementById('notificationForm');
+    if (notifyEl) {
+        notifyEl.querySelectorAll('[data-notify-key]').forEach(input => {
+            const key = input.dataset.notifyKey;
+            input.value = notificationDraft[key] ?? '';
+            input.addEventListener('input', renderSettingsCompare);
+        });
+    }
+
+    const weightsEl = document.getElementById('factorWeightsForm');
+    if (weightsEl) {
+        weightsEl.innerHTML = Object.entries(factorWeights).map(([k,v]) =>
+            `<div class="form-row"><label>${factorNames[k]||k}</label><input type="range" min="0" max="25" value="${v}" class="weight-slider" data-key="${k}" oninput="updateWeight(this)"><span id="wv_${k}">${v}%</span></div>`
+        ).join('');
+    }
+    updateWeightSum();
+    updateNextRun();
+    renderSettingsCompare();
+}
+
+function updateNextRun() {
+    const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+    const next = new Date();
+    do { next.setDate(next.getDate() + 1); } while (next.getDay() === 0 || next.getDay() === 6);
+    const el = document.getElementById('cfgNextRun');
+    if (el) el.textContent = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')} (${weekdays[next.getDay()]}) 15:10`;
+}
+
+function updateWeight(s) {
+    factorWeights[s.dataset.key] = Number(s.value);
+    const el = document.getElementById('wv_' + s.dataset.key);
+    if (el) el.textContent = s.value + '%';
+    updateWeightSum();
+    renderSettingsCompare();
+}
+
+function updateWeightSum() {
+    const sum = Object.values(factorWeights).reduce((a,b)=>a+Number(b || 0),0);
+    const el = document.getElementById('weightSum');
+    if (!el) return;
+    el.textContent = '当前总权重: ' + sum + '%';
+    el.className = 'weight-sum' + (sum !== 100 ? ' warn' : '');
+}
+
+function collectStrategyConfig() {
+    const strategy = { ...strategyDraft };
+    document.querySelectorAll('#strategyForm [data-config-key]').forEach(input => {
+        if (!input.matches('input,select')) return;
+        if (input.dataset.configKey === 'latestFbtHour' || input.dataset.configKey === 'latestFbtMinute' || input.dataset.configKey === 'latestFbtSecond') {
+            return;
+        }
+        strategy[input.dataset.configKey] = Number(input.value);
+    });
+    strategy.latestFbt = readLatestFbtFromForm();
+    const sortBy = document.querySelector('#strategyForm [data-sort-key="sortBy"]')?.value || ztSortDraft.sortBy;
+    const sortOrder = document.querySelector('#strategyForm [data-sort-key="sortOrder"]')?.value || ztSortDraft.sortOrder;
+    return { strategy, ztSort: { sortBy, sortOrder } };
+}
+
+function collectNotificationConfig() {
+    const notification = { ...notificationDraft };
+    document.querySelectorAll('#notificationForm [data-notify-key]').forEach(input => {
+        notification[input.dataset.notifyKey] = input.type === 'number' ? Number(input.value) : input.value.trim();
+    });
+    return notification;
+}
+
+function collectFullRuntimeConfig() {
+    const strategyPart = collectStrategyConfig();
+    return {
+        strategy: strategyPart.strategy,
+        factorWeights: { ...factorWeights },
+        notification: collectNotificationConfig(),
+        ztSort: strategyPart.ztSort,
+        schedule: runtimeConfigState.config?.schedule || { cronExpression:'10 15 * * 1-5', runTime:'15:10' },
+    };
+}
+
+async function saveRuntimeConfig(payload, statusId, event, okText) {
+    const btn = event?.target;
+    const oldText = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = '保存中...'; }
+    setFormStatus(statusId, '正在写入后端配置表并同步 config/strategy_params.py ...');
+    try {
+        const merged = { ...(runtimeConfigState.config || {}), ...payload };
+        if (payload.strategy) merged.strategy = payload.strategy;
+        if (payload.factorWeights) merged.factorWeights = payload.factorWeights;
+        if (payload.notification) merged.notification = payload.notification;
+        if (payload.ztSort) merged.ztSort = payload.ztSort;
+        const resp = await apiFetch('/config/strategy', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(merged),
+            timeout: 20000,
+            retries: 0,
+        });
+        const data = await readJsonResponse(resp);
+        applyRuntimeConfig(data);
+        setFormStatus(statusId, okText || '配置已保存并生效', 'ok');
+        return data;
+    } catch (e) {
+        setFormStatus(statusId, `保存失败: ${e.message || '后端异常'}`, 'error');
+        throw e;
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = oldText; }
+    }
+}
+
+async function saveStrategyConfig(event) {
+    const payload = collectStrategyConfig();
+    await saveRuntimeConfig(payload, 'strategyStatus', event, '策略参数已保存。后续筛选、监控状态和涨停频率按该配置执行。');
+}
+
+async function saveNotificationConfig(event, opts = {}) {
+    const payload = { notification: collectNotificationConfig() };
+    const data = await saveRuntimeConfig(payload, 'emailStatus', event, opts.silent ? '通知配置已保存，准备发送测试邮件...' : '通知配置已保存。后续邮件按该收件账号发送。');
+    return data;
+}
+
+async function saveFactorWeights(event) {
+    await saveRuntimeConfig({ factorWeights: { ...factorWeights } }, 'settingsStatus', event, '权重配置已保存。后续评分优先使用该配置。');
+}
+
+function formatSavedAt(value) {
+    if (!value) return '--';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value).slice(0, 19);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function formatConfigValue(value, suffix = '') {
+    if (value === undefined || value === null || value === '') return '--';
+    return `${value}${suffix}`;
+}
+
+function renderSettingsCompare() {
+    const el = document.getElementById('settingsCompare');
+    if (!el) return;
+    const prev = runtimeConfigState.previous_config || runtimeConfigState.config || {};
+    const current = collectFullRuntimeConfig();
+    const rows = [];
+    const strategySuffix = {
+        dropMin:'%', dropMax:'%', turnoverMin:'%', turnoverMax:'%', mcMin:'亿', mcMax:'亿',
+        trackingDays:'天', maxZbc:'次', maxZtFrequency:'次'
+    };
+    Object.keys(strategyLabels).forEach(key => {
+        const prevVal = key === 'latestFbt' ? formatFbtToClock(prev.strategy?.[key]) : prev.strategy?.[key];
+        const currentVal = key === 'latestFbt' ? formatFbtToClock(current.strategy[key]) : current.strategy[key];
+        rows.push([strategyLabels[key], prevVal, currentVal, strategySuffix[key] || '']);
+    });
+    Object.entries(factorNames).forEach(([key, label]) => {
+        rows.push([`${label}权重`, prev.factorWeights?.[key], current.factorWeights[key], '%']);
+    });
+    rows.push(['收件邮箱', prev.notification?.emailTo, current.notification.emailTo, '']);
+    rows.push(['发件邮箱', prev.notification?.emailUser, current.notification.emailUser, '']);
+    rows.push(['SMTP主机', prev.notification?.emailHost, current.notification.emailHost, '']);
+    rows.push(['SMTP端口', prev.notification?.emailPort, current.notification.emailPort, '']);
+    rows.push(['涨停排序', `${prev.ztSort?.sortBy || '--'} / ${prev.ztSort?.sortOrder || '--'}`, `${current.ztSort.sortBy} / ${current.ztSort.sortOrder}`, '']);
+
+    el.innerHTML = `
+        <div class="compare-meta">上次保存：${formatSavedAt(runtimeConfigState.saved_at)}｜来源：${runtimeConfigState.source || '--'}</div>
+        <table class="compare-table"><thead><tr><th>配置项</th><th>上次保存值</th><th>当前编辑值</th></tr></thead><tbody>
+        ${rows.map(([label, oldVal, newVal, suffix]) => {
+            const changed = String(oldVal ?? '') !== String(newVal ?? '');
+            return `<tr class="${changed ? 'changed' : ''}"><td>${escapeHtml(label)}</td><td>${escapeHtml(formatConfigValue(oldVal, suffix))}</td><td>${escapeHtml(formatConfigValue(newVal, suffix))}</td></tr>`;
+        }).join('')}</tbody></table>`;
+}
+
+async function testEmail(event) {
+    const btn = event?.target;
+    if (btn) btn.disabled = true;
+    setFormStatus('emailStatus', '正在保存当前通知配置...');
+    try {
+        await saveNotificationConfig(null, { silent: true });
+        setFormStatus('emailStatus', '正在使用已保存收件账号发送测试邮件...');
+        const resp = await apiFetch('/system/test-email', { method: 'POST', timeout: 30000 });
+        const data = await readJsonResponse(resp);
+        if (data.status === 'ok') {
+            setFormStatus('emailStatus', `${data.message || '测试邮件已发送，请检查收件箱'}${data.email_to ? '：' + data.email_to : ''}`, 'ok');
+        } else {
+            setFormStatus('emailStatus', '发送失败: ' + (data.message || '未知错误'), 'error');
+        }
+    } catch(e) {
+        setFormStatus('emailStatus', '请求超时或后端异常，请稍后重试', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+async function manualRun(event) {
+    const btn = event?.target;
     const oldText = btn.textContent;
     btn.textContent = '筛选中，请稍候...';
     btn.disabled = true;
+    setFormStatus('runStatus', '已请求 /api/v1/screening/run，等待后台返回结果...');
     try {
         // 启动后台任务
         const startResp = await apiFetch('/screening/run', { method: 'POST', timeout: 60000, retries: 2 });
@@ -869,35 +2102,50 @@ async function manualRun() {
             const pollData = await pollResp.json();
             if (pollData.status === 'completed') {
                 const total = pollData.total_scored || pollData.results?.length || 0;
-                alert(`筛选已完成\n共 ${total} 条推荐结果\nSTRONG_BUY: ${pollData.strong_buy || 0}  BUY: ${pollData.buy || 0}  WATCH: ${pollData.watch || 0}`);
+                setFormStatus('runStatus', `筛选已完成，共 ${total} 条推荐结果，STRONG_BUY ${pollData.strong_buy || 0}、BUY ${pollData.buy || 0}、WATCH ${pollData.watch || 0}`, 'ok');
                 loadDashboard();
                 return;
             }
             if (pollData.status === 'error') {
-                alert('筛选失败: ' + (pollData.message || '未知错误'));
+                setFormStatus('runStatus', '筛选失败: ' + (pollData.message || '未知错误'), 'error');
                 return;
             }
         }
-        alert('筛选超时，请查看筛选页面');
+        setFormStatus('runStatus', '筛选超时，请查看筛选页面或 /api/v1/screening/latest', 'error');
     } catch(e) {
-        alert('请求异常，请检查后端是否运行');
+        setFormStatus('runStatus', '请求异常，请检查后端是否运行', 'error');
     } finally {
         btn.textContent = oldText;
         btn.disabled = false;
     }
 }
-function saveConfig() { alert('配置已保存到本地存储'); }
+function saveConfig() {
+    saveFactorWeights();
+}
 
 // ---- Pagination ----
 function renderPagination(cid, total, page, size, cb) {
     const p = Math.ceil(total / size);
     if (p <= 1) {
-        document.getElementById(cid).innerHTML = '';
+        document.getElementById(cid).innerHTML = total ? `<span class="page-summary">共 ${total} 条</span>` : '';
         return;
     }
-    document.getElementById(cid).innerHTML = Array.from({length:p},(_,i)=>i+1).map(i => `<button class="${i===page?'active':''}" onclick="${cb.name}(${i})">${i}</button>`).join('');
+    const prevDisabled = page <= 1 ? 'disabled' : '';
+    const nextDisabled = page >= p ? 'disabled' : '';
+    document.getElementById(cid).innerHTML = `
+        <button class="page-arrow" ${prevDisabled} aria-label="上一页" title="上一页" onclick="${cb.name}(${Math.max(1, page - 1)})">‹</button>
+        <button class="active" disabled aria-current="page">第 ${page}/${p} 页</button>
+        <button class="page-arrow" ${nextDisabled} aria-label="下一页" title="下一页" onclick="${cb.name}(${Math.min(p, page + 1)})">›</button>
+        <span class="page-summary">共 ${total} 条</span>`;
 }
 
 // ---- Global ----
 function refreshData() { navigateTo(location.hash.replace('#','')||'dashboard', false, true); }
-function setupScreeningPage() {}
+function setupScreeningPage() {
+    if (!screeningLastResults.length) {
+        const body = document.getElementById('scrResultBody');
+        if (body && (!body.textContent.trim() || body.textContent.includes('设置筛选条件后点击'))) {
+            body.innerHTML = renderScreeningEmptyState();
+        }
+    }
+}

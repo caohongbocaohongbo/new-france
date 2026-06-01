@@ -173,11 +173,11 @@ def normalize_watchlist_file(path: Path = FRANCE_FILE) -> Tuple[List[Dict], int]
     return unique, duplicate_count
 
 
-def count_zt_30days(code: str, path: Path = FRANCE_FILE) -> int:
-    """统计某股票在30天内出现在监控列表中的次数（即涨停次数）"""
+def count_zt_30days(code: str, path: Path = FRANCE_FILE, days: int = 30) -> int:
+    """统计某股票在配置周期内出现在监控列表中的次数（即涨停次数）。"""
     from datetime import datetime, timezone, timedelta
     BEIJING_TZ = timezone(timedelta(hours=8))
-    cutoff = (datetime.now(BEIJING_TZ) - timedelta(days=30)).strftime("%Y-%m-%d")
+    cutoff = (datetime.now(BEIJING_TZ) - timedelta(days=max(1, int(days)))).strftime("%Y-%m-%d")
 
     entries = parse_watchlist(path)
     count = 0

@@ -179,6 +179,47 @@ def fetch_historical(codes: List[str], days: int = 60) -> Dict[str, pd.DataFrame
         return {}
 
 
+def fetch_daily_basic_history(code: str, days: int = 60) -> pd.DataFrame:
+    """通过 Tushare 获取个股历史换手率、量比、PE 等日频指标。
+
+    无 TUSHARE_TOKEN 或接口失败时返回空 DataFrame，调用方应保持空态而不是造数。
+    """
+    pro = _get_pro()
+    if pro is None:
+        return pd.DataFrame()
+
+    try:
+        def _ts_market(c):
+            if c.startswith('8'): return 'BJ'
+            if c.startswith(('6', '9')): return 'SH'
+            return 'SZ'
+
+        ts_code = f"{code}.{_ts_market(code)}"
+        end_date = datetime.now(BEIJING_TZ).strftime("%Y%m%d")
+        start_date = (datetime.now(BEIJING_TZ) - timedelta(days=days + 30)).strftime("%Y%m%d")
+        df = pro.daily_basic(
+            ts_code=ts_code,
+            start_date=start_date,
+            end_date=end_date,
+            fields="ts_code,trade_date,pe,pe_ttm,volume_ratio,turnover_rate",
+        )
+        if df is None or df.empty:
+            return pd.DataFrame()
+
+        df = df.sort_values("trade_date").rename(columns={
+            "trade_date": "日期",
+            "pe_ttm": "PE_TTM",
+            "pe": "PE",
+            "volume_ratio": "量比",
+            "turnover_rate": "换手率",
+        })
+        df["日期"] = df["日期"].astype(str)
+        return df
+    except Exception as e:
+        logger.warning(f"Tushare 历史基础指标获取失败: {e}")
+        return pd.DataFrame()
+
+
 def fetch_zt_pool(trade_date: Optional[date] = None) -> Optional[pd.DataFrame]:
     """
     通过 Tushare 获取当日涨停股池（stk_limit + daily 联合查询）。

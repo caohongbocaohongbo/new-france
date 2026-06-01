@@ -17,7 +17,18 @@ from .sources.index_data import fetch_index_gain
 logger = logging.getLogger(__name__)
 
 # 历史K线并发抓取限制（避免被数据源封IP）
-_KLINE_SEMAPHORE = asyncio.Semaphore(8)
+_KLINE_SEMAPHORE = None
+_KLINE_SEMAPHORE_LOOP = None
+
+
+def _get_kline_semaphore() -> asyncio.Semaphore:
+    """按当前事件循环懒创建信号量，避免后台线程导入模块时缺少 event loop。"""
+    global _KLINE_SEMAPHORE, _KLINE_SEMAPHORE_LOOP
+    loop = asyncio.get_running_loop()
+    if _KLINE_SEMAPHORE is None or _KLINE_SEMAPHORE_LOOP is not loop:
+        _KLINE_SEMAPHORE = asyncio.Semaphore(8)
+        _KLINE_SEMAPHORE_LOOP = loop
+    return _KLINE_SEMAPHORE
 
 
 @dataclass
@@ -117,7 +128,7 @@ class DataCollectorAgent:
 
         async def _fetch_one(sym):
             try:
-                async with _KLINE_SEMAPHORE:
+                async with _get_kline_semaphore():
                     hist = await asyncio.to_thread(fetch_historical, sym, days)
                 if hist is not None and not hist.empty:
                     result[sym] = hist
