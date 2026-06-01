@@ -292,7 +292,7 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
         f"上证指数涨幅: {index_gain:+.2f}%",
         f"指数数据口径: {_format_index_source(index_snapshot)}",
         f"监控股票总数: {wl_count} 只",
-        f"今日新增涨停: {len(zt_list)} 只",
+        f"今日涨停池有效数: {len(zt_list)} 只",
         f"涨停数据口径: 数据源={zt_meta.get('source','--')} 原始={zt_meta.get('raw_count', len(zt_list))}只 展示={zt_meta.get('final_count', len(zt_list))}只 过滤={zt_meta.get('filtered_count', 0)}只 采集={zt_meta.get('fetched_at','--')}",
         "",
     ]
@@ -467,7 +467,7 @@ def _html_header(date_str, weekday, index_gain, zt_count, wl_count=0, zt_meta=No
       </td>
       <td width="12"></td>
       <td style="padding:12px 20px;background:#FFFFFF;border:1px solid #DCE5EF;border-radius:8px;text-align:center">
-        <div style="color:#667085;font-size:11px;margin-bottom:4px">今日涨停</div>
+        <div style="color:#667085;font-size:11px;margin-bottom:4px">涨停池有效数</div>
         <div style="color:#2F87AC;font-size:24px;font-weight:700">{zt_count}<span style="font-size:14px;font-weight:400"> 只</span></div>
       </td>
     </tr>
@@ -542,7 +542,7 @@ def _html_zt_table(zt_list, sort_by="seal_time", zt_meta=None):
 
     return f"""
 <div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
-  <h2 style="color:#172033;font-size:16px;margin:0 0 4px 0;font-weight:600">今日涨停股列表 <span style="color:#667085;font-weight:400;font-size:13px">({len(zt_list)}只)</span></h2>
+  <h2 style="color:#172033;font-size:16px;margin:0 0 4px 0;font-weight:600">今日涨停池列表 <span style="color:#667085;font-weight:400;font-size:13px">({len(zt_list)}只)</span></h2>
   <p style="color:#667085;font-size:11px;margin:0 0 6px 0">排序: {sort_label} &#9650; 升序</p>
   <p style="color:#667085;font-size:11px;margin:0 0 14px 0">{source_note}</p>
   <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:13px">

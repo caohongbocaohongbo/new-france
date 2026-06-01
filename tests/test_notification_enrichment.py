@@ -91,6 +91,15 @@ class NotificationEnrichmentTest(unittest.TestCase):
         self.assertIn("展示46只", html)
         self.assertIn("过滤18只", html)
 
+    def test_text_summary_labels_zt_count_as_pool_effective_count(self):
+        zt_list = [{"code": "000001", "name": "平安银行", "price": 10.0}]
+        meta = {"source": "eastmoney_direct", "raw_count": 1, "final_count": 1, "filtered_count": 0}
+
+        text = notifier._build_text_content([], date(2026, 6, 1), 0, zt_list, 0, {}, meta, {})
+
+        self.assertIn("今日涨停池有效数: 1 只", text)
+        self.assertNotIn("今日新增涨停", text)
+
 
 if __name__ == "__main__":
     unittest.main()
