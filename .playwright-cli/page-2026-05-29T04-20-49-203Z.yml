@@ -1,0 +1,127 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - generic [ref=e37]: Dashboard 总览
+      - link "监控列表" [ref=e38] [cursor=pointer]:
+        - /url: "#watchlist"
+        - generic [ref=e39]: 监控列表
+      - link "推荐结果" [ref=e40] [cursor=pointer]:
+        - /url: "#recommendations"
+        - generic [ref=e41]: 推荐结果
+      - link "手动筛选" [ref=e42] [cursor=pointer]:
+        - /url: "#screening"
+        - generic [ref=e43]: 手动筛选
+      - link "策略配置" [ref=e44] [cursor=pointer]:
+        - /url: "#settings"
+        - generic [ref=e45]: 策略配置
+    - generic [ref=e46]:
+      - generic [ref=e49]: 交易中
+      - generic [ref=e100]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e50]:
+    - generic [ref=e51]:
+      - heading "策略配置" [level=1] [ref=e235]
+      - generic [ref=e54]: 2026-05-29 周五
+    - generic [ref=e237]:
+      - generic [ref=e238]:
+        - heading "策略参数" [level=2] [ref=e240]
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - generic [ref=e243]: 回撤区间
+            - spinbutton [ref=e244]: "5"
+            - text: "-"
+            - spinbutton [ref=e245]: "10"
+            - text: "%"
+          - generic [ref=e246]:
+            - generic [ref=e247]: PE上限
+            - spinbutton [ref=e248]: "50"
+          - generic [ref=e249]:
+            - generic [ref=e250]: 量比区间
+            - spinbutton [ref=e251]: "1"
+            - text: "-"
+            - spinbutton [ref=e252]: "5"
+          - generic [ref=e253]:
+            - generic [ref=e254]: 换手率区间
+            - spinbutton [ref=e255]: "5"
+            - text: "-"
+            - spinbutton [ref=e256]: "10"
+            - text: "%"
+          - generic [ref=e257]:
+            - generic [ref=e258]: 流通市值区间
+            - spinbutton [ref=e259]: "50"
+            - text: "-"
+            - spinbutton [ref=e260]: "200"
+            - text: 亿
+          - generic [ref=e261]:
+            - generic [ref=e262]: 监控周期
+            - spinbutton [ref=e263]: "30"
+            - text: 天
+      - generic [ref=e264]:
+        - heading "通知配置" [level=2] [ref=e266]
+        - generic [ref=e267]:
+          - generic [ref=e268]:
+            - generic [ref=e269]: QQ邮箱
+            - textbox [ref=e270]: 896256756@qq.com
+          - button "发送测试邮件" [ref=e271] [cursor=pointer]
+      - generic [ref=e273]:
+        - heading "定时任务" [level=2] [ref=e275]
+        - generic [ref=e276]:
+          - generic [ref=e277]:
+            - generic [ref=e278]: Cron表达式
+            - code [ref=e279]: 10 15 * * 1-5
+          - generic [ref=e280]:
+            - generic [ref=e281]: 下次执行
+            - generic [ref=e282]: 2026-06-01 (周一) 15:10
+          - button "手动触发执行" [ref=e283] [cursor=pointer]
+      - generic [ref=e285]:
+        - heading "因子权重配置" [level=2] [ref=e287]
+        - paragraph [ref=e288]: 页面保存仅暂存到当前浏览器；后端评分权重仍以 config/strategy_params.py 为准。
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - generic [ref=e291]: 回撤幅度
+            - slider [ref=e292]: "15"
+            - generic [ref=e293]: 15%
+          - generic [ref=e294]:
+            - generic [ref=e295]: 量能趋势
+            - slider [ref=e296]: "12"
+            - generic [ref=e297]: 12%
+          - generic [ref=e298]:
+            - generic [ref=e299]: 均线多头
+            - slider [ref=e300]: "12"
+            - generic [ref=e301]: 12%
+          - generic [ref=e302]:
+            - generic [ref=e303]: 强势确认
+            - slider [ref=e304]: "10"
+            - generic [ref=e305]: 10%
+          - generic [ref=e306]:
+            - generic [ref=e307]: 尾盘买点
+            - slider [ref=e308]: "10"
+            - generic [ref=e309]: 10%
+          - generic [ref=e310]:
+            - generic [ref=e311]: 流通市值
+            - slider [ref=e312]: "10"
+            - generic [ref=e313]: 10%
+          - generic [ref=e314]:
+            - generic [ref=e315]: 量比
+            - slider [ref=e316]: "8"
+            - generic [ref=e317]: 8%
+          - generic [ref=e318]:
+            - generic [ref=e319]: 换手率
+            - slider [ref=e320]: "8"
+            - generic [ref=e321]: 8%
+          - generic [ref=e322]:
+            - generic [ref=e323]: 市盈率
+            - slider [ref=e324]: "8"
+            - generic [ref=e325]: 8%
+          - generic [ref=e326]:
+            - generic [ref=e327]: 涨停质量
+            - slider [ref=e328]: "7"
+            - generic [ref=e329]: 7%
+        - generic [ref=e330]: "当前总权重: 100%"
+        - button "保存配置" [ref=e331] [cursor=pointer]

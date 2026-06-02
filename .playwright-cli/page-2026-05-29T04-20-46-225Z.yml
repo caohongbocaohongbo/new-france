@@ -1,0 +1,75 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - generic [ref=e37]: Dashboard 总览
+      - link "监控列表" [ref=e38] [cursor=pointer]:
+        - /url: "#watchlist"
+        - generic [ref=e39]: 监控列表
+      - link "推荐结果" [ref=e40] [cursor=pointer]:
+        - /url: "#recommendations"
+        - generic [ref=e41]: 推荐结果
+      - link "手动筛选" [ref=e42] [cursor=pointer]:
+        - /url: "#screening"
+        - generic [ref=e43]: 手动筛选
+      - link "策略配置" [ref=e44] [cursor=pointer]:
+        - /url: "#settings"
+        - generic [ref=e45]: 策略配置
+    - generic [ref=e46]:
+      - generic [ref=e49]: 交易中
+      - generic [ref=e100]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e50]:
+    - generic [ref=e51]:
+      - heading "手动筛选" [level=1] [ref=e193]
+      - generic [ref=e54]: 2026-05-29 周五
+    - generic [ref=e195]:
+      - generic [ref=e196]:
+        - heading "筛选条件" [level=2] [ref=e198]
+        - generic [ref=e199]:
+          - generic [ref=e200]: 回撤范围
+          - generic [ref=e201]:
+            - spinbutton [ref=e202]: "5"
+            - text: "-"
+            - spinbutton [ref=e203]: "10"
+            - text: "%"
+        - generic [ref=e204]:
+          - generic [ref=e205]: 量比范围
+          - generic [ref=e206]:
+            - spinbutton [ref=e207]: "1"
+            - text: "-"
+            - spinbutton [ref=e208]: "5"
+        - generic [ref=e209]:
+          - generic [ref=e210]: 换手率范围
+          - generic [ref=e211]:
+            - spinbutton [ref=e212]: "5"
+            - text: "-"
+            - spinbutton [ref=e213]: "10"
+            - text: "%"
+        - generic [ref=e214]:
+          - generic [ref=e215]: 流通市值范围
+          - generic [ref=e216]:
+            - spinbutton [ref=e217]: "50"
+            - text: "-"
+            - spinbutton [ref=e218]: "200"
+            - text: 亿
+        - generic [ref=e219]:
+          - generic [ref=e220]: PE上限
+          - spinbutton [ref=e221]: "50"
+        - button "执行筛选" [ref=e222] [cursor=pointer]
+        - button "重置条件" [ref=e223] [cursor=pointer]
+      - generic [ref=e224]:
+        - generic [ref=e225]:
+          - generic [ref=e226]:
+            - heading "筛选结果" [level=2] [ref=e227]
+            - generic [ref=e228]: 0 条结果
+          - generic [ref=e229]:
+            - textbox "搜索代码/名称" [ref=e230]
+            - button "查询" [ref=e231] [cursor=pointer]
+        - paragraph [ref=e233]: 设置筛选条件后点击「执行筛选」
+        - generic [ref=e234]: "默认参数: 回撤3%-10% | 量比1-5 | 换手率5%-10% | 流通市值50-200亿 | PE≤50"

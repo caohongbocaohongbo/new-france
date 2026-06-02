@@ -28,7 +28,8 @@ class RecommendationAgent:
                       dry_run: bool = False,
                       audit_results: dict = None,
                       zt_meta: dict = None,
-                      index_snapshot: dict = None) -> dict:
+                      index_snapshot: dict = None,
+                      national_team: dict = None) -> dict:
         """
         执行完整输出流程
         Returns: {report_path, html_path, notify_result, summary}
@@ -41,6 +42,8 @@ class RecommendationAgent:
             zt_meta = {}
         if index_snapshot is None:
             index_snapshot = {}
+        if national_team is None:
+            national_team = {}
         date_str = target_date.strftime("%Y-%m-%d")
         logger.info(f"RecommendationAgent: 开始输出 {date_str}...")
 
@@ -64,7 +67,8 @@ class RecommendationAgent:
                                           zt_list=zt_list,
                                           audit_results=audit_results,
                                           zt_meta=zt_meta,
-                                          index_snapshot=index_snapshot)
+                                          index_snapshot=index_snapshot,
+                                          national_team=national_team)
 
         # 4. 统计摘要
         summary = {

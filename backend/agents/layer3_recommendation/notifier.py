@@ -231,13 +231,135 @@ def _format_index_source(index_snapshot: dict) -> str:
     return f"数据源={source} 采集={fetched_at}"
 
 
+def _national_change_counts(entity: dict) -> str:
+    counts = entity.get("change_counts") or {}
+    return (
+        f"首次记录{counts.get('new', 0)} | "
+        f"增持{counts.get('increase', 0)} | "
+        f"减持{counts.get('decrease', 0)} | "
+        f"退出{counts.get('exit', 0)}"
+    )
+
+
+def _text_national_team_section(national_team: dict) -> list:
+    if not national_team:
+        return []
+    source_status = national_team.get("source_status") or {}
+    lines = [
+        "【国家队动向】",
+        f"数据源: {source_status.get('source') or '--'} | 采集: {source_status.get('fetched_at') or '--'}",
+    ]
+    if national_team.get("scope_note"):
+        lines.append(f"口径: {national_team.get('scope_note')}")
+    if not source_status.get("ok", False):
+        lines.append(f"数据源暂不可用: {source_status.get('error') or source_status.get('note') or '本次不生成国家队判断'}")
+        return lines
+
+    entities = national_team.get("entities") or []
+    if not entities:
+        lines.append("未发现新的公开披露变化。")
+    for entity in entities:
+        lines.append(
+            f"  {entity.get('entity_name')}: 持仓{entity.get('holding_count', 0)}条 | "
+            f"报告期:{entity.get('latest_report_period') or '--'} | "
+            f"公告日:{entity.get('latest_notice_date') or '--'} | "
+            f"{_national_change_counts(entity)}"
+        )
+        latest_event = entity.get("latest_event")
+        if latest_event:
+            lines.append(f"    最新事件: {latest_event.get('event_date') or '--'} {latest_event.get('title') or '--'}")
+
+    events = national_team.get("events") or []
+    if events:
+        lines.append("  最新可查事件:")
+        for event in events[:5]:
+            lines.append(
+                f"    {event.get('event_date') or '--'} "
+                f"{event.get('entity_name') or ''} {event.get('title') or ''} "
+                f"来源:{event.get('source') or '--'}"
+            )
+    else:
+        lines.append("  未发现新的可查事件。")
+    lines.append("  说明: 十大股东/十大流通股东为公开披露数据，系统每日检查公开源更新，不推断未披露交易。")
+    return lines
+
+
+def _html_national_team_section(national_team: dict) -> str:
+    if not national_team:
+        return ""
+    source_status = national_team.get("source_status") or {}
+    source_name = html.escape(str(source_status.get("source") or "--"))
+    fetched_at = html.escape(str(source_status.get("fetched_at") or "--"))
+    source_url = html.escape(str(source_status.get("source_url") or "#"))
+
+    if not source_status.get("ok", False):
+        note = html.escape(str(source_status.get("error") or source_status.get("note") or "本次不生成国家队判断"))
+        return f"""
+<div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+  <h2 style="color:#172033;font-size:16px;margin:0 0 10px 0;font-weight:600">国家队动向</h2>
+  <p style="color:#E74C3C;font-size:13px;margin:0">数据源暂不可用：{note}</p>
+  <p style="color:#667085;font-size:11px;margin:8px 0 0 0">数据源:{source_name} | 采集:{fetched_at}</p>
+</div>"""
+
+    cards = ""
+    for entity in national_team.get("entities") or []:
+        counts = entity.get("change_counts") or {}
+        latest_event = entity.get("latest_event") or {}
+        cards += f"""
+      <td style="padding:12px;background:#F8FAFC;border:1px solid #E1E7EF;border-radius:8px;vertical-align:top">
+        <div style="color:#172033;font-size:14px;font-weight:700;margin-bottom:6px">{html.escape(str(entity.get('entity_name') or '--'))}</div>
+        <div style="color:#667085;font-size:11px;line-height:1.7">
+          最近命中 {entity.get('holding_count', 0)} 条<br>
+          报告期 {html.escape(str(entity.get('latest_report_period') or '--'))}<br>
+          公告日 {html.escape(str(entity.get('latest_notice_date') or '--'))}<br>
+          首次记录 {counts.get('new', 0)} / 增持 {counts.get('increase', 0)} / 减持 {counts.get('decrease', 0)} / 退出 {counts.get('exit', 0)}
+        </div>
+        <div style="color:#172033;font-size:11px;margin-top:8px;line-height:1.5">{html.escape(str(latest_event.get('title') or '未发现新的可查事件'))}</div>
+      </td>"""
+
+    events_html = ""
+    for event in (national_team.get("events") or [])[:5]:
+        events_html += f"""
+    <tr>
+      <td style="padding:7px 8px;color:#5B6472;font-size:11px">{html.escape(str(event.get('event_date') or '--'))}</td>
+      <td style="padding:7px 8px;color:#172033;font-size:12px;font-weight:600">{html.escape(str(event.get('entity_name') or '--'))}</td>
+      <td style="padding:7px 8px;color:#172033;font-size:12px">{html.escape(str(event.get('title') or '--'))}</td>
+      <td style="padding:7px 8px;color:#667085;font-size:11px">{html.escape(str(event.get('source') or '--'))}</td>
+    </tr>"""
+    if not events_html:
+        events_html = '<tr><td colspan="4" style="padding:10px;color:#667085;font-size:12px">未发现新的可查事件。</td></tr>'
+
+    return f"""
+<div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+  <h2 style="color:#172033;font-size:16px;margin:0 0 6px 0;font-weight:600">国家队动向</h2>
+  <p style="color:#667085;font-size:11px;margin:0 0 14px 0">数据源:<a href="{source_url}" style="color:#3B82F6;text-decoration:none">{source_name}</a> | 采集:{fetched_at} | {html.escape(str(national_team.get("scope_note") or "十大股东/十大流通股东为公开披露数据，系统每日检查公开源更新。"))}</p>
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:8px;margin:0 -8px 10px -8px">
+    <tr>{cards}
+    </tr>
+  </table>
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#FFFFFF;border:1px solid #E1E7EF;border-radius:6px;overflow:hidden">
+    <thead>
+      <tr style="background:#EEF2F6;color:#5B6472">
+        <th style="padding:7px 8px;text-align:left;font-size:11px">日期</th>
+        <th style="padding:7px 8px;text-align:left;font-size:11px">主体</th>
+        <th style="padding:7px 8px;text-align:left;font-size:11px">事件</th>
+        <th style="padding:7px 8px;text-align:left;font-size:11px">来源</th>
+      </tr>
+    </thead>
+    <tbody>{events_html}
+    </tbody>
+  </table>
+</div>"""
+
+
 def send_notification(scored_stocks, target_date: date,
                       index_gain: float = 0.0,
                       report_path: str = "",
                       zt_list: list = None,
                       audit_results: dict = None,
                       zt_meta: dict = None,
-                      index_snapshot: dict = None) -> bool:
+                      index_snapshot: dict = None,
+                      national_team: dict = None) -> bool:
     """发送邮件通知"""
     notify_config = _get_notify_config()
     if not notify_config["email_enabled"]:
@@ -252,6 +374,8 @@ def send_notification(scored_stocks, target_date: date,
         zt_meta = {}
     if index_snapshot is None:
         index_snapshot = {}
+    if national_team is None:
+        national_team = {}
 
     # 按配置排序涨停列表
     sort_by, sort_order = _get_zt_sort_config()
@@ -260,8 +384,8 @@ def send_notification(scored_stocks, target_date: date,
     # 监控列表条数（与前端一致）
     wl_count = _get_watchlist_count()
 
-    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results, zt_meta, index_snapshot)
-    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results, zt_meta, index_snapshot)
+    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results, zt_meta, index_snapshot, national_team)
+    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results, zt_meta, index_snapshot, national_team)
     ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         text_content=text_content,
@@ -275,13 +399,15 @@ def send_notification(scored_stocks, target_date: date,
 # Plain-text content (fallback for email clients that don't render HTML)
 # ---------------------------------------------------------------------------
 
-def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None) -> str:
+def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None, national_team: dict = None) -> str:
     if audit_results is None:
         audit_results = {}
     if zt_meta is None:
         zt_meta = {}
     if index_snapshot is None:
         index_snapshot = {}
+    if national_team is None:
+        national_team = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -312,6 +438,11 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
                 f"封板:{fbt_str}  炸板:{int(zt.get('break_count',0))}次  "
                 f"连板:{int(zt.get('consecutive',0))}天"
             )
+        lines.append("")
+
+    national_text = _text_national_team_section(national_team)
+    if national_text:
+        lines.extend(national_text)
         lines.append("")
 
     strong = [s for s in stocks if s.recommendation == "STRONG_BUY"]
@@ -384,13 +515,15 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
 # HTML content (primary — 带样式的表格)
 # ---------------------------------------------------------------------------
 
-def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None) -> str:
+def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None, national_team: dict = None) -> str:
     if audit_results is None:
         audit_results = {}
     if zt_meta is None:
         zt_meta = {}
     if index_snapshot is None:
         index_snapshot = {}
+    if national_team is None:
+        national_team = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -406,6 +539,8 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
     # 涨停股列表表格
     if zt_list:
         parts.append(_html_zt_table(zt_list, sort_by, zt_meta))
+
+    parts.append(_html_national_team_section(national_team))
 
     # 筛选结果
     parts.append(_html_screening_summary(len(strong), len(buy), len(watch), audit_results))

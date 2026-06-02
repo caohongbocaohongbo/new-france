@@ -1,0 +1,79 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - img [ref=e37]
+        - generic [ref=e42]: Dashboard 总览
+      - link "监控列表" [ref=e43] [cursor=pointer]:
+        - /url: "#watchlist"
+        - img [ref=e44]
+        - generic [ref=e47]: 监控列表
+      - link "推荐结果" [ref=e48] [cursor=pointer]:
+        - /url: "#recommendations"
+        - img [ref=e49]
+        - generic [ref=e51]: 推荐结果
+      - link "手动筛选" [ref=e52] [cursor=pointer]:
+        - /url: "#screening"
+        - img [ref=e53]
+        - generic [ref=e56]: 手动筛选
+      - link "策略配置" [ref=e57] [cursor=pointer]:
+        - /url: "#settings"
+        - img [ref=e58]
+        - generic [ref=e61]: 策略配置
+    - generic [ref=e62]:
+      - generic [ref=e65]: 交易中
+      - generic [ref=e66]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - heading "监控列表" [level=1] [ref=e69]
+      - generic [ref=e71]: "数据源: 东方财富涨停股池"
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - textbox "搜索代码/名称..." [ref=e74]
+        - combobox [ref=e75] [cursor=pointer]:
+          - option "全部状态" [selected]
+          - option "回撤中"
+          - option "已推荐"
+          - option "已过期"
+        - button "查询" [ref=e76] [cursor=pointer]
+        - button "导出CSV" [ref=e77] [cursor=pointer]
+      - generic [ref=e78]:
+        - generic [ref=e79] [cursor=pointer]: 全部 0
+        - generic [ref=e80] [cursor=pointer]: 回撤中 0
+        - generic [ref=e81] [cursor=pointer]: 已推荐 0
+        - generic [ref=e82] [cursor=pointer]: 已过期 0
+      - generic [ref=e84]:
+        - button "向左查看更多列表列" [ref=e85] [cursor=pointer]: ‹
+        - button "向右查看更多列表列" [ref=e86] [cursor=pointer]: ›
+        - table [ref=e88]:
+          - rowgroup [ref=e89]:
+            - row "代码 名称 涨停日期 参考价 现价 回撤% 换手率 量比 PE 封板 涨停次数 流通市值 状态 操作" [ref=e90]:
+              - columnheader "代码" [ref=e91]
+              - columnheader "名称" [ref=e92]
+              - columnheader "涨停日期" [ref=e93]
+              - columnheader "参考价" [ref=e94]
+              - columnheader "现价" [ref=e95]
+              - columnheader "回撤%" [ref=e96]:
+                - button "回撤%" [ref=e97] [cursor=pointer]: 回撤%
+              - columnheader "换手率" [ref=e99]:
+                - button "换手率" [ref=e100] [cursor=pointer]: 换手率
+              - columnheader "量比" [ref=e102]:
+                - button "量比" [ref=e103] [cursor=pointer]: 量比
+              - columnheader "PE" [ref=e105]:
+                - button "PE" [ref=e106] [cursor=pointer]: PE
+              - columnheader "封板" [ref=e108]
+              - columnheader "涨停次数" [ref=e109]:
+                - button "涨停次数" [ref=e110] [cursor=pointer]: 涨停次数
+              - columnheader "流通市值" [ref=e112]
+              - columnheader "状态" [ref=e113]
+              - columnheader "操作" [ref=e114]
+          - rowgroup [ref=e115]:
+            - row "加载中..." [ref=e116]:
+              - cell "加载中..." [ref=e117]
+  - text: ×

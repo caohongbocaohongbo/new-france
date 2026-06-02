@@ -1,0 +1,434 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - generic [ref=e37]: Dashboard 总览
+      - link "监控列表" [ref=e38] [cursor=pointer]:
+        - /url: "#watchlist"
+        - generic [ref=e39]: 监控列表
+      - link "推荐结果" [ref=e40] [cursor=pointer]:
+        - /url: "#recommendations"
+        - generic [ref=e41]: 推荐结果
+      - link "手动筛选" [ref=e42] [cursor=pointer]:
+        - /url: "#screening"
+        - generic [ref=e43]: 手动筛选
+      - link "策略配置" [ref=e44] [cursor=pointer]:
+        - /url: "#settings"
+        - generic [ref=e45]: 策略配置
+    - generic [ref=e46]:
+      - generic [ref=e49]: 交易中
+      - generic [ref=e50]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e51]:
+    - generic [ref=e52]:
+      - heading "监控列表" [level=1] [ref=e53]
+      - generic [ref=e55]: "数据源: 东方财富涨停股池"
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - textbox "搜索代码/名称..." [ref=e58]
+        - combobox [ref=e59] [cursor=pointer]:
+          - option "全部状态" [selected]
+          - option "回撤中"
+          - option "已推荐"
+          - option "已过期"
+        - button "查询" [ref=e60] [cursor=pointer]
+        - button "导出CSV" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - generic [ref=e63] [cursor=pointer]: 全部 610
+        - generic [ref=e64] [cursor=pointer]: 回撤中 500
+        - generic [ref=e65] [cursor=pointer]: 已推荐 0
+        - generic [ref=e66] [cursor=pointer]: 已过期 0
+      - generic [ref=e67]:
+        - table [ref=e69]:
+          - rowgroup [ref=e70]:
+            - row "代码 名称 涨停日期 参考价 现价 回撤% 换手率 量比 PE 封板 涨停次数 流通市值 状态 操作" [ref=e71]:
+              - columnheader "代码" [ref=e72]
+              - columnheader "名称" [ref=e73]
+              - columnheader "涨停日期" [ref=e74]
+              - columnheader "参考价" [ref=e75]
+              - columnheader "现价" [ref=e76]
+              - columnheader "回撤%" [ref=e77]:
+                - button "回撤%" [ref=e78] [cursor=pointer]: 回撤%
+              - columnheader "换手率" [ref=e80]:
+                - button "换手率" [ref=e81] [cursor=pointer]: 换手率
+              - columnheader "量比" [ref=e83]:
+                - button "量比" [ref=e84] [cursor=pointer]: 量比
+              - columnheader "PE" [ref=e86]:
+                - button "PE" [ref=e87] [cursor=pointer]: PE
+              - columnheader "封板" [ref=e89]
+              - columnheader "涨停次数" [ref=e90]
+              - columnheader "流通市值" [ref=e91]
+              - columnheader "状态" [ref=e92]
+              - columnheader "操作" [ref=e93]
+          - rowgroup [ref=e94]:
+            - row "002918 蒙娜丽莎 2026-05-28 14.96 -- -- -- -- -- 09:31 1 -- 回撤中 详情 移除" [ref=e98]:
+              - cell "002918" [ref=e99]
+              - cell "蒙娜丽莎" [ref=e100]
+              - cell "2026-05-28" [ref=e101]
+              - cell "14.96" [ref=e102]
+              - cell "--" [ref=e103]
+              - cell "--" [ref=e104]
+              - cell "--" [ref=e105]
+              - cell "--" [ref=e106]
+              - cell "--" [ref=e107]
+              - cell "09:31" [ref=e108]
+              - cell "1" [ref=e109]
+              - cell "--" [ref=e110]
+              - cell "回撤中" [ref=e111]:
+                - generic [ref=e112]: 回撤中
+              - cell "详情 移除" [ref=e113]:
+                - button "详情" [ref=e114] [cursor=pointer]
+                - button "移除" [ref=e115] [cursor=pointer]
+            - row "300449 汉邦高科 2026-05-11 9.56 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e116]:
+              - cell "300449" [ref=e117]
+              - cell "汉邦高科" [ref=e118]
+              - cell "2026-05-11" [ref=e119]
+              - cell "9.56" [ref=e120]
+              - cell "--" [ref=e121]
+              - cell "--" [ref=e122]
+              - cell "--" [ref=e123]
+              - cell "--" [ref=e124]
+              - cell "--" [ref=e125]
+              - cell "--" [ref=e126]
+              - cell "1" [ref=e127]
+              - cell "--" [ref=e128]
+              - cell "回撤中" [ref=e129]:
+                - generic [ref=e130]: 回撤中
+              - cell "详情 移除" [ref=e131]:
+                - button "详情" [ref=e132] [cursor=pointer]
+                - button "移除" [ref=e133] [cursor=pointer]
+            - row "600172 黄河旋风 2026-05-28 14.60 -- -- -- -- -- 09:44 1 -- 回撤中 详情 移除" [ref=e134]:
+              - cell "600172" [ref=e135]
+              - cell "黄河旋风" [ref=e136]
+              - cell "2026-05-28" [ref=e137]
+              - cell "14.60" [ref=e138]
+              - cell "--" [ref=e139]
+              - cell "--" [ref=e140]
+              - cell "--" [ref=e141]
+              - cell "--" [ref=e142]
+              - cell "--" [ref=e143]
+              - cell "09:44" [ref=e144]
+              - cell "1" [ref=e145]
+              - cell "--" [ref=e146]
+              - cell "回撤中" [ref=e147]:
+                - generic [ref=e148]: 回撤中
+              - cell "详情 移除" [ref=e149]:
+                - button "详情" [ref=e150] [cursor=pointer]
+                - button "移除" [ref=e151] [cursor=pointer]
+            - row "603459 红板科技 2026-05-11 89.16 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e152]:
+              - cell "603459" [ref=e153]
+              - cell "红板科技" [ref=e154]
+              - cell "2026-05-11" [ref=e155]
+              - cell "89.16" [ref=e156]
+              - cell "--" [ref=e157]
+              - cell "--" [ref=e158]
+              - cell "--" [ref=e159]
+              - cell "--" [ref=e160]
+              - cell "--" [ref=e161]
+              - cell "--" [ref=e162]
+              - cell "1" [ref=e163]
+              - cell "--" [ref=e164]
+              - cell "回撤中" [ref=e165]:
+                - generic [ref=e166]: 回撤中
+              - cell "详情 移除" [ref=e167]:
+                - button "详情" [ref=e168] [cursor=pointer]
+                - button "移除" [ref=e169] [cursor=pointer]
+            - row "603045 福达合金 2026-05-11 68.35 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e170]:
+              - cell "603045" [ref=e171]
+              - cell "福达合金" [ref=e172]
+              - cell "2026-05-11" [ref=e173]
+              - cell "68.35" [ref=e174]
+              - cell "--" [ref=e175]
+              - cell "--" [ref=e176]
+              - cell "--" [ref=e177]
+              - cell "--" [ref=e178]
+              - cell "--" [ref=e179]
+              - cell "--" [ref=e180]
+              - cell "1" [ref=e181]
+              - cell "--" [ref=e182]
+              - cell "回撤中" [ref=e183]:
+                - generic [ref=e184]: 回撤中
+              - cell "详情 移除" [ref=e185]:
+                - button "详情" [ref=e186] [cursor=pointer]
+                - button "移除" [ref=e187] [cursor=pointer]
+            - row "002491 通鼎互联 2026-05-11 22.73 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e188]:
+              - cell "002491" [ref=e189]
+              - cell "通鼎互联" [ref=e190]
+              - cell "2026-05-11" [ref=e191]
+              - cell "22.73" [ref=e192]
+              - cell "--" [ref=e193]
+              - cell "--" [ref=e194]
+              - cell "--" [ref=e195]
+              - cell "--" [ref=e196]
+              - cell "--" [ref=e197]
+              - cell "--" [ref=e198]
+              - cell "1" [ref=e199]
+              - cell "--" [ref=e200]
+              - cell "回撤中" [ref=e201]:
+                - generic [ref=e202]: 回撤中
+              - cell "详情 移除" [ref=e203]:
+                - button "详情" [ref=e204] [cursor=pointer]
+                - button "移除" [ref=e205] [cursor=pointer]
+            - row "002108 沧州明珠 2026-05-11 6.44 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e206]:
+              - cell "002108" [ref=e207]
+              - cell "沧州明珠" [ref=e208]
+              - cell "2026-05-11" [ref=e209]
+              - cell "6.44" [ref=e210]
+              - cell "--" [ref=e211]
+              - cell "--" [ref=e212]
+              - cell "--" [ref=e213]
+              - cell "--" [ref=e214]
+              - cell "--" [ref=e215]
+              - cell "--" [ref=e216]
+              - cell "1" [ref=e217]
+              - cell "--" [ref=e218]
+              - cell "回撤中" [ref=e219]:
+                - generic [ref=e220]: 回撤中
+              - cell "详情 移除" [ref=e221]:
+                - button "详情" [ref=e222] [cursor=pointer]
+                - button "移除" [ref=e223] [cursor=pointer]
+            - row "600530 交大昂立 2026-05-11 6.55 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e224]:
+              - cell "600530" [ref=e225]
+              - cell "交大昂立" [ref=e226]
+              - cell "2026-05-11" [ref=e227]
+              - cell "6.55" [ref=e228]
+              - cell "--" [ref=e229]
+              - cell "--" [ref=e230]
+              - cell "--" [ref=e231]
+              - cell "--" [ref=e232]
+              - cell "--" [ref=e233]
+              - cell "--" [ref=e234]
+              - cell "1" [ref=e235]
+              - cell "--" [ref=e236]
+              - cell "回撤中" [ref=e237]:
+                - generic [ref=e238]: 回撤中
+              - cell "详情 移除" [ref=e239]:
+                - button "详情" [ref=e240] [cursor=pointer]
+                - button "移除" [ref=e241] [cursor=pointer]
+            - row "688545 兴福电子 2026-05-11 75.60 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e242]:
+              - cell "688545" [ref=e243]
+              - cell "兴福电子" [ref=e244]
+              - cell "2026-05-11" [ref=e245]
+              - cell "75.60" [ref=e246]
+              - cell "--" [ref=e247]
+              - cell "--" [ref=e248]
+              - cell "--" [ref=e249]
+              - cell "--" [ref=e250]
+              - cell "--" [ref=e251]
+              - cell "--" [ref=e252]
+              - cell "1" [ref=e253]
+              - cell "--" [ref=e254]
+              - cell "回撤中" [ref=e255]:
+                - generic [ref=e256]: 回撤中
+              - cell "详情 移除" [ref=e257]:
+                - button "详情" [ref=e258] [cursor=pointer]
+                - button "移除" [ref=e259] [cursor=pointer]
+            - row "600545 卓郎智能 2026-05-11 6.06 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e260]:
+              - cell "600545" [ref=e261]
+              - cell "卓郎智能" [ref=e262]
+              - cell "2026-05-11" [ref=e263]
+              - cell "6.06" [ref=e264]
+              - cell "--" [ref=e265]
+              - cell "--" [ref=e266]
+              - cell "--" [ref=e267]
+              - cell "--" [ref=e268]
+              - cell "--" [ref=e269]
+              - cell "--" [ref=e270]
+              - cell "1" [ref=e271]
+              - cell "--" [ref=e272]
+              - cell "回撤中" [ref=e273]:
+                - generic [ref=e274]: 回撤中
+              - cell "详情 移除" [ref=e275]:
+                - button "详情" [ref=e276] [cursor=pointer]
+                - button "移除" [ref=e277] [cursor=pointer]
+            - row "601991 大唐发电 2026-05-11 6.09 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e278]:
+              - cell "601991" [ref=e279]
+              - cell "大唐发电" [ref=e280]
+              - cell "2026-05-11" [ref=e281]
+              - cell "6.09" [ref=e282]
+              - cell "--" [ref=e283]
+              - cell "--" [ref=e284]
+              - cell "--" [ref=e285]
+              - cell "--" [ref=e286]
+              - cell "--" [ref=e287]
+              - cell "--" [ref=e288]
+              - cell "1" [ref=e289]
+              - cell "--" [ref=e290]
+              - cell "回撤中" [ref=e291]:
+                - generic [ref=e292]: 回撤中
+              - cell "详情 移除" [ref=e293]:
+                - button "详情" [ref=e294] [cursor=pointer]
+                - button "移除" [ref=e295] [cursor=pointer]
+            - row "605006 山东玻纤 2026-05-11 16.36 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e296]:
+              - cell "605006" [ref=e297]
+              - cell "山东玻纤" [ref=e298]
+              - cell "2026-05-11" [ref=e299]
+              - cell "16.36" [ref=e300]
+              - cell "--" [ref=e301]
+              - cell "--" [ref=e302]
+              - cell "--" [ref=e303]
+              - cell "--" [ref=e304]
+              - cell "--" [ref=e305]
+              - cell "--" [ref=e306]
+              - cell "1" [ref=e307]
+              - cell "--" [ref=e308]
+              - cell "回撤中" [ref=e309]:
+                - generic [ref=e310]: 回撤中
+              - cell "详情 移除" [ref=e311]:
+                - button "详情" [ref=e312] [cursor=pointer]
+                - button "移除" [ref=e313] [cursor=pointer]
+            - row "600683 京投发展 2026-05-11 18.95 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e314]:
+              - cell "600683" [ref=e315]
+              - cell "京投发展" [ref=e316]
+              - cell "2026-05-11" [ref=e317]
+              - cell "18.95" [ref=e318]
+              - cell "--" [ref=e319]
+              - cell "--" [ref=e320]
+              - cell "--" [ref=e321]
+              - cell "--" [ref=e322]
+              - cell "--" [ref=e323]
+              - cell "--" [ref=e324]
+              - cell "1" [ref=e325]
+              - cell "--" [ref=e326]
+              - cell "回撤中" [ref=e327]:
+                - generic [ref=e328]: 回撤中
+              - cell "详情 移除" [ref=e329]:
+                - button "详情" [ref=e330] [cursor=pointer]
+                - button "移除" [ref=e331] [cursor=pointer]
+            - row "600076 康欣新材 2026-05-11 3.96 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e332]:
+              - cell "600076" [ref=e333]
+              - cell "康欣新材" [ref=e334]
+              - cell "2026-05-11" [ref=e335]
+              - cell "3.96" [ref=e336]
+              - cell "--" [ref=e337]
+              - cell "--" [ref=e338]
+              - cell "--" [ref=e339]
+              - cell "--" [ref=e340]
+              - cell "--" [ref=e341]
+              - cell "--" [ref=e342]
+              - cell "1" [ref=e343]
+              - cell "--" [ref=e344]
+              - cell "回撤中" [ref=e345]:
+                - generic [ref=e346]: 回撤中
+              - cell "详情 移除" [ref=e347]:
+                - button "详情" [ref=e348] [cursor=pointer]
+                - button "移除" [ref=e349] [cursor=pointer]
+            - row "603738 泰晶科技 2026-05-11 51.71 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e350]:
+              - cell "603738" [ref=e351]
+              - cell "泰晶科技" [ref=e352]
+              - cell "2026-05-11" [ref=e353]
+              - cell "51.71" [ref=e354]
+              - cell "--" [ref=e355]
+              - cell "--" [ref=e356]
+              - cell "--" [ref=e357]
+              - cell "--" [ref=e358]
+              - cell "--" [ref=e359]
+              - cell "--" [ref=e360]
+              - cell "1" [ref=e361]
+              - cell "--" [ref=e362]
+              - cell "回撤中" [ref=e363]:
+                - generic [ref=e364]: 回撤中
+              - cell "详情 移除" [ref=e365]:
+                - button "详情" [ref=e366] [cursor=pointer]
+                - button "移除" [ref=e367] [cursor=pointer]
+            - row "300302 同有科技 2026-05-11 42.60 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e368]:
+              - cell "300302" [ref=e369]
+              - cell "同有科技" [ref=e370]
+              - cell "2026-05-11" [ref=e371]
+              - cell "42.60" [ref=e372]
+              - cell "--" [ref=e373]
+              - cell "--" [ref=e374]
+              - cell "--" [ref=e375]
+              - cell "--" [ref=e376]
+              - cell "--" [ref=e377]
+              - cell "--" [ref=e378]
+              - cell "1" [ref=e379]
+              - cell "--" [ref=e380]
+              - cell "回撤中" [ref=e381]:
+                - generic [ref=e382]: 回撤中
+              - cell "详情 移除" [ref=e383]:
+                - button "详情" [ref=e384] [cursor=pointer]
+                - button "移除" [ref=e385] [cursor=pointer]
+            - row "002865 钧达股份 2026-05-11 106.18 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e386]:
+              - cell "002865" [ref=e387]
+              - cell "钧达股份" [ref=e388]
+              - cell "2026-05-11" [ref=e389]
+              - cell "106.18" [ref=e390]
+              - cell "--" [ref=e391]
+              - cell "--" [ref=e392]
+              - cell "--" [ref=e393]
+              - cell "--" [ref=e394]
+              - cell "--" [ref=e395]
+              - cell "--" [ref=e396]
+              - cell "1" [ref=e397]
+              - cell "--" [ref=e398]
+              - cell "回撤中" [ref=e399]:
+                - generic [ref=e400]: 回撤中
+              - cell "详情 移除" [ref=e401]:
+                - button "详情" [ref=e402] [cursor=pointer]
+                - button "移除" [ref=e403] [cursor=pointer]
+            - row "603269 海鸥股份 2026-05-11 18.56 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e404]:
+              - cell "603269" [ref=e405]
+              - cell "海鸥股份" [ref=e406]
+              - cell "2026-05-11" [ref=e407]
+              - cell "18.56" [ref=e408]
+              - cell "--" [ref=e409]
+              - cell "--" [ref=e410]
+              - cell "--" [ref=e411]
+              - cell "--" [ref=e412]
+              - cell "--" [ref=e413]
+              - cell "--" [ref=e414]
+              - cell "1" [ref=e415]
+              - cell "--" [ref=e416]
+              - cell "回撤中" [ref=e417]:
+                - generic [ref=e418]: 回撤中
+              - cell "详情 移除" [ref=e419]:
+                - button "详情" [ref=e420] [cursor=pointer]
+                - button "移除" [ref=e421] [cursor=pointer]
+            - row "001331 胜通能源 2026-05-11 54.99 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e422]:
+              - cell "001331" [ref=e423]
+              - cell "胜通能源" [ref=e424]
+              - cell "2026-05-11" [ref=e425]
+              - cell "54.99" [ref=e426]
+              - cell "--" [ref=e427]
+              - cell "--" [ref=e428]
+              - cell "--" [ref=e429]
+              - cell "--" [ref=e430]
+              - cell "--" [ref=e431]
+              - cell "--" [ref=e432]
+              - cell "1" [ref=e433]
+              - cell "--" [ref=e434]
+              - cell "回撤中" [ref=e435]:
+                - generic [ref=e436]: 回撤中
+              - cell "详情 移除" [ref=e437]:
+                - button "详情" [ref=e438] [cursor=pointer]
+                - button "移除" [ref=e439] [cursor=pointer]
+            - row "600234 科新发展 2026-05-11 31.47 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e440]:
+              - cell "600234" [ref=e441]
+              - cell "科新发展" [ref=e442]
+              - cell "2026-05-11" [ref=e443]
+              - cell "31.47" [ref=e444]
+              - cell "--" [ref=e445]
+              - cell "--" [ref=e446]
+              - cell "--" [ref=e447]
+              - cell "--" [ref=e448]
+              - cell "--" [ref=e449]
+              - cell "--" [ref=e450]
+              - cell "1" [ref=e451]
+              - cell "--" [ref=e452]
+              - cell "回撤中" [ref=e453]:
+                - generic [ref=e454]: 回撤中
+              - cell "详情 移除" [ref=e455]:
+                - button "详情" [ref=e456] [cursor=pointer]
+                - button "移除" [ref=e457] [cursor=pointer]
+        - generic [ref=e97]:
+          - button "← 上一页" [disabled] [ref=e458]
+          - button "第 1/31 页" [ref=e459] [cursor=pointer]
+          - button "下一页 →" [ref=e460] [cursor=pointer]
+          - generic [ref=e461]: 共 610 条
+  - text: ×

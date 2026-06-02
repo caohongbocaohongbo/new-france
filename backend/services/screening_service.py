@@ -202,6 +202,13 @@ async def run_full_pipeline(
 
     logger.info(f"  监控列表: {len(watchlist)} 只")
 
+    national_team_summary = {}
+    try:
+        from .national_team_service import get_email_summary
+        national_team_summary = get_email_summary()
+    except Exception as e:
+        logger.warning(f"  国家队动向摘要读取失败: {e}")
+
     # 拉取实时行情 + 历史K线 + 事件采集（并行，无数据依赖）
     codes = [e["code"] for e in watchlist]
     event_engine = EventEngine()
@@ -393,7 +400,8 @@ async def run_full_pipeline(
                                   zt_list=zt_list, dry_run=dry_run,
                                   audit_results=audit_results,
                                   zt_meta=zt_meta,
-                                  index_snapshot=index_snapshot)
+                                  index_snapshot=index_snapshot,
+                                  national_team=national_team_summary)
 
     # ---- 构建响应 ----
     results = []

@@ -100,6 +100,69 @@ class NotificationEnrichmentTest(unittest.TestCase):
         self.assertIn("今日涨停池有效数: 1 只", text)
         self.assertNotIn("今日新增涨停", text)
 
+    def test_text_summary_keeps_zt_rows_when_national_team_section_exists(self):
+        zt_list = [{"code": "000001", "name": "平安银行", "price": 10.0, "change_pct": 10.0}]
+        national_team = {
+            "source_status": {"ok": True, "source": "东方财富股东分析", "fetched_at": "2026-06-01T15:10:00+08:00"},
+            "entities": [],
+            "events": [],
+        }
+
+        text = notifier._build_text_content([], date(2026, 6, 1), 0, zt_list, 0, {}, {}, {}, national_team)
+
+        self.assertLess(text.index("【今日涨停股列表】"), text.index("000001 平安银行"))
+        self.assertLess(text.index("000001 平安银行"), text.index("【国家队动向】"))
+
+    def test_national_team_summary_renders_source_and_no_fake_events(self):
+        national_team = {
+            "total_holdings": 2,
+            "entities": [
+                {
+                    "entity_key": "huijin",
+                    "entity_name": "中央汇金",
+                    "holding_count": 1,
+                    "latest_report_period": "2026-03-31",
+                    "latest_notice_date": "2026-04-30",
+                    "change_counts": {"new": 0, "increase": 1, "decrease": 0, "exit": 0, "unchanged": 0},
+                    "latest_event": {"title": "中央汇金 增持 工商银行(601398)", "event_date": "2026-04-30"},
+                },
+                {
+                    "entity_key": "csf",
+                    "entity_name": "证金公司",
+                    "holding_count": 1,
+                    "latest_report_period": "2026-03-31",
+                    "latest_notice_date": "2026-04-30",
+                    "change_counts": {"new": 0, "increase": 0, "decrease": 0, "exit": 0, "unchanged": 1},
+                    "latest_event": None,
+                },
+            ],
+            "events": [
+                {
+                    "event_date": "2026-04-30",
+                    "entity_name": "中央汇金",
+                    "title": "中央汇金 增持 工商银行(601398)",
+                    "source": "东方财富股东分析",
+                    "source_url": "https://data.eastmoney.com/gdfx/HoldingAnalyse.html",
+                }
+            ],
+            "source_status": {
+                "ok": True,
+                "source": "东方财富股东分析",
+                "source_url": "https://data.eastmoney.com/gdfx/HoldingAnalyse.html",
+                "fetched_at": "2026-06-01T15:10:00+08:00",
+            },
+        }
+
+        text = notifier._build_text_content([], date(2026, 6, 1), 0, [], 0, {}, {}, {}, national_team)
+        html = notifier._build_html_content([], date(2026, 6, 1), 0, [], 0, "seal_time", {}, {}, {}, national_team)
+
+        self.assertIn("【国家队动向】", text)
+        self.assertIn("中央汇金", text)
+        self.assertIn("东方财富股东分析", text)
+        self.assertIn("国家队动向", html)
+        self.assertIn("中央汇金 增持 工商银行", html)
+        self.assertIn("数据源", html)
+
 
 if __name__ == "__main__":
     unittest.main()

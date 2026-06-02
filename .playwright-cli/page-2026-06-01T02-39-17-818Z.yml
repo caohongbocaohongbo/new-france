@@ -1,0 +1,76 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - img [ref=e37]
+        - generic [ref=e42]: Dashboard 总览
+      - link "监控列表" [ref=e43] [cursor=pointer]:
+        - /url: "#watchlist"
+        - img [ref=e44]
+        - generic [ref=e46]: 监控列表
+      - link "推荐结果" [ref=e47] [cursor=pointer]:
+        - /url: "#recommendations"
+        - img [ref=e48]
+        - generic [ref=e50]: 推荐结果
+      - link "手动筛选" [ref=e51] [cursor=pointer]:
+        - /url: "#screening"
+        - img [ref=e52]
+        - generic [ref=e55]: 手动筛选
+      - link "策略配置" [ref=e56] [cursor=pointer]:
+        - /url: "#settings"
+        - img [ref=e57]
+        - generic [ref=e60]: 策略配置
+    - generic [ref=e61]:
+      - generic [ref=e64]: 交易中
+      - generic [ref=e115]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e65]:
+    - generic [ref=e66]:
+      - heading "策略配置" [level=1] [ref=e175]
+      - generic [ref=e69]: 2026-06-01 周一
+    - generic [ref=e177]:
+      - generic [ref=e178]:
+        - heading "策略参数" [level=2] [ref=e180]
+        - generic [ref=e182]: 正在从后端读取策略配置...
+        - button "保存策略参数" [ref=e183] [cursor=pointer]
+      - generic [ref=e185]:
+        - heading "通知配置" [level=2] [ref=e187]
+        - generic [ref=e188]:
+          - generic [ref=e189]:
+            - generic [ref=e190]: 发件邮箱
+            - textbox [ref=e191]
+          - generic [ref=e192]:
+            - generic [ref=e193]: 收件邮箱
+            - textbox [ref=e194]
+          - generic [ref=e195]:
+            - generic [ref=e196]: SMTP主机
+            - textbox [ref=e197]
+          - generic [ref=e198]:
+            - generic [ref=e199]: SMTP端口
+            - spinbutton [ref=e200]
+          - button "保存通知配置" [ref=e201] [cursor=pointer]
+          - button "发送测试邮件" [ref=e202] [cursor=pointer]
+      - generic [ref=e204]:
+        - heading "定时任务" [level=2] [ref=e206]
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - generic [ref=e209]: Cron表达式
+            - code [ref=e210]: 10 15 * * 1-5
+          - generic [ref=e211]:
+            - generic [ref=e212]: 下次执行
+            - generic [ref=e213]: 2026-06-02 (周二) 15:10
+          - button "手动触发执行" [ref=e214] [cursor=pointer]
+      - generic [ref=e216]:
+        - heading "因子权重配置" [level=2] [ref=e218]
+        - paragraph [ref=e219]: 保存后写入后端配置表，并同步 config/strategy_params.py；筛选、评分和邮件通知优先读取后端配置。
+        - generic [ref=e221]: 正在读取因子权重...
+        - button "保存权重配置" [ref=e223] [cursor=pointer]
+      - generic [ref=e225]:
+        - heading "上次修改比对" [level=2] [ref=e227]
+        - generic [ref=e228]: 正在读取配置...
+  - text: ×

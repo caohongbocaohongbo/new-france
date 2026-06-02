@@ -1,0 +1,290 @@
+- generic [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - generic [ref=e37]: Dashboard 总览
+      - link "监控列表" [ref=e38] [cursor=pointer]:
+        - /url: "#watchlist"
+        - generic [ref=e39]: 监控列表
+      - link "推荐结果" [ref=e40] [cursor=pointer]:
+        - /url: "#recommendations"
+        - generic [ref=e41]: 推荐结果
+      - link "手动筛选" [ref=e42] [cursor=pointer]:
+        - /url: "#screening"
+        - generic [ref=e43]: 手动筛选
+      - link "策略配置" [ref=e44] [cursor=pointer]:
+        - /url: "#settings"
+        - generic [ref=e45]: 策略配置
+    - generic [ref=e46]:
+      - generic [ref=e49]: 交易中
+      - generic [ref=e50]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e51]:
+    - generic [ref=e52]:
+      - heading "监控列表" [level=1] [ref=e53]
+      - generic [ref=e55]: "数据源: 东方财富涨停股池"
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - textbox "搜索代码/名称..." [ref=e58]
+        - combobox [ref=e59] [cursor=pointer]:
+          - option "全部状态" [selected]
+          - option "回撤中"
+          - option "已推荐"
+          - option "已过期"
+        - button "查询" [ref=e60] [cursor=pointer]
+        - button "导出CSV" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - generic [ref=e63] [cursor=pointer]: 全部 610
+        - generic [ref=e64] [cursor=pointer]: 回撤中 610
+        - generic [ref=e65] [cursor=pointer]: 已推荐 0
+        - generic [ref=e66] [cursor=pointer]: 已过期 0
+      - generic [ref=e67]:
+        - table [ref=e69]:
+          - rowgroup [ref=e70]:
+            - row "代码 名称 涨停日期 参考价 现价 回撤% 换手率 量比 PE 封板 涨停次数 流通市值 状态 操作" [ref=e71]:
+              - columnheader "代码" [ref=e72]
+              - columnheader "名称" [ref=e73]
+              - columnheader "涨停日期" [ref=e74]
+              - columnheader "参考价" [ref=e75]
+              - columnheader "现价" [ref=e76]
+              - columnheader "回撤%" [ref=e77]:
+                - button "回撤%" [ref=e78] [cursor=pointer]: 回撤%
+              - columnheader "换手率" [ref=e80]:
+                - button "换手率" [ref=e81] [cursor=pointer]: 换手率
+              - columnheader "量比" [ref=e83]:
+                - button "量比" [ref=e84] [cursor=pointer]: 量比
+              - columnheader "PE" [ref=e86]:
+                - button "PE" [ref=e87] [cursor=pointer]: PE
+              - columnheader "封板" [ref=e89]
+              - columnheader "涨停次数" [ref=e90]:
+                - button "涨停次数" [ref=e91] [cursor=pointer]: 涨停次数
+              - columnheader "流通市值" [ref=e93]
+              - columnheader "状态" [ref=e94]
+              - columnheader "操作" [ref=e95]
+          - rowgroup [ref=e96]:
+            - row "002918 蒙娜丽莎 2026-05-28 14.96 13.46 -10.03% 17.81% 1.10 -75.90 09:31 1 29亿 回撤中 详情 移除" [ref=e100]:
+              - cell "002918" [ref=e101]
+              - cell "蒙娜丽莎" [ref=e102]
+              - cell "2026-05-28" [ref=e103]
+              - cell "14.96" [ref=e104]
+              - cell "13.46" [ref=e105]
+              - cell "-10.03%" [ref=e106]
+              - cell "17.81%" [ref=e107]
+              - cell "1.10" [ref=e108]
+              - cell "-75.90" [ref=e109]
+              - cell "09:31" [ref=e110]
+              - cell "1" [ref=e111]
+              - cell "29亿" [ref=e112]
+              - cell "回撤中" [ref=e113]:
+                - generic [ref=e114]: 回撤中
+              - cell "详情 移除" [ref=e115]:
+                - button "详情" [active] [ref=e116] [cursor=pointer]
+                - button "移除" [ref=e117] [cursor=pointer]
+            - row "300449 汉邦高科 2026-05-11 9.56 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e118]:
+              - cell "300449" [ref=e119]
+              - cell "汉邦高科" [ref=e120]
+              - cell "2026-05-11" [ref=e121]
+              - cell "9.56" [ref=e122]
+              - cell "--" [ref=e123]
+              - cell "--" [ref=e124]
+              - cell "--" [ref=e125]
+              - cell "--" [ref=e126]
+              - cell "--" [ref=e127]
+              - cell "--" [ref=e128]
+              - cell "1" [ref=e129]
+              - cell "--" [ref=e130]
+              - cell "回撤中" [ref=e131]:
+                - generic [ref=e132]: 回撤中
+              - cell "详情 移除" [ref=e133]:
+                - button "详情" [ref=e134] [cursor=pointer]
+                - button "移除" [ref=e135] [cursor=pointer]
+            - row "600172 黄河旋风 2026-05-28 14.60 -- -- -- -- -- 09:44 1 -- 回撤中 详情 移除" [ref=e136]:
+              - cell "600172" [ref=e137]
+              - cell "黄河旋风" [ref=e138]
+              - cell "2026-05-28" [ref=e139]
+              - cell "14.60" [ref=e140]
+              - cell "--" [ref=e141]
+              - cell "--" [ref=e142]
+              - cell "--" [ref=e143]
+              - cell "--" [ref=e144]
+              - cell "--" [ref=e145]
+              - cell "09:44" [ref=e146]
+              - cell "1" [ref=e147]
+              - cell "--" [ref=e148]
+              - cell "回撤中" [ref=e149]:
+                - generic [ref=e150]: 回撤中
+              - cell "详情 移除" [ref=e151]:
+                - button "详情" [ref=e152] [cursor=pointer]
+                - button "移除" [ref=e153] [cursor=pointer]
+            - row "603459 红板科技 2026-05-11 89.16 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e154]:
+              - cell "603459" [ref=e155]
+              - cell "红板科技" [ref=e156]
+              - cell "2026-05-11" [ref=e157]
+              - cell "89.16" [ref=e158]
+              - cell "--" [ref=e159]
+              - cell "--" [ref=e160]
+              - cell "--" [ref=e161]
+              - cell "--" [ref=e162]
+              - cell "--" [ref=e163]
+              - cell "--" [ref=e164]
+              - cell "1" [ref=e165]
+              - cell "--" [ref=e166]
+              - cell "回撤中" [ref=e167]:
+                - generic [ref=e168]: 回撤中
+              - cell "详情 移除" [ref=e169]:
+                - button "详情" [ref=e170] [cursor=pointer]
+                - button "移除" [ref=e171] [cursor=pointer]
+            - row "603045 福达合金 2026-05-11 68.35 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e172]:
+              - cell "603045" [ref=e173]
+              - cell "福达合金" [ref=e174]
+              - cell "2026-05-11" [ref=e175]
+              - cell "68.35" [ref=e176]
+              - cell "--" [ref=e177]
+              - cell "--" [ref=e178]
+              - cell "--" [ref=e179]
+              - cell "--" [ref=e180]
+              - cell "--" [ref=e181]
+              - cell "--" [ref=e182]
+              - cell "1" [ref=e183]
+              - cell "--" [ref=e184]
+              - cell "回撤中" [ref=e185]:
+                - generic [ref=e186]: 回撤中
+              - cell "详情 移除" [ref=e187]:
+                - button "详情" [ref=e188] [cursor=pointer]
+                - button "移除" [ref=e189] [cursor=pointer]
+            - row "002491 通鼎互联 2026-05-11 22.73 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e190]:
+              - cell "002491" [ref=e191]
+              - cell "通鼎互联" [ref=e192]
+              - cell "2026-05-11" [ref=e193]
+              - cell "22.73" [ref=e194]
+              - cell "--" [ref=e195]
+              - cell "--" [ref=e196]
+              - cell "--" [ref=e197]
+              - cell "--" [ref=e198]
+              - cell "--" [ref=e199]
+              - cell "--" [ref=e200]
+              - cell "1" [ref=e201]
+              - cell "--" [ref=e202]
+              - cell "回撤中" [ref=e203]:
+                - generic [ref=e204]: 回撤中
+              - cell "详情 移除" [ref=e205]:
+                - button "详情" [ref=e206] [cursor=pointer]
+                - button "移除" [ref=e207] [cursor=pointer]
+            - row "002108 沧州明珠 2026-05-11 6.44 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e208]:
+              - cell "002108" [ref=e209]
+              - cell "沧州明珠" [ref=e210]
+              - cell "2026-05-11" [ref=e211]
+              - cell "6.44" [ref=e212]
+              - cell "--" [ref=e213]
+              - cell "--" [ref=e214]
+              - cell "--" [ref=e215]
+              - cell "--" [ref=e216]
+              - cell "--" [ref=e217]
+              - cell "--" [ref=e218]
+              - cell "1" [ref=e219]
+              - cell "--" [ref=e220]
+              - cell "回撤中" [ref=e221]:
+                - generic [ref=e222]: 回撤中
+              - cell "详情 移除" [ref=e223]:
+                - button "详情" [ref=e224] [cursor=pointer]
+                - button "移除" [ref=e225] [cursor=pointer]
+            - row "600530 交大昂立 2026-05-11 6.55 -- -- -- -- -- -- 1 -- 回撤中 详情 移除" [ref=e226]:
+              - cell "600530" [ref=e227]
+              - cell "交大昂立" [ref=e228]
+              - cell "2026-05-11" [ref=e229]
+              - cell "6.55" [ref=e230]
+              - cell "--" [ref=e231]
+              - cell "--" [ref=e232]
+              - cell "--" [ref=e233]
+              - cell "--" [ref=e234]
+              - cell "--" [ref=e235]
+              - cell "--" [ref=e236]
+              - cell "1" [ref=e237]
+              - cell "--" [ref=e238]
+              - cell "回撤中" [ref=e239]:
+                - generic [ref=e240]: 回撤中
+              - cell "详情 移除" [ref=e241]:
+                - button "详情" [ref=e242] [cursor=pointer]
+                - button "移除" [ref=e243] [cursor=pointer]
+        - generic [ref=e99]:
+          - button "← 上一页" [disabled] [ref=e244]
+          - button "第 1/77 页" [ref=e245] [cursor=pointer]
+          - button "下一页 →" [ref=e246] [cursor=pointer]
+          - generic [ref=e247]: 共 610 条
+  - generic [ref=e249]:
+    - generic [ref=e250]:
+      - generic [ref=e251]:
+        - heading "蒙娜丽莎" [level=2] [ref=e252]
+        - generic [ref=e253] [cursor=pointer]: "002918"
+      - generic [ref=e254]:
+        - generic [ref=e255]: "涨停日期: 2026-05-28"
+        - generic [ref=e256]: "参考价: 14.96"
+        - generic [ref=e257]: "现价: 13.46"
+        - generic [ref=e258]: "回撤: -10.03%"
+        - generic [ref=e259]: "封板时间: 09:31"
+        - generic [ref=e260]: "连板数: 1"
+        - generic [ref=e261]: "加入时间: 2026-05-11"
+      - generic [ref=e262]:
+        - generic "价格、成交量、涨跌幅、均线、回撤分布均由历史K线计算" [ref=e263]: "K线: 新浪财经K线API"
+        - generic "现价、实时回撤来自东方财富实时行情" [ref=e264]: "实时行情: 东方财富实时行情"
+        - generic "当前可用数据源未返回真实换手率历史序列，未使用推算值" [ref=e265]: "换手率: 暂无可查来源"
+        - generic "当前未配置或未取到Tushare daily_basic，东方财富历史K线不提供量比历史序列" [ref=e266]: "量比: 暂无可查来源"
+        - generic "当前未配置或未取到Tushare daily_basic，实时PE不等同历史序列，未回填假数据" [ref=e267]: "PE: 暂无可查来源"
+        - generic "涨停日期由历史K线涨跌幅识别，监控涨停日使用记录中的封板时间" [ref=e268]: "封板/涨停: 历史K线涨跌幅>=9.8% + data/france.md 监控记录"
+      - button "×" [ref=e269] [cursor=pointer]
+    - generic [ref=e270]:
+      - generic [ref=e273]: 价格走势 + 回撤幅度
+      - generic [ref=e277]:
+        - generic [ref=e279]: 成交量趋势
+        - generic [ref=e284]: 均线系统 (MA5/MA10/MA20/MA60)
+      - generic [ref=e288]:
+        - generic [ref=e290]: 价格涨跌幅
+        - generic [ref=e295]: 回撤分布统计
+      - generic [ref=e299]:
+        - heading "补充指标趋势" [level=3] [ref=e300]
+        - paragraph [ref=e301]: 用于补齐换手率、量比、PE、封板时间与历史涨停日期，保持百度财经轻量图表风格。
+      - generic [ref=e302]:
+        - generic [ref=e303]:
+          - generic [ref=e304]: 换手率趋势
+          - generic [ref=e306]: 当前可用数据源未返回真实换手率历史序列，未使用推算值
+        - generic [ref=e307]:
+          - generic [ref=e308]: 量比趋势
+          - generic [ref=e310]: 当前未配置或未取到Tushare daily_basic，东方财富历史K线不提供量比历史序列
+        - generic [ref=e311]:
+          - generic [ref=e312]: PE 趋势
+          - generic [ref=e314]: 当前未配置或未取到Tushare daily_basic，实时PE不等同历史序列，未回填假数据
+      - generic [ref=e315]:
+        - generic [ref=e317]: 封板时间趋势
+        - generic [ref=e321]:
+          - generic [ref=e322]: 涨停板时间 | 涨停日期可视化
+          - generic [ref=e324]:
+            - generic [ref=e325]:
+              - generic [ref=e326]: "1"
+              - generic [ref=e327]: 05-12
+              - generic [ref=e328]: "--"
+              - generic [ref=e329]: 涨停
+            - generic [ref=e330]:
+              - generic [ref=e331]: "2"
+              - generic [ref=e332]: 05-13
+              - generic [ref=e333]: "--"
+              - generic [ref=e334]: 涨停
+            - generic [ref=e335]:
+              - generic [ref=e336]: "3"
+              - generic [ref=e337]: 05-14
+              - generic [ref=e338]: "--"
+              - generic [ref=e339]: 涨停
+            - generic [ref=e340]:
+              - generic [ref=e341]: "4"
+              - generic [ref=e342]: 05-15
+              - generic [ref=e343]: "--"
+              - generic [ref=e344]: 涨停
+            - generic [ref=e345]:
+              - generic [ref=e346]: "5"
+              - generic [ref=e347]: 05-28
+              - generic [ref=e348]: 09:31
+              - generic [ref=e349]: 1板

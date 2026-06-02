@@ -132,6 +132,114 @@ class SystemConfig(Base):
     )
 
 
+class NationalTeamHolding(Base):
+    """国家队十大股东/十大流通股东披露持仓"""
+    __tablename__ = "national_team_holdings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entity_key = Column(String(40), nullable=False)
+    entity_name = Column(String(40), nullable=False)
+    shareholder_name = Column(String(120), nullable=False)
+    shareholder_type = Column(String(60))
+    shares_type = Column(String(60))
+    holder_rank = Column(Integer)
+    stock_code = Column(String(6), nullable=False)
+    stock_name = Column(String(50))
+    report_period = Column(String(10), nullable=False)
+    notice_date = Column(String(10))
+    shares = Column(Float)
+    share_ratio = Column(Float)
+    shares_change = Column(Float)
+    change_ratio = Column(Float)
+    change_name = Column(String(30))
+    market_value = Column(Float)
+    holding_type = Column(String(30), nullable=False)
+    holding_type_name = Column(String(30))
+    source = Column(String(80), nullable=False)
+    source_url = Column(String(500))
+    fetched_at = Column(DateTime, default=beijing_now)
+    created_at = Column(DateTime, default=beijing_now)
+    updated_at = Column(DateTime, default=beijing_now, onupdate=beijing_now)
+
+    __table_args__ = (
+        UniqueConstraint("entity_key", "stock_code", "shareholder_name", "report_period", "holding_type",
+                         name="uq_national_team_holding"),
+        Index("idx_national_team_entity", "entity_key"),
+        Index("idx_national_team_period", "report_period"),
+        Index("idx_national_team_stock", "stock_code"),
+    )
+
+
+class NationalTeamChange(Base):
+    """国家队持仓披露变动"""
+    __tablename__ = "national_team_changes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entity_key = Column(String(40), nullable=False)
+    entity_name = Column(String(40), nullable=False)
+    stock_code = Column(String(6), nullable=False)
+    stock_name = Column(String(50))
+    shareholder_name = Column(String(120), nullable=False)
+    holding_type = Column(String(30), nullable=False)
+    report_period = Column(String(10), nullable=False)
+    previous_report_period = Column(String(10))
+    change_type = Column(String(20), nullable=False)
+    shares = Column(Float)
+    previous_shares = Column(Float)
+    shares_delta = Column(Float)
+    change_ratio = Column(Float)
+    source = Column(String(80), nullable=False)
+    source_url = Column(String(500))
+    detected_at = Column(DateTime, default=beijing_now)
+
+    __table_args__ = (
+        Index("idx_national_team_changes_entity", "entity_key"),
+        Index("idx_national_team_changes_period", "report_period"),
+    )
+
+
+class NationalTeamEvent(Base):
+    """国家队可溯源事件"""
+    __tablename__ = "national_team_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entity_key = Column(String(40), nullable=False)
+    entity_name = Column(String(40), nullable=False)
+    event_date = Column(String(10), nullable=False)
+    title = Column(String(200), nullable=False)
+    summary = Column(Text)
+    related_stock_code = Column(String(6))
+    related_stock_name = Column(String(50))
+    impact_level = Column(String(20), default="neutral")
+    source = Column(String(80), nullable=False)
+    source_url = Column(String(500))
+    fetched_at = Column(DateTime, default=beijing_now)
+
+    __table_args__ = (
+        Index("idx_national_team_events_entity", "entity_key"),
+        Index("idx_national_team_events_date", "event_date"),
+    )
+
+
+class NationalTeamSnapshot(Base):
+    """国家队采集快照状态"""
+    __tablename__ = "national_team_snapshots"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    report_period = Column(String(10))
+    raw_count = Column(Integer, default=0)
+    matched_count = Column(Integer, default=0)
+    source = Column(String(80), nullable=False)
+    status = Column(String(20), default="success")
+    error_message = Column(Text)
+    fetched_at = Column(DateTime, default=beijing_now)
+
+    __table_args__ = (
+        Index("idx_national_team_snapshots_period", "report_period"),
+        Index("idx_national_team_snapshots_status", "status"),
+    )
+
+
 def register_models():
     """确保所有模型已导入（供 init_db 使用）"""
     pass

@@ -143,6 +143,7 @@ function readLatestFbtFromForm() {
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initWatchlistTabs();
+    initNationalTeamTabs();
     initRecommendationControls();
     updateDateTime();
     checkSystemStatus();
@@ -179,13 +180,15 @@ function navigateTo(route, pushState = true, force = false) {
     if (pushState) history.replaceState(null, '', '#' + route);
     document.getElementById('pageTitle').textContent = {
         dashboard:'Dashboard 市场总览',watchlist:'监控列表',
-        recommendations:'推荐结果',screening:'手动筛选',settings:'策略配置'
+        recommendations:'推荐结果',screening:'手动筛选',
+        'national-team':'国家队动向',settings:'策略配置'
     }[page] || page;
     setTopbarMeta(page);
     if (page === 'dashboard') loadDashboard();
     if (page === 'watchlist') loadWatchlist();
     if (page === 'recommendations') loadRecommendations();
     if (page === 'screening') setupScreeningPage();
+    if (page === 'national-team') loadNationalTeam();
     if (page === 'settings') setupSettingsPage();
 }
 
@@ -193,6 +196,12 @@ let wlCurrentStatus = ''; // current tab filter
 let recommendationLastData = null;
 let recommendationCurrentLevel = '';
 let recommendationEnrichedResults = [];
+let ntCurrentEntity = '';
+let ntCurrentPage = 1;
+let ntEventsOffset = 0;
+let ntEventsTotal = 0;
+let ntEventsLoading = false;
+const NT_EVENTS_PAGE_SIZE = 5;
 
 function applyWatchlistQuery(queryString) {
     const params = new URLSearchParams(queryString);
@@ -233,6 +242,25 @@ function initWatchlistTabs() {
     if (searchInput) {
         searchInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') loadWatchlist(1);
+        });
+    }
+}
+
+function initNationalTeamTabs() {
+    document.querySelectorAll('#ntTabs .tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            ntCurrentEntity = tab.dataset.entity || '';
+            document.querySelectorAll('#ntTabs .tab').forEach(item => item.classList.remove('active'));
+            tab.classList.add('active');
+            loadNationalTeam(1);
+        });
+    });
+    const eventsScroll = document.getElementById('ntEventsScroll');
+    if (eventsScroll) {
+        eventsScroll.addEventListener('scroll', () => {
+            if (eventsScroll.scrollTop + eventsScroll.clientHeight >= eventsScroll.scrollHeight - 64) {
+                loadMoreNationalTeamEvents();
+            }
         });
     }
 }
@@ -473,20 +501,33 @@ function renderMarketTrend(data) {
     const el = document.getElementById('marketTrend');
     if (!el) return;
     const ztList = data.zt_list || [];
+    const dtList = data.dt_list || data.limit_down_list || [];
     const timeSlots = [
         ['09:25', 92500], ['09:30', 93000], ['09:45', 94500], ['10:00', 100000],
         ['10:30', 103000], ['11:00', 110000], ['13:00', 130000], ['13:30', 133000],
         ['14:00', 140000], ['14:30', 143000], ['14:45', 144500], ['15:00', 150000]
     ];
-    const buckets = Object.fromEntries(timeSlots.map(([label]) => [label, 0]));
+    const limitUpBuckets = Object.fromEntries(timeSlots.map(([label]) => [label, 0]));
+    const limitDownBuckets = Object.fromEntries(timeSlots.map(([label]) => [label, 0]));
     for (const item of ztList) {
         if (!isRealNumber(item.seal_time)) continue;
         const seal = Number(item.seal_time);
         const slot = [...timeSlots].reverse().find(([, threshold]) => seal >= threshold)?.[0] || timeSlots[0][0];
-        buckets[slot] = (buckets[slot] || 0) + 1;
+        limitUpBuckets[slot] = (limitUpBuckets[slot] || 0) + 1;
     }
-    const points = Object.entries(buckets);
-    if (!ztList.length || points.every(([, v]) => !v)) {
+    for (const item of dtList) {
+        const rawTime = item.seal_time ?? item.open_time ?? item.time;
+        if (!isRealNumber(rawTime)) continue;
+        const seal = Number(rawTime);
+        const slot = [...timeSlots].reverse().find(([, threshold]) => seal >= threshold)?.[0] || timeSlots[0][0];
+        limitDownBuckets[slot] = (limitDownBuckets[slot] || 0) + 1;
+    }
+    const points = timeSlots.map(([label]) => ({
+        label,
+        up: limitUpBuckets[label] || 0,
+        down: limitDownBuckets[label] || 0,
+    }));
+    if ((!ztList.length && !dtList.length) || points.every(item => !item.up && !item.down)) {
         emptyChart(el, '接口未返回封板时间明细，未使用本地假数据补绘');
         return;
     }
@@ -501,39 +542,63 @@ function renderMarketTrend(data) {
             backgroundColor: 'rgba(255,255,255,0.98)',
             borderColor: '#e5e7eb',
             textStyle: { color: '#1f2937' },
+            formatter: params => {
+                const row = points[params?.[0]?.dataIndex] || {};
+                return [
+                    `<strong>时间：${row.label || '--'}</strong>`,
+                    `涨停：${row.up || 0} 只`,
+                    `跌停：${row.down || 0} 只`,
+                ].join('<br>');
+            },
         },
         grid: chartGrid({ top: 24, bottom: 42, left: 44, right: 20 }),
         xAxis: {
             type: 'category',
-            data: points.map(([label]) => label),
+            data: points.map(item => item.label),
             axisLabel: { interval: 0, fontSize: 11, color: '#6b7280' },
             axisTick: { alignWithLabel: true },
         },
         yAxis: {
             type: 'value',
             minInterval: 1,
-            axisLabel: { fontSize: 11, color: '#6b7280' },
+            axisLabel: {
+                fontSize: 11,
+                color: '#6b7280',
+                formatter: value => Math.abs(Number(value) || 0),
+            },
             splitLine: { lineStyle: { color: '#eef0f4' } },
         },
         series: [
             {
                 type: 'bar',
-                data: points.map(([, value]) => value),
-                barWidth: '42%',
+                name: '涨停',
+                data: points.map(item => item.up),
+                barWidth: '38%',
                 itemStyle: {
-                    color: params => (params.dataIndex >= 8 ? '#f5a400' : '#f5222d'),
+                    color: '#D60A22',
                     borderRadius: [4, 4, 0, 0],
                 },
             },
             {
+                type: 'bar',
+                name: '跌停',
+                data: points.map(item => item.down ? -item.down : 0),
+                barWidth: '38%',
+                itemStyle: {
+                    color: '#027B66',
+                    borderRadius: [0, 0, 4, 4],
+                },
+            },
+            {
                 type: 'line',
-                data: points.map(([, value]) => value),
+                name: '趋势',
+                data: points.map(item => item.up - item.down),
                 smooth: true,
                 symbol: 'circle',
-                symbolSize: 7,
-                lineStyle: { color: '#2932e1', width: 2.5 },
-                itemStyle: { color: '#2932e1' },
-                areaStyle: { color: 'rgba(41, 50, 225, 0.08)' },
+                symbolSize: 4,
+                lineStyle: { color: '#8a8f99', width: 1.2, opacity: 0.45 },
+                itemStyle: { color: '#8a8f99', opacity: 0.55 },
+                emphasis: { disabled: true },
             },
         ],
     }));
@@ -772,6 +837,346 @@ function exportWatchlist() {
     a.remove();
     URL.revokeObjectURL(url);
     setInlineStatus('wlQueryHint', `已导出当前 ${wlLastItems.length} 条列表数据`);
+}
+
+// ---- National Team ----
+async function loadNationalTeam(page = ntCurrentPage || 1) {
+    ntCurrentPage = page;
+    const body = document.getElementById('ntHoldingBody');
+    if (body) body.innerHTML = '<tr><td colspan="14" class="empty-cell">加载中...</td></tr>';
+    setInlineStatus('ntStatus', '');
+    ntEventsOffset = 0;
+    ntEventsTotal = 0;
+    ntEventsLoading = false;
+    updateNationalTeamEventMore();
+
+    try {
+        const params = new URLSearchParams({ page: String(page), size: '15' });
+        if (ntCurrentEntity) params.set('entity', ntCurrentEntity);
+        const [summaryResp, holdingsResp, eventsResp, capitalFlowsResp, holdingValuesResp] = await Promise.all([
+            apiFetch('/national-team/summary'),
+            apiFetch(`/national-team/holdings?${params.toString()}`),
+            apiFetch(buildNationalTeamEventPath()),
+            apiFetch('/national-team/capital-flows?limit=10'),
+            apiFetch('/national-team/holding-values?limit=10'),
+        ]);
+        if (!summaryResp.ok) throw new Error('国家队摘要加载失败');
+        if (!holdingsResp.ok) throw new Error('国家队持仓加载失败');
+        if (!eventsResp.ok) throw new Error('国家队事件加载失败');
+        if (!capitalFlowsResp.ok) throw new Error('国家队买卖资金统计加载失败');
+        if (!holdingValuesResp.ok) throw new Error('国家队持股金额统计加载失败');
+        const summary = await summaryResp.json();
+        const holdings = await holdingsResp.json();
+        const events = await eventsResp.json();
+        const capitalFlows = await capitalFlowsResp.json();
+        const holdingValues = await holdingValuesResp.json();
+
+        renderNationalTeamSummary(summary);
+        renderNationalTeamCapitalFlows(capitalFlows, holdingValues);
+        renderNationalTeamHoldings(holdings);
+        ntEventsTotal = Number(events.total || 0);
+        ntEventsOffset = (events.items || []).length;
+        renderNationalTeamEvents(events.items || [], false);
+        updateNationalTeamEventMore();
+        renderPagination('ntPagination', holdings.total || 0, holdings.page || page, holdings.size || 15, loadNationalTeam);
+    } catch (e) {
+        const message = e?.message || '国家队数据加载失败，请确认后端服务可用';
+        if (body) body.innerHTML = `<tr><td colspan="14" class="empty-cell" style="color:#e60012">${escapeHtml(message)}</td></tr>`;
+        document.getElementById('ntPagination').innerHTML = '';
+        document.getElementById('ntEventsList').innerHTML = `<p class="empty-state" style="color:#e60012">${escapeHtml(message)}</p>`;
+        document.getElementById('ntCapitalFlows').innerHTML = `<div class="empty-state" style="color:#e60012">${escapeHtml(message)}</div>`;
+        ntEventsTotal = 0;
+        ntEventsOffset = 0;
+        updateNationalTeamEventMore();
+        setInlineStatus('ntStatus', message, 'error');
+    }
+}
+
+function buildNationalTeamEventPath() {
+    return `/national-team/events?${ntCurrentEntity ? `entity=${encodeURIComponent(ntCurrentEntity)}&` : ''}limit=${NT_EVENTS_PAGE_SIZE}&offset=${ntEventsOffset}`;
+}
+
+function renderNationalTeamSummary(summary) {
+    const cards = document.getElementById('ntSummaryCards');
+    const entities = summary.entities || [];
+    const byKey = Object.fromEntries(entities.map(item => [item.entity_key, item]));
+    const source = summary.source_status || {};
+    const cardData = [
+        { label: '最近命中样本', value: summary.total_holdings || 0, sub: `事件 ${summary.total_events || 0} 条` },
+        { label: '中央汇金', value: byKey.huijin?.holding_count || 0, sub: nationalTeamCardSub(byKey.huijin) },
+        { label: '社保基金', value: byKey.social_security?.holding_count || 0, sub: nationalTeamCardSub(byKey.social_security) },
+        { label: '证金公司', value: byKey.csf?.holding_count || 0, sub: nationalTeamCardSub(byKey.csf) },
+    ];
+    cards.innerHTML = cardData.map(item => `
+        <div class="metric-card national-team-card">
+            <div class="metric-label">${escapeHtml(item.label)}</div>
+            <div class="metric-value">${escapeHtml(item.value)}</div>
+            <div class="metric-sub">${escapeHtml(item.sub || '--')}</div>
+        </div>
+    `).join('');
+    const sourceMeta = document.getElementById('ntSourceMeta');
+    if (sourceMeta) {
+        const sourceText = source.ok === false
+            ? `数据源暂不可用：${source.error || source.note || '--'}`
+            : `数据源：${source.source || '--'} · 采集：${formatDateTimeShort(source.fetched_at)} · ${summary.scope_note || '公开披露样本'}`;
+        sourceMeta.textContent = sourceText;
+    }
+}
+
+function nationalTeamCardSub(entity) {
+    if (!entity) return '暂无披露';
+    const c = entity.change_counts || {};
+    return `报告期 ${entity.latest_report_period || '--'} · 增${c.increase || 0}/减${c.decrease || 0}/退${c.exit || 0}`;
+}
+
+function renderNationalTeamCapitalFlows(data, holdingValues = {}) {
+    const container = document.getElementById('ntCapitalFlows');
+    if (!container) return;
+    const order = { huijin: 0, social_security: 1, csf: 2 };
+    const holdingByKey = Object.fromEntries((holdingValues.entities || []).map(item => [item.entity_key, item]));
+    const entities = (data.entities || []).slice().sort((a, b) => (order[a.entity_key] ?? 9) - (order[b.entity_key] ?? 9));
+    if (!entities.length) {
+        container.innerHTML = '<div class="empty-state">暂无可查买卖资金披露</div>';
+        return;
+    }
+    container.innerHTML = entities.map(entity => {
+        const buy = entity.buy || { items: [], total: 0 };
+        const sell = entity.sell || { items: [], total: 0 };
+        const holding = holdingByKey[entity.entity_key] || { items: [] };
+        return `<div class="capital-flow-card">
+            <div class="capital-flow-head">
+                <h3>${escapeHtml(entity.entity_name || '--')}${renderNationalTeamOrgInfo(entity, holding)}</h3>
+                <span>买${buy.total || 0} / 卖${sell.total || 0}</span>
+            </div>
+            <div class="capital-flow-sides">
+                ${renderNationalTeamFlowSide('买入前10', 'buy', buy)}
+                ${renderNationalTeamFlowSide('卖出前10', 'sell', sell)}
+            </div>
+            ${renderNationalTeamHoldingValues(holding)}
+        </div>`;
+    }).join('');
+}
+
+function renderNationalTeamOrgInfo(entity, holding) {
+    const fullName = holding.full_name || entity.full_name || orgFullNameFallback(entity.entity_key);
+    const englishName = holding.english_name || entity.english_name || orgEnglishNameFallback(entity.entity_key);
+    if (!fullName && !englishName) return '';
+    const title = [fullName, englishName].filter(Boolean).join('\n');
+    return `<span class="org-info-wrap">
+        <button class="org-info-trigger" type="button" aria-label="${escapeHtml(entity.entity_name || '')}组织机构全称" title="${escapeHtml(title)}">i</button>
+        <span class="org-info-popover"><b>全称：${escapeHtml(fullName || '--')}</b>${englishName ? `<em>${escapeHtml(englishName)}</em>` : ''}</span>
+    </span>`;
+}
+
+function orgFullNameFallback(entityKey) {
+    return {
+        huijin: '中央汇金投资有限责任公司',
+        social_security: '全国社会保障基金理事会',
+        csf: '中国证券金融股份有限公司',
+    }[entityKey] || '';
+}
+
+function orgEnglishNameFallback(entityKey) {
+    return {
+        huijin: 'Central Huijin Investment Ltd.',
+        social_security: 'National Council for Social Security Fund',
+        csf: '',
+    }[entityKey] || '';
+}
+
+function renderNationalTeamFlowSide(title, direction, flow) {
+    const items = (flow.items || []).slice(0, 10);
+    const maxAmount = items.reduce((max, item) => Math.max(max, Number(item.change_amount || 0)), 0);
+    if (!items.length) {
+        return `<div class="capital-flow-side ${direction}">
+            <div class="capital-flow-side-title"><span>${escapeHtml(title)}</span><b>0</b></div>
+            <div class="detail-empty">暂无可查${direction === 'buy' ? '增持' : '减持'}披露</div>
+        </div>`;
+    }
+    return `<div class="capital-flow-side ${direction}">
+        <div class="capital-flow-side-title"><span>${escapeHtml(title)}</span><b>${items.length}</b></div>
+        <div class="capital-flow-list">
+            ${items.map(item => {
+                const amount = Number(item.change_amount || 0);
+                const width = maxAmount > 0 ? Math.max(4, amount / maxAmount * 100) : 0;
+                return `<a class="capital-flow-row" href="${escapeHtml(item.source_url || '#')}" target="_blank" rel="noopener" title="${escapeHtml(item.shareholder_name || '')}">
+                    <div class="capital-flow-row-main">
+                        <span>${escapeHtml(item.stock_name || '--')} <small>${escapeHtml(item.stock_code || '')}</small></span>
+                        <em>${formatYi(amount)}</em>
+                    </div>
+                    <div class="capital-flow-track"><i class="capital-flow-bar" style="--bar-width:${width.toFixed(1)}%"></i></div>
+                    <div class="capital-flow-meta">
+                        <span>${escapeHtml(item.change_name || (direction === 'buy' ? '增加' : '减少'))} ${escapeHtml(formatWanShare(item.shares_change))}</span>
+                        <span>${escapeHtml(item.report_period || '--')}</span>
+                    </div>
+                </a>`;
+            }).join('')}
+        </div>
+    </div>`;
+}
+
+function renderNationalTeamHoldingValues(holding) {
+    const items = (holding.items || []).slice(0, 10);
+    const maxAmount = items.reduce((max, item) => Math.max(max, Number(item.market_value || 0)), 0);
+    if (!items.length) {
+        return `<div class="holding-value-box">
+            <div class="holding-value-title"><span>持股金额前10</span><b>0</b></div>
+            <div class="detail-empty">暂无可查持股金额披露</div>
+        </div>`;
+    }
+    return `<div class="holding-value-box">
+        <div class="holding-value-title"><span>持股金额前10</span><b>${items.length}</b></div>
+        <div class="holding-value-list">
+            ${items.map(item => {
+                const amount = Number(item.market_value || 0);
+                const width = maxAmount > 0 ? Math.max(4, amount / maxAmount * 100) : 0;
+                return `<a class="holding-value-row" href="${escapeHtml(item.source_url || '#')}" target="_blank" rel="noopener" title="${escapeHtml((item.shareholder_names || []).join(' / '))}">
+                    <div class="holding-value-main">
+                        <span>${escapeHtml(item.stock_name || '--')} <small>${escapeHtml(item.stock_code || '')}</small></span>
+                        <em>${formatYi(amount)}</em>
+                    </div>
+                    <div class="holding-value-track"><i style="--bar-width:${width.toFixed(1)}%"></i></div>
+                    <div class="holding-value-meta">
+                        <span>${escapeHtml(item.holder_count || 0)}个账户</span>
+                        <span>${escapeHtml(item.report_period || '--')}</span>
+                    </div>
+                </a>`;
+            }).join('')}
+        </div>
+    </div>`;
+}
+
+function renderNationalTeamHoldings(data) {
+    const body = document.getElementById('ntHoldingBody');
+    const items = data.items || [];
+    if (!items.length) {
+        body.innerHTML = '<tr><td colspan="14" class="empty-cell">暂无可查持仓披露。请点击「刷新公开源」或等待每日任务刷新。</td></tr>';
+        return;
+    }
+    body.innerHTML = items.map(item => {
+        const changeClass = String(item.change_name || '').includes('减少') ? 'down-text' : (String(item.change_name || '').includes('增加') ? 'up-text' : '');
+        return `<tr>
+            <td><span class="stock-code">${escapeHtml(item.stock_code)}</span></td>
+            <td>${escapeHtml(item.stock_name || '--')}</td>
+            <td><span class="tag tag-active">${escapeHtml(item.entity_name || '--')}</span></td>
+            <td class="holder-name">${escapeHtml(item.shareholder_name || '--')}</td>
+            <td>${escapeHtml(item.holding_type_name || '--')}</td>
+            <td>${escapeHtml(item.report_period || '--')}</td>
+            <td>${escapeHtml(item.notice_date || '--')}</td>
+            <td>${escapeHtml(item.holder_rank || '--')}</td>
+            <td>${formatWanShare(item.shares)}</td>
+            <td class="${changeClass}">${escapeHtml(item.change_name || '--')}</td>
+            <td>${formatMaybePct(item.change_ratio, 2)}</td>
+            <td>${formatYi(item.market_value)}</td>
+            <td><a href="${escapeHtml(item.source_url || '#')}" target="_blank" rel="noopener" class="link">${escapeHtml(item.source || '--')}</a></td>
+            <td>${escapeHtml(formatDateTimeShort(item.fetched_at))}</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderNationalTeamEvents(events, append = false) {
+    const list = document.getElementById('ntEventsList');
+    if (!list) return;
+    if (!events.length && !append) {
+        list.innerHTML = '<p class="empty-state">未发现新的可查事件。十大股东数据以公开披露为准。</p>';
+        return;
+    }
+    if (!events.length) return;
+    const html = events.map(event => {
+        const sourceName = event.source || '--';
+        const sourceUrl = event.source_url || '';
+        return `
+        <div class="national-event">
+            <div class="event-date">${escapeHtml(event.event_date || '--')}</div>
+            <div class="event-main">
+                <div class="event-title">${escapeHtml(event.title || '--')}</div>
+                ${event.summary ? `<div class="event-summary">${escapeHtml(event.summary)}</div>` : ''}
+                <div class="event-stock">${escapeHtml(event.related_stock_name || '--')} ${escapeHtml(event.related_stock_code || '')}</div>
+                <div class="event-source">
+                    <span>来源：${escapeHtml(sourceName)}</span>
+                    ${sourceUrl ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener" class="event-source-link">官网查看</a>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    if (append) {
+        list.insertAdjacentHTML('beforeend', html);
+    } else {
+        list.innerHTML = html;
+    }
+}
+
+function updateNationalTeamEventMore() {
+    const button = document.getElementById('ntEventLoadMore');
+    if (!button) return;
+    const hasMore = ntEventsOffset < ntEventsTotal;
+    button.hidden = !hasMore;
+    button.disabled = ntEventsLoading || !hasMore;
+    button.textContent = ntEventsLoading ? '加载中...' : '加载更多';
+}
+
+async function loadMoreNationalTeamEvents() {
+    if (ntEventsLoading || ntEventsOffset >= ntEventsTotal) return;
+    ntEventsLoading = true;
+    updateNationalTeamEventMore();
+    try {
+        const resp = await apiFetch(buildNationalTeamEventPath());
+        if (!resp.ok) throw new Error('国家队事件加载失败');
+        const events = await resp.json();
+        const items = events.items || [];
+        ntEventsTotal = Number(events.total || ntEventsTotal);
+        ntEventsOffset += items.length;
+        renderNationalTeamEvents(items, true);
+    } catch (e) {
+        const button = document.getElementById('ntEventLoadMore');
+        if (button) {
+            button.hidden = false;
+            button.disabled = false;
+            button.textContent = '加载失败，点击重试';
+        }
+        setInlineStatus('ntStatus', e?.message || '国家队事件加载失败', 'error');
+    } finally {
+        ntEventsLoading = false;
+        updateNationalTeamEventMore();
+    }
+}
+
+async function refreshNationalTeam(event) {
+    const btn = event?.currentTarget;
+    const oldText = btn?.textContent;
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '刷新中...';
+    }
+    setInlineStatus('ntStatus', '正在请求东方财富公开源...');
+    try {
+        const resp = await apiFetch('/national-team/refresh', { method: 'POST', timeout: 120000, retries: 0 });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.detail?.source_status?.errors?.[0] || data.detail || '刷新失败');
+        setInlineStatus('ntStatus', `刷新完成：持仓 ${data.holding_count || 0} 条，变动 ${data.change_count || 0} 条`, 'ok');
+        await loadNationalTeam(1);
+    } catch (e) {
+        setInlineStatus('ntStatus', e?.message || '刷新失败，请稍后重试', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = oldText;
+        }
+    }
+}
+
+function scrollNationalTeamTable(direction) {
+    const scroller = document.getElementById('ntTableScroll');
+    if (!scroller) return;
+    scroller.scrollBy({ left: direction * Math.max(360, scroller.clientWidth * 0.75), behavior: 'smooth' });
+}
+
+function formatWanShare(value) {
+    return isRealNumber(value) ? `${(Number(value) / 10000).toFixed(2)}万` : '--';
+}
+
+function formatYi(value) {
+    return isRealNumber(value) ? `${(Number(value) / 1e8).toFixed(2)}亿` : '--';
 }
 
 // ---- Stock Detail Modal ----

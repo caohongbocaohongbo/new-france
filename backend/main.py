@@ -47,6 +47,7 @@ def get_app():
     from .api.router_reports import router as reports_router
     from .api.router_system import router as system_router
     from .api.router_config import router as config_router
+    from .api.router_national_team import router as national_team_router
 
     _app = FastAPI(
         title="New France — 尾盘涨停选股系统",
@@ -65,6 +66,7 @@ def get_app():
     _app.include_router(reports_router, prefix="/api/v1/reports", tags=["报告"])
     _app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
     _app.include_router(config_router, prefix="/api/v1/config", tags=["配置"])
+    _app.include_router(national_team_router, prefix="/api/v1/national-team", tags=["国家队动向"])
 
     # 托管前端静态文件
     frontend_dir = PROJECT_DIR / "frontend"
@@ -242,8 +244,25 @@ async def _run_daily_pipeline(args, logger):
     if zt_count_updated:
         logger.info(f"  更新 {zt_count_updated} 只涨停频率统计")
 
-    # 3. 执行完整筛选流水线
-    logger.info("[Step 3] 执行筛选流水线...")
+    # 3. 刷新国家队动向缓存，供前端和邮件使用
+    logger.info("[Step 3] 刷新国家队动向...")
+    try:
+        from .services.national_team_service import refresh_national_team_data
+        nt_result = refresh_national_team_data(max_pages_per_filter=1, page_size=30)
+        if nt_result.get("ok"):
+            logger.info(
+                "  国家队动向: 持仓%s条, 变动%s条, 事件%s条",
+                nt_result.get("holding_count", 0),
+                nt_result.get("change_count", 0),
+                nt_result.get("event_count", 0),
+            )
+        else:
+            logger.warning(f"  国家队动向刷新失败: {nt_result.get('source_status', {}).get('errors')}")
+    except Exception as e:
+        logger.warning(f"  国家队动向刷新异常: {e}")
+
+    # 4. 执行完整筛选流水线
+    logger.info("[Step 4] 执行筛选流水线...")
     from .services.screening_service import run_full_pipeline
     import json
     result = await run_full_pipeline(target_date=today, dry_run=args.dry_run, **screening_params)

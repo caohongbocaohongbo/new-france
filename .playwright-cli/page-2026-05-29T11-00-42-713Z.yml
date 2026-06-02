@@ -1,0 +1,285 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - generic [ref=e37]: Dashboard 总览
+      - link "监控列表" [ref=e38] [cursor=pointer]:
+        - /url: "#watchlist"
+        - generic [ref=e39]: 监控列表
+      - link "推荐结果" [ref=e40] [cursor=pointer]:
+        - /url: "#recommendations"
+        - generic [ref=e41]: 推荐结果
+      - link "手动筛选" [ref=e42] [cursor=pointer]:
+        - /url: "#screening"
+        - generic [ref=e43]: 手动筛选
+      - link "策略配置" [ref=e44] [cursor=pointer]:
+        - /url: "#settings"
+        - generic [ref=e45]: 策略配置
+    - generic [ref=e46]:
+      - generic [ref=e49]: 已收盘
+      - generic [ref=e50]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e51]:
+    - heading "策略配置" [level=1] [ref=e53]
+    - generic [ref=e55]:
+      - generic [ref=e56]:
+        - heading "策略参数" [level=2] [ref=e58]
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]: 回撤区间
+            - spinbutton [ref=e62]: "5"
+            - text: "-"
+            - spinbutton [ref=e63]: "10"
+            - text: "%"
+          - generic [ref=e64]:
+            - generic [ref=e65]: PE上限
+            - spinbutton [ref=e66]: "50"
+          - generic [ref=e67]:
+            - generic [ref=e68]: 量比区间
+            - spinbutton [ref=e69]: "1"
+            - text: "-"
+            - spinbutton [ref=e70]: "5"
+          - generic [ref=e71]:
+            - generic [ref=e72]: 换手率区间
+            - spinbutton [ref=e73]: "5"
+            - text: "-"
+            - spinbutton [ref=e74]: "10"
+            - text: "%"
+          - generic [ref=e75]:
+            - generic [ref=e76]: 流通市值区间
+            - spinbutton [ref=e77]: "50"
+            - text: "-"
+            - spinbutton [ref=e78]: "200"
+            - text: 亿
+          - generic [ref=e79]:
+            - generic [ref=e80]: 监控周期
+            - spinbutton [ref=e81]: "30"
+            - text: 天
+          - generic [ref=e82]:
+            - generic [ref=e83]: 最晚封板
+            - spinbutton [ref=e84]: "140000"
+            - generic [ref=e85]: HHMMSS
+          - generic [ref=e86]:
+            - generic [ref=e87]: 炸板上限
+            - spinbutton [ref=e88]: "0"
+            - text: 次
+          - generic [ref=e89]:
+            - generic [ref=e90]: 涨停频率上限
+            - spinbutton [ref=e91]: "2"
+            - text: 次
+          - generic [ref=e92]:
+            - generic [ref=e93]: 涨停列表排序
+            - combobox [ref=e94]:
+              - option "封板时间" [selected]
+              - option "换手率"
+              - option "量比"
+              - option "PE"
+              - option "流通市值"
+              - option "涨幅"
+            - combobox [ref=e95]:
+              - option "升序" [selected]
+              - option "降序"
+        - button "保存策略参数" [ref=e96] [cursor=pointer]
+      - generic [ref=e98]:
+        - heading "通知配置" [level=2] [ref=e100]
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - generic [ref=e103]: 发件邮箱
+            - textbox [ref=e104]: 896256756@qq.com
+          - generic [ref=e105]:
+            - generic [ref=e106]: 收件邮箱
+            - textbox [ref=e107]: 896256756@qq.com
+          - generic [ref=e108]:
+            - generic [ref=e109]: SMTP主机
+            - textbox [ref=e110]: smtp.qq.com
+          - generic [ref=e111]:
+            - generic [ref=e112]: SMTP端口
+            - spinbutton [ref=e113]: "465"
+          - button "保存通知配置" [ref=e114] [cursor=pointer]
+          - button "发送测试邮件" [ref=e115] [cursor=pointer]
+      - generic [ref=e117]:
+        - heading "定时任务" [level=2] [ref=e119]
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - generic [ref=e122]: Cron表达式
+            - code [ref=e123]: 10 15 * * 1-5
+          - generic [ref=e124]:
+            - generic [ref=e125]: 下次执行
+            - generic [ref=e126]: 2026-06-01 (周一) 15:10
+          - button "手动触发执行" [ref=e127] [cursor=pointer]
+      - generic [ref=e129]:
+        - heading "因子权重配置" [level=2] [ref=e131]
+        - paragraph [ref=e132]: 保存后写入后端配置表，并同步 config/strategy_params.py；筛选、评分和邮件通知优先读取后端配置。
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - generic [ref=e135]: 回撤幅度
+            - slider [ref=e136]: "15"
+            - generic [ref=e137]: 15%
+          - generic [ref=e138]:
+            - generic [ref=e139]: 量能趋势
+            - slider [ref=e140]: "12"
+            - generic [ref=e141]: 12%
+          - generic [ref=e142]:
+            - generic [ref=e143]: 均线多头
+            - slider [ref=e144]: "12"
+            - generic [ref=e145]: 12%
+          - generic [ref=e146]:
+            - generic [ref=e147]: 强势确认
+            - slider [ref=e148]: "10"
+            - generic [ref=e149]: 10%
+          - generic [ref=e150]:
+            - generic [ref=e151]: 尾盘买点
+            - slider [ref=e152]: "10"
+            - generic [ref=e153]: 10%
+          - generic [ref=e154]:
+            - generic [ref=e155]: 流通市值
+            - slider [ref=e156]: "10"
+            - generic [ref=e157]: 10%
+          - generic [ref=e158]:
+            - generic [ref=e159]: 量比
+            - slider [ref=e160]: "8"
+            - generic [ref=e161]: 8%
+          - generic [ref=e162]:
+            - generic [ref=e163]: 换手率
+            - slider [ref=e164]: "8"
+            - generic [ref=e165]: 8%
+          - generic [ref=e166]:
+            - generic [ref=e167]: 市盈率
+            - slider [ref=e168]: "8"
+            - generic [ref=e169]: 8%
+          - generic [ref=e170]:
+            - generic [ref=e171]: 涨停质量
+            - slider [ref=e172]: "7"
+            - generic [ref=e173]: 7%
+        - generic [ref=e174]: "当前总权重: 100%"
+        - button "保存权重配置" [ref=e175] [cursor=pointer]
+        - generic [ref=e176]: "配置来源: database，上次保存 2026-05-29 18:59"
+      - generic [ref=e177]:
+        - heading "上次修改比对" [level=2] [ref=e179]
+        - generic [ref=e180]:
+          - generic [ref=e181]: 上次保存：2026-05-29 18:59｜来源：database
+          - table [ref=e182]:
+            - rowgroup [ref=e183]:
+              - row "配置项 上次保存值 当前编辑值" [ref=e184]:
+                - columnheader "配置项" [ref=e185]
+                - columnheader "上次保存值" [ref=e186]
+                - columnheader "当前编辑值" [ref=e187]
+            - rowgroup [ref=e188]:
+              - row "回撤下限 5% 5%" [ref=e189]:
+                - cell "回撤下限" [ref=e190]
+                - cell "5%" [ref=e191]
+                - cell "5%" [ref=e192]
+              - row "回撤上限 10% 10%" [ref=e193]:
+                - cell "回撤上限" [ref=e194]
+                - cell "10%" [ref=e195]
+                - cell "10%" [ref=e196]
+              - row "PE上限 50 50" [ref=e197]:
+                - cell "PE上限" [ref=e198]
+                - cell "50" [ref=e199]
+                - cell "50" [ref=e200]
+              - row "量比下限 1 1" [ref=e201]:
+                - cell "量比下限" [ref=e202]
+                - cell "1" [ref=e203]
+                - cell "1" [ref=e204]
+              - row "量比上限 5 5" [ref=e205]:
+                - cell "量比上限" [ref=e206]
+                - cell "5" [ref=e207]
+                - cell "5" [ref=e208]
+              - row "换手率下限 5% 5%" [ref=e209]:
+                - cell "换手率下限" [ref=e210]
+                - cell "5%" [ref=e211]
+                - cell "5%" [ref=e212]
+              - row "换手率上限 10% 10%" [ref=e213]:
+                - cell "换手率上限" [ref=e214]
+                - cell "10%" [ref=e215]
+                - cell "10%" [ref=e216]
+              - row "流通市值下限 50亿 50亿" [ref=e217]:
+                - cell "流通市值下限" [ref=e218]
+                - cell "50亿" [ref=e219]
+                - cell "50亿" [ref=e220]
+              - row "流通市值上限 200亿 200亿" [ref=e221]:
+                - cell "流通市值上限" [ref=e222]
+                - cell "200亿" [ref=e223]
+                - cell "200亿" [ref=e224]
+              - row "监控周期 30天 30天" [ref=e225]:
+                - cell "监控周期" [ref=e226]
+                - cell "30天" [ref=e227]
+                - cell "30天" [ref=e228]
+              - row "最晚封板时间 140000 140000" [ref=e229]:
+                - cell "最晚封板时间" [ref=e230]
+                - cell "140000" [ref=e231]
+                - cell "140000" [ref=e232]
+              - row "最大炸板次数 0次 0次" [ref=e233]:
+                - cell "最大炸板次数" [ref=e234]
+                - cell "0次" [ref=e235]
+                - cell "0次" [ref=e236]
+              - row "周期内最大涨停次数 2次 2次" [ref=e237]:
+                - cell "周期内最大涨停次数" [ref=e238]
+                - cell "2次" [ref=e239]
+                - cell "2次" [ref=e240]
+              - row "回撤幅度权重 15% 15%" [ref=e241]:
+                - cell "回撤幅度权重" [ref=e242]
+                - cell "15%" [ref=e243]
+                - cell "15%" [ref=e244]
+              - row "量能趋势权重 12% 12%" [ref=e245]:
+                - cell "量能趋势权重" [ref=e246]
+                - cell "12%" [ref=e247]
+                - cell "12%" [ref=e248]
+              - row "均线多头权重 12% 12%" [ref=e249]:
+                - cell "均线多头权重" [ref=e250]
+                - cell "12%" [ref=e251]
+                - cell "12%" [ref=e252]
+              - row "强势确认权重 10% 10%" [ref=e253]:
+                - cell "强势确认权重" [ref=e254]
+                - cell "10%" [ref=e255]
+                - cell "10%" [ref=e256]
+              - row "尾盘买点权重 10% 10%" [ref=e257]:
+                - cell "尾盘买点权重" [ref=e258]
+                - cell "10%" [ref=e259]
+                - cell "10%" [ref=e260]
+              - row "流通市值权重 10% 10%" [ref=e261]:
+                - cell "流通市值权重" [ref=e262]
+                - cell "10%" [ref=e263]
+                - cell "10%" [ref=e264]
+              - row "量比权重 8% 8%" [ref=e265]:
+                - cell "量比权重" [ref=e266]
+                - cell "8%" [ref=e267]
+                - cell "8%" [ref=e268]
+              - row "换手率权重 8% 8%" [ref=e269]:
+                - cell "换手率权重" [ref=e270]
+                - cell "8%" [ref=e271]
+                - cell "8%" [ref=e272]
+              - row "市盈率权重 8% 8%" [ref=e273]:
+                - cell "市盈率权重" [ref=e274]
+                - cell "8%" [ref=e275]
+                - cell "8%" [ref=e276]
+              - row "涨停质量权重 7% 7%" [ref=e277]:
+                - cell "涨停质量权重" [ref=e278]
+                - cell "7%" [ref=e279]
+                - cell "7%" [ref=e280]
+              - row "收件邮箱 896256756@qq.com 896256756@qq.com" [ref=e281]:
+                - cell "收件邮箱" [ref=e282]
+                - cell "896256756@qq.com" [ref=e283]
+                - cell "896256756@qq.com" [ref=e284]
+              - row "发件邮箱 896256756@qq.com 896256756@qq.com" [ref=e285]:
+                - cell "发件邮箱" [ref=e286]
+                - cell "896256756@qq.com" [ref=e287]
+                - cell "896256756@qq.com" [ref=e288]
+              - row "SMTP主机 smtp.qq.com smtp.qq.com" [ref=e289]:
+                - cell "SMTP主机" [ref=e290]
+                - cell "smtp.qq.com" [ref=e291]
+                - cell "smtp.qq.com" [ref=e292]
+              - row "SMTP端口 465 465" [ref=e293]:
+                - cell "SMTP端口" [ref=e294]
+                - cell "465" [ref=e295]
+                - cell "465" [ref=e296]
+              - row "涨停排序 seal_time / asc seal_time / asc" [ref=e297]:
+                - cell "涨停排序" [ref=e298]
+                - cell "seal_time / asc" [ref=e299]
+                - cell "seal_time / asc" [ref=e300]
+  - text: ×

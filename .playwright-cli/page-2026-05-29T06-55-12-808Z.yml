@@ -1,0 +1,219 @@
+- generic [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e32]:
+        - generic [ref=e33]: New France
+        - generic [ref=e34]: 尾盘涨停选股系统
+    - navigation [ref=e35]:
+      - link "Dashboard 总览" [ref=e36] [cursor=pointer]:
+        - /url: "#dashboard"
+        - generic [ref=e37]: Dashboard 总览
+      - link "监控列表" [ref=e38] [cursor=pointer]:
+        - /url: "#watchlist"
+        - generic [ref=e39]: 监控列表
+      - link "推荐结果" [ref=e40] [cursor=pointer]:
+        - /url: "#recommendations"
+        - generic [ref=e41]: 推荐结果
+      - link "手动筛选" [ref=e42] [cursor=pointer]:
+        - /url: "#screening"
+        - generic [ref=e43]: 手动筛选
+      - link "策略配置" [ref=e44] [cursor=pointer]:
+        - /url: "#settings"
+        - generic [ref=e45]: 策略配置
+    - generic [ref=e46]:
+      - generic [ref=e49]: 交易中
+      - generic [ref=e50]: "下次执行: 每个交易日 15:10 (北京时间)"
+  - main [ref=e51]:
+    - generic [ref=e52]:
+      - heading "监控列表" [level=1] [ref=e53]
+      - generic [ref=e55]: "数据源: 东方财富涨停股池"
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - textbox "搜索代码/名称..." [ref=e58]
+        - combobox [ref=e59] [cursor=pointer]:
+          - option "全部状态" [selected]
+          - option "回撤中"
+          - option "已推荐"
+          - option "已过期"
+        - button "查询" [ref=e60] [cursor=pointer]
+        - button "导出CSV" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - generic [ref=e63] [cursor=pointer]: 全部 610
+        - generic [ref=e64] [cursor=pointer]: 回撤中 610
+        - generic [ref=e65] [cursor=pointer]: 已推荐 0
+        - generic [ref=e66] [cursor=pointer]: 已过期 0
+      - generic [ref=e67]:
+        - table [ref=e69]:
+          - rowgroup [ref=e70]:
+            - row "代码 名称 涨停日期 参考价 现价 回撤% 换手率 量比 PE 封板 涨停次数 流通市值 状态 操作" [ref=e71]:
+              - columnheader "代码" [ref=e72]
+              - columnheader "名称" [ref=e73]
+              - columnheader "涨停日期" [ref=e74]
+              - columnheader "参考价" [ref=e75]
+              - columnheader "现价" [ref=e76]
+              - columnheader "回撤%" [ref=e77]:
+                - button "回撤%" [ref=e78] [cursor=pointer]: 回撤%
+              - columnheader "换手率" [ref=e80]:
+                - button "换手率" [ref=e81] [cursor=pointer]: 换手率
+              - columnheader "量比" [ref=e83]:
+                - button "量比" [ref=e84] [cursor=pointer]: 量比
+              - columnheader "PE" [ref=e86]:
+                - button "PE" [ref=e87] [cursor=pointer]: PE
+              - columnheader "封板" [ref=e89]
+              - columnheader "涨停次数" [ref=e90]:
+                - button "涨停次数" [active] [ref=e91] [cursor=pointer]: 涨停次数
+              - columnheader "流通市值" [ref=e93]
+              - columnheader "状态" [ref=e94]
+              - columnheader "操作" [ref=e95]
+          - rowgroup [ref=e96]:
+            - row "600589 大位科技 2026-05-28 11.95 10.84 -9.29% 15.18% 1.44 -126.27 09:25 0 160亿 回撤中 详情 移除" [ref=e248]:
+              - cell "600589" [ref=e249]
+              - cell "大位科技" [ref=e250]
+              - cell "2026-05-28" [ref=e251]
+              - cell "11.95" [ref=e252]
+              - cell "10.84" [ref=e253]
+              - cell "-9.29%" [ref=e254]
+              - cell "15.18%" [ref=e255]
+              - cell "1.44" [ref=e256]
+              - cell "-126.27" [ref=e257]
+              - cell "09:25" [ref=e258]
+              - cell "0" [ref=e259]
+              - cell "160亿" [ref=e260]
+              - cell "回撤中" [ref=e261]:
+                - generic [ref=e262]: 回撤中
+              - cell "详情 移除" [ref=e263]:
+                - button "详情" [ref=e264] [cursor=pointer]
+                - button "移除" [ref=e265] [cursor=pointer]
+            - row "002688 金河生物 2026-05-28 5.95 5.55 -6.72% 6.73% 3.30 17.14 09:30 0 41亿 回撤中 详情 移除" [ref=e266]:
+              - cell "002688" [ref=e267]
+              - cell "金河生物" [ref=e268]
+              - cell "2026-05-28" [ref=e269]
+              - cell "5.95" [ref=e270]
+              - cell "5.55" [ref=e271]
+              - cell "-6.72%" [ref=e272]
+              - cell "6.73%" [ref=e273]
+              - cell "3.30" [ref=e274]
+              - cell "17.14" [ref=e275]
+              - cell "09:30" [ref=e276]
+              - cell "0" [ref=e277]
+              - cell "41亿" [ref=e278]
+              - cell "回撤中" [ref=e279]:
+                - generic [ref=e280]: 回撤中
+              - cell "详情 移除" [ref=e281]:
+                - button "详情" [ref=e282] [cursor=pointer]
+                - button "移除" [ref=e283] [cursor=pointer]
+            - row "002995 天地在线 2026-05-28 20.75 22.83 10.02% 16.62% 3.29 -2975.36 09:30 0 26亿 回撤中 详情 移除" [ref=e284]:
+              - cell "002995" [ref=e285]
+              - cell "天地在线" [ref=e286]
+              - cell "2026-05-28" [ref=e287]
+              - cell "20.75" [ref=e288]
+              - cell "22.83" [ref=e289]
+              - cell "10.02%" [ref=e290]
+              - cell "16.62%" [ref=e291]
+              - cell "3.29" [ref=e292]
+              - cell "-2975.36" [ref=e293]
+              - cell "09:30" [ref=e294]
+              - cell "0" [ref=e295]
+              - cell "26亿" [ref=e296]
+              - cell "回撤中" [ref=e297]:
+                - generic [ref=e298]: 回撤中
+              - cell "详情 移除" [ref=e299]:
+                - button "详情" [ref=e300] [cursor=pointer]
+                - button "移除" [ref=e301] [cursor=pointer]
+            - row "600063 皖维高新 2026-05-28 6.95 7.02 1.01% 12.76% 4.84 26.67 09:30 0 145亿 回撤中 详情 移除" [ref=e302]:
+              - cell "600063" [ref=e303]
+              - cell "皖维高新" [ref=e304]
+              - cell "2026-05-28" [ref=e305]
+              - cell "6.95" [ref=e306]
+              - cell "7.02" [ref=e307]
+              - cell "1.01%" [ref=e308]
+              - cell "12.76%" [ref=e309]
+              - cell "4.84" [ref=e310]
+              - cell "26.67" [ref=e311]
+              - cell "09:30" [ref=e312]
+              - cell "0" [ref=e313]
+              - cell "145亿" [ref=e314]
+              - cell "回撤中" [ref=e315]:
+                - generic [ref=e316]: 回撤中
+              - cell "详情 移除" [ref=e317]:
+                - button "详情" [ref=e318] [cursor=pointer]
+                - button "移除" [ref=e319] [cursor=pointer]
+            - row "000720 新能泰山 2026-05-28 5.07 5.27 3.94% 17.64% 3.96 -74.34 09:30 0 66亿 回撤中 详情 移除" [ref=e320]:
+              - cell "000720" [ref=e321]
+              - cell "新能泰山" [ref=e322]
+              - cell "2026-05-28" [ref=e323]
+              - cell "5.07" [ref=e324]
+              - cell "5.27" [ref=e325]
+              - cell "3.94%" [ref=e326]
+              - cell "17.64%" [ref=e327]
+              - cell "3.96" [ref=e328]
+              - cell "-74.34" [ref=e329]
+              - cell "09:30" [ref=e330]
+              - cell "0" [ref=e331]
+              - cell "66亿" [ref=e332]
+              - cell "回撤中" [ref=e333]:
+                - generic [ref=e334]: 回撤中
+              - cell "详情 移除" [ref=e335]:
+                - button "详情" [ref=e336] [cursor=pointer]
+                - button "移除" [ref=e337] [cursor=pointer]
+            - row "603050 科林电气 2026-05-28 24.89 24.89 0.00% 8.83% 3.75 59.20 09:31 0 100亿 回撤中 详情 移除" [ref=e338]:
+              - cell "603050" [ref=e339]
+              - cell "科林电气" [ref=e340]
+              - cell "2026-05-28" [ref=e341]
+              - cell "24.89" [ref=e342]
+              - cell "24.89" [ref=e343]
+              - cell "0.00%" [ref=e344]
+              - cell "8.83%" [ref=e345]
+              - cell "3.75" [ref=e346]
+              - cell "59.20" [ref=e347]
+              - cell "09:31" [ref=e348]
+              - cell "0" [ref=e349]
+              - cell "100亿" [ref=e350]
+              - cell "回撤中" [ref=e351]:
+                - generic [ref=e352]: 回撤中
+              - cell "详情 移除" [ref=e353]:
+                - button "详情" [ref=e354] [cursor=pointer]
+                - button "移除" [ref=e355] [cursor=pointer]
+            - row "000920 沃顿科技 2026-05-28 12.88 12.86 -0.16% 8.69% 3.07 34.45 09:34 0 61亿 回撤中 详情 移除" [ref=e356]:
+              - cell "000920" [ref=e357]
+              - cell "沃顿科技" [ref=e358]
+              - cell "2026-05-28" [ref=e359]
+              - cell "12.88" [ref=e360]
+              - cell "12.86" [ref=e361]
+              - cell "-0.16%" [ref=e362]
+              - cell "8.69%" [ref=e363]
+              - cell "3.07" [ref=e364]
+              - cell "34.45" [ref=e365]
+              - cell "09:34" [ref=e366]
+              - cell "0" [ref=e367]
+              - cell "61亿" [ref=e368]
+              - cell "回撤中" [ref=e369]:
+                - generic [ref=e370]: 回撤中
+              - cell "详情 移除" [ref=e371]:
+                - button "详情" [ref=e372] [cursor=pointer]
+                - button "移除" [ref=e373] [cursor=pointer]
+            - row "002210 飞马国际 2026-05-28 2.85 2.90 1.75% 12.23% 4.86 166.28 09:34 0 77亿 回撤中 详情 移除" [ref=e374]:
+              - cell "002210" [ref=e375]
+              - cell "飞马国际" [ref=e376]
+              - cell "2026-05-28" [ref=e377]
+              - cell "2.85" [ref=e378]
+              - cell "2.90" [ref=e379]
+              - cell "1.75%" [ref=e380]
+              - cell "12.23%" [ref=e381]
+              - cell "4.86" [ref=e382]
+              - cell "166.28" [ref=e383]
+              - cell "09:34" [ref=e384]
+              - cell "0" [ref=e385]
+              - cell "77亿" [ref=e386]
+              - cell "回撤中" [ref=e387]:
+                - generic [ref=e388]: 回撤中
+              - cell "详情 移除" [ref=e389]:
+                - button "详情" [ref=e390] [cursor=pointer]
+                - button "移除" [ref=e391] [cursor=pointer]
+        - generic [ref=e99]:
+          - button "← 上一页" [disabled] [ref=e392]
+          - button "第 1/77 页" [ref=e393] [cursor=pointer]
+          - button "下一页 →" [ref=e394] [cursor=pointer]
+          - generic [ref=e395]: 共 610 条
+  - text: ×
