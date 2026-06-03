@@ -25,6 +25,12 @@ async def system_status():
         index_snapshot = fetch_index_snapshot() or {}
     except Exception as exc:
         logger.warning(f"获取指数快照失败: {exc}")
+    optional_sources = {"sources": {}}
+    try:
+        from ..services.optional_source_health import get_optional_source_statuses
+        optional_sources = get_optional_source_statuses()
+    except Exception as exc:
+        logger.warning(f"获取旁路数据源状态失败: {exc}")
     return {
         "is_trading_day": now.weekday() < 5,
         "is_trading_hours": is_trading,
@@ -34,6 +40,7 @@ async def system_status():
         "index_snapshot": index_snapshot,
         "index_value": index_snapshot.get("value"),
         "index_gain": index_snapshot.get("gain_pct"),
+        "optional_sources": optional_sources,
     }
 
 

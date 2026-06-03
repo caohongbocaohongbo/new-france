@@ -190,6 +190,13 @@ async def run_full_pipeline(
     else:
         logger.info("  涨停股池: 无数据")
 
+    optional_sources = {"sources": {}}
+    try:
+        from .optional_source_health import get_optional_source_statuses, is_optional_source_enabled
+        optional_sources = get_optional_source_statuses()
+    except Exception as e:
+        logger.warning(f"  旁路数据源状态读取失败: {e}")
+
     # 读取监控列表
     watchlist = _read_watchlist()
     if not watchlist:
@@ -197,6 +204,7 @@ async def run_full_pipeline(
             "total_scored": 0, "strong_buy": 0, "buy": 0, "watch": 0,
             "results": [], "index_gain": index_gain, "index_value": index_snapshot.get("value"),
             "index_snapshot": index_snapshot, "zt_list": zt_list,
+            "optional_sources": optional_sources,
             "errors": ["监控列表为空，请先添加股票"],
         }
 
@@ -204,10 +212,13 @@ async def run_full_pipeline(
 
     national_team_summary = {}
     try:
-        from .national_team_service import get_email_summary
-        national_team_summary = get_email_summary()
+        if is_optional_source_enabled("national_team", "email"):
+            from .national_team_service import get_email_summary
+            national_team_summary = get_email_summary()
+        else:
+            logger.info("  国家队动向仍为旁路数据源，未接入本次邮件")
     except Exception as e:
-        logger.warning(f"  国家队动向摘要读取失败: {e}")
+        logger.warning(f"  旁路数据源摘要读取失败: {e}")
 
     # 拉取实时行情 + 历史K线 + 事件采集（并行，无数据依赖）
     codes = [e["code"] for e in watchlist]
@@ -446,5 +457,6 @@ async def run_full_pipeline(
         "results": results,
         "report_md": summary.get("report_md"),
         "report_html": summary.get("report_html"),
+        "optional_sources": optional_sources,
         "errors": errors,
     }

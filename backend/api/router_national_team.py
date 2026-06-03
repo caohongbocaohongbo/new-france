@@ -58,6 +58,11 @@ def national_team_events(entity: Optional[str] = Query(None),
 @router.post("/refresh")
 def national_team_refresh():
     result = refresh_national_team_data()
+    try:
+        from ..services.optional_source_health import record_optional_source_result
+        record_optional_source_result("national_team", result)
+    except Exception as exc:
+        logger.warning(f"国家队旁路健康状态写入失败: {exc}")
     if not result.get("ok"):
         raise HTTPException(status_code=503, detail=result)
     return result

@@ -21,6 +21,11 @@ except ImportError:
 _app = None
 
 
+def _empty_optional_statuses():
+    """读取可选数据源状态失败时返回稳定结构。"""
+    return {"sources": {}, "updated_at": None}
+
+
 def _json_safe(value):
     """清理 NaN/Infinity，保证 latest.json 可被 FastAPI 直接响应。"""
     if isinstance(value, float):
@@ -30,6 +35,51 @@ def _json_safe(value):
     if isinstance(value, list):
         return [_json_safe(v) for v in value]
     return value
+
+
+def _run_optional_sources(logger):
+    """刷新旁路数据源；失败只记录状态，不影响每日筛选主链路。"""
+    optional_statuses = _empty_optional_statuses()
+    logger.info("[Optional] 刷新旁路数据源...")
+    try:
+        from .services.national_team_service import refresh_national_team_data
+        from .services.optional_source_health import (
+            get_optional_source_statuses,
+            record_optional_source_result,
+        )
+        nt_result = refresh_national_team_data(max_pages_per_filter=1, page_size=30)
+        record_optional_source_result("national_team", nt_result)
+        if nt_result.get("ok"):
+            logger.info(
+                "  国家队动向: 持仓%s条, 变动%s条, 事件%s条",
+                nt_result.get("holding_count", 0),
+                nt_result.get("change_count", 0),
+                nt_result.get("event_count", 0),
+            )
+        else:
+            logger.warning(f"  国家队动向刷新失败: {nt_result.get('source_status', {}).get('errors')}")
+        optional_statuses = get_optional_source_statuses()
+    except Exception as e:
+        logger.warning(f"  旁路数据源刷新异常: {e}")
+        try:
+            from .services.optional_source_health import (
+                get_optional_source_statuses,
+                record_optional_source_result,
+            )
+            record_optional_source_result(
+                "national_team",
+                {
+                    "ok": False,
+                    "source_status": {
+                        "source": "东方财富股东分析",
+                        "errors": [str(e)],
+                    },
+                },
+            )
+            optional_statuses = get_optional_source_statuses()
+        except Exception as inner:
+            logger.warning(f"  旁路数据源状态写入失败: {inner}")
+    return optional_statuses
 
 
 def get_app():
@@ -244,24 +294,10 @@ async def _run_daily_pipeline(args, logger):
     if zt_count_updated:
         logger.info(f"  更新 {zt_count_updated} 只涨停频率统计")
 
-    # 3. 刷新国家队动向缓存，供前端和邮件使用
-    logger.info("[Step 3] 刷新国家队动向...")
-    try:
-        from .services.national_team_service import refresh_national_team_data
-        nt_result = refresh_national_team_data(max_pages_per_filter=1, page_size=30)
-        if nt_result.get("ok"):
-            logger.info(
-                "  国家队动向: 持仓%s条, 变动%s条, 事件%s条",
-                nt_result.get("holding_count", 0),
-                nt_result.get("change_count", 0),
-                nt_result.get("event_count", 0),
-            )
-        else:
-            logger.warning(f"  国家队动向刷新失败: {nt_result.get('source_status', {}).get('errors')}")
-    except Exception as e:
-        logger.warning(f"  国家队动向刷新异常: {e}")
+    # 3. 刷新旁路数据源。旁路源只写健康状态，是否进入邮件/Dashboard 由配置或 promotion PR 控制。
+    optional_statuses = _run_optional_sources(logger)
 
-    # 4. 执行完整筛选流水线
+    # 4. 执行完整筛选流水线（核心链路）
     logger.info("[Step 4] 执行筛选流水线...")
     from .services.screening_service import run_full_pipeline
     import json
@@ -271,7 +307,16 @@ async def _run_daily_pipeline(args, logger):
     reports_dir = PROJECT_DIR / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     (reports_dir / "latest.json").write_text(
-        json.dumps(_json_safe({"status": "completed", "date": today_str, **result}), ensure_ascii=False, indent=2),
+        json.dumps(
+            _json_safe({
+                "status": "completed",
+                "date": today_str,
+                **result,
+                "optional_sources": optional_statuses,
+            }),
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8")
 
     logger.info(f"  结果: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}, WATCH={result['watch']}")

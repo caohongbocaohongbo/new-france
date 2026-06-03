@@ -97,6 +97,42 @@ New France 是面向交易日复盘与筛选的后台工具，视觉基调应接
 
 配置表中的值优先级高于 `config/strategy_params.py`。前端保存成功后，后端会同步更新 `config/strategy_params.py`，确保文件默认值与最新配置一致。SMTP 密码不得出现在页面、接口响应、数据库或文档中，只能通过环境变量提供。
 
+## 旁路数据源规范
+
+新增数据源不得默认进入每日邮件或 Dashboard。正确接入顺序为：
+
+1. 数据源先作为旁路源运行，只写入数据库/API 和 `data/source_health.json` 健康状态。
+2. 健康状态必须包含 `ok`、`source_status.source`、`source_status.source_url`、`source_status.fetched_at`、`data.record_count`、`consecutive_successes`、`required_successes`、`error`。
+3. 连续成功次数达到 `config/optional_sources.json` 中的 `required_successes`，且最近采集时间未超过 `max_age_hours` 后，才视为可接入生产展示。
+4. GitHub Actions 只自动创建接入 PR，不自动打开生产展示。PR 合并前，`surfaces.email` 和 `surfaces.dashboard` 必须保持 `false`。
+5. Dashboard 旁路源区块只渲染 `surfaces.dashboard=true` 的数据源；邮件只渲染 `surfaces.email=true` 的数据源。
+
+当前国家队动向的默认配置：
+
+- `required_successes`: 3
+- `max_age_hours`: 72
+- `surfaces.email`: false
+- `surfaces.dashboard`: false
+
+如需临时联调，可用环境变量覆盖 `OPTIONAL_SOURCE_NATIONAL_TEAM_EMAIL`、`OPTIONAL_SOURCE_NATIONAL_TEAM_DASHBOARD`、`OPTIONAL_SOURCE_NATIONAL_TEAM_PROMOTED`，但正式接入仍以配置 PR 为准。
+
+## CI 数据分支规范
+
+每日筛选生成物不再提交到 `main`。`Daily Stock Screening` 运行完成后，只允许把以下文件提交到 `data-snapshots` 分支：
+
+- `data/france.md`
+- `data/new_france.db`
+- `data/source_health.json`
+- `data/snapshot_manifest.json`
+- `reports/`
+
+工作流必须具备：
+
+- `concurrency`：避免并发写入生成数据。
+- 旧 SHA 检测：运行提交落后 `origin/main` 时跳过主链路和数据提交。
+- rebase retry：推送 `data-snapshots` 前 fetch/rebase，最多重试 3 次。
+- promotion PR：稳定旁路源只通过 PR 打开邮件和 Dashboard 开关。
+
 ## 数据真实性
 
 - 前端不得渲染硬编码业务样例数据。
@@ -106,6 +142,7 @@ New France 是面向交易日复盘与筛选的后台工具，视觉基调应接
 - 推荐卡片关注日、关注至今涨停板次数来自 `/api/v1/watchlist` 和 `/api/v1/watchlist/{code}/detail`，字段为 `added_date`、`zt_count`、`follow_limit_up_count`。
 - 价格历史来自后端历史 K 线与当前价构建的 `price_history`，推荐结果缺失 `price_history` 时允许用详情接口的真实 `chart_data` 补绘。
 - 后端允许数据源降级，但应在审计报告或未来接口字段中暴露降级来源，避免把历史收盘价误认作实时价。
+- 旁路数据源未通过稳定阈值前，前端 Dashboard 和邮件不得用该数据源渲染生产判断。
 
 ## 发布同步
 

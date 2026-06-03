@@ -339,6 +339,7 @@ async function loadDashboard() {
     document.getElementById('limitSummary').textContent = '';
     document.getElementById('sectorDist').innerHTML = '<p style="color:#8B95A8;text-align:center;padding:20px">加载中...</p>';
     document.getElementById('marketTrend').innerHTML = '<div class="detail-empty">加载中...</div>';
+    renderDashboardOptionalSources(null);
 
     try {
         // 并行请求 watchlist stats 和最新筛选结果
@@ -386,6 +387,7 @@ async function loadDashboard() {
 
         renderLimitOverview(rec);
         renderMarketTrend(rec);
+        renderDashboardOptionalSources(status.optional_sources || rec.optional_sources);
 
     } catch(e) {
         // API 不可用（可能是 Render 冷启动），提供重试
@@ -406,7 +408,44 @@ async function loadDashboard() {
             '<p style="color:#e60012;text-align:center;padding:20px">后端服务不可用</p>';
         document.getElementById('marketTrend').innerHTML =
             '<div class="detail-empty" style="color:#e60012">后端服务不可用</div>';
+        renderDashboardOptionalSources(null);
     }
+}
+
+function renderDashboardOptionalSources(optionalSources) {
+    const panel = document.getElementById('dashboardOptionalSources');
+    const grid = document.getElementById('dashboardOptionalSourceGrid');
+    if (!panel || !grid) return;
+
+    const sources = Object.values(optionalSources?.sources || {})
+        .filter(source => source?.surfaces?.dashboard_enabled);
+    if (!sources.length) {
+        panel.hidden = true;
+        grid.innerHTML = '';
+        return;
+    }
+
+    panel.hidden = false;
+    grid.innerHTML = sources.map(source => {
+        const statusClass = source.ok && source.ready_for_promotion ? 'ok' : (source.ok ? 'pending' : 'error');
+        const statusText = source.ok && source.ready_for_promotion ? '已达稳定阈值' : (source.ok ? '旁路观察中' : '来源异常');
+        const fetchedAt = source.source_status?.fetched_at ? formatDateTimeShort(source.source_status.fetched_at) : '--';
+        const count = source.data?.record_count ?? '--';
+        const successes = source.consecutive_successes ?? 0;
+        const required = source.required_successes ?? '--';
+        const sourceName = source.source_status?.source || '--';
+        return `
+            <div class="optional-source-card ${statusClass}">
+                <div class="optional-source-top">
+                    <span>${escapeHtml(source.label || source.key || '--')}</span>
+                    <b>${escapeHtml(statusText)}</b>
+                </div>
+                <div class="optional-source-value">${escapeHtml(count)} 条</div>
+                <div class="optional-source-meta">连续成功 ${escapeHtml(successes)} / ${escapeHtml(required)} · ${escapeHtml(fetchedAt)}</div>
+                <div class="optional-source-meta">来源：${escapeHtml(sourceName)}</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function renderDashboardIndex(data) {

@@ -1,0 +1,65 @@
+name: Optional Source Promotion
+
+on:
+  workflow_run:
+    workflows: ["Daily Stock Screening"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: optional-source-promotion
+  cancel-in-progress: false
+
+env:
+  DATA_BRANCH: data-snapshots
+  PROMOTION_BRANCH: bot/optional-source-promotion
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch data snapshots
+        run: git fetch origin "${DATA_BRANCH}:${DATA_BRANCH}" || true
+
+      - name: Check optional source promotion
+        id: promotion
+        run: |
+          output="$(python scripts/check_optional_source_promotion.py --data-branch "${DATA_BRANCH}")"
+          echo "${output}"
+          if echo "${output}" | grep -q "promotion_required=true"; then
+            echo "required=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "required=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create promotion pull request
+        if: steps.promotion.outputs.required == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "${PROMOTION_BRANCH}"
+          git add -f config/optional_sources.json reports/optional-source-promotion.md
+          git commit -m "[bot] Promote stable optional sources"
+          git push --force-with-lease origin "${PROMOTION_BRANCH}"
+          gh pr create \
+            --base main \
+            --head "${PROMOTION_BRANCH}" \
+            --title "接入稳定旁路数据源到邮件和 Dashboard" \
+            --body-file reports/optional-source-promotion.md \
+          || gh pr edit "${PROMOTION_BRANCH}" --body-file reports/optional-source-promotion.md

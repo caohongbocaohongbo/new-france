@@ -46,6 +46,34 @@ python -m http.server 5173 --directory frontend
 
 前端设置页会展示“上次保存值 / 当前编辑值”，便于保存前比对。保存成功后，筛选候选过滤、评分权重、邮件收件账号、监控周期状态判断、涨停频率统计都会优先读取后端配置。
 
+## 旁路数据源接入
+
+新增数据源默认旁路运行，不直接进入每日邮件和 Dashboard。每日流程会刷新旁路源并写入 `data/source_health.json`，字段包括来源、来源链接、采集时间、记录条数、错误信息、连续成功次数和稳定阈值。
+
+生产展示开关统一放在 `config/optional_sources.json`：
+
+- `surfaces.email` 控制是否进入每日邮件。
+- `surfaces.dashboard` 控制是否进入 Dashboard 的旁路数据源区块。
+- `required_successes` 和 `max_age_hours` 控制稳定判断。
+
+稳定判断通过后，`.github/workflows/optional-source-promotion.yml` 会读取 `data-snapshots` 分支上的 `data/source_health.json`。如果某个旁路源连续成功、数据条数正常且尚未接入邮件/Dashboard，工作流会自动创建审核 PR，修改 `config/optional_sources.json` 并附带 `reports/optional-source-promotion.md` 证据。该 PR 需要人工确认合并，不自动进入生产展示。
+
+可通过环境变量临时覆盖：
+
+- `OPTIONAL_SOURCE_NATIONAL_TEAM_EMAIL=1`：临时允许国家队动向进入邮件。
+- `OPTIONAL_SOURCE_NATIONAL_TEAM_DASHBOARD=1`：临时允许国家队动向进入 Dashboard。
+- `OPTIONAL_SOURCE_NATIONAL_TEAM_PROMOTED=1`：临时视为已稳定。
+
+## 生成数据快照
+
+GitHub Actions 的 `Daily Stock Screening` 不再把 `data/france.md`、`reports/`、`data/new_france.db` 等生成物提交到 `main`。定时任务运行后会调用 `scripts/commit_screening_data.sh`，把生成物提交到 `data-snapshots` 分支，并写入 `data/snapshot_manifest.json` 记录来源分支、来源提交和生成时间。
+
+工作流包含三层保护：
+
+- `concurrency` 防止同一分支的筛选任务重叠写入。
+- 旧提交检测：如果手动重跑的 workflow SHA 已落后 `origin/main`，会跳过筛选和数据提交。
+- 推送重试：提交 `data-snapshots` 前会 fetch/rebase，最多重试 3 次。
+
 ## 视觉还原口径
 
 当前前端按 Figma `france` 文件的 5 个业务画板优化：Dashboard 总览、监控列表、推荐结果、股票详情弹窗、手动筛选。整体采用浅灰左栏、白色工作区、8px 卡片、4px 表单控件、紫黑主按钮和百度财经式浅色图表。除监控列表原稿中存在的列错位不照抄外，其余布局密度、卡片层级、导航样式和图表风格按设计稿实现。
@@ -58,6 +86,7 @@ python -m http.server 5173 --directory frontend
 - 推荐结果主体来自 `reports/latest.json`，该文件由手动筛选或定时任务生成；其中包含上证指数真实点位快照 `index_value`、`index_gain`、`index_snapshot`。关注日、关注至今涨停板次数来自 `data/france.md` 经 `/api/v1/watchlist` 暴露的 `added_date`、`zt_count`、`follow_limit_up_count` 字段。
 - 推荐卡片趋势图只使用接口返回的 `price_history` 或 `/api/v1/watchlist/{code}/detail` 的真实历史 K 线数据。两个接口都没有价格历史时，前端显示空状态，不用本地样例数据补线。
 - 股票详情补充指标中，换手率、量比、PE 来自后端 Tushare 日频基础指标扩展；未配置 `TUSHARE_TOKEN` 或数据源不可用时前端显示空态，不用前端模拟线段。
+- 旁路数据源的邮件和 Dashboard 展示由 `config/optional_sources.json` 控制；未打开前仅记录健康状态和独立 API，不进入生产展示。
 
 需要注意：后端在实时行情缺失时会使用涨停池或历史 K 线作为降级价格来源，属于后端真实数据源降级，不是前端假数据；但严格审计“实时性”时，需要在接口中继续暴露价格来源字段。
 

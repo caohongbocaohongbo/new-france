@@ -8,6 +8,14 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: daily-screening-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+  DATA_BRANCH: data-snapshots
+
 jobs:
   screening:
     runs-on: ubuntu-latest
@@ -15,16 +23,36 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check workflow SHA freshness
+        id: freshness
+        run: |
+          git fetch origin "${BASE_BRANCH}" --prune
+          head_sha="$(git rev-parse HEAD)"
+          remote_sha="$(git rev-parse "origin/${BASE_BRANCH}")"
+          echo "head_sha=${head_sha}"
+          echo "remote_sha=${remote_sha}"
+          if [ "${head_sha}" != "${remote_sha}" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "旧提交 workflow，不执行 screening 主链路"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-python@v5
+        if: steps.freshness.outputs.stale != 'true'
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Install dependencies
+        if: steps.freshness.outputs.stale != 'true'
         run: pip install -r requirements.txt
 
       - name: Run daily screening
+        if: steps.freshness.outputs.stale != 'true'
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
           SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
@@ -34,15 +62,6 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: python -m backend.main
 
-      - name: Commit updated data
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/france.md reports/ data/new_france.db 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo "No data changes to commit"
-          else
-            git commit -m "[bot] Daily screening $(date +%Y-%m-%d)"
-            git push origin main
-          fi
+      - name: Commit generated data snapshot
+        if: always() && steps.freshness.outputs.stale != 'true'
+        run: bash scripts/commit_screening_data.sh

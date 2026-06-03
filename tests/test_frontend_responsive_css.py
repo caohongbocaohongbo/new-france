@@ -119,6 +119,18 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn("涨停", trend_js)
         self.assertIn("跌停", trend_js)
 
+    def test_dashboard_optional_sources_are_gated_by_backend_status(self):
+        html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
+        js = (ROOT / "frontend/js/app.js").read_text(encoding="utf-8")
+        css = (ROOT / "frontend/css/styles.css").read_text(encoding="utf-8")
+
+        self.assertIn('id="dashboardOptionalSources"', html)
+        self.assertIn("renderDashboardOptionalSources", js)
+        self.assertIn("dashboard_enabled", js)
+        self.assertIn("ready_for_promotion", js)
+        self.assertIn(".optional-source-panel", css)
+        self.assertIn(".optional-source-grid", css)
+
     def test_docs_publish_directory_matches_frontend_for_national_team(self):
         for rel in ["index.html", "js/app.js", "css/styles.css"]:
             frontend_text = (ROOT / "frontend" / rel).read_text(encoding="utf-8")
