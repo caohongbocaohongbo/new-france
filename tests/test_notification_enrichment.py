@@ -64,7 +64,7 @@ class NotificationEnrichmentTest(unittest.TestCase):
         self.assertIn("封板时间", html)
         self.assertIn("封板时间为0，数据缺失", html)
 
-    def test_build_price_history_from_historical_starts_at_watch_date(self):
+    def test_build_price_history_from_historical_uses_cumulative_drawdown(self):
         hist = pd.DataFrame(
             [
                 {"日期": "2026-05-09", "收盘": 7.0, "涨跌幅": 1.0},
@@ -78,7 +78,7 @@ class NotificationEnrichmentTest(unittest.TestCase):
 
         self.assertEqual([row["date"] for row in series], ["2026-05-11", "2026-05-12", "2026-05-13"])
         self.assertEqual(series[-1]["close"], 6.97)
-        self.assertEqual(series[-1]["drawdown_pct"], -4.52)
+        self.assertEqual(series[-1]["drawdown_pct"], -7.26)
 
     def test_zt_source_note_displays_raw_and_final_counts(self):
         zt_list = [{"code": "000001", "name": "平安银行", "price": 10.0}]

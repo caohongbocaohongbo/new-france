@@ -1764,7 +1764,7 @@ function buildPriceHistoryFromDetail(detail) {
         close: closes[index],
         change_pct: cd.changes?.[index],
         drawdown_pct: cd.drawdowns?.[index],
-    })).filter(row => Number.isFinite(Number(row.close))).slice(-12);
+    })).filter(row => Number.isFinite(Number(row.close)) && isRealNumber(row.drawdown_pct)).slice(-12);
 }
 
 function setRecommendationLevel(level, reload = false) {
@@ -1874,10 +1874,10 @@ function renderRecommendationCharts(stocks) {
         if (!el) return;
         const rows = (stock.price_history || [])
             .slice(-12)
-            .filter(row => Number.isFinite(Number(row.close)));
+            .filter(row => Number.isFinite(Number(row.close)) && isRealNumber(row.drawdown_pct));
         if (!rows.length) return;
         const refPrice = toNumber(stock.ref_price, 0);
-        const drawVals = rows.map(row => toNumber(row.drawdown_pct, 0));
+        const drawVals = rows.map(row => Number(row.drawdown_pct));
         const closeVals = rows.map(row => Number(row.close));
         if (refPrice > 0) closeVals.push(refPrice);
         let minClose = Math.min(...closeVals);
@@ -1966,7 +1966,7 @@ function renderRecommendationCharts(stocks) {
                 {
                     type: 'line',
                     name: '回撤%',
-                    data: rows.map(row => toNumber(row.drawdown_pct, 0)),
+                    data: rows.map(row => Number(row.drawdown_pct)),
                     smooth: true,
                     symbol: 'circle',
                     symbolSize: 8,
@@ -2026,7 +2026,7 @@ function renderAuditFailures(audit) {
 function renderRecommendationTrendChart(stock) {
     const rows = (stock.price_history || [])
         .slice(-12)
-        .filter(row => Number.isFinite(Number(row.close)));
+        .filter(row => Number.isFinite(Number(row.close)) && isRealNumber(row.drawdown_pct));
     const refPrice = toNumber(stock.ref_price, 0);
     const followCount = stock.follow_limit_up_count ?? stock.zt_count;
     const events = (stock.limit_events || []).slice(-6);
@@ -2110,6 +2110,20 @@ function scrollWatchlistTable(direction) {
 
 // ---- Screening ----
 let screeningLastResults = [];
+let overnightLastDecision = null;
+let screeningMode = 'pullback';
+
+function setScreeningMode(mode) {
+    screeningMode = mode === 'overnight' ? 'overnight' : 'pullback';
+    document.querySelectorAll('[data-screening-mode]').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.screeningMode === screeningMode);
+    });
+    const pullback = document.getElementById('pullbackPanel');
+    const overnight = document.getElementById('overnightPanel');
+    if (pullback) pullback.classList.toggle('active', screeningMode === 'pullback');
+    if (overnight) overnight.classList.toggle('active', screeningMode === 'overnight');
+    if (screeningMode === 'overnight') loadLatestOvernightDecision();
+}
 
 async function runScreening() {
     const body = document.getElementById('scrResultBody');
@@ -2237,6 +2251,128 @@ function renderScreeningEmptyState() {
         <p>筛选结果将在此处展示</p>
         <p>筛选结果包含 STRONG_BUY / BUY / WATCH 三级推荐及审核降级详情</p>
     </div>`;
+}
+
+async function runOvernightArbitrage() {
+    const body = document.getElementById('overnightDecisionBody');
+    const btn = document.querySelector('.btn-primary[onclick="runOvernightArbitrage()"]');
+    const oldText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '决策生成中...';
+    }
+    setInlineStatus('overnightStatus', '已提交尾盘套利任务，等待 14:43 决策结果...');
+    if (body) {
+        body.innerHTML = '<div class="empty-state"><p>尾盘套利任务已提交</p><p style="font-size:12px;color:#999">正在拉取全市场行情、涨停池与5分钟K线增强</p></div>';
+    }
+
+    try {
+        const startResp = await apiFetch('/overnight-arbitrage/run', { method: 'POST', timeout: 60000, retries: 1 });
+        const startData = await startResp.json();
+        if (startData.status !== 'started') {
+            throw new Error(startData.message || '启动失败');
+        }
+        for (let i = 0; i < 80; i++) {
+            await new Promise(r => setTimeout(r, 3000));
+            const pollResp = await apiFetch('/overnight-arbitrage/latest', { timeout: 12000, retries: 0 });
+            const data = await pollResp.json();
+            if (data.status === 'completed') {
+                renderOvernightDecision(data);
+                setInlineStatus('overnightStatus', `决策已生成：BUY ${data.buy_count || 0}，WATCH ${data.watch_count || 0}`, 'ok');
+                return;
+            }
+            if (data.status === 'error') {
+                throw new Error(data.message || '尾盘套利任务异常');
+            }
+        }
+        throw new Error('尾盘套利任务超时，请稍后刷新最新决策');
+    } catch (e) {
+        setInlineStatus('overnightStatus', e.message || '请求异常，请检查后端服务', 'error');
+        if (body) body.innerHTML = `<div class="empty-state"><p style="color:#e60012">${escapeHtml(e.message || '请求异常，请检查后端服务')}</p></div>`;
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = oldText;
+        }
+    }
+}
+
+async function loadLatestOvernightDecision() {
+    try {
+        const resp = await apiFetch('/overnight-arbitrage/latest', { timeout: 12000, retries: 0 });
+        const data = await resp.json();
+        renderOvernightDecision(data);
+    } catch (e) {
+        setInlineStatus('overnightStatus', e.message || '最新决策读取失败', 'error');
+    }
+}
+
+function renderOvernightDecision(data) {
+    overnightLastDecision = data || {};
+    const body = document.getElementById('overnightDecisionBody');
+    const countEl = document.getElementById('overnightResultCount');
+    const metaEl = document.getElementById('overnightMeta');
+    if (!body) return;
+    const results = Array.isArray(data?.results) ? data.results : [];
+    if (countEl) countEl.textContent = `${results.length} 条结果`;
+    if (metaEl) {
+        metaEl.textContent = data?.status === 'completed'
+            ? `${data.date || '--'} ${data.generated_at || '--'} | 有效窗口 ${data.valid_window || '14:43-14:55'}`
+            : (data?.message || '等待 14:43 决策');
+    }
+    if (data?.status !== 'completed') {
+        body.innerHTML = `<div class="empty-state"><p>${escapeHtml(data?.message || '暂无尾盘套利决策')}</p><p style="font-size:12px;color:#999">交易日14:43自动运行，也可手动触发。</p></div>`;
+        return;
+    }
+    if (!results.length) {
+        body.innerHTML = '<div class="empty-state"><p>本次无可执行尾盘套利候选</p><p style="font-size:12px;color:#999">空仓也是策略输出。</p></div>';
+        return;
+    }
+    const groups = [
+        ['BUY', '可买'],
+        ['WATCH', '观察'],
+    ];
+    body.innerHTML = groups.map(([action, label]) => renderOvernightGroup(
+        label,
+        results.filter(item => item.action === action),
+        action.toLowerCase()
+    )).join('') + renderOvernightSourceStatus(data);
+}
+
+function renderOvernightGroup(label, items, actionClass) {
+    if (!items.length) {
+        return `<div class="overnight-section"><h3>${escapeHtml(label)}</h3><div class="empty-state compact">暂无${escapeHtml(label)}标的</div></div>`;
+    }
+    const cards = items.map(item => {
+        const reasons = (item.reasons || []).map(v => `<span>${escapeHtml(v)}</span>`).join('');
+        const risks = (item.risks || []).map(v => `<span>${escapeHtml(v)}</span>`).join('') || '<span>--</span>';
+        return `<article class="overnight-card ${actionClass}">
+            <div class="overnight-card-head">
+                <div><b>${escapeHtml(item.name || '--')}</b><span class="stock-code">${escapeHtml(item.code || '--')}</span></div>
+                <span class="tag tag-${actionClass}">${escapeHtml(item.action || '--')}</span>
+            </div>
+            <div class="overnight-score">${formatNumber(item.decision_score, 2)}<span>决策分</span></div>
+            <div class="overnight-metrics">
+                <span>现价 <b>${formatNumber(item.current_price, 2)}</b></span>
+                <span>涨幅 <b class="up-text">${formatMaybePct(item.change_pct, 2)}</b></span>
+                <span>换手 <b>${formatMaybePct(item.turnover, 2)}</b></span>
+                <span>量比 <b>${formatNumber(item.volume_ratio, 2)}</b></span>
+            </div>
+            <div class="overnight-chip-row">${reasons}</div>
+            <div class="overnight-risk">风险: ${risks}</div>
+        </article>`;
+    }).join('');
+    return `<div class="overnight-section"><h3>${escapeHtml(label)}</h3><div class="overnight-decision-grid">${cards}</div></div>`;
+}
+
+function renderOvernightSourceStatus(data) {
+    const sources = data?.source_status || {};
+    const rows = Object.entries(sources).map(([key, source]) => {
+        const status = source?.status || '--';
+        const count = source?.count ?? '';
+        return `<span>${escapeHtml(key)}: <b>${escapeHtml(status)}</b>${count !== '' ? ` ${escapeHtml(count)}条` : ''}</span>`;
+    }).join('');
+    return `<div class="overnight-source-status">${rows}</div>`;
 }
 
 // ---- Settings ----
@@ -2586,6 +2722,7 @@ function renderPagination(cid, total, page, size, cb) {
 // ---- Global ----
 function refreshData() { navigateTo(location.hash.replace('#','')||'dashboard', false, true); }
 function setupScreeningPage() {
+    setScreeningMode(screeningMode);
     if (!screeningLastResults.length) {
         const body = document.getElementById('scrResultBody');
         if (body && (!body.textContent.trim() || body.textContent.includes('设置筛选条件后点击'))) {

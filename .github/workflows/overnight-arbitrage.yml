@@ -1,15 +1,15 @@
-name: Daily Stock Screening
+name: Overnight Arbitrage Decision
 on:
   schedule:
-    # 北京时间 15:10 = UTC 07:10，交易日（周一到周五）
-    - cron: '10 7 * * 1-5'
-  workflow_dispatch:  # 允许手动触发
+    # 北京时间 14:43 = UTC 06:43，交易日（周一到周五）
+    - cron: '43 6 * * 1-5'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: daily-screening-${{ github.ref }}
+  group: overnight-arbitrage-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -17,9 +17,9 @@ env:
   DATA_BRANCH: data-snapshots
 
 jobs:
-  screening:
+  overnight-arbitrage:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 12
 
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
           echo "remote_sha=${remote_sha}"
           if [ "${head_sha}" != "${remote_sha}" ]; then
             echo "stale=true" >> "$GITHUB_OUTPUT"
-            echo "旧提交 workflow，不执行 screening 主链路"
+            echo "旧提交 workflow，不执行 overnight arbitrage 主链路"
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
@@ -55,7 +55,7 @@ jobs:
         if: steps.freshness.outputs.stale != 'true'
         run: bash scripts/restore_screening_data.sh
 
-      - name: Run daily screening
+      - name: Run overnight arbitrage decision
         if: steps.freshness.outputs.stale != 'true'
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
@@ -64,7 +64,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           SMTP_TO: ${{ secrets.SMTP_TO }}
           PYTHONPATH: ${{ github.workspace }}
-        run: python -m backend.main
+        run: python -m backend.main --run-overnight-arbitrage
 
       - name: Commit generated data snapshot
         if: always() && steps.freshness.outputs.stale != 'true'

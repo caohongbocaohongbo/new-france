@@ -22,6 +22,13 @@ def run_git(args, cwd, **kwargs):
 
 
 class GitHubWorkflowTest(unittest.TestCase):
+    def test_generated_runtime_outputs_are_ignored_on_main(self):
+        gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+        self.assertIn("data/france.md", gitignore)
+        self.assertIn("data/snapshot_manifest.json", gitignore)
+        self.assertIn("reports/*.json", gitignore)
+
     def test_daily_screening_pushes_generated_data_to_snapshot_branch(self):
         workflow = (ROOT / ".github/workflows/daily-screening.yml").read_text(encoding="utf-8")
 
@@ -30,11 +37,13 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn("concurrency:", workflow)
         self.assertIn("fetch-depth: 0", workflow)
         self.assertIn("DATA_BRANCH: data-snapshots", workflow)
+        self.assertIn("bash scripts/restore_screening_data.sh", workflow)
         self.assertIn("bash scripts/commit_screening_data.sh", workflow)
         self.assertNotIn("git push origin main", workflow)
 
     def test_daily_screening_snapshot_script_has_stale_sha_and_retry_guards(self):
         script = SCRIPT.read_text(encoding="utf-8")
+        restore_script = (ROOT / "scripts/restore_screening_data.sh").read_text(encoding="utf-8")
 
         self.assertIn("DATA_BRANCH=\"${DATA_BRANCH:-data-snapshots}\"", script)
         self.assertIn("origin/${BASE_BRANCH}", script)
@@ -45,6 +54,10 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn("git add -f", script)
         self.assertIn("data/source_health.json", script)
         self.assertNotIn("git push origin main", script)
+        self.assertIn("DATA_BRANCH=\"${DATA_BRANCH:-data-snapshots}\"", restore_script)
+        self.assertIn("git show \"origin/${DATA_BRANCH}:${file}\"", restore_script)
+        self.assertIn('restore_file "data/france.md"', restore_script)
+        self.assertIn('restore_file "reports/latest.json"', restore_script)
 
     def test_daily_screening_snapshot_script_handles_generated_changes_without_branch_checkout_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -126,6 +139,25 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn("scripts/check_optional_source_promotion.py", workflow)
         self.assertIn("git add -f config/optional_sources.json reports/optional-source-promotion.md", workflow)
         self.assertIn("gh pr create", workflow)
+
+    def test_overnight_arbitrage_workflow_runs_before_tail_window_and_uses_snapshot_branch(self):
+        workflow = (ROOT / ".github/workflows/overnight-arbitrage.yml").read_text(encoding="utf-8")
+
+        self.assertIn("Overnight Arbitrage Decision", workflow)
+        self.assertIn("43 6 * * 1-5", workflow)
+        self.assertIn("DATA_BRANCH: data-snapshots", workflow)
+        self.assertIn("bash scripts/restore_screening_data.sh", workflow)
+        self.assertIn("python -m backend.main --run-overnight-arbitrage", workflow)
+        self.assertIn("bash scripts/commit_screening_data.sh", workflow)
+        self.assertNotIn("python -m backend.main\\n", workflow)
+        self.assertNotIn("git push origin main", workflow)
+
+    def test_render_blueprint_has_independent_overnight_arbitrage_cron(self):
+        blueprint = (ROOT / "render.yaml").read_text(encoding="utf-8")
+
+        self.assertIn("new-france-overnight-arbitrage", blueprint)
+        self.assertIn('schedule: "43 6 * * 1-5"', blueprint)
+        self.assertIn("python -m backend.main --run-overnight-arbitrage", blueprint)
 
 
 if __name__ == "__main__":

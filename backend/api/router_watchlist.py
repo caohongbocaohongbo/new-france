@@ -1,11 +1,14 @@
 """监控列表 API"""
 from fastapi import APIRouter, Query, HTTPException
-from typing import Optional
+from typing import Dict, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import lru_cache
 import logging
 import pandas as pd
 
 from ..services.watchlist_store import parse_watchlist, write_watchlist
 from ..services.runtime_config import get_effective_config
+from ..services.drawdown import cumulative_drawdown_values, latest_cumulative_drawdown, normalize_trade_date
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -15,17 +18,54 @@ LOCAL_SORT_FIELDS = {"zt_count"}
 SORTABLE_FIELDS = QUOTE_SORT_FIELDS | LOCAL_SORT_FIELDS
 
 
+@lru_cache(maxsize=2048)
+def _fetch_history_cached(code: str, days: int, cache_day: str):
+    try:
+        from ..agents.layer1_data_collector.sources.historical_kline import fetch_historical
+        return fetch_historical(code, days)
+    except Exception as e:
+        logger.debug(f"  {code} 历史K线缓存读取失败({cache_day}): {e}")
+        return None
+
+
+def _fetch_watchlist_histories(codes: list, days: int = 60) -> Dict[str, pd.DataFrame]:
+    if not codes:
+        return {}
+    from datetime import datetime, timezone, timedelta
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    cache_day = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d")
+    result = {}
+    unique_codes = list(dict.fromkeys(codes))
+    max_workers = min(8, len(unique_codes))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(_fetch_history_cached, code, days, cache_day): code
+            for code in unique_codes
+        }
+        for future in as_completed(futures):
+            code = futures[future]
+            try:
+                hist = future.result()
+            except Exception as e:
+                logger.debug(f"  {code} 历史K线读取失败: {e}")
+                continue
+            if hist is not None and not hist.empty:
+                result[code] = hist
+    return result
+
+
 def _parse_watchlist():
     """解析 france.md 监控列表"""
     return parse_watchlist()
 
 
-def _enrich_with_quotes(entries: list) -> list:
-    """用东方财富实时行情补全回撤%、换手率、量比、PE、流通市值"""
+def _enrich_with_quotes(entries: list, include_drawdown: bool = True) -> list:
+    """用行情和历史K线补全累计回撤、换手率、量比、PE、流通市值。"""
     if not entries:
         return entries
 
     codes = [e["code"] for e in entries]
+    historical = _fetch_watchlist_histories(codes) if include_drawdown else {}
     try:
         from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
         quotes = fetch_stock_quotes(codes)
@@ -50,13 +90,20 @@ def _enrich_with_quotes(entries: list) -> list:
     for e in entries:
         code = e["code"]
         ref = e["ref_price"]
+        hist = historical.get(code)
         q = quote_map.get(code)
         if q is not None:
             current = q.get("最新价")
-            if current is not None and current > 0:
-                drop_pct = round((current - ref) / ref * 100, 2)
-            else:
-                drop_pct = None
+            drop_pct = (
+                _compute_watchlist_drop_pct(
+                    hist,
+                    e.get("added_date", e["zt_date"]),
+                    ref,
+                    current,
+                    current_date=today,
+                )
+                if include_drawdown else None
+            )
             entry = {
                 **e,
                 "current_price": current,
@@ -70,7 +117,17 @@ def _enrich_with_quotes(entries: list) -> list:
         else:
             entry = {
                 **e,
-                "current_price": None, "drop_pct": None,
+                "current_price": None,
+                "drop_pct": (
+                    _compute_watchlist_drop_pct(
+                        hist,
+                        e.get("added_date", e["zt_date"]),
+                        ref,
+                        None,
+                        current_date=today,
+                    )
+                    if include_drawdown else None
+                ),
                 "turnover": None, "vol_ratio": None,
                 "pe": None, "mcap_raw": None, "mcap": None,
             }
@@ -205,6 +262,21 @@ def _fill_latest_metric_value(series: list, value) -> list:
     return filled
 
 
+def _compute_watchlist_drop_pct(hist: Optional[pd.DataFrame],
+                                watch_date: str,
+                                ref_price: float,
+                                current_price: Optional[float],
+                                current_date=None):
+    """监控列表回撤取历史累计回撤最后值，历史缺失时才用实时价单点兜底。"""
+    return latest_cumulative_drawdown(
+        hist,
+        watch_date,
+        ref_price,
+        current_price=current_price,
+        current_date=current_date,
+    )
+
+
 @router.get("")
 def get_watchlist(status: Optional[str] = Query(None),
                   search: Optional[str] = Query(None),
@@ -231,12 +303,13 @@ def get_watchlist(status: Optional[str] = Query(None),
     if size > 50:
         items = entries[:size]
     elif sort_by in QUOTE_SORT_FIELDS:
-        enriched = _enrich_with_quotes(entries)
+        enriched = _enrich_with_quotes(entries, include_drawdown=(sort_by == "drop_pct"))
         if not _has_sort_values(enriched, sort_by):
             raise HTTPException(status_code=503, detail=f"实时行情暂不可用，无法按 {sort_by} 排序，请稍后重试")
         sorted_entries = _sort_watchlist(enriched, sort_by, sort_order)
         start = (page - 1) * size
-        items = sorted_entries[start:start + size]
+        page_items = sorted_entries[start:start + size]
+        items = page_items if sort_by == "drop_pct" else _enrich_with_quotes(page_items)
     elif sort_by in LOCAL_SORT_FIELDS:
         sorted_entries = _sort_watchlist(entries, sort_by, sort_order)
         start = (page - 1) * size
@@ -352,6 +425,10 @@ def get_stock_detail(code: str):
         except Exception as e:
             logger.warning(f"  K线收盘价提取失败: {e}")
 
+    from datetime import datetime, timezone, timedelta
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    today = datetime.now(BEIJING_TZ).date()
+
     # ---- 3. 构建图表数据序列 ----
     dates = []
     closes = []
@@ -386,7 +463,7 @@ def get_stock_detail(code: str):
                 data_rows["换手率"] = hist_df["换手率"]
 
             for _, row in data_rows.iterrows():
-                day = str(row[date_col])[:10]
+                day = normalize_trade_date(row[date_col])
                 close = float(row[close_col]) if pd.notna(row[close_col]) else 0
                 vol = float(row.get(vol_col, 0)) if vol_col in row.index and pd.notna(row.get(vol_col, 0)) else 0
                 chg = float(row.get(pct_col, 0)) if pct_col in row.index and pd.notna(row.get(pct_col, 0)) else 0
@@ -398,7 +475,7 @@ def get_stock_detail(code: str):
                 closes.append(round(close, 2))
                 volumes.append(int(vol))
                 changes.append(round(chg, 2))
-                drawdowns.append(round((close - ref_price) / ref_price * 100, 2))
+                drawdowns.append(None)
                 turnover_series.append(None)
                 vol_ratio_series.append(None)
                 pe_series.append(None)
@@ -428,6 +505,12 @@ def get_stock_detail(code: str):
             if len(closes) >= 60:
                 for i in range(len(closes)):
                     ma60.append(round(sum(closes[max(0, i - 59):i + 1]) / min(i + 1, 60), 2))
+
+            drawdowns = cumulative_drawdown_values(
+                [{"date": day, "close": close} for day, close in zip(dates, closes)],
+                stock.get("added_date", stock.get("zt_date", "")),
+                ref_price,
+            )
 
     # ---- 3.1 补充真实日频指标（仅 Tushare 可用时返回，失败保持空序列）----
     try:
@@ -510,7 +593,7 @@ def get_stock_detail(code: str):
         buckets = [("≤-10%", -100, -10), ("-10%~-5%", -10, -5), ("-5%~-3%", -5, -3),
                    ("-3%~0%", -3, 0), ("0%~+5%", 0, 5), ("+5%+", 5, 1000)]
         for label, lo, hi in buckets:
-            count = sum(1 for d in drawdowns if lo <= d < hi)
+            count = sum(1 for d in drawdowns if d is not None and lo <= d < hi)
             if count > 0:
                 drawdown_distribution[label] = count
 
@@ -579,12 +662,12 @@ def get_stock_detail(code: str):
         "kline": {
             "source": kline_source,
             "available": has_historical_kline,
-            "note": "价格、成交量、涨跌幅、均线、回撤分布均由历史K线计算" if has_historical_kline else "历史K线数据源不可用；实时行情仅用于顶部现价，不回填为趋势图",
+            "note": "价格、成交量、涨跌幅、均线由历史K线计算；回撤为加入关注日以来的历史累计值" if has_historical_kline else "历史K线数据源不可用；实时行情仅用于顶部现价，不回填为趋势图",
         },
         "quote": {
             "source": quote_source,
             "available": current_price is not None,
-            "note": "现价、实时回撤来自东方财富实时行情" if quote_source == "东方财富实时行情" else (
+            "note": "现价来自东方财富实时行情；回撤优先使用历史累计值，历史缺失时按实时价兜底" if quote_source == "东方财富实时行情" else (
                 "东方财富实时行情暂不可用，现价使用历史K线最后收盘价降级" if current_price is not None else "实时行情接口暂不可用，且K线无可用收盘价"
             ),
         },
@@ -621,7 +704,13 @@ def get_stock_detail(code: str):
         "zt_date": zt_date,
         "ref_price": ref_price,
         "current_price": current_price,
-        "drop_pct": round((current_price - ref_price) / ref_price * 100, 2) if current_price and current_price > 0 else None,
+        "drop_pct": _compute_watchlist_drop_pct(
+            hist_df,
+            added_date,
+            ref_price,
+            current_price,
+            current_date=today,
+        ),
         "seal_time": stock.get("seal_time", "0"),
         "consecutive": stock.get("consecutive", "0"),
         "break_count": stock.get("break_count", "0"),

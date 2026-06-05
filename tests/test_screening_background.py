@@ -6,6 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
 from backend.api import router_screening
+from backend.api import router_overnight_arbitrage
+from backend.main import get_app
 
 
 class ScreeningBackgroundTaskTest(unittest.TestCase):
@@ -52,6 +54,34 @@ class ScreeningBackgroundTaskTest(unittest.TestCase):
 
         with ThreadPoolExecutor(max_workers=1) as executor:
             self.assertEqual(executor.submit(load_agent_name).result(timeout=3), "DataCollectorAgent")
+
+    def test_overnight_arbitrage_task_runs_as_sync_threadpool_task(self):
+        self.assertFalse(
+            inspect.iscoroutinefunction(router_overnight_arbitrage._run_overnight_task),
+            "尾盘套利包含同步行情请求，BackgroundTasks 必须用同步函数进入线程池，避免阻塞轮询接口",
+        )
+
+    def test_overnight_arbitrage_task_writes_completed_payload(self):
+        result = {
+            "strategy": "overnight_arbitrage",
+            "buy_count": 1,
+            "watch_count": 2,
+            "results": [],
+        }
+
+        with patch.object(router_overnight_arbitrage, "_execute_overnight_pipeline", return_value=result), \
+                patch.object(router_overnight_arbitrage, "_write_overnight_cache") as write_cache:
+            router_overnight_arbitrage._run_overnight_task(dry_run=True)
+
+        payload = write_cache.call_args.args[0]
+        self.assertEqual(payload["status"], "completed")
+        self.assertEqual(payload["strategy"], "overnight_arbitrage")
+        self.assertEqual(payload["buy_count"], 1)
+
+    def test_app_mounts_overnight_arbitrage_routes(self):
+        routes = {getattr(route, "path", "") for route in get_app().routes}
+        self.assertIn("/api/v1/overnight-arbitrage/run", routes)
+        self.assertIn("/api/v1/overnight-arbitrage/latest", routes)
 
 
 if __name__ == "__main__":

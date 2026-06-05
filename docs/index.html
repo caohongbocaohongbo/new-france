@@ -194,6 +194,11 @@
 
     <!-- Page: Screening -->
     <section id="page-screening" class="page">
+        <div class="screening-mode-tabs" role="tablist" aria-label="筛选策略">
+            <button type="button" class="tab active" data-screening-mode="pullback" onclick="setScreeningMode('pullback')">涨停回撤筛选</button>
+            <button type="button" class="tab" data-screening-mode="overnight" onclick="setScreeningMode('overnight')">尾盘隔夜套利</button>
+        </div>
+        <div id="pullbackPanel" class="screening-mode-panel active">
         <div class="screening-layout">
             <div class="screening-filters panel">
                 <div class="panel-header"><h2>筛选条件</h2></div>
@@ -230,6 +235,39 @@
                 </div>
                 <div id="scrResultBody"><p class="empty-state">设置筛选条件后点击「执行筛选」</p></div>
                 <div class="screening-defaults">默认参数: 回撤3%-10% | 量比1-5 | 换手率5%-10% | 流通市值50-200亿 | PE≤50</div>
+            </div>
+        </div>
+        </div>
+        <div id="overnightPanel" class="screening-mode-panel">
+            <div class="screening-layout overnight-layout">
+                <div class="screening-filters panel overnight-control-panel">
+                    <div class="panel-header"><h2>14:43 决策任务</h2></div>
+                    <div class="filter-group">
+                        <label>运行时间</label>
+                        <div class="readonly-field">交易日 14:43</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>有效窗口</label>
+                        <div class="readonly-field">14:43-14:55</div>
+                    </div>
+                    <div class="filter-group">
+                        <label>策略边界</label>
+                        <div class="strategy-note">排除创业板、ST、停牌、低成交额与低换手标的；次日 09:30-09:35 仅作卖出复盘。</div>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="runOvernightArbitrage()">执行尾盘套利</button>
+                    <button class="btn btn-full" onclick="loadLatestOvernightDecision()">刷新最新决策</button>
+                    <span id="overnightStatus" class="inline-status" aria-live="polite"></span>
+                </div>
+                <div class="screening-results panel overnight-results-panel">
+                    <div class="panel-header results-header">
+                        <div class="title-with-count"><h2>尾盘套利决策</h2><span id="overnightResultCount" class="count-pill">0 条结果</span></div>
+                        <div class="result-tools">
+                            <span class="table-note" id="overnightMeta">等待 14:43 决策</span>
+                        </div>
+                    </div>
+                    <div id="overnightDecisionBody"><p class="empty-state">点击「执行尾盘套利」后生成今日买入候选</p></div>
+                    <div class="screening-defaults">独立报告: reports/overnight_arbitrage_latest.json，不覆盖回撤推荐 latest.json</div>
+                </div>
             </div>
         </div>
     </section>

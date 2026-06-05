@@ -15,6 +15,7 @@ from ..agents.layer3_recommendation.agent import RecommendationAgent
 from ..events.engine import EventEngine
 from .runtime_config import get_effective_config, get_factor_weights_decimal
 from .watchlist_store import FRANCE_FILE, parse_watchlist
+from .drawdown import build_cumulative_price_history_series, latest_cumulative_drawdown
 
 logger = logging.getLogger(__name__)
 
@@ -34,51 +35,15 @@ def _build_price_history_series(hist: Optional[pd.DataFrame],
                                 ref_price: float,
                                 current_price: Optional[float] = None,
                                 current_date: Optional[date] = None) -> List[Dict]:
-    """生成从关注日起的收盘价和相对参考价回撤序列。"""
-    if hist is None or hist.empty or ref_price <= 0:
-        return []
-
-    date_col = "日期" if "日期" in hist.columns else ("date" if "date" in hist.columns else None)
-    close_col = "收盘" if "收盘" in hist.columns else ("close" if "close" in hist.columns else None)
-    pct_col = "涨跌幅" if "涨跌幅" in hist.columns else ("pctChg" if "pctChg" in hist.columns else None)
-    if date_col is None or close_col is None:
-        return []
-
-    rows = []
-    for _, row in hist.iterrows():
-        day = str(row.get(date_col, ""))[:10]
-        if not day or day < watch_date:
-            continue
-        try:
-            close = float(row.get(close_col, 0))
-        except (TypeError, ValueError):
-            continue
-        if close <= 0:
-            continue
-        try:
-            pct = float(row.get(pct_col, 0)) if pct_col else 0.0
-        except (TypeError, ValueError):
-            pct = 0.0
-        drawdown = (close - ref_price) / ref_price * 100
-        rows.append({
-            "date": day,
-            "close": round(close, 2),
-            "change_pct": round(pct, 2),
-            "drawdown_pct": round(drawdown, 2),
-        })
-
-    if current_price and current_price > 0 and current_date is not None:
-        today_str = current_date.strftime("%Y-%m-%d")
-        if not rows or rows[-1]["date"] < today_str:
-            drawdown = (current_price - ref_price) / ref_price * 100
-            rows.append({
-                "date": today_str,
-                "close": round(current_price, 2),
-                "change_pct": 0.0,
-                "drawdown_pct": round(drawdown, 2),
-            })
-
-    return rows[-12:]
+    """生成从关注日起的收盘价和累计回撤序列。"""
+    return build_cumulative_price_history_series(
+        hist,
+        watch_date,
+        ref_price,
+        current_price=current_price,
+        current_date=current_date,
+        limit=12,
+    )
 
 
 async def run_full_pipeline(
@@ -299,7 +264,17 @@ async def run_full_pipeline(
         if current_price is None or current_price <= 0:
             continue
 
-        drop_pct = (current_price - e["ref_price"]) / e["ref_price"] * 100
+        hist = historical.get(code)
+        watch_date = e.get("added_date", e["zt_date"])
+        drop_pct = latest_cumulative_drawdown(
+            hist,
+            watch_date,
+            e["ref_price"],
+            current_price=current_price,
+            current_date=target_date,
+        )
+        if drop_pct is None:
+            continue
 
         # 回撤必须是价格低于参考价（drop_pct < 0），价格上涨的跳过
         if drop_pct >= 0:
@@ -364,8 +339,8 @@ async def run_full_pipeline(
             "涨停频率": zt_frequency,
             "added_date": e.get("added_date", e["zt_date"]),
             "price_history": _build_price_history_series(
-                historical.get(code),
-                e.get("added_date", e["zt_date"]),
+                hist,
+                watch_date,
                 e["ref_price"],
                 current_price,
                 target_date,

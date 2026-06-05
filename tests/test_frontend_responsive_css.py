@@ -95,6 +95,18 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn("border-top: 0", css)
         self.assertIn("padding-top: 0", css)
 
+    def test_screening_result_tools_table_note_has_no_extra_line(self):
+        css = (ROOT / "frontend/css/styles.css").read_text(encoding="utf-8")
+        docs_css = (ROOT / "docs/css/styles.css").read_text(encoding="utf-8")
+        match = re.search(r"\.result-tools \.table-note\s*\{([\s\S]*?)\n\}", css)
+
+        self.assertIsNotNone(match)
+        block = match.group(1)
+        self.assertIn("margin: 0", block)
+        self.assertIn("padding-top: 0", block)
+        self.assertIn("border-top: 0", block)
+        self.assertIn(match.group(0), docs_css)
+
     def test_dashboard_limit_panels_have_matched_height_and_clean_trend_colors(self):
         js = (ROOT / "frontend/js/app.js").read_text(encoding="utf-8")
         css = (ROOT / "frontend/css/styles.css").read_text(encoding="utf-8")
@@ -130,6 +142,23 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn("ready_for_promotion", js)
         self.assertIn(".optional-source-panel", css)
         self.assertIn(".optional-source-grid", css)
+
+    def test_screening_page_has_independent_overnight_arbitrage_tab(self):
+        html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
+        js = (ROOT / "frontend/js/app.js").read_text(encoding="utf-8")
+        css = (ROOT / "frontend/css/styles.css").read_text(encoding="utf-8")
+
+        self.assertIn("尾盘隔夜套利", html)
+        self.assertIn('data-screening-mode="overnight"', html)
+        self.assertIn('id="overnightPanel"', html)
+        self.assertIn('id="overnightDecisionBody"', html)
+        self.assertIn("runOvernightArbitrage", js)
+        self.assertIn("/overnight-arbitrage/run", js)
+        self.assertIn("/overnight-arbitrage/latest", js)
+        self.assertIn("renderOvernightDecision", js)
+        self.assertIn("14:43-14:55", js)
+        self.assertIn(".screening-mode-tabs", css)
+        self.assertIn(".overnight-decision-grid", css)
 
     def test_docs_publish_directory_matches_frontend_for_national_team(self):
         for rel in ["index.html", "js/app.js", "css/styles.css"]:

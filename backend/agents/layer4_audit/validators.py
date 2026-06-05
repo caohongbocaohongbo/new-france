@@ -82,27 +82,38 @@ def validate_data_completeness(ctx: Dict[str, Any]) -> ValidationResult:
 
 
 def validate_drop_consistency(ctx: Dict[str, Any]) -> ValidationResult:
-    """回撤一致性校验：独立计算回撤与候选中的drop_pct比对"""
+    """回撤一致性校验：累计回撤与候选中的drop_pct比对"""
     current = ctx.get("current_price", 0)
     ref = ctx.get("ref_price", 0)
     reported_drop = ctx.get("drop_pct", 0)
+    price_history = ctx.get("price_history") or []
 
     if ref <= 0 or current <= 0:
         return ValidationResult("回撤校验", "fail", "无法计算回撤，价格数据缺失", weight=1.0)
 
-    computed_drop = (current - ref) / ref * 100
+    computed_drop = None
+    for row in reversed(price_history):
+        try:
+            value = float(row.get("drawdown_pct"))
+        except (AttributeError, TypeError, ValueError):
+            continue
+        if value == value:
+            computed_drop = value
+            break
+    if computed_drop is None:
+        computed_drop = (current - ref) / ref * 100
     diff = abs(computed_drop - reported_drop)
 
     if diff > 1.0:
         return ValidationResult("回撤校验", "fail",
-                                f"独立计算回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%偏差{diff:.2f}%",
+                                f"累计回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%偏差{diff:.2f}%",
                                 weight=1.5)
     if diff > 0.5:
         return ValidationResult("回撤校验", "warn",
-                                f"独立计算回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%有轻微偏差{diff:.2f}%")
+                                f"累计回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%有轻微偏差{diff:.2f}%")
 
     return ValidationResult("回撤校验", "pass",
-                            f"回撤{computed_drop:+.2f}%验证一致")
+                            f"累计回撤{computed_drop:+.2f}%验证一致")
 
 
 def validate_financial_metrics(ctx: Dict[str, Any]) -> ValidationResult:

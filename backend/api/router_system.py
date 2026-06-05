@@ -66,8 +66,10 @@ async def audit_watchlist():
     """对全量监控列表执行数据审核，返回问题清单"""
     try:
         from ..services.watchlist_store import parse_watchlist, FRANCE_FILE
+        from ..services.drawdown import latest_cumulative_drawdown
         from ..agents.layer4_audit.validators import ALL_VALIDATORS, ValidationResult
         from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
+        from ..agents.layer1_data_collector.sources.historical_kline import fetch_historical
 
         entries = parse_watchlist(FRANCE_FILE)
         if not entries:
@@ -89,14 +91,25 @@ async def audit_watchlist():
             code = e["code"]
             q = quote_map.get(code)
             current_price = q.get("最新价") if q is not None else None
+            hist = None
+            try:
+                hist = fetch_historical(code, 60)
+            except Exception as ex:
+                logger.debug(f"{code} 历史K线获取失败，审核回撤使用实时价兜底: {ex}")
+            drop_pct = latest_cumulative_drawdown(
+                hist,
+                e.get("added_date", e["zt_date"]),
+                e.get("ref_price", 0),
+                current_price=current_price,
+                current_date=now.date(),
+            )
 
             ctx = {
                 "code": code,
                 "name": e.get("name", ""),
                 "current_price": current_price,
                 "ref_price": e.get("ref_price", 0),
-                "drop_pct": round((current_price - e["ref_price"]) / e["ref_price"] * 100, 2)
-                if current_price and e.get("ref_price") else 0,
+                "drop_pct": drop_pct if drop_pct is not None else 0,
                 "市盈率": q.get("市盈率") if q is not None else None,
                 "量比": q.get("量比") if q is not None else None,
                 "换手率": q.get("换手率") if q is not None else None,

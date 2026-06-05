@@ -129,6 +129,7 @@ class AuditAgent:
                     "封板时间": extra.get("封板时间", 0),
                 },
                 "history": historical.get(s.code) if historical else None,
+                "price_history": extra.get("price_history", []),
             }
             # 从extra字段补充zt_quality数据
             if extra:

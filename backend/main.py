@@ -98,6 +98,7 @@ def get_app():
     from .api.router_system import router as system_router
     from .api.router_config import router as config_router
     from .api.router_national_team import router as national_team_router
+    from .api.router_overnight_arbitrage import router as overnight_arbitrage_router
 
     _app = FastAPI(
         title="New France — 尾盘涨停选股系统",
@@ -117,6 +118,7 @@ def get_app():
     _app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
     _app.include_router(config_router, prefix="/api/v1/config", tags=["配置"])
     _app.include_router(national_team_router, prefix="/api/v1/national-team", tags=["国家队动向"])
+    _app.include_router(overnight_arbitrage_router, prefix="/api/v1/overnight-arbitrage", tags=["尾盘隔夜套利"])
 
     # 托管前端静态文件
     frontend_dir = PROJECT_DIR / "frontend"
@@ -155,6 +157,8 @@ def main():
     parser.add_argument("--test-email", action="store_true", help="发送测试邮件")
     parser.add_argument("--serve", action="store_true", help="启动 API 服务")
     parser.add_argument("--init-db", action="store_true", help="初始化数据库")
+    parser.add_argument("--run-overnight-arbitrage", action="store_true",
+                        help="运行尾盘隔夜套利 14:43 决策任务")
     args = parser.parse_args()
 
     if args.init_db:
@@ -184,8 +188,36 @@ def main():
         test_email()
         return
 
+    if args.run_overnight_arbitrage:
+        asyncio.run(_run_overnight_arbitrage_cli(args, logger))
+        return
+
     # 默认：执行每日完整流程
     asyncio.run(_run_daily_pipeline(args, logger))
+
+
+async def _run_overnight_arbitrage_cli(args, logger):
+    """尾盘隔夜套利独立定时任务。"""
+    from datetime import datetime, timezone, timedelta
+    from .db.database import init_db
+    from .services.overnight_arbitrage_service import run_overnight_arbitrage
+
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    init_db()
+    today = datetime.now(BEIJING_TZ).date()
+    weekday = today.weekday()
+    if weekday >= 5 and not args.force:
+        logger.info(f"今天是周{['一','二','三','四','五','六','日'][weekday]}，非交易日，尾盘套利退出")
+        return
+
+    logger.info("尾盘隔夜套利任务启动")
+    result = await run_overnight_arbitrage(target_date=today, dry_run=args.dry_run)
+    logger.info(
+        "尾盘隔夜套利完成: BUY=%s, WATCH=%s, 扫描=%s",
+        result.get("buy_count", 0),
+        result.get("watch_count", 0),
+        result.get("total_scanned", 0),
+    )
 
 
 async def _run_daily_pipeline(args, logger):

@@ -133,35 +133,8 @@ def _fmt_num(value, digits=1, suffix=""):
 
 def _build_price_history_series(hist, watch_date: str, ref_price: float) -> list:
     """邮件渲染用的轻量序列生成，便于独立测试。"""
-    if hist is None or getattr(hist, "empty", True) or ref_price <= 0:
-        return []
-    date_col = "日期" if "日期" in hist.columns else ("date" if "date" in hist.columns else None)
-    close_col = "收盘" if "收盘" in hist.columns else ("close" if "close" in hist.columns else None)
-    pct_col = "涨跌幅" if "涨跌幅" in hist.columns else ("pctChg" if "pctChg" in hist.columns else None)
-    if date_col is None or close_col is None:
-        return []
-    series = []
-    for _, row in hist.iterrows():
-        day = str(row.get(date_col, ""))[:10]
-        if not day or day < watch_date:
-            continue
-        try:
-            close = float(row.get(close_col, 0))
-        except (TypeError, ValueError):
-            continue
-        if close <= 0:
-            continue
-        try:
-            pct = float(row.get(pct_col, 0)) if pct_col else 0.0
-        except (TypeError, ValueError):
-            pct = 0.0
-        series.append({
-            "date": day,
-            "close": round(close, 2),
-            "change_pct": round(pct, 2),
-            "drawdown_pct": round((close - ref_price) / ref_price * 100, 2),
-        })
-    return series[-12:]
+    from ...services.drawdown import build_cumulative_price_history_series
+    return build_cumulative_price_history_series(hist, watch_date, ref_price, limit=12)
 
 
 def _stock_price_history(stock) -> list:
