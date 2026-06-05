@@ -5,7 +5,7 @@ import logging
 import math
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 
@@ -51,6 +51,22 @@ def _clip(value: float, lower: float, upper: float) -> float:
 
 def _is_excluded_market(code: str) -> bool:
     return code.startswith(("300", "301"))
+
+
+def _append_quote_source(quotes: pd.DataFrame, source_name: str) -> pd.DataFrame:
+    if quotes is None:
+        return pd.DataFrame()
+    result = quotes.copy()
+    if not result.empty:
+        result["数据源"] = source_name
+    return result
+
+
+def _empty_source_status(source_name: str, status: str, count: int = 0, error: Optional[str] = None) -> dict:
+    result = {"source": source_name, "status": status, "count": int(count or 0)}
+    if error:
+        result["error"] = str(error)
+    return result
 
 
 def _reject_reason(row: dict) -> Optional[str]:
@@ -196,6 +212,8 @@ def build_overnight_decision(
     target_date: Optional[date] = None,
     generated_at: Optional[str] = None,
     limit: int = 20,
+    quote_source_status: Optional[List[dict]] = None,
+    errors: Optional[List[str]] = None,
 ) -> dict:
     """根据实时行情和可选分时增强源生成 14:43 买入决策。"""
     target_date = target_date or datetime.now(BEIJING_TZ).date()
@@ -222,8 +240,13 @@ def build_overnight_decision(
 
     candidates.sort(key=lambda item: item["decision_score"], reverse=True)
     results = candidates[:limit]
+    errors = errors or []
+    has_quotes = total > 0
+    status = "completed" if not errors else "completed_with_errors"
+    if not has_quotes:
+        status = "data_unavailable"
     return {
-        "status": "completed",
+        "status": status,
         "strategy": "overnight_arbitrage",
         "date": target_date.strftime("%Y-%m-%d"),
         "generated_at": generated_at,
@@ -236,11 +259,12 @@ def build_overnight_decision(
         "results": results,
         "rejected": rejected[:50],
         "source_status": {
-            "eastmoney_quote": {"status": "ok" if total else "empty", "count": total},
+            "quotes": quote_source_status or [_empty_source_status("eastmoney_all_a", "ok" if total else "empty", total)],
             "eastmoney_zt_pool": {"status": "ok" if zt_map else "optional_missing", "count": len(zt_map)},
-            "sina_quote": {"status": "fallback_in_quote_source"},
             "yahoo_5m": {"status": "ok" if minute_strength else "optional_missing", "count": len(minute_strength)},
         },
+        "errors": errors,
+        "empty_reason": "" if has_quotes else "全市场行情主备源均不可用或返回空数据，未扫描到可判断股票",
         "trade_note": "当日14:43生成买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。",
     }
 
@@ -307,6 +331,120 @@ def _eastmoney_all_a_snapshot() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _sina_all_a_snapshot(max_pages: int = 80) -> pd.DataFrame:
+    """新浪财经全A兜底源；过滤创业板，只保留沪深可交易A股字段。"""
+    import requests
+
+    url = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
+    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}
+    rows = []
+    seen = set()
+    for page in range(1, max_pages + 1):
+        params = {
+            "page": page,
+            "num": 80,
+            "sort": "changepercent",
+            "asc": 0,
+            "node": "hs_a",
+            "symbol": "",
+            "_s_r_a": "page",
+        }
+        resp = requests.get(url, params=params, headers=headers, timeout=12)
+        resp.raise_for_status()
+        data = resp.json()
+        if not data:
+            break
+        for item in data:
+            code = str(item.get("code") or "").zfill(6)
+            symbol = str(item.get("symbol") or "")
+            if not code or code in seen or _is_excluded_market(code):
+                continue
+            if not symbol.startswith(("sh", "sz", "bj")):
+                continue
+            latest = _float(item.get("trade"))
+            amount = _float(item.get("amount"))
+            if latest is None or latest <= 0:
+                continue
+            rows.append({
+                "代码": code,
+                "名称": str(item.get("name") or ""),
+                "最新价": latest,
+                "涨跌幅": _float(item.get("changepercent")),
+                "成交量": _float(item.get("volume")),
+                "成交额": amount,
+                "换手率": _float(item.get("turnoverratio")),
+                "量比": None,
+                "市盈率": _float(item.get("per")),
+                "总市值": (_float(item.get("mktcap")) or 0) * 10_000,
+                "流通市值": (_float(item.get("nmc")) or 0) * 10_000,
+            })
+            seen.add(code)
+        if len(data) < 80:
+            break
+    return pd.DataFrame(rows)
+
+
+def _zt_pool_quote_fallback(zt_pool: Optional[pd.DataFrame]) -> pd.DataFrame:
+    """全市场源都失败时，用涨停池做窄范围兜底，避免扫描数变成0。"""
+    if zt_pool is None or zt_pool.empty:
+        return pd.DataFrame()
+    rows = []
+    for _, item in zt_pool.iterrows():
+        code = str(item.get("代码", "")).zfill(6)
+        if not code or _is_excluded_market(code):
+            continue
+        rows.append({
+            "代码": code,
+            "名称": str(item.get("名称", "")),
+            "最新价": _float(item.get("最新价")),
+            "涨跌幅": _float(item.get("涨跌幅")),
+            "成交量": _float(item.get("成交量")),
+            "成交额": _float(item.get("成交额")),
+            "换手率": _float(item.get("换手率")),
+            "量比": _float(item.get("量比")),
+            "总市值": _float(item.get("总市值")),
+            "流通市值": _float(item.get("流通市值")),
+        })
+    return pd.DataFrame(rows)
+
+
+def _fetch_quotes_with_fallbacks(
+    primary_fetcher: Callable[[], pd.DataFrame],
+    zt_pool: Optional[pd.DataFrame] = None,
+) -> Tuple[pd.DataFrame, List[dict], List[str]]:
+    """按东方财富全市场 -> 新浪全A -> 涨停池窄范围的顺序取行情。"""
+    sources = [
+        ("eastmoney_all_a", primary_fetcher),
+        ("sina_all_a", _sina_all_a_snapshot),
+    ]
+    statuses: List[dict] = []
+    errors: List[str] = []
+
+    for source_name, fetcher in sources:
+        try:
+            quotes = fetcher()
+            count = 0 if quotes is None else len(quotes)
+            if count:
+                statuses.append(_empty_source_status(source_name, "ok", count))
+                return _append_quote_source(quotes, source_name), statuses, errors
+            statuses.append(_empty_source_status(source_name, "empty", 0))
+            errors.append(f"{source_name} 返回空行情")
+        except Exception as exc:
+            logger.warning("尾盘套利行情源 %s 失败: %s", source_name, exc)
+            statuses.append(_empty_source_status(source_name, "error", 0, str(exc)))
+            errors.append(f"{source_name} 失败: {exc}")
+
+    fallback = _zt_pool_quote_fallback(zt_pool)
+    fallback_count = len(fallback)
+    if fallback_count:
+        statuses.append(_empty_source_status("eastmoney_zt_pool_quote_fallback", "ok", fallback_count))
+        return _append_quote_source(fallback, "eastmoney_zt_pool_quote_fallback"), statuses, errors
+
+    statuses.append(_empty_source_status("eastmoney_zt_pool_quote_fallback", "empty", 0))
+    errors.append("涨停池窄范围兜底为空")
+    return pd.DataFrame(), statuses, errors
+
+
 def _fetch_yahoo_5m_strength(codes: Iterable[str]) -> Dict[str, dict]:
     """对前排候选拉 Yahoo 5 分钟 K 线，失败时返回空映射。"""
     import time
@@ -363,14 +501,10 @@ async def run_overnight_arbitrage(
     minute_fetcher = minute_fetcher or _fetch_yahoo_5m_strength
 
     errors = []
+    quote_source_status = []
     quotes = pd.DataFrame()
     zt_pool = pd.DataFrame()
     minute_strength = {}
-    try:
-        quotes = quote_fetcher()
-    except Exception as exc:
-        logger.exception("尾盘套利全市场行情失败: %s", exc)
-        errors.append(f"全市场行情失败: {exc}")
     try:
         zt_pool = zt_fetcher(target_date)
     except TypeError:
@@ -378,6 +512,8 @@ async def run_overnight_arbitrage(
     except Exception as exc:
         logger.warning("尾盘套利涨停池失败: %s", exc)
         errors.append(f"涨停池失败: {exc}")
+    quotes, quote_source_status, quote_errors = _fetch_quotes_with_fallbacks(quote_fetcher, zt_pool=zt_pool)
+    errors.extend(quote_errors)
 
     seed_codes = []
     if quotes is not None and not quotes.empty:
@@ -403,9 +539,9 @@ async def run_overnight_arbitrage(
         target_date=target_date,
         generated_at=generated_at,
         limit=20,
+        quote_source_status=quote_source_status,
+        errors=errors,
     )
-    if errors:
-        decision["errors"] = errors
     write_overnight_report(decision)
     if not dry_run:
         notify_overnight_decision(decision)
@@ -430,6 +566,7 @@ def notify_overnight_decision(decision: dict) -> bool:
     lines = [
         "【尾盘隔夜套利 14:43 决策】",
         f"日期: {decision.get('date')} | 有效窗口: {decision.get('valid_window')}",
+        f"状态: {decision.get('status', 'completed')} | 扫描: {decision.get('total_scanned', 0)}",
         "说明: 当日尾盘买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。",
         "",
         "【可买】",
@@ -453,6 +590,14 @@ def notify_overnight_decision(decision: dict) -> bool:
             )
     else:
         lines.append("无")
+
+    if decision.get("errors") or decision.get("empty_reason"):
+        lines.append("")
+        lines.append("【数据源/空仓说明】")
+        if decision.get("empty_reason"):
+            lines.append(str(decision.get("empty_reason")))
+        for err in decision.get("errors") or []:
+            lines.append(f"- {err}")
 
     text_content = "\n".join(lines)
     html_content = (

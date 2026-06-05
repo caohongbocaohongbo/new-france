@@ -213,7 +213,8 @@ async def _run_overnight_arbitrage_cli(args, logger):
     logger.info("尾盘隔夜套利任务启动")
     result = await run_overnight_arbitrage(target_date=today, dry_run=args.dry_run)
     logger.info(
-        "尾盘隔夜套利完成: BUY=%s, WATCH=%s, 扫描=%s",
+        "尾盘隔夜套利完成: status=%s, BUY=%s, WATCH=%s, 扫描=%s",
+        result.get("status", "completed"),
         result.get("buy_count", 0),
         result.get("watch_count", 0),
         result.get("total_scanned", 0),

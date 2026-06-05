@@ -35,7 +35,7 @@ def _build_price_history_series(hist: Optional[pd.DataFrame],
                                 ref_price: float,
                                 current_price: Optional[float] = None,
                                 current_date: Optional[date] = None) -> List[Dict]:
-    """生成从关注日起的收盘价和累计回撤序列。"""
+    """生成从关注日起的收盘价和参考价回撤序列。"""
     return build_cumulative_price_history_series(
         hist,
         watch_date,
@@ -44,6 +44,67 @@ def _build_price_history_series(hist: Optional[pd.DataFrame],
         current_date=current_date,
         limit=12,
     )
+
+
+def _build_watchlist_drawdown_summary(
+    watchlist: List[Dict],
+    quotes: pd.DataFrame,
+    historical: Dict[str, pd.DataFrame],
+    target_date: date,
+    tracking_days: int,
+    recommended_codes: set,
+) -> Dict:
+    """复用主筛选链路数据，生成监控列表真实回撤状态摘要。"""
+    quote_map = {}
+    if quotes is not None and not quotes.empty:
+        for _, row in quotes.iterrows():
+            quote_map[row["代码"]] = row
+
+    counts = {"active": 0, "recommended": 0, "expired": 0, "waiting": 0, "unknown": 0}
+    items = []
+    for entry in watchlist:
+        code = entry["code"]
+        drop_pct = None
+        try:
+            days_since = (target_date - date.fromisoformat(entry["zt_date"])).days
+        except Exception:
+            days_since = 0
+        if days_since > tracking_days:
+            status = "expired"
+        elif code in recommended_codes:
+            status = "recommended"
+        else:
+            q = quote_map.get(code)
+            current_price = q.get("最新价") if q is not None else None
+            drop_pct = latest_cumulative_drawdown(
+                historical.get(code),
+                entry.get("added_date", entry["zt_date"]),
+                entry["ref_price"],
+                current_price=current_price,
+                current_date=target_date,
+            )
+            if drop_pct is None:
+                status = "unknown"
+            elif drop_pct < 0:
+                status = "active"
+            else:
+                status = "waiting"
+        counts[status] += 1
+        items.append({
+            "code": code,
+            "status": status,
+            "drop_pct": round(drop_pct, 2) if drop_pct is not None else None,
+        })
+
+    return {
+        "status_counts": counts,
+        "items": items,
+        "source": "daily_screening_pipeline",
+        "mode": "added_date_cumulative",
+        "generated_at": target_date.strftime("%Y-%m-%d"),
+        "history_available": len(historical),
+        "quote_available": quotes is not None and not quotes.empty,
+    }
 
 
 async def run_full_pipeline(
@@ -379,6 +440,19 @@ async def run_full_pipeline(
                 s.adjusted_score = min(s.adjusted_score, 54.0)
             logger.info(f"  降级: {s.name}({s.code}) {old_rec} → {s.recommendation}")
 
+    recommended_codes = {
+        s.code for s in scored
+        if str(s.recommendation).upper() in {"STRONG_BUY", "BUY", "WATCH"}
+    }
+    watchlist_drawdown_summary = _build_watchlist_drawdown_summary(
+        watchlist,
+        quotes,
+        historical,
+        target_date,
+        tracking_days,
+        recommended_codes,
+    )
+
     # ---- Layer 3: 生成报告 ----
     logger.info("[Layer 3] 生成报告...")
     recom = RecommendationAgent()
@@ -433,5 +507,6 @@ async def run_full_pipeline(
         "report_md": summary.get("report_md"),
         "report_html": summary.get("report_html"),
         "optional_sources": optional_sources,
+        "watchlist_drawdown_summary": watchlist_drawdown_summary,
         "errors": errors,
     }

@@ -41,7 +41,8 @@ def _run_overnight_task(dry_run: bool = False):
         result = _execute_overnight_pipeline(dry_run=dry_run)
         _write_overnight_cache({"status": "completed", **result})
         logger.info(
-            "尾盘套利完成: BUY=%s WATCH=%s",
+            "尾盘套利完成: status=%s BUY=%s WATCH=%s",
+            result.get("status", "completed"),
             result.get("buy_count", 0),
             result.get("watch_count", 0),
         )

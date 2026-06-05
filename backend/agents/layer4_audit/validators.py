@@ -82,7 +82,7 @@ def validate_data_completeness(ctx: Dict[str, Any]) -> ValidationResult:
 
 
 def validate_drop_consistency(ctx: Dict[str, Any]) -> ValidationResult:
-    """回撤一致性校验：累计回撤与候选中的drop_pct比对"""
+    """回撤一致性校验：参考价回撤与候选中的drop_pct比对"""
     current = ctx.get("current_price", 0)
     ref = ctx.get("ref_price", 0)
     reported_drop = ctx.get("drop_pct", 0)
@@ -106,14 +106,14 @@ def validate_drop_consistency(ctx: Dict[str, Any]) -> ValidationResult:
 
     if diff > 1.0:
         return ValidationResult("回撤校验", "fail",
-                                f"累计回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%偏差{diff:.2f}%",
+                                f"参考价回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%偏差{diff:.2f}%",
                                 weight=1.5)
     if diff > 0.5:
         return ValidationResult("回撤校验", "warn",
-                                f"累计回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%有轻微偏差{diff:.2f}%")
+                                f"参考价回撤{computed_drop:+.2f}%与上报{reported_drop:+.2f}%有轻微偏差{diff:.2f}%")
 
     return ValidationResult("回撤校验", "pass",
-                            f"累计回撤{computed_drop:+.2f}%验证一致")
+                            f"参考价回撤{computed_drop:+.2f}%验证一致")
 
 
 def validate_financial_metrics(ctx: Dict[str, Any]) -> ValidationResult:

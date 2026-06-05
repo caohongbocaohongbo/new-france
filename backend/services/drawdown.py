@@ -45,12 +45,11 @@ def _column(df: pd.DataFrame, *names: str) -> Optional[str]:
 
 
 def cumulative_drawdown_values(rows: List[Dict[str, Any]], watch_date: str, ref_price: float) -> List[Optional[float]]:
-    """从首次关注日开始，把每日单点回撤值累加为历史累计回撤。"""
+    """从首次关注日开始，计算每日收盘价相对参考价的回撤。"""
     if ref_price <= 0:
         return [None for _ in rows]
 
     start = normalize_trade_date(watch_date)
-    cumulative = 0.0
     values: List[Optional[float]] = []
     for row in rows:
         day = normalize_trade_date(row.get("date"))
@@ -58,9 +57,7 @@ def cumulative_drawdown_values(rows: List[Dict[str, Any]], watch_date: str, ref_
         if not day or close is None or (start and day < start):
             values.append(None)
             continue
-        daily_drawdown = round((close - ref_price) / ref_price * 100, 2)
-        cumulative += daily_drawdown
-        values.append(round(cumulative, 2))
+        values.append(round((close - ref_price) / ref_price * 100, 2))
     return values
 
 
@@ -72,7 +69,7 @@ def build_cumulative_price_history_series(
     current_date: Optional[date] = None,
     limit: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
-    """生成从关注日起的收盘价、涨跌幅和累计回撤序列。"""
+    """生成从关注日起的收盘价、涨跌幅和参考价回撤序列。"""
     if hist is None or hist.empty or ref_price <= 0:
         return []
 

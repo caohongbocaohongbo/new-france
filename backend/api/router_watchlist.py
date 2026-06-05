@@ -3,6 +3,8 @@ from fastapi import APIRouter, Query, HTTPException
 from typing import Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import lru_cache
+from pathlib import Path
+import json
 import logging
 import pandas as pd
 
@@ -12,6 +14,7 @@ from ..services.drawdown import cumulative_drawdown_values, latest_cumulative_dr
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+REPORTS_DIR = Path(__file__).resolve().parent.parent.parent / "reports"
 
 QUOTE_SORT_FIELDS = {"drop_pct", "turnover", "vol_ratio", "pe"}
 LOCAL_SORT_FIELDS = {"zt_count"}
@@ -60,7 +63,7 @@ def _parse_watchlist():
 
 
 def _enrich_with_quotes(entries: list, include_drawdown: bool = True) -> list:
-    """用行情和历史K线补全累计回撤、换手率、量比、PE、流通市值。"""
+    """用行情和历史K线补全参考价回撤、换手率、量比、PE、流通市值。"""
     if not entries:
         return entries
 
@@ -85,6 +88,7 @@ def _enrich_with_quotes(entries: list, include_drawdown: bool = True) -> list:
         tracking_days = int(get_effective_config()["config"]["strategy"].get("trackingDays", 30))
     except Exception:
         tracking_days = 30
+    recommended_codes = _latest_recommended_codes()
 
     result = []
     for e in entries:
@@ -132,13 +136,13 @@ def _enrich_with_quotes(entries: list, include_drawdown: bool = True) -> list:
                 "pe": None, "mcap_raw": None, "mcap": None,
             }
 
-        # 状态判断（基于日期，不依赖行情）
-        try:
-            zt_date = datetime.strptime(e["zt_date"], "%Y-%m-%d").date()
-        except Exception:
-            zt_date = today
-        days_since = (today - zt_date).days
-        entry["status"] = "expired" if days_since > tracking_days else "active"
+        entry["status"] = _status_from_drawdown(
+            e,
+            today,
+            tracking_days,
+            recommended_codes,
+            entry.get("drop_pct"),
+        )
 
         result.append(entry)
 
@@ -167,6 +171,136 @@ def _parse_with_status(entries: list) -> list:
             "status": "expired" if days_since > tracking_days else "active",
         })
     return result
+
+
+def _latest_recommended_codes() -> set:
+    """从最新筛选报告读取已推荐股票代码；读取失败时保持空集。"""
+    cache_file = REPORTS_DIR / "latest.json"
+    if not cache_file.exists():
+        return set()
+    try:
+        data = json.loads(cache_file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.debug(f"读取最新推荐报告失败: {exc}")
+        return set()
+
+    codes = set()
+    for item in data.get("results") or []:
+        recommendation = str(item.get("recommendation") or "").upper()
+        if recommendation in {"STRONG_BUY", "BUY", "WATCH"}:
+            code = str(item.get("code") or "").zfill(6)
+            if code and code != "000000":
+                codes.add(code)
+    return codes
+
+
+def _latest_drawdown_summary() -> Optional[dict]:
+    cache_file = REPORTS_DIR / "latest.json"
+    if not cache_file.exists():
+        return None
+    try:
+        data = json.loads(cache_file.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.debug(f"读取最新回撤摘要失败: {exc}")
+        return None
+    summary = data.get("watchlist_drawdown_summary")
+    return summary if isinstance(summary, dict) else None
+
+
+def _latest_summary_status_map() -> dict:
+    summary = _latest_drawdown_summary()
+    if not summary:
+        return {}
+    result = {}
+    for item in summary.get("items") or []:
+        code = str(item.get("code") or "").zfill(6)
+        if code and code != "000000":
+            result[code] = {
+                "status": item.get("status"),
+                "drop_pct": item.get("drop_pct"),
+            }
+    return result
+
+
+def _entry_expired(entry: dict, today, tracking_days: int) -> bool:
+    from datetime import datetime
+
+    try:
+        zt_date = datetime.strptime(entry["zt_date"], "%Y-%m-%d").date()
+    except Exception:
+        zt_date = today
+    return (today - zt_date).days > tracking_days
+
+
+def _status_from_drawdown(entry: dict,
+                          today,
+                          tracking_days: int,
+                          recommended_codes: set,
+                          drop_pct) -> str:
+    """监控状态：active 只表示当前价格低于参考价。"""
+    if _entry_expired(entry, today, tracking_days):
+        return "expired"
+    code = str(entry.get("code") or "").zfill(6)
+    if code in recommended_codes:
+        return "recommended"
+    if drop_pct is None:
+        return "unknown"
+    return "active" if drop_pct < 0 else "waiting"
+
+
+def _compute_drawdown_statuses(entries: list) -> tuple[dict, dict]:
+    """全量计算监控项真实回撤状态，供统计和“回撤中”过滤使用。"""
+    from datetime import datetime, timezone, timedelta
+
+    if not entries:
+        return {}, {"quote_available": False, "history_available": 0}
+
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    today = datetime.now(BEIJING_TZ).date()
+    try:
+        tracking_days = int(get_effective_config()["config"]["strategy"].get("trackingDays", 30))
+    except Exception:
+        tracking_days = 30
+
+    codes = [e["code"] for e in entries]
+    historical = _fetch_watchlist_histories(codes)
+    quote_map = {}
+    quote_available = False
+    try:
+        from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
+        quotes = fetch_stock_quotes(codes)
+        quote_available = quotes is not None and not quotes.empty
+        if quote_available:
+            for _, row in quotes.iterrows():
+                quote_map[row["代码"]] = row
+    except Exception as exc:
+        logger.warning(f"监控统计实时行情拉取失败，仅用历史K线计算回撤: {exc}")
+
+    recommended_codes = _latest_recommended_codes()
+    statuses = {}
+    for entry in entries:
+        code = entry["code"]
+        hist = historical.get(code)
+        q = quote_map.get(code)
+        current_price = q.get("最新价") if q is not None else None
+        drop_pct = _compute_watchlist_drop_pct(
+            hist,
+            entry.get("added_date", entry["zt_date"]),
+            entry["ref_price"],
+            current_price,
+            current_date=today,
+        )
+        statuses[code] = {
+            "status": _status_from_drawdown(entry, today, tracking_days, recommended_codes, drop_pct),
+            "drop_pct": drop_pct,
+        }
+
+    meta = {
+        "quote_available": quote_available,
+        "history_available": len(historical),
+        "recommended_count": len(recommended_codes),
+    }
+    return statuses, meta
 
 
 def _as_sort_number(value):
@@ -267,7 +401,7 @@ def _compute_watchlist_drop_pct(hist: Optional[pd.DataFrame],
                                 ref_price: float,
                                 current_price: Optional[float],
                                 current_date=None):
-    """监控列表回撤取历史累计回撤最后值，历史缺失时才用实时价单点兜底。"""
+    """监控列表回撤取最新参考价回撤，历史缺失时才用实时价单点兜底。"""
     return latest_cumulative_drawdown(
         hist,
         watch_date,
@@ -297,7 +431,22 @@ def get_watchlist(status: Optional[str] = Query(None),
                    if search.lower() in e["code"] or search.lower() in e["name"]]
 
     if status:
-        entries = [e for e in entries if e.get("status") == status]
+        summary_statuses = _latest_summary_status_map()
+        if summary_statuses:
+            entries = [
+                {**e, **summary_statuses.get(e["code"], {})}
+                for e in entries
+                if summary_statuses.get(e["code"], {}).get("status") == status
+            ]
+        elif status == "active":
+            drawdown_statuses, _ = _compute_drawdown_statuses(entries)
+            entries = [
+                {**e, **drawdown_statuses.get(e["code"], {})}
+                for e in entries
+                if drawdown_statuses.get(e["code"], {}).get("status") == "active"
+            ]
+        else:
+            entries = [e for e in entries if e.get("status") == status]
 
     total = len(entries)
     if size > 50:
@@ -331,15 +480,47 @@ def get_watchlist_stats():
     BEIJING_TZ = timezone(timedelta(hours=8))
     today = datetime.now(BEIJING_TZ)
     new_today = sum(1 for e in entries if e["zt_date"] == today.strftime("%Y-%m-%d"))
-    status_counts = {
-        "active": sum(1 for e in entries if e.get("status") == "active"),
-        "recommended": sum(1 for e in entries if e.get("status") == "recommended"),
-        "expired": sum(1 for e in entries if e.get("status") == "expired"),
-    }
+    summary = _latest_drawdown_summary()
+    if summary and isinstance(summary.get("status_counts"), dict):
+        status_counts = {
+            "active": int(summary["status_counts"].get("active", 0)),
+            "recommended": int(summary["status_counts"].get("recommended", 0)),
+            "expired": int(summary["status_counts"].get("expired", 0)),
+            "waiting": int(summary["status_counts"].get("waiting", 0)),
+            "unknown": int(summary["status_counts"].get("unknown", 0)),
+        }
+        drawdown_source = {
+            "mode": summary.get("mode", "added_date_cumulative"),
+            "source": summary.get("source", "latest_screening_report"),
+            "history_available": summary.get("history_available", 0),
+            "quote_available": bool(summary.get("quote_available", False)),
+            "generated_at": summary.get("generated_at"),
+        }
+    else:
+        recommended_codes = _latest_recommended_codes()
+        expired = sum(1 for e in entries if e.get("status") == "expired")
+        recommended = sum(1 for e in entries if str(e.get("code") or "").zfill(6) in recommended_codes)
+        unknown = max(0, len(entries) - expired - recommended)
+        status_counts = {
+            "active": 0,
+            "recommended": recommended,
+            "expired": expired,
+            "waiting": 0,
+            "unknown": unknown,
+        }
+        drawdown_source = {
+            "mode": "added_date_cumulative",
+            "source": "missing_latest_screening_summary",
+            "history_available": 0,
+            "quote_available": False,
+            "generated_at": None,
+        }
     return {
         "total": len(entries),
         "new_today": new_today,
         "status_counts": status_counts,
+        "drawdown_status_note": "active=当前价格低于参考价；waiting=未过期但未回撤；unknown=行情/K线不足无法判断",
+        "drawdown_source": drawdown_source,
         "codes": [e["code"] for e in entries],
     }
 
@@ -662,12 +843,12 @@ def get_stock_detail(code: str):
         "kline": {
             "source": kline_source,
             "available": has_historical_kline,
-            "note": "价格、成交量、涨跌幅、均线由历史K线计算；回撤为加入关注日以来的历史累计值" if has_historical_kline else "历史K线数据源不可用；实时行情仅用于顶部现价，不回填为趋势图",
+            "note": "价格、成交量、涨跌幅、均线由历史K线计算；回撤为当前收盘价相对参考价的跌幅" if has_historical_kline else "历史K线数据源不可用；实时行情仅用于顶部现价，不回填为趋势图",
         },
         "quote": {
             "source": quote_source,
             "available": current_price is not None,
-            "note": "现价来自东方财富实时行情；回撤优先使用历史累计值，历史缺失时按实时价兜底" if quote_source == "东方财富实时行情" else (
+            "note": "现价来自东方财富实时行情；回撤优先使用历史K线最新收盘价，历史缺失时按实时价兜底" if quote_source == "东方财富实时行情" else (
                 "东方财富实时行情暂不可用，现价使用历史K线最后收盘价降级" if current_price is not None else "实时行情接口暂不可用，且K线无可用收盘价"
             ),
         },
