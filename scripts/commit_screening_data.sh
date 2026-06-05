@@ -23,8 +23,11 @@ if [[ "${HEAD_SHA}" != "${REMOTE_BASE_SHA}" ]]; then
 fi
 
 snapshot_dir="$(mktemp -d)"
+data_worktree_dir="$(mktemp -d)"
 cleanup() {
   rm -rf "${snapshot_dir}"
+  git worktree remove --force "${data_worktree_dir}" >/dev/null 2>&1 || true
+  rm -rf "${data_worktree_dir}"
 }
 trap cleanup EXIT
 
@@ -50,36 +53,57 @@ cat > "${snapshot_dir}/data/snapshot_manifest.json" <<EOF
 EOF
 
 if git show-ref --verify --quiet "refs/remotes/origin/${DATA_BRANCH}"; then
-  git checkout -B "${DATA_BRANCH}" "origin/${DATA_BRANCH}"
+  git worktree add --detach --force "${data_worktree_dir}" "origin/${DATA_BRANCH}"
 else
-  git checkout --orphan "${DATA_BRANCH}"
-  git rm -rf . >/dev/null 2>&1 || true
+  git worktree add --detach --force "${data_worktree_dir}" "${HEAD_SHA}"
 fi
 
-mkdir -p data reports
-rm -rf data/france.md data/new_france.db data/source_health.json data/snapshot_manifest.json reports
-mkdir -p data reports
-cp -R "${snapshot_dir}/data/." data/
-cp -R "${snapshot_dir}/reports/." reports/
+git -C "${data_worktree_dir}" config user.name "github-actions[bot]"
+git -C "${data_worktree_dir}" config user.email "github-actions[bot]@users.noreply.github.com"
 
-git add -f data/france.md data/new_france.db data/source_health.json data/snapshot_manifest.json reports/ 2>/dev/null || true
+(
+  cd "${data_worktree_dir}"
 
-if git diff --cached --quiet; then
-  echo "No generated data changes to commit on ${DATA_BRANCH}"
-  exit 0
-fi
+  if git show-ref --verify --quiet "refs/remotes/origin/${DATA_BRANCH}"; then
+    git checkout -B "${DATA_BRANCH}" "origin/${DATA_BRANCH}"
+  else
+    git checkout --orphan "${DATA_BRANCH}"
+    git rm -rf . >/dev/null 2>&1 || true
+  fi
 
-git commit -m "[bot] Daily data snapshot $(date -u +%Y-%m-%d)"
+  mkdir -p data reports
+  rm -rf data/france.md data/new_france.db data/source_health.json data/snapshot_manifest.json reports
+  mkdir -p data reports
+  cp -R "${snapshot_dir}/data/." data/
+  cp -R "${snapshot_dir}/reports/." reports/
 
-for attempt in 1 2 3; do
-  echo "Push attempt ${attempt}/3 to ${DATA_BRANCH}"
-  git fetch origin "${DATA_BRANCH}" || true
-  git pull --rebase origin "${DATA_BRANCH}" || true
-  if git push origin "HEAD:${DATA_BRANCH}"; then
+  add_paths=(data/snapshot_manifest.json)
+  for file in data/france.md data/new_france.db data/source_health.json reports; do
+    if [[ -e "${file}" ]]; then
+      add_paths+=("${file}")
+    fi
+  done
+  git add -f "${add_paths[@]}"
+
+  if git diff --cached --quiet; then
+    echo "No generated data changes to commit on ${DATA_BRANCH}"
     exit 0
   fi
-  sleep $((attempt * 2))
-done
 
-echo "推送 ${DATA_BRANCH} 失败"
-exit 1
+  git commit -m "[bot] Daily data snapshot $(date -u +%Y-%m-%d)"
+
+  for attempt in 1 2 3; do
+    echo "Push attempt ${attempt}/3 to ${DATA_BRANCH}"
+    git fetch origin "${DATA_BRANCH}" || true
+    git pull --rebase origin "${DATA_BRANCH}" || true
+    if git push origin "HEAD:${DATA_BRANCH}"; then
+      exit 0
+    fi
+    sleep $((attempt * 2))
+  done
+
+  echo "推送 ${DATA_BRANCH} 失败"
+  exit 1
+)
+
+exit $?
