@@ -64,6 +64,27 @@ class NotificationEnrichmentTest(unittest.TestCase):
         self.assertIn("封板时间", html)
         self.assertIn("封板时间为0，数据缺失", html)
 
+    def test_html_recommendation_separates_screening_date_from_watch_dates(self):
+        stock = _stock()
+
+        html = notifier._html_recommendation_section(
+            [stock], "BUY 建议买入", "#F39C12", {}, date(2026, 6, 8)
+        )
+
+        self.assertIn("筛选日期:2026-06-08", html)
+        self.assertIn("加入关注:--", html)
+        self.assertIn("涨停日:2026-05-11", html)
+
+    def test_html_recommendation_explains_missing_history(self):
+        stock = _stock()
+        stock.extra = {}
+
+        html = notifier._html_recommendation_section(
+            [stock], "BUY 建议买入", "#F39C12", {}, date(2026, 6, 8)
+        )
+
+        self.assertIn("历史走势暂缺", html)
+
     def test_build_price_history_from_historical_uses_ref_price_drawdown(self):
         hist = pd.DataFrame(
             [

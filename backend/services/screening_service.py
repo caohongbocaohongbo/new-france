@@ -480,6 +480,7 @@ async def run_full_pipeline(
             "code": s.code,
             "name": s.name,
             "zt_date": s.zt_date,
+            "added_date": (s.extra or {}).get("added_date"),
             "ref_price": s.ref_price,
             "current_price": s.current_price,
             "drop_pct": s.drop_pct,

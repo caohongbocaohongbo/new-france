@@ -90,6 +90,56 @@ def _empty_source_status(source_name: str, status: str, count: int = 0, error: O
     return result
 
 
+def _normalize_error_text(value: Any) -> str:
+    return str(value or "").strip().lower()
+
+
+def _detect_quote_channel_issue(quote_source_status: Optional[List[dict]]) -> dict:
+    statuses = quote_source_status or []
+    if not statuses:
+        return {"status": "unknown", "kind": "unknown", "scope": "unknown"}
+
+    quote_statuses = [item for item in statuses if item.get("source") != "eastmoney_zt_pool_quote_fallback"]
+    if not quote_statuses:
+        return {"status": "unknown", "kind": "unknown", "scope": "unknown"}
+
+    errors = [item for item in quote_statuses if item.get("status") == "error"]
+    if not errors:
+        return {"status": "ok", "kind": "none", "scope": "sources"}
+
+    error_text = " | ".join(_normalize_error_text(item.get("error")) for item in errors)
+    dns_markers = ("failed to resolve", "nameresolutionerror", "nodename nor servname provided")
+    if error_text and all(marker in error_text for marker in ("httpsconnectionpool",)):
+        if any(marker in error_text for marker in dns_markers):
+            return {
+                "status": "error",
+                "kind": "dns_resolution_failed",
+                "scope": "runtime_environment",
+                "note": "运行环境 DNS 解析失败，主备行情源都未连通。",
+            }
+
+    if len(errors) == len(quote_statuses):
+        return {
+            "status": "error",
+            "kind": "all_quote_sources_failed",
+            "scope": "sources",
+            "note": "主备行情源都失败，但未识别为统一的运行环境 DNS 故障。",
+        }
+
+    return {"status": "degraded", "kind": "partial_source_failure", "scope": "sources"}
+
+
+def _build_empty_reason(total: int, quote_source_status: Optional[List[dict]]) -> str:
+    if total > 0:
+        return ""
+    channel = _detect_quote_channel_issue(quote_source_status)
+    if channel.get("kind") == "dns_resolution_failed":
+        return "运行环境 DNS/外网通道异常，东方财富与新浪主备行情源均无法解析，未扫描到可判断股票。"
+    if channel.get("kind") == "all_quote_sources_failed":
+        return "全市场行情主备源均失败，且涨停池兜底为空，未扫描到可判断股票。"
+    return "全市场行情主备源均不可用或返回空数据，未扫描到可判断股票。"
+
+
 def _reject_reason(row: dict) -> Optional[str]:
     code = str(row.get("代码", "")).zfill(6)
     name = str(row.get("名称", "")).upper()
@@ -269,6 +319,7 @@ def build_overnight_decision(
     status = "completed" if not errors else "completed_with_errors"
     if not has_quotes:
         status = "data_unavailable"
+    normalized_quote_status = quote_source_status or [_empty_source_status("eastmoney_all_a", "ok" if total else "empty", total)]
     return {
         "status": status,
         "strategy": "overnight_arbitrage",
@@ -283,12 +334,13 @@ def build_overnight_decision(
         "results": results,
         "rejected": rejected[:50],
         "source_status": {
-            "quotes": quote_source_status or [_empty_source_status("eastmoney_all_a", "ok" if total else "empty", total)],
+            "quotes": normalized_quote_status,
+            "channel": _detect_quote_channel_issue(normalized_quote_status),
             "eastmoney_zt_pool": {"status": "ok" if zt_map else "optional_missing", "count": len(zt_map)},
             "yahoo_5m": {"status": "ok" if minute_strength else "optional_missing", "count": len(minute_strength)},
         },
         "errors": errors,
-        "empty_reason": "" if has_quotes else "全市场行情主备源均不可用或返回空数据，未扫描到可判断股票",
+        "empty_reason": _build_empty_reason(total, normalized_quote_status),
         "trade_note": "当日14:43生成买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。",
     }
 
@@ -766,6 +818,256 @@ async def run_overnight_arbitrage(
     return decision
 
 
+def _fmt_value(value, suffix: str = "", digits: int = 2) -> str:
+    number = _float(value)
+    if number is None:
+        return "--"
+    return f"{number:.{digits}f}{suffix}"
+
+
+def _fmt_amount(value) -> str:
+    number = _float(value)
+    if number is None or number <= 0:
+        return "--"
+    if number >= 100_000_000:
+        return f"{number / 100_000_000:.1f}亿"
+    return f"{number / 10_000:.0f}万"
+
+
+def _fmt_joined(values: Optional[List[str]]) -> str:
+    items = [str(item) for item in (values or []) if str(item).strip()]
+    return "、".join(items) if items else "--"
+
+
+def _overnight_candidate_text_lines(title: str, items: List[dict]) -> List[str]:
+    lines = [f"【{title}】"]
+    if not items:
+        return lines + ["无"]
+    for item in items:
+        lines.append(
+            f"{item.get('code')} {item.get('name')} 分数{item.get('decision_score')} "
+            f"现价{_fmt_value(item.get('current_price'))} 涨幅{_fmt_value(item.get('change_pct'), '%')} "
+            f"回撤{_fmt_value(item.get('intraday_pullback_pct'), '%')} "
+            f"原因:{_fmt_joined(item.get('reasons'))} 风险:{_fmt_joined(item.get('risks'))}"
+        )
+    return lines
+
+
+def _overnight_quote_status_text(source_status: dict) -> List[str]:
+    lines = []
+    channel = source_status.get("channel") or {}
+    if channel:
+        lines.append(
+            "通道: "
+            f"{channel.get('status', '--')} / {channel.get('kind', '--')} / {channel.get('scope', '--')}"
+        )
+    for item in source_status.get("quotes") or []:
+        line = f"{item.get('source', '--')}: {item.get('status', '--')} count={item.get('count', 0)}"
+        if item.get("error"):
+            line += f" error={item.get('error')}"
+        lines.append(line)
+    return lines
+
+
+def _build_overnight_text_content(decision: dict, buy_items: List[dict], watch_items: List[dict]) -> str:
+    lines = [
+        "【尾盘隔夜套利 14:43 决策】",
+        f"日期: {decision.get('date')} | 有效窗口: {decision.get('valid_window')}",
+        f"状态: {decision.get('status', 'completed')} | 扫描: {decision.get('total_scanned', 0)}",
+        f"BUY: {decision.get('buy_count', 0)} | WATCH: {decision.get('watch_count', 0)}",
+        "说明: 当日尾盘买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。",
+        "",
+    ]
+    lines.extend(_overnight_candidate_text_lines("BUY 候选", buy_items))
+    lines.append("")
+    lines.extend(_overnight_candidate_text_lines("WATCH 候选", watch_items))
+
+    source_status = decision.get("source_status") or {}
+    status_lines = _overnight_quote_status_text(source_status)
+    if status_lines or decision.get("errors") or decision.get("empty_reason"):
+        lines.append("")
+        lines.append("【数据源/通道】")
+        lines.extend(status_lines)
+        if decision.get("empty_reason"):
+            lines.append(str(decision.get("empty_reason")))
+        for err in decision.get("errors") or []:
+            lines.append(f"- {err}")
+    return "\n".join(lines)
+
+
+def _html_badge(text: str, color: str) -> str:
+    return (
+        f'<span style="display:inline-block;padding:3px 8px;border-radius:999px;'
+        f'background:{color}18;color:{color};font-size:11px;font-weight:700">'
+        f"{html.escape(str(text))}</span>"
+    )
+
+
+def _overnight_candidate_rows(items: List[dict]) -> str:
+    if not items:
+        return (
+            '<tr><td colspan="13" style="padding:14px 10px;text-align:center;color:#667085;'
+            'background:#F8FAFC">无候选</td></tr>'
+        )
+
+    rows = []
+    for idx, item in enumerate(items, start=1):
+        bg = "#F8FAFC" if idx % 2 else "#FFFFFF"
+        action = str(item.get("action") or "--")
+        color = "#E74C3C" if action == "BUY" else "#3498DB"
+        change = _float(item.get("change_pct"), 0) or 0
+        change_color = "#E74C3C" if change >= 0 else "#16A36A"
+        pullback = _float(item.get("intraday_pullback_pct"))
+        pullback_color = "#16A36A" if pullback is not None and pullback < 0 else "#667085"
+        rows.append(f"""
+    <tr style="background:{bg}">
+      <td style="padding:8px 10px;text-align:center;color:#667085;font-size:12px">{idx}</td>
+      <td style="padding:8px 10px;font-family:Menlo,Consolas,monospace;font-size:12px;color:#172033">{html.escape(str(item.get('code') or '--'))}</td>
+      <td style="padding:8px 10px;font-weight:600;font-size:13px;color:#172033">{html.escape(str(item.get('name') or '--'))}</td>
+      <td style="padding:8px 10px;text-align:center">{_html_badge(action, color)}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:#172033">{_fmt_value(item.get('decision_score'))}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#172033">{_fmt_value(item.get('current_price'))}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:600;color:{change_color}">{_fmt_value(item.get('change_pct'), '%')}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#172033">{_fmt_value(item.get('turnover'), '%')}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#172033">{_fmt_value(item.get('volume_ratio'))}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:#172033">{_fmt_amount(item.get('amount'))}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:13px;color:{pullback_color}">{_fmt_value(item.get('intraday_pullback_pct'), '%')}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#172033;line-height:1.5">{html.escape(_fmt_joined(item.get('reasons')))}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#667085;line-height:1.5">{html.escape(_fmt_joined(item.get('risks')))}</td>
+    </tr>""")
+    return "".join(rows)
+
+
+def _html_overnight_candidate_section(title: str, items: List[dict], color: str) -> str:
+    return f"""
+<div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+  <h2 style="color:#172033;font-size:16px;margin:0 0 14px 0;font-weight:600">{html.escape(title)} <span style="color:#667085;font-weight:400;font-size:13px">({len(items)}只)</span></h2>
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead>
+      <tr style="background:#E7EDF4;color:#263545;border-top:3px solid {color}">
+        <th style="padding:10px;text-align:center;font-weight:600;border-radius:6px 0 0 0">#</th>
+        <th style="padding:10px;text-align:left;font-weight:600">代码</th>
+        <th style="padding:10px;text-align:left;font-weight:600">名称</th>
+        <th style="padding:10px;text-align:center;font-weight:600">评级</th>
+        <th style="padding:10px;text-align:right;font-weight:600">得分</th>
+        <th style="padding:10px;text-align:right;font-weight:600">现价</th>
+        <th style="padding:10px;text-align:right;font-weight:600">涨幅</th>
+        <th style="padding:10px;text-align:right;font-weight:600">换手</th>
+        <th style="padding:10px;text-align:right;font-weight:600">量比</th>
+        <th style="padding:10px;text-align:right;font-weight:600">成交额</th>
+        <th style="padding:10px;text-align:right;font-weight:600">回撤</th>
+        <th style="padding:10px;text-align:left;font-weight:600">原因</th>
+        <th style="padding:10px;text-align:left;font-weight:600;border-radius:0 6px 0 0">风险</th>
+      </tr>
+    </thead>
+    <tbody>{_overnight_candidate_rows(items)}
+    </tbody>
+  </table>
+</div>"""
+
+
+def _html_overnight_source_section(decision: dict) -> str:
+    source_status = decision.get("source_status") or {}
+    channel = source_status.get("channel") or {}
+    rows = []
+    if channel:
+        rows.append(f"""
+    <tr style="background:#F8FAFC">
+      <td style="padding:8px 10px;font-weight:600;color:#172033">通道</td>
+      <td style="padding:8px 10px;color:#172033">{html.escape(str(channel.get('status', '--')))}</td>
+      <td style="padding:8px 10px;color:#172033">{html.escape(str(channel.get('kind', '--')))}</td>
+      <td style="padding:8px 10px;color:#172033">{html.escape(str(channel.get('scope', '--')))}</td>
+      <td style="padding:8px 10px;color:#667085">{html.escape(str(channel.get('note', '--')))}</td>
+    </tr>""")
+    for idx, item in enumerate(source_status.get("quotes") or []):
+        bg = "#FFFFFF" if idx % 2 else "#F8FAFC"
+        rows.append(f"""
+    <tr style="background:{bg}">
+      <td style="padding:8px 10px;font-weight:600;color:#172033">{html.escape(str(item.get('source', '--')))}</td>
+      <td style="padding:8px 10px;color:#172033">{html.escape(str(item.get('status', '--')))}</td>
+      <td style="padding:8px 10px;color:#172033">count={int(item.get('count') or 0)}</td>
+      <td style="padding:8px 10px;color:#667085">source</td>
+      <td style="padding:8px 10px;color:#667085">{html.escape(str(item.get('error') or '--'))}</td>
+    </tr>""")
+
+    extra_lines = []
+    if decision.get("empty_reason"):
+        extra_lines.append(html.escape(str(decision.get("empty_reason"))))
+    extra_lines.extend(html.escape(str(err)) for err in decision.get("errors") or [])
+    extra_html = ""
+    if extra_lines:
+        extra_html = (
+            '<p style="color:#667085;font-size:12px;line-height:1.7;margin:12px 0 0 0">'
+            + "<br>".join(extra_lines)
+            + "</p>"
+        )
+
+    return f"""
+<div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+  <h2 style="color:#172033;font-size:16px;margin:0 0 14px 0;font-weight:600">数据源/通道</h2>
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead>
+      <tr style="background:#E7EDF4;color:#263545">
+        <th style="padding:10px;text-align:left;font-weight:600;border-radius:6px 0 0 0">对象</th>
+        <th style="padding:10px;text-align:left;font-weight:600">状态</th>
+        <th style="padding:10px;text-align:left;font-weight:600">类型/数量</th>
+        <th style="padding:10px;text-align:left;font-weight:600">范围</th>
+        <th style="padding:10px;text-align:left;font-weight:600;border-radius:0 6px 0 0">说明</th>
+      </tr>
+    </thead>
+    <tbody>{''.join(rows) if rows else '<tr><td colspan="5" style="padding:14px 10px;text-align:center;color:#667085;background:#F8FAFC">无数据源状态</td></tr>'}
+    </tbody>
+  </table>
+  {extra_html}
+</div>"""
+
+
+def _build_overnight_html_content(decision: dict, buy_items: List[dict], watch_items: List[dict]) -> str:
+    status_color = "#16A36A" if decision.get("status") == "completed" else "#F39C12"
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#F3F6FA;color:#172033;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">
+<div style="max-width:900px;margin:0 auto;padding:24px">
+  <div style="background:#EEF3F8;border:1px solid #D8E2EC;border-radius:12px;padding:28px 32px;margin-bottom:24px">
+    <h1 style="color:#172033;font-size:22px;margin:0 0 4px 0;font-weight:700">New France 尾盘隔夜套利</h1>
+    <p style="color:#667085;font-size:13px;margin:0 0 16px 0">{html.escape(str(decision.get('date') or '--'))} | 有效窗口 {html.escape(str(decision.get('valid_window') or '--'))}</p>
+    <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:8px;margin:0 -8px">
+      <tr>
+        <td style="padding:14px 16px;background:#FFFFFF;border:1px solid #DCE5EF;border-radius:8px;text-align:center">
+          <div style="color:#667085;font-size:11px;margin-bottom:4px">状态</div>
+          <div style="color:{status_color};font-size:20px;font-weight:700">{html.escape(str(decision.get('status', 'completed')))}</div>
+        </td>
+        <td style="padding:14px 16px;background:#FFFFFF;border:1px solid #DCE5EF;border-radius:8px;text-align:center">
+          <div style="color:#667085;font-size:11px;margin-bottom:4px">BUY</div>
+          <div style="color:#E74C3C;font-size:24px;font-weight:700">{int(decision.get('buy_count') or 0)}</div>
+        </td>
+        <td style="padding:14px 16px;background:#FFFFFF;border:1px solid #DCE5EF;border-radius:8px;text-align:center">
+          <div style="color:#667085;font-size:11px;margin-bottom:4px">WATCH</div>
+          <div style="color:#3498DB;font-size:24px;font-weight:700">{int(decision.get('watch_count') or 0)}</div>
+        </td>
+        <td style="padding:14px 16px;background:#FFFFFF;border:1px solid #DCE5EF;border-radius:8px;text-align:center">
+          <div style="color:#667085;font-size:11px;margin-bottom:4px">扫描</div>
+          <div style="color:#2F87AC;font-size:24px;font-weight:700">{int(decision.get('total_scanned') or 0)}</div>
+        </td>
+      </tr>
+    </table>
+    <p style="color:#667085;font-size:12px;line-height:1.6;margin:12px 0 0 0">当日尾盘买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。</p>
+  </div>
+  {_html_overnight_candidate_section('BUY 候选', buy_items, '#E74C3C')}
+  {_html_overnight_candidate_section('WATCH 候选', watch_items, '#3498DB')}
+  {_html_overnight_source_section(decision)}
+  <div style="text-align:center;padding:18px;color:#667085;font-size:12px">
+    <p style="margin:0 0 4px 0">本结果仅供参考，不构成投资建议</p>
+  </div>
+</div>
+</body>
+</html>"""
+
+
 def notify_overnight_decision(decision: dict) -> bool:
     """发送尾盘套利轻量邮件。失败不影响报告落盘。"""
     try:
@@ -781,49 +1083,8 @@ def notify_overnight_decision(decision: dict) -> bool:
     buy_items = [item for item in decision.get("results", []) if item.get("action") == "BUY"][:5]
     watch_items = [item for item in decision.get("results", []) if item.get("action") == "WATCH"][:5]
     subject = f"New France 尾盘隔夜套利 {decision.get('date')} BUY={decision.get('buy_count', 0)} WATCH={decision.get('watch_count', 0)}"
-    lines = [
-        "【尾盘隔夜套利 14:43 决策】",
-        f"日期: {decision.get('date')} | 有效窗口: {decision.get('valid_window')}",
-        f"状态: {decision.get('status', 'completed')} | 扫描: {decision.get('total_scanned', 0)}",
-        "说明: 当日尾盘买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。",
-        "",
-        "【可买】",
-    ]
-    if buy_items:
-        for item in buy_items:
-            lines.append(
-                f"{item.get('code')} {item.get('name')} 分数{item.get('decision_score')} "
-                f"涨幅{item.get('change_pct')}% 量比{item.get('volume_ratio')} "
-                f"风险:{'、'.join(item.get('risks') or ['--'])}"
-            )
-    else:
-        lines.append("无")
-    lines.append("")
-    lines.append("【观察】")
-    if watch_items:
-        for item in watch_items:
-            lines.append(
-                f"{item.get('code')} {item.get('name')} 分数{item.get('decision_score')} "
-                f"原因:{'、'.join(item.get('reasons') or ['--'])}"
-            )
-    else:
-        lines.append("无")
-
-    if decision.get("errors") or decision.get("empty_reason"):
-        lines.append("")
-        lines.append("【数据源/空仓说明】")
-        if decision.get("empty_reason"):
-            lines.append(str(decision.get("empty_reason")))
-        for err in decision.get("errors") or []:
-            lines.append(f"- {err}")
-
-    text_content = "\n".join(lines)
-    html_content = (
-        '<!DOCTYPE html><html lang="zh-CN"><body style="font-family:sans-serif;padding:20px">'
-        '<pre style="white-space:pre-wrap;line-height:1.7;color:#172033">'
-        f"{html.escape(text_content)}"
-        "</pre></body></html>"
-    )
+    text_content = _build_overnight_text_content(decision, buy_items, watch_items)
+    html_content = _build_overnight_html_content(decision, buy_items, watch_items)
     try:
         ok, _message = notifier._send_email(
             subject=subject,

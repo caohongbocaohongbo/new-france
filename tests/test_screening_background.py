@@ -2,6 +2,7 @@ import inspect
 import importlib
 import sys
 import unittest
+import json
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
@@ -82,6 +83,35 @@ class ScreeningBackgroundTaskTest(unittest.TestCase):
         routes = {getattr(route, "path", "") for route in get_app().routes}
         self.assertIn("/api/v1/overnight-arbitrage/run", routes)
         self.assertIn("/api/v1/overnight-arbitrage/latest", routes)
+
+    def test_latest_screening_enriches_added_date_from_watchlist(self):
+        cache_file = router_screening.REPORTS_DIR / "latest.json"
+        original = cache_file.read_text(encoding="utf-8") if cache_file.exists() else None
+        payload = {
+            "status": "completed",
+            "date": "2026-06-08",
+            "results": [
+                {
+                    "code": "600207",
+                    "name": "安彩高科",
+                    "zt_date": "2026-06-05",
+                    "recommendation": "BUY",
+                    "price_history": [{"date": "2026-06-08", "drawdown_pct": -7.09}],
+                }
+            ],
+        }
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        try:
+            result = __import__("asyncio").run(router_screening.get_latest_screening())
+        finally:
+            if original is None:
+                cache_file.unlink(missing_ok=True)
+            else:
+                cache_file.write_text(original, encoding="utf-8")
+
+        self.assertEqual(result["results"][0]["added_date"], "2026-06-05")
+        self.assertEqual(result["results"][0]["price_history"][0]["date"], "2026-06-08")
 
 
 if __name__ == "__main__":

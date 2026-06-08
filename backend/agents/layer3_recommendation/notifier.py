@@ -528,7 +528,7 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
         ]:
             if not level_stocks:
                 continue
-            parts.append(_html_recommendation_section(level_stocks, label, color, audit_results))
+            parts.append(_html_recommendation_section(level_stocks, label, color, audit_results, target_date))
 
     parts.append(_html_footer())
     return "\n".join(parts)
@@ -692,7 +692,7 @@ def _html_screening_summary(strong, buy, watch, audit_results=None):
 </div>"""
 
 
-def _html_recommendation_section(level_stocks, label, color, audit_results=None):
+def _html_recommendation_section(level_stocks, label, color, audit_results=None, target_date=None):
     items_html = ""
     for s in level_stocks:
         stars = "★" * min(4, max(1, int(s.adjusted_score / 25)))
@@ -724,6 +724,9 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None)
                 f'审核降级: {audit_info["original_rec"]} → {audit_info["adjusted_rec"]} '
                 f'(失败{audit_info.get("fail_count",0)}项){failed_html}</div>'
             )
+        extra = getattr(s, "extra", {}) or {}
+        added_date = extra.get("added_date") or "--"
+        screening_date = target_date.strftime("%Y-%m-%d") if target_date else "--"
         history_html = _html_price_history(_stock_price_history(s))
         items_html += f"""
     <div style="background:#F8FAFC;border:1px solid #E1E7EF;border-radius:8px;padding:16px;margin-bottom:10px">
@@ -739,6 +742,8 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None)
         </div>
       </div>
       <div style="font-size:12px;color:#667085;margin-bottom:6px">
+        筛选日期:{screening_date} &nbsp;|&nbsp;
+        加入关注:{html.escape(str(added_date))} &nbsp;|&nbsp;
         回撤:<span style="color:{drop_color};font-weight:600">{s.drop_pct:+.2f}%</span> &nbsp;|&nbsp;
         涨停日:{s.zt_date} &nbsp;|&nbsp;
         参考价:{s.ref_price:.2f} &nbsp;|&nbsp;
@@ -758,7 +763,11 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None)
 
 def _html_price_history(rows: list) -> str:
     if not rows:
-        return ""
+        return """
+      <div style="margin-top:10px">
+        <div style="font-size:11px;color:#172033;font-weight:600;margin-bottom:4px">历史走势暂缺</div>
+        <div style="font-size:11px;color:#667085">暂无自加入关注以来的价格/回撤序列，通常表示历史K线未取到或结果缓存未写入该字段。</div>
+      </div>"""
     cells = ""
     for row in rows:
         draw = row["drawdown_pct"]
