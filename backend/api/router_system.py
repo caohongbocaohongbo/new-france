@@ -9,6 +9,44 @@ router = APIRouter()
 BEIJING_TZ = timezone(timedelta(hours=8))
 
 
+def trading_session_status(now: datetime) -> dict:
+    """A 股交易时段：上午 09:30-11:30，下午 13:00-15:00。"""
+    is_trading_day = now.weekday() < 5
+    minutes = now.hour * 60 + now.minute
+    morning_open = 9 * 60 + 30
+    morning_close = 11 * 60 + 30
+    afternoon_open = 13 * 60
+    afternoon_close = 15 * 60
+
+    if not is_trading_day:
+        session = "non_trading_day"
+        is_trading_hours = False
+        text = "休市中"
+    elif morning_open <= minutes < morning_close or afternoon_open <= minutes < afternoon_close:
+        session = "trading"
+        is_trading_hours = True
+        text = "交易中"
+    elif minutes < morning_open:
+        session = "pre_open"
+        is_trading_hours = False
+        text = "未开盘"
+    elif minutes < afternoon_open:
+        session = "midday_break"
+        is_trading_hours = False
+        text = "休市中"
+    else:
+        session = "closed"
+        is_trading_hours = False
+        text = "已收盘"
+
+    return {
+        "is_trading_day": is_trading_day,
+        "is_trading_hours": is_trading_hours,
+        "market_session": session,
+        "market_status_text": text,
+    }
+
+
 @router.get("/health")
 async def health():
     return {"status": "ok", "timestamp": datetime.now(BEIJING_TZ).isoformat()}
@@ -18,7 +56,7 @@ async def health():
 async def system_status():
     """系统运行状态（北京时间）"""
     now = datetime.now(BEIJING_TZ)
-    is_trading = now.weekday() < 5 and 9 <= now.hour <= 15
+    trading_status = trading_session_status(now)
     index_snapshot = {}
     try:
         from ..agents.layer1_data_collector.sources.index_data import fetch_index_snapshot
@@ -32,8 +70,7 @@ async def system_status():
     except Exception as exc:
         logger.warning(f"获取旁路数据源状态失败: {exc}")
     return {
-        "is_trading_day": now.weekday() < 5,
-        "is_trading_hours": is_trading,
+        **trading_status,
         "next_execution": "15:10 (北京时间, 交易日)",
         "cron_expression": "每个交易日 15:10 (北京时间)",
         "timestamp": now.isoformat(),

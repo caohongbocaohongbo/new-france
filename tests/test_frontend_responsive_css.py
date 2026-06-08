@@ -130,6 +130,25 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn("时间", trend_js)
         self.assertIn("涨停", trend_js)
         self.assertIn("跌停", trend_js)
+        self.assertIn("boundaryGap: true", trend_js)
+        self.assertIn("barGap: '-100%'", trend_js)
+        self.assertIn("barCategoryGap: '42%'", trend_js)
+        self.assertIn("axisLine: { lineStyle: { color: '#d7dce5' } }", trend_js)
+
+    def test_trading_status_uses_backend_session_text_and_precise_local_fallback(self):
+        js = (ROOT / "frontend/js/app.js").read_text(encoding="utf-8")
+
+        self.assertIn("function getLocalMarketStatus", js)
+        self.assertIn("market_status_text", js)
+        self.assertIn("market_session", js)
+        self.assertIn("morningOpen = 9 * 60 + 30", js)
+        self.assertIn("morningClose = 11 * 60 + 30", js)
+        self.assertIn("afternoonOpen = 13 * 60", js)
+        self.assertIn("afternoonClose = 15 * 60", js)
+        self.assertIn("data.is_trading_hours ? '' : ' off'", js)
+        self.assertIn("local.is_trading_hours ? '' : ' off'", js)
+        self.assertNotIn("data.is_trading_hours || data.is_trading_day", js)
+        self.assertNotIn("now.getHours() >= 9 && now.getHours() < 15", js)
 
     def test_dashboard_optional_sources_are_gated_by_backend_status(self):
         html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")

@@ -279,25 +279,48 @@ function initRecommendationControls() {
 }
 
 // ---- System Status ----
+function getLocalMarketStatus(now = new Date()) {
+    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const morningOpen = 9 * 60 + 30;
+    const morningClose = 11 * 60 + 30;
+    const afternoonOpen = 13 * 60;
+    const afternoonClose = 15 * 60;
+    const isTradingHours = isWeekday
+        && ((minutes >= morningOpen && minutes < morningClose) || (minutes >= afternoonOpen && minutes < afternoonClose));
+    let marketSession = 'non_trading_day';
+    let marketStatusText = '休市中';
+    if (isWeekday && isTradingHours) {
+        marketSession = 'trading';
+        marketStatusText = '交易中';
+    } else if (isWeekday && minutes < morningOpen) {
+        marketSession = 'pre_open';
+        marketStatusText = '未开盘';
+    } else if (isWeekday && minutes < afternoonOpen) {
+        marketSession = 'midday_break';
+        marketStatusText = '休市中';
+    } else if (isWeekday) {
+        marketSession = 'closed';
+        marketStatusText = '已收盘';
+    }
+    return { is_trading_day: isWeekday, is_trading_hours: isTradingHours, market_session: marketSession, market_status_text: marketStatusText };
+}
+
 async function checkSystemStatus() {
     const dot = document.getElementById('statusDot');
     const text = document.getElementById('statusText');
     const nextRun = document.getElementById('nextRun');
-    const now = new Date();
-    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
-    const isHours = now.getHours() >= 9 && now.getHours() < 15;
 
     try {
         const resp = await apiFetch('/system/status');
         const data = await resp.json();
-        text.textContent = data.is_trading_hours ? '交易中' : (data.is_trading_day ? '已收盘' : '休市中');
-        dot.className = 'status-dot' + (data.is_trading_hours || data.is_trading_day ? '' : ' off');
+        text.textContent = data.market_status_text || (data.is_trading_hours ? '交易中' : (data.is_trading_day ? '已收盘' : '休市中'));
+        dot.className = 'status-dot' + (data.is_trading_hours ? '' : ' off');
         nextRun.textContent = '下次执行: ' + data.cron_expression;
     } catch (e) {
-        // Fallback: 本地判断
-        if (isWeekday && isHours) { text.textContent = '交易中'; dot.className = 'status-dot'; }
-        else if (isWeekday) { text.textContent = '已收盘'; dot.className = 'status-dot'; }
-        else { text.textContent = '休市中'; dot.className = 'status-dot off'; }
+        const local = getLocalMarketStatus();
+        text.textContent = local.market_status_text;
+        dot.className = 'status-dot' + (local.is_trading_hours ? '' : ' off');
         nextRun.textContent = '下次执行: 交易日 15:10 (北京时间)';
     }
 }
@@ -594,8 +617,10 @@ function renderMarketTrend(data) {
         xAxis: {
             type: 'category',
             data: points.map(item => item.label),
+            boundaryGap: true,
             axisLabel: { interval: 0, fontSize: 11, color: '#6b7280' },
             axisTick: { alignWithLabel: true },
+            axisLine: { lineStyle: { color: '#d7dce5' } },
         },
         yAxis: {
             type: 'value',
@@ -605,6 +630,7 @@ function renderMarketTrend(data) {
                 color: '#6b7280',
                 formatter: value => Math.abs(Number(value) || 0),
             },
+            axisLine: { lineStyle: { color: '#d7dce5' } },
             splitLine: { lineStyle: { color: '#eef0f4' } },
         },
         series: [
@@ -613,6 +639,8 @@ function renderMarketTrend(data) {
                 name: '涨停',
                 data: points.map(item => item.up),
                 barWidth: '38%',
+                barGap: '-100%',
+                barCategoryGap: '42%',
                 itemStyle: {
                     color: '#D60A22',
                     borderRadius: [4, 4, 0, 0],
@@ -623,6 +651,8 @@ function renderMarketTrend(data) {
                 name: '跌停',
                 data: points.map(item => item.down ? -item.down : 0),
                 barWidth: '38%',
+                barGap: '-100%',
+                barCategoryGap: '42%',
                 itemStyle: {
                     color: '#027B66',
                     borderRadius: [0, 0, 4, 4],
