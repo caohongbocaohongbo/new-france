@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, BackgroundTasks, Query
 
 from ..services.overnight_arbitrage_service import (
+    read_overnight_history,
     read_overnight_report,
     run_overnight_arbitrage,
     write_overnight_report,
@@ -75,3 +76,9 @@ async def run_overnight_endpoint(
 async def get_latest_overnight():
     """读取最新尾盘隔夜套利决策。"""
     return read_overnight_report()
+
+
+@router.get("/history")
+async def get_overnight_history():
+    """读取尾盘隔夜套利跨日推荐统计。"""
+    return read_overnight_history()

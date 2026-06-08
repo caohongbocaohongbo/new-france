@@ -11,6 +11,7 @@ import pandas as pd
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
 REPORT_FILE = PROJECT_DIR / "reports" / "overnight_arbitrage_latest.json"
+HISTORY_FILE = PROJECT_DIR / "reports" / "overnight_arbitrage_history.json"
 BEIJING_TZ = timezone(timedelta(hours=8))
 
 logger = logging.getLogger(__name__)
@@ -49,8 +50,28 @@ def _clip(value: float, lower: float, upper: float) -> float:
     return max(lower, min(upper, value))
 
 
+def _round_or_none(value, digits: int = 2) -> Optional[float]:
+    number = _float(value)
+    return None if number is None else round(number, digits)
+
+
+def _intraday_pullback_pct(price, high) -> Optional[float]:
+    latest = _float(price)
+    high_price = _float(high)
+    if latest is None or high_price is None or high_price <= 0:
+        return None
+    if latest >= high_price:
+        return 0.0
+    return round((latest - high_price) / high_price * 100, 2)
+
+
 def _is_excluded_market(code: str) -> bool:
     return code.startswith(("300", "301"))
+
+
+def _stock_code(value) -> str:
+    text = str(value or "").strip()
+    return text.zfill(6) if text else ""
 
 
 def _append_quote_source(quotes: pd.DataFrame, source_name: str) -> pd.DataFrame:
@@ -127,6 +148,7 @@ def _build_zt_map(zt_pool: Optional[pd.DataFrame]) -> dict:
 
 def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
     code = str(row.get("代码", "")).zfill(6)
+    current_price = _float(row.get("最新价"))
     change_pct = _float(row.get("涨跌幅"), 0) or 0
     amount = _float(row.get("成交额"), 0) or 0
     turnover = _float(row.get("换手率"), 0) or 0
@@ -188,7 +210,9 @@ def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
         "name": str(row.get("名称", "")),
         "action": action,
         "decision_score": score,
-        "current_price": _float(row.get("最新价")),
+        "current_price": current_price,
+        "pe": _round_or_none(row.get("市盈率")),
+        "intraday_pullback_pct": _intraday_pullback_pct(current_price, row.get("最高价")),
         "change_pct": round(change_pct, 2),
         "turnover": round(turnover, 2),
         "volume_ratio": round(volume_ratio, 2),
@@ -288,13 +312,182 @@ def read_overnight_report(report_file: Path = REPORT_FILE) -> dict:
     return json.loads(report_file.read_text(encoding="utf-8"))
 
 
+def _empty_history() -> dict:
+    return {
+        "status": "empty",
+        "strategy": "overnight_arbitrage_history",
+        "updated_at": None,
+        "total_stocks": 0,
+        "total_recommendations": 0,
+        "records": [],
+    }
+
+
+def read_overnight_history(history_file: Path = HISTORY_FILE) -> dict:
+    if not history_file.exists():
+        return _empty_history()
+    return json.loads(history_file.read_text(encoding="utf-8"))
+
+
+def _history_values(recommendations: List[dict], key: str) -> List[float]:
+    values = []
+    for item in recommendations:
+        value = _float(item.get(key))
+        if value is not None:
+            values.append(round(value, 3 if key == "price" else 2))
+    return values
+
+
+def _history_metric(values: List[float]) -> dict:
+    if not values:
+        return {"count": 0, "avg": None, "min": None, "max": None}
+    return {
+        "count": len(values),
+        "avg": round(sum(values) / len(values), 2),
+        "min": round(min(values), 2),
+        "max": round(max(values), 2),
+    }
+
+
+def _rebuild_history_record(code: str, name: str, recommendations: List[dict]) -> dict:
+    recommendations = sorted(recommendations, key=lambda item: (str(item.get("date", "")), str(item.get("generated_at", ""))))
+    price_values = _history_values(recommendations, "price")
+    pe_values = _history_values(recommendations, "pe")
+    pullback_values = _history_values(recommendations, "pullback_pct")
+    price_metric = _history_metric(price_values)
+    pe_metric = _history_metric(pe_values)
+    pullback_metric = _history_metric(pullback_values)
+    last = recommendations[-1] if recommendations else {}
+    return {
+        "code": code,
+        "name": name,
+        "recommendation_count": len(recommendations),
+        "first_recommended_at": recommendations[0].get("generated_at") if recommendations else None,
+        "last_recommended_at": last.get("generated_at"),
+        "last_action": last.get("action"),
+        "price_pushes": price_values,
+        "pe_values": pe_values,
+        "pullback_values": pullback_values,
+        "metrics": {
+            "price_count": price_metric["count"],
+            "price_avg": price_metric["avg"],
+            "price_min": price_metric["min"],
+            "price_max": price_metric["max"],
+            "pe_count": pe_metric["count"],
+            "pe_avg": pe_metric["avg"],
+            "pe_min": pe_metric["min"],
+            "pe_max": pe_metric["max"],
+            "pullback_count": pullback_metric["count"],
+            "pullback_avg": pullback_metric["avg"],
+            "pullback_min": pullback_metric["min"],
+            "pullback_max": pullback_metric["max"],
+        },
+        "recommendations": recommendations,
+    }
+
+
+def update_overnight_history(decision: dict, history_file: Path = HISTORY_FILE) -> dict:
+    """按股票+交易日去重保存 BUY/WATCH 历史，并重算跨日统计。"""
+    history = read_overnight_history(history_file)
+    trade_date = str(decision.get("date") or "")
+    generated_at = str(decision.get("generated_at") or "")
+    if not trade_date and len(generated_at) >= 10:
+        trade_date = generated_at[:10]
+    if not trade_date:
+        trade_date = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d")
+
+    by_code: Dict[str, dict] = {}
+    for record in history.get("records") or []:
+        code = _stock_code(record.get("code"))
+        if not code:
+            continue
+        by_date = {
+            str(item.get("date")): item
+            for item in record.get("recommendations") or []
+            if item.get("date")
+        }
+        by_code[code] = {
+            "name": str(record.get("name") or ""),
+            "by_date": by_date,
+        }
+
+    for item in decision.get("results") or []:
+        action = item.get("action")
+        if action not in {"BUY", "WATCH"}:
+            continue
+        code = _stock_code(item.get("code"))
+        if not code:
+            continue
+        holder = by_code.setdefault(code, {"name": str(item.get("name") or ""), "by_date": {}})
+        holder["name"] = str(item.get("name") or holder.get("name") or "")
+        existing = holder["by_date"].get(trade_date)
+        if existing and str(existing.get("generated_at") or "") > generated_at:
+            continue
+        holder["by_date"][trade_date] = {
+            "date": trade_date,
+            "generated_at": generated_at,
+            "action": action,
+            "price": _round_or_none(item.get("current_price"), 3),
+            "pe": _round_or_none(item.get("pe")),
+            "pullback_pct": _round_or_none(item.get("intraday_pullback_pct")),
+            "decision_score": _round_or_none(item.get("decision_score")),
+        }
+
+    records = []
+    for code, holder in by_code.items():
+        recommendations = [item for _, item in sorted(holder.get("by_date", {}).items())]
+        if recommendations:
+            records.append(_rebuild_history_record(code, holder.get("name") or "", recommendations))
+
+    records.sort(
+        key=lambda item: (
+            -item["recommendation_count"],
+            str(item.get("last_recommended_at") or ""),
+            item["code"],
+        )
+    )
+    payload = {
+        "status": "completed",
+        "strategy": "overnight_arbitrage_history",
+        "updated_at": generated_at or datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M:%S"),
+        "total_stocks": len(records),
+        "total_recommendations": sum(item["recommendation_count"] for item in records),
+        "records": records,
+    }
+    history_file.parent.mkdir(parents=True, exist_ok=True)
+    history_file.write_text(json.dumps(_json_safe(payload), ensure_ascii=False, indent=2), encoding="utf-8")
+    return payload
+
+
+def _attach_history_summary(decision: dict, history: dict) -> None:
+    records = {_stock_code(item.get("code")): item for item in history.get("records") or []}
+    for item in decision.get("results") or []:
+        record = records.get(_stock_code(item.get("code")))
+        if not record:
+            continue
+        item["history"] = {
+            "recommendation_count": record.get("recommendation_count", 0),
+            "price_pushes": record.get("price_pushes", []),
+            "pe_values": record.get("pe_values", []),
+            "pullback_values": record.get("pullback_values", []),
+            "metrics": record.get("metrics", {}),
+        }
+    decision["history_summary"] = {
+        "status": history.get("status"),
+        "history_file": "reports/overnight_arbitrage_history.json",
+        "total_stocks": history.get("total_stocks", 0),
+        "total_recommendations": history.get("total_recommendations", 0),
+        "updated_at": history.get("updated_at"),
+    }
+
+
 def _eastmoney_all_a_snapshot() -> pd.DataFrame:
     """拉取沪深全 A 实时快照，供尾盘套利粗筛。"""
     import requests
 
     url = "https://push2.eastmoney.com/api/qt/clist/get"
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/center/gridlist.html"}
-    fields = "f2,f3,f5,f6,f8,f10,f12,f14,f20,f21"
+    fields = "f2,f3,f5,f6,f8,f9,f10,f12,f14,f15,f20,f21"
     rows = []
     for fs in ("m:1+t:2,m:1+t:23", "m:0+t:6,m:0+t:80"):
         for page in range(1, 8):
@@ -321,9 +514,11 @@ def _eastmoney_all_a_snapshot() -> pd.DataFrame:
                     "名称": str(item.get("f14", "")),
                     "最新价": _float(item.get("f2")),
                     "涨跌幅": _float(item.get("f3")),
+                    "最高价": _float(item.get("f15")),
                     "成交量": _float(item.get("f5")),
                     "成交额": _float(item.get("f6")),
                     "换手率": _float(item.get("f8")),
+                    "市盈率": _float(item.get("f9")),
                     "量比": _float(item.get("f10")),
                     "总市值": _float(item.get("f20")),
                     "流通市值": _float(item.get("f21")),
@@ -370,6 +565,7 @@ def _sina_all_a_snapshot(max_pages: int = 80) -> pd.DataFrame:
                 "名称": str(item.get("name") or ""),
                 "最新价": latest,
                 "涨跌幅": _float(item.get("changepercent")),
+                "最高价": _float(item.get("high")),
                 "成交量": _float(item.get("volume")),
                 "成交额": amount,
                 "换手率": _float(item.get("turnoverratio")),
@@ -398,9 +594,11 @@ def _zt_pool_quote_fallback(zt_pool: Optional[pd.DataFrame]) -> pd.DataFrame:
             "名称": str(item.get("名称", "")),
             "最新价": _float(item.get("最新价")),
             "涨跌幅": _float(item.get("涨跌幅")),
+            "最高价": _float(item.get("最高价")),
             "成交量": _float(item.get("成交量")),
             "成交额": _float(item.get("成交额")),
             "换手率": _float(item.get("换手率")),
+            "市盈率": _float(item.get("市盈率")),
             "量比": _float(item.get("量比")),
             "总市值": _float(item.get("总市值")),
             "流通市值": _float(item.get("流通市值")),
@@ -542,6 +740,26 @@ async def run_overnight_arbitrage(
         quote_source_status=quote_source_status,
         errors=errors,
     )
+    if dry_run:
+        decision["history_summary"] = {
+            "status": "skipped_dry_run",
+            "history_file": "reports/overnight_arbitrage_history.json",
+            "message": "dry_run 不写入跨日推荐历史，避免测试污染累计统计",
+        }
+    else:
+        try:
+            history = update_overnight_history(decision)
+            _attach_history_summary(decision, history)
+        except Exception as exc:
+            logger.warning("尾盘套利历史统计更新失败: %s", exc)
+            decision.setdefault("errors", []).append(f"历史统计更新失败: {exc}")
+            if decision.get("status") == "completed":
+                decision["status"] = "completed_with_errors"
+            decision["history_summary"] = {
+                "status": "error",
+                "history_file": "reports/overnight_arbitrage_history.json",
+                "error": str(exc),
+            }
     write_overnight_report(decision)
     if not dry_run:
         notify_overnight_decision(decision)

@@ -58,6 +58,7 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn("git show \"origin/${DATA_BRANCH}:${file}\"", restore_script)
         self.assertIn('restore_file "data/france.md"', restore_script)
         self.assertIn('restore_file "reports/latest.json"', restore_script)
+        self.assertIn('restore_file "reports/overnight_arbitrage_history.json"', restore_script)
 
     def test_daily_screening_snapshot_script_handles_generated_changes_without_branch_checkout_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:

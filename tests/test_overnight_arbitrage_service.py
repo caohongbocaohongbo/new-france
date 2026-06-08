@@ -1,13 +1,19 @@
 import unittest
+import asyncio
 from datetime import date
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pandas as pd
 
 from backend.services.overnight_arbitrage_service import (
+    HISTORY_FILE,
     REPORT_FILE,
     build_overnight_decision,
     notify_overnight_decision,
+    run_overnight_arbitrage,
+    update_overnight_history,
     write_overnight_report,
 )
 
@@ -18,6 +24,7 @@ class OvernightArbitrageServiceTest(unittest.TestCase):
             {
                 "代码": "600001", "名称": "主板强势", "最新价": 12.3, "涨跌幅": 9.82,
                 "成交额": 420_000_000, "换手率": 7.2, "量比": 2.8, "流通市值": 8_800_000_000,
+                "市盈率": 18.6, "最高价": 12.6,
             },
             {
                 "代码": "000002", "名称": "主板观察", "最新价": 8.6, "涨跌幅": 7.25,
@@ -61,6 +68,8 @@ class OvernightArbitrageServiceTest(unittest.TestCase):
         self.assertEqual(decision["watch_count"], 1)
         self.assertEqual([item["code"] for item in decision["results"]], ["600001", "000002"])
         self.assertEqual(decision["results"][0]["action"], "BUY")
+        self.assertEqual(decision["results"][0]["pe"], 18.6)
+        self.assertEqual(decision["results"][0]["intraday_pullback_pct"], -2.38)
         self.assertGreater(decision["results"][0]["decision_score"], decision["results"][1]["decision_score"])
         self.assertIn("尾盘承接", " ".join(decision["results"][0]["reasons"]))
         rejected = {item["code"]: item["reason"] for item in decision["rejected"]}
@@ -120,6 +129,139 @@ class OvernightArbitrageServiceTest(unittest.TestCase):
                 REPORT_FILE.unlink(missing_ok=True)
             else:
                 REPORT_FILE.write_text(original_text, encoding="utf-8")
+
+    def test_history_dedupes_same_trading_day_and_aggregates_dimensions(self):
+        with TemporaryDirectory() as tmp:
+            history_file = Path(tmp) / "overnight_history.json"
+            day1_first = {
+                "date": "2026-06-04",
+                "generated_at": "2026-06-04 14:35:00",
+                "results": [{
+                    "action": "BUY",
+                    "code": "600001",
+                    "name": "主板强势",
+                    "current_price": 10.0,
+                    "pe": 12.0,
+                    "intraday_pullback_pct": -1.5,
+                    "decision_score": 61.0,
+                }],
+            }
+            day1_latest = {
+                "date": "2026-06-04",
+                "generated_at": "2026-06-04 14:43:00",
+                "results": [{
+                    "action": "WATCH",
+                    "code": "600001",
+                    "name": "主板强势",
+                    "current_price": 10.5,
+                    "pe": 13.0,
+                    "intraday_pullback_pct": -0.5,
+                    "decision_score": 58.0,
+                }],
+            }
+            day2 = {
+                "date": "2026-06-05",
+                "generated_at": "2026-06-05 14:43:00",
+                "results": [{
+                    "action": "BUY",
+                    "code": "600001",
+                    "name": "主板强势",
+                    "current_price": 9.5,
+                    "pe": 11.0,
+                    "intraday_pullback_pct": -2.0,
+                    "decision_score": 66.0,
+                }],
+            }
+
+            update_overnight_history(day1_first, history_file=history_file)
+            update_overnight_history(day1_latest, history_file=history_file)
+            history = update_overnight_history(day2, history_file=history_file)
+
+        record = history["records"][0]
+        self.assertEqual(record["code"], "600001")
+        self.assertEqual(record["recommendation_count"], 2)
+        self.assertEqual([item["date"] for item in record["recommendations"]], ["2026-06-04", "2026-06-05"])
+        self.assertEqual(record["recommendations"][0]["action"], "WATCH")
+        self.assertEqual(record["price_pushes"], [10.5, 9.5])
+        self.assertEqual(record["pe_values"], [13.0, 11.0])
+        self.assertEqual(record["pullback_values"], [-0.5, -2.0])
+        self.assertEqual(record["metrics"]["price_avg"], 10.0)
+        self.assertEqual(record["metrics"]["pe_avg"], 12.0)
+        self.assertEqual(record["metrics"]["pullback_avg"], -1.25)
+
+    def test_history_keeps_latest_same_day_when_older_run_replayed(self):
+        with TemporaryDirectory() as tmp:
+            history_file = Path(tmp) / "overnight_history.json"
+            latest = {
+                "date": "2026-06-04",
+                "generated_at": "2026-06-04 14:43:00",
+                "results": [{
+                    "action": "BUY",
+                    "code": "600001",
+                    "name": "主板强势",
+                    "current_price": 10.5,
+                    "pe": 13.0,
+                    "intraday_pullback_pct": -0.5,
+                    "decision_score": 62.0,
+                }],
+            }
+            older = {
+                "date": "2026-06-04",
+                "generated_at": "2026-06-04 14:35:00",
+                "results": [{
+                    "action": "WATCH",
+                    "code": "600001",
+                    "name": "主板强势",
+                    "current_price": 10.0,
+                    "pe": 12.0,
+                    "intraday_pullback_pct": -1.5,
+                    "decision_score": 58.0,
+                }],
+            }
+
+            update_overnight_history(latest, history_file=history_file)
+            history = update_overnight_history(older, history_file=history_file)
+
+        record = history["records"][0]
+        self.assertEqual(record["recommendation_count"], 1)
+        self.assertEqual(record["recommendations"][0]["generated_at"], "2026-06-04 14:43:00")
+        self.assertEqual(record["price_pushes"], [10.5])
+
+    def test_run_pipeline_writes_latest_and_history_without_email_in_test(self):
+        report_text = REPORT_FILE.read_text(encoding="utf-8") if REPORT_FILE.exists() else None
+        history_text = HISTORY_FILE.read_text(encoding="utf-8") if HISTORY_FILE.exists() else None
+        quotes = pd.DataFrame([{
+            "代码": "600001", "名称": "主板强势", "最新价": 12.3, "涨跌幅": 9.82,
+            "最高价": 12.6, "成交额": 420_000_000, "换手率": 7.2,
+            "量比": 2.8, "市盈率": 18.6, "流通市值": 8_800_000_000,
+        }])
+        zt_pool = pd.DataFrame([{"代码": "600001", "封板时间": 144100, "炸板次数": 0, "连板数": 1}])
+
+        try:
+            with patch("backend.services.overnight_arbitrage_service.notify_overnight_decision", return_value=True):
+                result = asyncio.run(run_overnight_arbitrage(
+                    target_date=date(2026, 6, 4),
+                    quote_fetcher=lambda: quotes,
+                    zt_fetcher=lambda _target_date: zt_pool,
+                    minute_fetcher=lambda _codes: {
+                        "600001": {"last_15m_change_pct": 1.25, "last_close_position": 0.96}
+                    },
+                    dry_run=False,
+                ))
+
+            self.assertEqual(result["history_summary"]["status"], "completed")
+            self.assertEqual(result["results"][0]["history"]["recommendation_count"], 1)
+            self.assertTrue(REPORT_FILE.exists())
+            self.assertTrue(HISTORY_FILE.exists())
+        finally:
+            if report_text is None:
+                REPORT_FILE.unlink(missing_ok=True)
+            else:
+                REPORT_FILE.write_text(report_text, encoding="utf-8")
+            if history_text is None:
+                HISTORY_FILE.unlink(missing_ok=True)
+            else:
+                HISTORY_FILE.write_text(history_text, encoding="utf-8")
 
     def test_notify_uses_existing_email_sender(self):
         decision = {
