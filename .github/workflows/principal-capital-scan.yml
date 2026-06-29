@@ -1,0 +1,57 @@
+name: Principal Capital Scan
+
+on:
+  schedule:
+    - cron: '*/5 1 * * 1-5'
+    - cron: '*/5 2-6 * * 1-5'
+    - cron: '0 7 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      buy_threshold:
+        description: '买入阈值(%)'
+        default: '50'
+      sell_threshold:
+        description: '卖出阈值(%)'
+        default: '30'
+      force:
+        description: '强制运行（忽略交易时段）'
+        type: boolean
+        default: false
+      enable_verify:
+        description: '启用 sina 抽样核验'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: principal-capital-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - name: Run principal capital scan
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -m backend.main --run-principal-capital-scan \
+            --buy-threshold ${{ github.event.inputs.buy_threshold || '50' }} \
+            --sell-threshold ${{ github.event.inputs.sell_threshold || '30' }} \
+            ${{ github.event.inputs.enable_verify == 'true' && '--enable-verify' || '' }} \
+            ${{ github.event.inputs.force == 'true' && '--force' || '' }}
