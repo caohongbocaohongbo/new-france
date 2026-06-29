@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
 from backend.api import router_screening
-from backend.api import router_overnight_arbitrage
+from backend.plugins.overnight_arbitrage import router as router_overnight_arbitrage
 from backend.main import get_app
 
 

@@ -73,6 +73,15 @@
             <svg class="nav-icon" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2.25 14.5 4.5v4.1c0 3.4-2.2 6.45-5.5 7.4-3.3-.95-5.5-4-5.5-7.4V4.5L9 2.25Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.25 9.15 8.2 11.1l3.7-4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>国家队动向</span>
         </a>
+        <!-- 插件: 主力资金双向监控（独立菜单，可整体迁移） -->
+        <a href="#principal-capital" class="nav-item" data-page="principal-capital">
+            <svg class="nav-icon" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5v15M3.5 6.5l5.5-5 5.5 5M3.5 11.5l5.5 5 5.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>主力资金</span>
+        </a>
+        <a href="#overnight-arbitrage" class="nav-item" data-page="overnight-arbitrage">
+            <svg class="nav-icon" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 13.5 7 9.5l2.5 2.5 5.5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 6h3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>隔夜套利</span>
+        </a>
         <a href="#settings" class="nav-item" data-page="settings">
             <svg class="nav-icon" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="2.25" stroke="currentColor" stroke-width="1.5"/><path d="M9 1.75v2M9 14.25v2M3.16 3.16l1.42 1.42M13.42 13.42l1.42 1.42M1.75 9h2M14.25 9h2M3.16 14.84l1.42-1.42M13.42 4.58l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             <span>策略配置</span>
@@ -196,7 +205,6 @@
     <section id="page-screening" class="page">
         <div class="screening-mode-tabs" role="tablist" aria-label="筛选策略">
             <button type="button" class="tab active" data-screening-mode="pullback" onclick="setScreeningMode('pullback')">涨停回撤筛选</button>
-            <button type="button" class="tab" data-screening-mode="overnight" onclick="setScreeningMode('overnight')">尾盘隔夜套利</button>
         </div>
         <div id="pullbackPanel" class="screening-mode-panel active">
         <div class="screening-layout">
@@ -238,36 +246,37 @@
             </div>
         </div>
         </div>
-        <div id="overnightPanel" class="screening-mode-panel">
-            <div class="screening-layout overnight-layout">
-                <div class="screening-filters panel overnight-control-panel">
-                    <div class="panel-header"><h2>14:43 决策任务</h2></div>
-                    <div class="filter-group">
-                        <label>运行时间</label>
-                        <div class="readonly-field">交易日 14:43</div>
-                    </div>
-                    <div class="filter-group">
-                        <label>有效窗口</label>
-                        <div class="readonly-field">14:43-14:55</div>
-                    </div>
-                    <div class="filter-group">
-                        <label>策略边界</label>
-                        <div class="strategy-note">排除创业板、ST、停牌、低成交额与低换手标的；次日 09:30-09:35 仅作卖出复盘。</div>
-                    </div>
-                    <button class="btn btn-primary btn-full" onclick="runOvernightArbitrage()">执行尾盘套利</button>
-                    <button class="btn btn-full" onclick="loadLatestOvernightDecision()">刷新最新决策</button>
-                    <span id="overnightStatus" class="inline-status" aria-live="polite"></span>
+    </section>
+
+    <section id="page-overnight-arbitrage" class="page">
+        <div class="screening-layout overnight-layout">
+            <div class="screening-filters panel overnight-control-panel">
+                <div class="panel-header"><h2>14:43 决策任务</h2></div>
+                <div class="filter-group">
+                    <label>运行时间</label>
+                    <div class="readonly-field">交易日 14:43</div>
                 </div>
-                <div class="screening-results panel overnight-results-panel">
-                    <div class="panel-header results-header">
-                        <div class="title-with-count"><h2>尾盘套利决策</h2><span id="overnightResultCount" class="count-pill">0 条结果</span></div>
-                        <div class="result-tools">
-                            <span class="table-note" id="overnightMeta">等待 14:43 决策</span>
-                        </div>
-                    </div>
-                    <div id="overnightDecisionBody"><p class="empty-state">点击「执行尾盘套利」后生成今日买入候选</p></div>
-                    <div class="screening-defaults">独立报告: reports/overnight_arbitrage_latest.json，不覆盖回撤推荐 latest.json</div>
+                <div class="filter-group">
+                    <label>有效窗口</label>
+                    <div class="readonly-field">14:43-14:55</div>
                 </div>
+                <div class="filter-group">
+                    <label>策略边界</label>
+                    <div class="strategy-note">排除创业板、ST、停牌、低成交额与低换手标的；次日 09:30-09:35 仅作卖出复盘。</div>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="runOvernightArbitrage()">执行尾盘套利</button>
+                <button class="btn btn-full" onclick="loadLatestOvernightDecision()">刷新最新决策</button>
+                <span id="overnightStatus" class="inline-status" aria-live="polite"></span>
+            </div>
+            <div class="screening-results panel overnight-results-panel">
+                <div class="panel-header results-header">
+                    <div class="title-with-count"><h2>尾盘套利决策</h2><span id="overnightResultCount" class="count-pill">0 条结果</span></div>
+                    <div class="result-tools">
+                        <span class="table-note" id="overnightMeta">等待 14:43 决策</span>
+                    </div>
+                </div>
+                <div id="overnightDecisionBody"><p class="empty-state">点击「执行尾盘套利」后生成今日买入候选</p></div>
+                <div class="screening-defaults">独立报告: reports/overnight_arbitrage_latest.json，不覆盖回撤推荐 latest.json</div>
             </div>
         </div>
     </section>
@@ -328,6 +337,60 @@
                     <button id="ntEventLoadMore" class="event-load-more" onclick="loadMoreNationalTeamEvents()">加载更多</button>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Page: Principal Capital (Plugin - 可独立迁移) -->
+    <section id="page-principal-capital" class="page">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>主力资金双向监控</h2>
+                <span id="pcMeta" class="panel-subtitle">未加载</span>
+            </div>
+            <div class="pc-controls" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border-color,#e5e7eb)">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px">买入阈值(%)
+                    <input id="pcBuyThreshold" type="number" min="0" max="100" step="1" value="50" style="width:70px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px">
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px">卖出阈值(%)
+                    <input id="pcSellThreshold" type="number" min="0" max="100" step="1" value="30" style="width:70px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px">
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <input id="pcExcludeStar" type="checkbox" checked> 排除科创板
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <input id="pcEnableVerify" type="checkbox"> 启用新浪核验
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px">
+                    <input id="pcForce" type="checkbox" checked> 强制运行(忽略交易时段)
+                </label>
+                <button id="pcRunBtn" class="btn btn-primary" onclick="pcTriggerScan()" style="padding:6px 16px">执行扫描</button>
+                <button id="pcRefreshBtn" class="btn" onclick="pcLoadLatest()" style="padding:6px 16px">刷新结果</button>
+                <span id="pcStatus" class="inline-status" aria-live="polite"></span>
+            </div>
+        </div>
+
+        <div class="pc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+            <div class="panel">
+                <div class="panel-header" style="background:#fef2f2">
+                    <h2 style="color:#b91c1c">买入信号</h2>
+                    <span id="pcBuyCount" class="count-pill">0</span>
+                </div>
+                <div id="pcBuyTable" style="padding:12px"><p class="empty-state">点击"执行扫描"获取数据</p></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header" style="background:#eff6ff">
+                    <h2 style="color:#1d4ed8">卖出信号</h2>
+                    <span id="pcSellCount" class="count-pill">0</span>
+                </div>
+                <div id="pcSellTable" style="padding:12px"><p class="empty-state">点击"执行扫描"获取数据</p></div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px">
+            <div class="panel-header">
+                <h2>数据源状态</h2>
+            </div>
+            <div id="pcSourceHealth" style="padding:12px"><p class="empty-state">未加载</p></div>
         </div>
     </section>
 
@@ -460,5 +523,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
 <script src="js/app.js"></script>
+<!-- 插件: 主力资金双向监控（独立 JS 模块，可整体迁移） -->
+<script src="js/plugins/principal_capital.js"></script>
+<script src="js/plugins/overnight_arbitrage.js"></script>
 </body>
 </html>

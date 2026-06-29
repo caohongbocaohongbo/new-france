@@ -98,7 +98,6 @@ def get_app():
     from .api.router_system import router as system_router
     from .api.router_config import router as config_router
     from .api.router_national_team import router as national_team_router
-    from .api.router_overnight_arbitrage import router as overnight_arbitrage_router
 
     _app = FastAPI(
         title="New France — 尾盘涨停选股系统",
@@ -118,7 +117,25 @@ def get_app():
     _app.include_router(system_router, prefix="/api/v1/system", tags=["系统"])
     _app.include_router(config_router, prefix="/api/v1/config", tags=["配置"])
     _app.include_router(national_team_router, prefix="/api/v1/national-team", tags=["国家队动向"])
-    _app.include_router(overnight_arbitrage_router, prefix="/api/v1/overnight-arbitrage", tags=["尾盘隔夜套利"])
+    # ---- 插件: 主力资金双向监控 ----
+    # 用 try-except 包装实现"可选加载"。插件目录可整体迁移到新项目，无需改动其它代码。
+    try:
+        from .plugins.principal_capital import register_router as _pc_register_router
+        _app.include_router(_pc_register_router(),
+                            prefix="/api/v1/principal-capital",
+                            tags=["主力资金"])
+    except ImportError as exc:
+        import logging
+        logging.getLogger(__name__).info("主力资金插件未加载: %s", exc)
+
+    try:
+        from .plugins.overnight_arbitrage import register_router as _oa_register_router
+        _app.include_router(_oa_register_router(),
+                            prefix="/api/v1/overnight-arbitrage",
+                            tags=["尾盘隔夜套利"])
+    except ImportError as exc:
+        import logging
+        logging.getLogger(__name__).info("隔夜套利插件未加载: %s", exc)
 
     # 托管前端静态文件
     frontend_dir = PROJECT_DIR / "frontend"
@@ -159,6 +176,14 @@ def main():
     parser.add_argument("--init-db", action="store_true", help="初始化数据库")
     parser.add_argument("--run-overnight-arbitrage", action="store_true",
                         help="运行尾盘隔夜套利 14:43 决策任务")
+    parser.add_argument("--run-principal-capital-scan", action="store_true",
+                        help="[插件] 执行主力资金双向扫描")
+    parser.add_argument("--buy-threshold", type=float, default=50.0,
+                        help="[插件] 主力净流入买入阈值(%%)")
+    parser.add_argument("--sell-threshold", type=float, default=30.0,
+                        help="[插件] 主力净流出卖出阈值(%%)")
+    parser.add_argument("--enable-verify", action="store_true",
+                        help="[插件] 启用新浪抽样核验主力资金数据")
     args = parser.parse_args()
 
     if args.init_db:
@@ -189,29 +214,45 @@ def main():
         return
 
     if args.run_overnight_arbitrage:
-        asyncio.run(_run_overnight_arbitrage_cli(args, logger))
+        _run_overnight_arbitrage_cli(args, logger)
+        return
+
+    if args.run_principal_capital_scan:
+        _run_principal_capital_cli(args, logger)
         return
 
     # 默认：执行每日完整流程
     asyncio.run(_run_daily_pipeline(args, logger))
 
 
-async def _run_overnight_arbitrage_cli(args, logger):
-    """尾盘隔夜套利独立定时任务。"""
-    from datetime import datetime, timezone, timedelta
-    from .db.database import init_db
-    from .services.overnight_arbitrage_service import run_overnight_arbitrage
-
-    BEIJING_TZ = timezone(timedelta(hours=8))
-    init_db()
-    today = datetime.now(BEIJING_TZ).date()
-    weekday = today.weekday()
-    if weekday >= 5 and not args.force:
-        logger.info(f"今天是周{['一','二','三','四','五','六','日'][weekday]}，非交易日，尾盘套利退出")
+def _run_principal_capital_cli(args, logger):
+    """[插件] 主力资金双向扫描 CLI 入口。"""
+    try:
+        from .plugins.principal_capital import run_scan_cli
+    except ImportError as exc:
+        logger.error("主力资金插件未安装: %s", exc)
         return
+    result = run_scan_cli(args)
+    logger.info(
+        "主力资金扫描: status=%s source=%s scanned=%s buy_fresh=%s sell_fresh=%s email=%s",
+        result.get("status"),
+        (result.get("source_status") or {}).get("active_source"),
+        result.get("scanned"),
+        result.get("buy_fresh_count"),
+        result.get("sell_fresh_count"),
+        result.get("email_sent"),
+    )
 
+
+def _run_overnight_arbitrage_cli(args, logger):
+    """尾盘隔夜套利独立定时任务。"""
+    try:
+        from .plugins.overnight_arbitrage import run_cli
+    except ImportError as exc:
+        logger.error("隔夜套利插件未安装: %s", exc)
+        return
     logger.info("尾盘隔夜套利任务启动")
-    result = await run_overnight_arbitrage(target_date=today, dry_run=args.dry_run)
+    result = run_cli(args)
     logger.info(
         "尾盘隔夜套利完成: status=%s, BUY=%s, WATCH=%s, 扫描=%s",
         result.get("status", "completed"),

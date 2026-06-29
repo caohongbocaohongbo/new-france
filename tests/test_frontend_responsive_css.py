@@ -162,22 +162,50 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn(".optional-source-panel", css)
         self.assertIn(".optional-source-grid", css)
 
-    def test_screening_page_has_independent_overnight_arbitrage_tab(self):
+    def test_overnight_arbitrage_is_promoted_to_top_level_page(self):
         html = (ROOT / "frontend/index.html").read_text(encoding="utf-8")
         js = (ROOT / "frontend/js/app.js").read_text(encoding="utf-8")
         css = (ROOT / "frontend/css/styles.css").read_text(encoding="utf-8")
+        plugin_js = (ROOT / "frontend/js/plugins/overnight_arbitrage.js").read_text(encoding="utf-8")
 
-        self.assertIn("尾盘隔夜套利", html)
-        self.assertIn('data-screening-mode="overnight"', html)
-        self.assertIn('id="overnightPanel"', html)
+        self.assertIn('data-page="overnight-arbitrage"', html)
+        self.assertIn('id="page-overnight-arbitrage"', html)
         self.assertIn('id="overnightDecisionBody"', html)
-        self.assertIn("runOvernightArbitrage", js)
-        self.assertIn("/overnight-arbitrage/run", js)
-        self.assertIn("/overnight-arbitrage/latest", js)
-        self.assertIn("renderOvernightDecision", js)
-        self.assertIn("14:43-14:55", js)
+        self.assertNotIn('data-screening-mode="overnight"', html)
+        self.assertNotIn('id="overnightPanel"', html)
+        self.assertIn("'overnight-arbitrage':'尾盘隔夜套利'", js)
+        self.assertIn("setupOvernightArbitragePage", js)
+        self.assertIn("runOvernightArbitrage", plugin_js)
+        self.assertIn("/overnight-arbitrage/run", plugin_js)
+        self.assertIn("/overnight-arbitrage/latest", plugin_js)
+        self.assertIn("renderOvernightDecision", plugin_js)
+        self.assertIn("14:43-14:55", plugin_js)
         self.assertIn(".screening-mode-tabs", css)
         self.assertIn(".overnight-decision-grid", css)
+
+    def test_overnight_arbitrage_plugin_js_is_self_contained(self):
+        """插件 JS 必须自带 fallback 工具，便于整目录迁移到新项目。
+
+        若以后有人把 fallback 删掉、直接硬依赖主项目全局 apiFetch / escapeHtml 等，
+        此测试会失败，提醒迁移性已经被打破。
+        """
+        frontend_plugin = (ROOT / "frontend/js/plugins/overnight_arbitrage.js").read_text(encoding="utf-8")
+        docs_plugin = (ROOT / "docs/js/plugins/overnight_arbitrage.js").read_text(encoding="utf-8")
+        for plugin_js in (frontend_plugin, docs_plugin):
+            # 命名空间
+            self.assertIn("window.OvernightArbitrage", plugin_js)
+            # 必须有 fallback 检测（typeof xxx === 'function'）
+            self.assertIn("typeof apiFetch === 'function'", plugin_js)
+            self.assertIn("typeof escapeHtml === 'function'", plugin_js)
+            self.assertIn("typeof formatNumber === 'function'", plugin_js)
+            self.assertIn("typeof formatMaybePct === 'function'", plugin_js)
+            self.assertIn("typeof setInlineStatus === 'function'", plugin_js)
+            # 必须有内部命名变量 _oaXxx
+            self.assertIn("_oaApiFetch", plugin_js)
+            self.assertIn("_oaEscapeHtml", plugin_js)
+            self.assertIn("_oaSetInlineStatus", plugin_js)
+        # frontend 与 docs 镜像保持一致
+        self.assertEqual(frontend_plugin, docs_plugin)
 
     def test_docs_publish_directory_matches_frontend_for_national_team(self):
         for rel in ["index.html", "js/app.js", "css/styles.css"]:

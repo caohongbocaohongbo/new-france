@@ -1,10 +1,10 @@
-"""尾盘隔夜套利 API。"""
+"""尾盘隔夜套利插件 API。"""
 import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Query
 
-from ..services.overnight_arbitrage_service import (
+from .service import (
     read_overnight_history,
     read_overnight_report,
     run_overnight_arbitrage,

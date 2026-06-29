@@ -1,18 +1,16 @@
-"""尾盘隔夜套利策略服务。"""
+"""尾盘隔夜套利插件策略服务。"""
 import html
 import json
 import logging
 import math
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 
-PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
-REPORT_FILE = PROJECT_DIR / "reports" / "overnight_arbitrage_latest.json"
-HISTORY_FILE = PROJECT_DIR / "reports" / "overnight_arbitrage_history.json"
-BEIJING_TZ = timezone(timedelta(hours=8))
+from . import notifier
+from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, PROJECT_DIR, REPORT_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +149,7 @@ def _reject_reason(row: dict) -> Optional[str]:
     if price <= 0:
         return "停牌或无有效价格"
     amount = _float(row.get("成交额"), 0) or 0
-    if amount < 80_000_000:
+    if amount < float(CONFIG["min_amount_yuan"]):
         return "成交额不足"
     turnover = _float(row.get("换手率"), 0) or 0
     if turnover < 2:
@@ -223,9 +221,16 @@ def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
         score -= 4
 
     score = round(_clip(score, 0, 100), 2)
-    if score >= 55:
+    thresholds = CONFIG["score_thresholds"]
+    if score >= float(thresholds["buy"]):
         action = "BUY"
-    elif score >= 36 or (change_pct >= 7 and amount >= 150_000_000):
+    elif (
+        score >= float(thresholds["watch"])
+        or (
+            change_pct >= float(thresholds["watch_min_change_pct"])
+            and amount >= float(thresholds["watch_min_amount_yuan"])
+        )
+    ):
         action = "WATCH"
     else:
         action = "PASS"
@@ -746,7 +751,7 @@ async def run_overnight_arbitrage(
     generated_at = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M:%S")
     quote_fetcher = quote_fetcher or _eastmoney_all_a_snapshot
     if zt_fetcher is None:
-        from ..agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
+        from .sources.zt_pool import fetch_zt_pool
         zt_fetcher = fetch_zt_pool
     minute_fetcher = minute_fetcher or _fetch_yahoo_5m_strength
 
@@ -1070,15 +1075,7 @@ def _build_overnight_html_content(decision: dict, buy_items: List[dict], watch_i
 
 def notify_overnight_decision(decision: dict) -> bool:
     """发送尾盘套利轻量邮件。失败不影响报告落盘。"""
-    try:
-        from ..agents.layer3_recommendation import notifier
-    except Exception as exc:
-        logger.warning("尾盘套利邮件模块不可用: %s", exc)
-        return False
-
-    config = notifier._get_notify_config()
-    if not config.get("email_enabled") or not config.get("email_to"):
-        return False
+    config = notifier.get_smtp_config()
 
     buy_items = [item for item in decision.get("results", []) if item.get("action") == "BUY"][:5]
     watch_items = [item for item in decision.get("results", []) if item.get("action") == "WATCH"][:5]
@@ -1086,12 +1083,7 @@ def notify_overnight_decision(decision: dict) -> bool:
     text_content = _build_overnight_text_content(decision, buy_items, watch_items)
     html_content = _build_overnight_html_content(decision, buy_items, watch_items)
     try:
-        ok, _message = notifier._send_email(
-            subject=subject,
-            text_content=text_content,
-            html_content=html_content,
-            notify_config=config,
-        )
+        ok, _message = notifier.send_email(subject, text_content, html_content, config)
         return ok
     except Exception as exc:
         logger.warning("尾盘套利邮件发送失败: %s", exc)
