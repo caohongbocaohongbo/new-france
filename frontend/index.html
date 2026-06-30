@@ -342,55 +342,72 @@
 
     <!-- Page: Principal Capital (Plugin - 可独立迁移) -->
     <section id="page-principal-capital" class="page">
-        <div class="panel">
-            <div class="panel-header">
-                <h2>主力资金双向监控</h2>
-                <span id="pcMeta" class="panel-subtitle">未加载</span>
+        <div class="pc-top-grid">
+            <!-- 左:控制区 -->
+            <div class="panel pc-control-panel">
+                <div class="panel-header">
+                    <h2>主力资金双向监控</h2>
+                    <span id="pcMeta" class="panel-subtitle">未加载</span>
+                </div>
+                <div class="pc-controls-stack">
+                    <div class="filter-group">
+                        <label>买入阈值(%)</label>
+                        <input id="pcBuyThreshold" type="number" min="0" max="100" step="1" value="50" class="input input-sm">
+                    </div>
+                    <div class="filter-group">
+                        <label>卖出阈值(%)</label>
+                        <input id="pcSellThreshold" type="number" min="0" max="100" step="1" value="30" class="input input-sm">
+                    </div>
+                    <div class="filter-group pc-checkbox-row">
+                        <label><input id="pcExcludeStar" type="checkbox" checked> 排除科创板</label>
+                    </div>
+                    <div class="filter-group pc-checkbox-row">
+                        <label><input id="pcEnableVerify" type="checkbox"> 启用新浪核验</label>
+                    </div>
+                    <div class="filter-group pc-checkbox-row">
+                        <label><input id="pcForce" type="checkbox" checked> 强制运行(忽略交易时段)</label>
+                    </div>
+                    <button id="pcRunBtn" class="btn btn-primary btn-full" onclick="pcTriggerScan()">执行扫描</button>
+                    <button id="pcRefreshBtn" class="btn btn-full" onclick="pcLoadLatest()">刷新结果</button>
+                    <span id="pcStatus" class="inline-status" aria-live="polite"></span>
+                </div>
             </div>
-            <div class="pc-controls" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--border-color,#e5e7eb)">
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px">买入阈值(%)
-                    <input id="pcBuyThreshold" type="number" min="0" max="100" step="1" value="50" style="width:70px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px">
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px">卖出阈值(%)
-                    <input id="pcSellThreshold" type="number" min="0" max="100" step="1" value="30" style="width:70px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px">
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px">
-                    <input id="pcExcludeStar" type="checkbox" checked> 排除科创板
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px">
-                    <input id="pcEnableVerify" type="checkbox"> 启用新浪核验
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px">
-                    <input id="pcForce" type="checkbox" checked> 强制运行(忽略交易时段)
-                </label>
-                <button id="pcRunBtn" class="btn btn-primary" onclick="pcTriggerScan()" style="padding:6px 16px">执行扫描</button>
-                <button id="pcRefreshBtn" class="btn" onclick="pcLoadLatest()" style="padding:6px 16px">刷新结果</button>
-                <span id="pcStatus" class="inline-status" aria-live="polite"></span>
+
+            <!-- 中:买入信号 -->
+            <div class="panel pc-signal-panel pc-buy-panel">
+                <div class="panel-header pc-signal-header pc-buy-header">
+                    <div class="title-with-count"><h2>买入信号</h2><span id="pcBuyCount" class="count-pill">0</span></div>
+                </div>
+                <div class="table-scroll-shell pc-table-shell">
+                    <button class="table-scroll-nav table-scroll-nav-left" onclick="scrollPcBuyTable(-1)" aria-label="向左查看买入信号列" title="向左查看">‹</button>
+                    <button class="table-scroll-nav table-scroll-nav-right" onclick="scrollPcBuyTable(1)" aria-label="向右查看买入信号列" title="向右查看">›</button>
+                    <div class="table-scroll" id="pcBuyTableScroll">
+                        <div id="pcBuyTable"><p class="empty-state">点击「执行扫描」获取数据</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右:卖出信号 -->
+            <div class="panel pc-signal-panel pc-sell-panel">
+                <div class="panel-header pc-signal-header pc-sell-header">
+                    <div class="title-with-count"><h2>卖出信号</h2><span id="pcSellCount" class="count-pill">0</span></div>
+                </div>
+                <div class="table-scroll-shell pc-table-shell">
+                    <button class="table-scroll-nav table-scroll-nav-left" onclick="scrollPcSellTable(-1)" aria-label="向左查看卖出信号列" title="向左查看">‹</button>
+                    <button class="table-scroll-nav table-scroll-nav-right" onclick="scrollPcSellTable(1)" aria-label="向右查看卖出信号列" title="向右查看">›</button>
+                    <div class="table-scroll" id="pcSellTableScroll">
+                        <div id="pcSellTable"><p class="empty-state">点击「执行扫描」获取数据</p></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="pc-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
-            <div class="panel">
-                <div class="panel-header" style="background:#fef2f2">
-                    <h2 style="color:#b91c1c">买入信号</h2>
-                    <span id="pcBuyCount" class="count-pill">0</span>
-                </div>
-                <div id="pcBuyTable" style="padding:12px"><p class="empty-state">点击"执行扫描"获取数据</p></div>
-            </div>
-            <div class="panel">
-                <div class="panel-header" style="background:#eff6ff">
-                    <h2 style="color:#1d4ed8">卖出信号</h2>
-                    <span id="pcSellCount" class="count-pill">0</span>
-                </div>
-                <div id="pcSellTable" style="padding:12px"><p class="empty-state">点击"执行扫描"获取数据</p></div>
-            </div>
-        </div>
-
-        <div class="panel" style="margin-top:16px">
+        <!-- 下:数据源状态(全宽) -->
+        <div class="panel pc-source-panel">
             <div class="panel-header">
                 <h2>数据源状态</h2>
             </div>
-            <div id="pcSourceHealth" style="padding:12px"><p class="empty-state">未加载</p></div>
+            <div id="pcSourceHealth" class="pc-source-body"><p class="empty-state">未加载</p></div>
         </div>
     </section>
 

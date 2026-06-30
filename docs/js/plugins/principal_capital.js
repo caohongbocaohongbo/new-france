@@ -10,18 +10,36 @@ window.PrincipalCapital = window.PrincipalCapital || {
     state: { initialized: false, lastReport: null },
 };
 
-const PC_API_BASE = '/api/v1/principal-capital';
+// 业务接口前缀（不含 /api/v1，由 apiFetch 或 _pcResolveApiBase 拼接）
+const PC_PATH = '/principal-capital';
 
 /* ============================================================
  * 工具函数（不污染 window）
  * ============================================================ */
 
-function _pcFetch(path, opts = {}) {
-    // 优先使用 app.js 的 apiFetch（自带 timeout）；如果未加载则降级为原生 fetch
-    if (typeof apiFetch === 'function') {
-        return apiFetch(PC_API_BASE + path, opts);
+// 解析 API base：local / localhost / file:// 都强制走本地后端，避免落到 Render
+function _pcResolveApiBase() {
+    if (typeof location !== 'undefined') {
+        if (location.protocol === 'file:' ||
+            location.hostname === 'localhost' ||
+            location.hostname === '127.0.0.1') {
+            return 'http://localhost:8000/api/v1';
+        }
     }
-    return fetch(PC_API_BASE + path, opts);
+    if (typeof API_BASE === 'string' && API_BASE) return API_BASE;
+    return '/api/v1';
+}
+
+// _pcFetch: 走绝对 URL，避免与主项目 apiFetch 的 API_BASE 双重拼接 /api/v1
+function _pcFetch(path, opts = {}) {
+    const url = _pcResolveApiBase() + PC_PATH + path;
+    const ms = opts.timeout || 30000;
+    const o = { ...opts };
+    delete o.timeout; delete o.retries;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { ...o, signal: controller.signal })
+        .finally(() => clearTimeout(timer));
 }
 
 function _pcSetStatus(text, isError = false) {
@@ -56,11 +74,151 @@ function _pcEscape(s) {
  * ============================================================ */
 
 function setupPrincipalCapitalPage() {
+    _pcInjectStyles();
     if (!PrincipalCapital.state.initialized) {
         PrincipalCapital.state.initialized = true;
     }
     pcLoadLatest();
     pcLoadSourceHealth();
+}
+
+/* ============================================================
+ * 插件自带样式（首次进入页面注入到 <head>，迁移时零外部 CSS 依赖）
+ * ============================================================ */
+function _pcInjectStyles() {
+    if (document.getElementById('principal-capital-styles')) return;
+    const css = `
+/* 主力资金顶部三栏:左控制 / 中买入 / 右卖出 */
+#page-principal-capital .pc-top-grid {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-base, 16px);
+    margin-bottom: var(--sp-base, 16px);
+    align-items: stretch;
+}
+/* 中等屏幕:控制区独占一行,买入卖出两栏并列 */
+@media (max-width: 1280px) {
+    #page-principal-capital .pc-top-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    #page-principal-capital .pc-control-panel {
+        grid-column: 1 / -1;
+    }
+    #page-principal-capital .pc-controls-stack {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 12px;
+    }
+    #page-principal-capital .pc-controls-stack .btn-full {
+        flex: 0 0 auto;
+        width: auto;
+    }
+}
+/* 窄屏:全部单列堆叠 */
+@media (max-width: 720px) {
+    #page-principal-capital .pc-top-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 三栏 panel 等高 + 子内容能伸展 */
+#page-principal-capital .pc-control-panel,
+#page-principal-capital .pc-signal-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* 左:控制区表单堆叠 */
+#page-principal-capital .pc-controls-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+}
+#page-principal-capital .pc-checkbox-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--body, #202124);
+    cursor: pointer;
+}
+#page-principal-capital .pc-controls-stack .input-sm {
+    width: 100%;
+}
+#page-principal-capital .pc-controls-stack .filter-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted, #6b7280);
+    margin-bottom: 4px;
+}
+#page-principal-capital .pc-controls-stack .pc-checkbox-row label {
+    margin-bottom: 0;
+}
+
+/* 信号头部色调 */
+#page-principal-capital .pc-buy-header { background: #fef2f2; }
+#page-principal-capital .pc-buy-header h2 { color: #b91c1c; }
+#page-principal-capital .pc-sell-header { background: #eff6ff; }
+#page-principal-capital .pc-sell-header h2 { color: #1d4ed8; }
+
+/* 信号 panel 表格滚动 shell:固定最小高度,撑开整个 panel */
+#page-principal-capital .pc-table-shell {
+    flex: 1 1 auto;
+    min-height: 300px;
+    max-height: 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+#page-principal-capital .pc-table-shell .table-scroll {
+    flex: 1;
+    overflow: auto;
+}
+
+/* 信号表格 min-width:确保窄屏触发横向滚动,左右按钮才有意义 */
+#page-principal-capital .pc-table-shell .data-table {
+    min-width: 520px;
+}
+#page-principal-capital .pc-table-shell .empty-state {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--muted-soft, #9ca3af);
+}
+
+/* 数据源状态:全宽 panel,与上方间距 */
+#page-principal-capital .pc-source-panel {
+    margin-top: 0;
+}
+#page-principal-capital .pc-source-body {
+    padding: 12px 16px 16px;
+}
+#page-principal-capital .pc-source-body .data-table {
+    min-width: 320px;
+}
+`;
+    const style = document.createElement('style');
+    style.id = 'principal-capital-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+}
+
+/* ============================================================
+ * 表格横向滚动(响应监控列表"‹/›"按钮交互)
+ * ============================================================ */
+function scrollPcBuyTable(direction) {
+    _pcScrollById('pcBuyTableScroll', direction);
+}
+function scrollPcSellTable(direction) {
+    _pcScrollById('pcSellTableScroll', direction);
+}
+function _pcScrollById(id, direction) {
+    const scroller = document.getElementById(id);
+    if (!scroller) return;
+    const distance = Math.max(200, Math.round(scroller.clientWidth * 0.75));
+    scroller.scrollBy({ left: direction < 0 ? -distance : distance, behavior: 'smooth' });
 }
 
 /* ============================================================
@@ -166,50 +324,57 @@ function _pcRenderTable(containerId, rows, isSell = false) {
         container.innerHTML = '<p class="empty-state">暂无信号</p>';
         return;
     }
-    const headerColor = isSell ? '#eff6ff' : '#fef2f2';
     const headerExtra = isSell ? '<th>严重度</th>' : '';
-    const headers = `<tr style="background:${headerColor}"><th>代码</th><th>名称</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th>${headerExtra}</tr>`;
-    const html = rows.map(r => {
+    const headers = `<thead><tr><th>代码</th><th>名称</th><th style="text-align:right">占比</th><th style="text-align:right">主力净流入</th><th style="text-align:right">成交额</th><th style="text-align:right">涨幅</th>${headerExtra}</tr></thead>`;
+    const ratioColor = isSell ? '#1d4ed8' : '#dc2626';
+    const bodyRows = rows.map(r => {
         const sev = r.severity || '';
-        const sevStyle = isSell ? {
-            danger: 'background:#dbeafe;color:#0f172a;font-weight:700',
-            alert: 'background:#eff6ff;color:#1d4ed8',
-            warn: 'background:#f1f5f9;color:#475569',
-        }[sev] || '' : '';
+        const sevStyleMap = {
+            danger: 'color:#0f172a;font-weight:700',
+            alert:  'color:#1d4ed8',
+            warn:   'color:#475569',
+        };
+        const sevStyle = isSell ? (sevStyleMap[sev] || '') : '';
         const sevCell = isSell ? `<td style="${sevStyle}">${_pcEscape(sev || '--')}</td>` : '';
         return `<tr>
             <td>${_pcEscape(r.code || '')}</td>
             <td>${_pcEscape(r.name || '')}</td>
-            <td style="text-align:right;color:${isSell ? '#1d4ed8' : '#dc2626'};font-weight:600">${_pcFmtPct(r.main_inflow_ratio)}</td>
+            <td style="text-align:right;color:${ratioColor};font-weight:600">${_pcFmtPct(r.main_inflow_ratio)}</td>
             <td style="text-align:right">${_pcFmtYi(r.main_net_inflow)}</td>
             <td style="text-align:right">${_pcFmtYi(r.total_amount)}</td>
             <td style="text-align:right">${_pcFmtPct(r.change_pct)}</td>
             ${sevCell}
         </tr>`;
     }).join('');
-    container.innerHTML = `<table style="width:100%;border-collapse:collapse" cellpadding="8" border="1">${headers}${html}</table>`;
+    container.innerHTML = `<table class="data-table">${headers}<tbody>${bodyRows}</tbody></table>`;
 }
 
 function _pcRenderSourceHealth(data) {
     const el = document.getElementById('pcSourceHealth');
     if (!el) return;
-    if (!data || Object.keys(data).length === 0 || data.sources && Object.keys(data.sources).length === 0) {
+    const sources = ['eastmoney_push2', 'eastmoney_push2his', 'akshare'];
+    const hasAnyKnown = data && sources.some(k => data[k] && typeof data[k] === 'object');
+    if (!hasAnyKnown) {
+        // 后端返回 {detail:"Not Found"} / {} / 错误响应 时，避免误显示"正常"
         el.innerHTML = '<p class="empty-state">尚未有数据源健康记录</p>';
         return;
     }
-    const sources = ['eastmoney_push2', 'eastmoney_push2his', 'akshare'];
     const rows = sources.map(name => {
         const item = data[name] || {};
         const fs = item.failure_streak || 0;
         const blocked = item.blocked_until;
-        const status = blocked ? `<span style="color:#dc2626">熔断到 ${_pcEscape(blocked)}</span>` :
-                       fs > 0 ? `<span style="color:#d97706">失败 ${fs} 次</span>` :
-                       '<span style="color:#059669">正常</span>';
-        return `<tr><td>${name}</td><td>${status}</td></tr>`;
+        let statusHtml;
+        if (blocked) {
+            statusHtml = `<span style="color:#dc2626">熔断到 ${_pcEscape(blocked)}</span>`;
+        } else if (fs > 0) {
+            statusHtml = `<span style="color:#d97706">失败 ${fs} 次</span>`;
+        } else {
+            statusHtml = `<span style="color:#059669">正常</span>`;
+        }
+        return `<tr><td>${_pcEscape(name)}</td><td>${statusHtml}</td></tr>`;
     }).join('');
-    const updated = data.updated_at ? `<p style="margin-top:8px;color:#6b7280;font-size:12px">更新时间: ${_pcEscape(data.updated_at)}</p>` : '';
-    el.innerHTML = `<table style="width:100%;border-collapse:collapse" cellpadding="8" border="1">
-        <tr style="background:#f3f4f6"><th>数据源</th><th>状态</th></tr>
-        ${rows}
-    </table>${updated}`;
+    const updated = data.updated_at
+        ? `<div class="table-note" style="margin-top:8px">更新时间: ${_pcEscape(data.updated_at)}</div>`
+        : '';
+    el.innerHTML = `<table class="data-table"><thead><tr><th>数据源</th><th>状态</th></tr></thead><tbody>${rows}</tbody></table>${updated}`;
 }
