@@ -69,6 +69,35 @@ function _pcEscape(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function _pcFmtTime(iso) {
+    if (!iso) return '--';
+    try {
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return String(iso);
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    } catch (e) {
+        return String(iso);
+    }
+}
+
+const PC_STATUS_LABEL = {
+    completed: '已完成',
+    no_data: '数据源全部不可用',
+    skipped: '已跳过(非交易时段)',
+    error: '异常',
+    empty: '暂无记录',
+    running: '运行中...',
+};
+
+const PC_SOURCE_LABEL = {
+    eastmoney: '东方财富(主)',
+    eastmoney_backup: '东方财富(备)',
+    akshare: 'akshare',
+    cache: '本地缓存(降级)',
+    none: '全部不可用',
+};
+
 /* ============================================================
  * 页面入口（供 app.js 路由调用）
  * ============================================================ */
@@ -198,6 +227,23 @@ function _pcInjectStyles() {
 #page-principal-capital .pc-source-body .data-table {
     min-width: 320px;
 }
+
+/* 控制区按钮样式与"手动筛选-执行筛选"按钮对齐(蓝紫色主按钮 + 47px 高度 + 16px 字号) */
+#page-principal-capital .pc-control-panel .btn-full {
+    height: 47px;
+    font-size: 16px;
+    width: 100%;
+    margin: 0;
+}
+#page-principal-capital .pc-control-panel .btn-primary {
+    background: var(--primary, #2932e1);
+    border-color: var(--primary, #2932e1);
+    color: var(--on-primary, #fff);
+}
+#page-principal-capital .pc-control-panel .btn-primary:hover {
+    background: var(--primary-active, #1e27b5);
+    border-color: var(--primary-active, #1e27b5);
+}
 `;
     const style = document.createElement('style');
     style.id = 'principal-capital-styles';
@@ -305,16 +351,28 @@ function _pcRenderReport(data) {
     const buy = data.buy_triggered || [];
     const sell = data.sell_triggered || [];
     const stale = data.source_status && data.source_status.is_stale;
-    const src = (data.source_status && data.source_status.active_source) || '--';
+    const srcRaw = (data.source_status && data.source_status.active_source) || 'none';
+    const srcLabel = (PC_SOURCE_LABEL[srcRaw] || srcRaw) + (stale ? ' (缓存降级)' : '');
+    const statusLabel = PC_STATUS_LABEL[data.status] || data.status || '--';
     if (meta) {
-        meta.textContent = `${data.now || ''} | 扫描 ${data.scanned || 0} 只 | 数据源: ${src}${stale ? ' (缓存降级)' : ''} | 状态: ${data.status}`;
-        meta.style.color = stale ? '#dc2626' : '#6b7280';
+        meta.textContent = `${_pcFmtTime(data.now)} · 扫描 ${data.scanned || 0} 只 · 数据源: ${srcLabel} · 状态: ${statusLabel}`;
+        meta.style.color = (stale || data.status === 'no_data' || data.status === 'error') ? '#dc2626' : '#6b7280';
     }
     document.getElementById('pcBuyCount').textContent = String(buy.length);
     document.getElementById('pcSellCount').textContent = String(sell.length);
     _pcRenderTable('pcBuyTable', buy);
     _pcRenderTable('pcSellTable', sell, true);
-    _pcSetStatus(`完成: 买${buy.length} 卖${sell.length}${data.email_sent ? ' (已邮件)' : ''}`);
+
+    // 状态行差异化提示
+    if (data.status === 'no_data') {
+        _pcSetStatus('扫描失败:全部数据源不可达(详见底部数据源状态)', 'error');
+    } else if (data.status === 'skipped') {
+        _pcSetStatus(`已跳过:${data.reason || '非交易时段'}`);
+    } else if (buy.length === 0 && sell.length === 0) {
+        _pcSetStatus(`完成:本轮无信号 (已扫描 ${data.scanned || 0} 只)`, 'ok');
+    } else {
+        _pcSetStatus(`完成:买 ${buy.length} 卖 ${sell.length}${data.email_sent ? ' (已邮件)' : ''}`, 'ok');
+    }
 }
 
 function _pcRenderTable(containerId, rows, isSell = false) {
