@@ -159,6 +159,18 @@ function _pcInjectStyles() {
     min-width: 0;
 }
 
+/* 左:控制区头部 (无 h2 标题, 仅显示 meta 信息) */
+#page-principal-capital .pc-control-header {
+    padding: 12px 16px;
+    min-height: 0;
+}
+#page-principal-capital .pc-meta {
+    color: #949999;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+}
+
 /* 左:控制区表单堆叠 */
 #page-principal-capital .pc-controls-stack {
     display: flex;
@@ -356,7 +368,6 @@ function _pcRenderReport(data) {
     const statusLabel = PC_STATUS_LABEL[data.status] || data.status || '--';
     if (meta) {
         meta.textContent = `${_pcFmtTime(data.now)} · 扫描 ${data.scanned || 0} 只 · 数据源: ${srcLabel} · 状态: ${statusLabel}`;
-        meta.style.color = (stale || data.status === 'no_data' || data.status === 'error') ? '#dc2626' : '#6b7280';
     }
     document.getElementById('pcBuyCount').textContent = String(buy.length);
     document.getElementById('pcSellCount').textContent = String(sell.length);

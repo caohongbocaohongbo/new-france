@@ -36,12 +36,14 @@ FACTOR_NAMES = {
     "turnover": "换手率",
     "pe": "市盈率",
     "zt_quality": "涨停质量",
+    "principal_capital": "主力资金",
     "event_bonus": "事件驱动加分",
 }
 
 FACTOR_ORDER = [
     "pullback", "volume_trend", "ma_alignment", "strength", "entry_point",
     "market_cap", "volume_ratio", "turnover", "pe", "zt_quality",
+    "principal_capital",
 ]
 
 
@@ -387,6 +389,12 @@ def build_skill_params(strategy: Dict[str, Any]) -> Dict[str, dict]:
             "latest_fbt": int(strategy["latestFbt"]),
             "max_zbc": int(strategy["maxZbc"]),
             "max_zt_frequency": int(strategy["maxZtFrequency"]),
+        },
+        "principal_capital": {
+            "buy_threshold": 50.0,
+            "sell_threshold": 30.0,
+            "exclude_star": True,
+            "min_amount": 10_000_000,
         },
     }
 

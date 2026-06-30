@@ -48,23 +48,27 @@ class StrategyConfig:
 
 
 # ---- 默认因子配置 ----
+# 总权重 = 100% (含主力资金 5%)。新增/调整因子权重时必须保持总和 = 1.0
 DEFAULT_FACTORS = [
-    FactorConfig(name="回撤幅度", key="pullback", weight=0.180000,
+    FactorConfig(name="回撤幅度", key="pullback", weight=0.140000,
                  params={'hard_min': 5.0, 'ideal_min': 5.0, 'ideal_max': 8.0, 'hard_max': 10.0}),
-    FactorConfig(name="量能趋势", key="volume_trend", weight=0.120000),
-    FactorConfig(name="均线多头", key="ma_alignment", weight=0.120000),
+    FactorConfig(name="量能趋势", key="volume_trend", weight=0.110000),
+    FactorConfig(name="均线多头", key="ma_alignment", weight=0.110000),
     FactorConfig(name="强势确认", key="strength", weight=0.100000),
     FactorConfig(name="尾盘买点", key="entry_point", weight=0.100000),
     FactorConfig(name="流通市值", key="market_cap", weight=0.100000,
                  params={'hard_min': 50.0, 'ideal_min': 50.0, 'ideal_max': 100.0, 'hard_max': 200.0}),
     FactorConfig(name="量比", key="volume_ratio", weight=0.080000,
                  params={'hard_min': 1.0, 'ideal_min': 1.5, 'ideal_max': 3.0, 'hard_max': 5.0}),
-    FactorConfig(name="换手率", key="turnover", weight=0.060000,
+    FactorConfig(name="换手率", key="turnover", weight=0.070000,
                  params={'hard_min': 5.0, 'ideal_min': 5.0, 'ideal_max': 8.0, 'hard_max': 10.0}),
     FactorConfig(name="市盈率", key="pe", weight=0.080000,
                  params={'max_pe': 50.0}),
     FactorConfig(name="涨停质量", key="zt_quality", weight=0.060000,
                  params={'latest_fbt': 140000, 'max_zbc': 0, 'max_zt_frequency': 2}),
+    FactorConfig(name="主力资金", key="principal_capital", weight=0.050000, enabled=True,
+                 params={"buy_threshold": 50.0, "sell_threshold": 30.0,
+                         "exclude_star": True, "min_amount": 10_000_000}),
     FactorConfig(name="事件驱动加分", key="event_bonus", weight=0.000000,
                  params={"max_bonus": 8.0, "max_penalty": -8.0}),
 ]

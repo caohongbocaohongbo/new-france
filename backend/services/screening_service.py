@@ -4,6 +4,8 @@ DataCollector → SignalEngine → RecommendationAgent
 """
 import asyncio
 import logging
+import queue
+import threading
 from datetime import date
 from typing import Dict, List, Optional
 
@@ -19,6 +21,16 @@ from .drawdown import build_cumulative_price_history_series, latest_cumulative_d
 
 logger = logging.getLogger(__name__)
 
+# 主力资金插件可选, 失败不影响主链路
+try:
+    from backend.plugins.principal_capital.sources.multi_source import (
+        get_cached_fund_flow as _pc_get_cached,
+        fetch_market_fund_flow_resilient as _pc_fetch_resilient,
+    )
+    _HAS_PC_PLUGIN = True
+except ImportError:
+    _HAS_PC_PLUGIN = False
+
 def _read_watchlist() -> List[Dict]:
     """从 france.md 读取监控列表"""
     return parse_watchlist(FRANCE_FILE)
@@ -28,6 +40,55 @@ def _fetch_index_snapshot() -> dict:
     """获取上证指数真实快照，失败时保留空值而不是伪造点位。"""
     from ..agents.layer1_data_collector.sources.index_data import fetch_index_snapshot
     return fetch_index_snapshot()
+
+
+async def _fetch_principal_capital_map(target_date) -> dict:
+    """获取主力资金占比映射 {code: main_inflow_ratio}。"""
+    if not _HAS_PC_PLUGIN:
+        return {}
+    try:
+        df, age = _pc_get_cached(max_age_seconds=600)
+        if df is not None and not df.empty:
+            logger.info(f"  主力资金: 命中缓存 (age={age}s, {len(df)} 只)")
+            return df.set_index("code")["main_inflow_ratio"].to_dict()
+
+        logger.info("  主力资金: 缓存过期, 现拉全市场...")
+        result_queue: "queue.Queue" = queue.Queue(maxsize=1)
+
+        def _worker() -> None:
+            try:
+                result_queue.put(("ok", _pc_fetch_resilient()))
+            except Exception as exc:
+                result_queue.put(("error", exc))
+
+        thread = threading.Thread(target=_worker, name="principal-capital-fetch", daemon=True)
+        thread.start()
+        try:
+            state, payload = await asyncio.to_thread(result_queue.get, True, 20)
+        except queue.Empty:
+            logger.warning("  主力资金: 现拉超时，改用过期缓存兜底")
+            state, payload = "timeout", None
+
+        if state == "error":
+            raise payload
+
+        if state == "ok":
+            df, status = payload
+        else:
+            df, status = None, {}
+        if df is not None and not df.empty:
+            logger.info(
+                f"  主力资金: 现拉成功 ({len(df)} 只, source={status.get('active_source')})"
+            )
+            return df.set_index("code")["main_inflow_ratio"].to_dict()
+
+        df, age = _pc_get_cached(max_age_seconds=24 * 3600)
+        if df is not None and not df.empty:
+            logger.warning(f"  主力资金: 全部数据源失败, 用过期缓存兜底 (age={age}s)")
+            return df.set_index("code")["main_inflow_ratio"].to_dict()
+    except Exception as exc:
+        logger.warning(f"  主力资金数据获取失败: {exc}")
+    return {}
 
 
 def _build_price_history_series(hist: Optional[pd.DataFrame],
@@ -250,10 +311,11 @@ async def run_full_pipeline(
     codes = [e["code"] for e in watchlist]
     event_engine = EventEngine()
 
-    quotes, historical, events = await asyncio.gather(
+    quotes, historical, events, principal_capital_map = await asyncio.gather(
         collector.collect_watchlist_quotes(codes),
         collector.collect_historical_batch(codes),
         event_engine.collect_daily_events(target_date),
+        _fetch_principal_capital_map(target_date),
     )
     logger.info(f"  实时行情: {len(quotes)} 只")
 
@@ -389,6 +451,7 @@ async def run_full_pipeline(
             "ref_price": e["ref_price"],
             "current_price": current_price,
             "drop_pct": round(drop_pct, 2),
+            "main_inflow_ratio": principal_capital_map.get(code),
             "涨跌幅": q.get("涨跌幅"),
             "换手率": q.get("换手率"),
             "市盈率": q.get("市盈率"),

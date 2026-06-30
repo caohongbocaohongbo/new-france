@@ -57,6 +57,7 @@ class SignalEngineAgent:
                 "history": hist,
                 "index_gain": index_gain,
                 "events": stock_events,
+                "main_inflow_ratio": c.get("main_inflow_ratio"),
                 "zt_quality": {
                     "封板时间": c.get("封板时间", 0),
                     "炸板次数": c.get("炸板次数", 0),

@@ -1852,7 +1852,7 @@ function renderRecommendationCards(stocks) {
     disposeRecommendationCharts();
     const names = {STRONG_BUY:'STRONG BUY',BUY:'BUY',WATCH:'WATCH',PASS:'PASS'};
     const colors = {STRONG_BUY:'#e60012',BUY:'#F39C12',WATCH:'#2932e1',PASS:'#999999'};
-    const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
+    const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality','principal_capital'];
     const el = document.getElementById('recList');
     const cards = stocks.map(s => {
         let dots = '';
@@ -2235,7 +2235,7 @@ async function runScreening() {
 function renderScreeningResults(results) {
     screeningLastResults = results || [];
     const names = {strong_buy:'STRONG BUY',buy:'BUY',watch:'WATCH',pass:'PASS'};
-    const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality'];
+    const keys = ['pullback','volume_trend','ma_alignment','strength','entry_point','market_cap','volume_ratio','turnover','pe','zt_quality','principal_capital'];
     let rows = results.map(s => {
         let dots = '';
         if (s.factors) keys.forEach(k => {
@@ -2288,12 +2288,12 @@ function renderScreeningEmptyState() {
 }
 
 // ---- Settings ----
-let factorWeights = { pullback:15,volume_trend:12,ma_alignment:12,strength:10,entry_point:10,market_cap:10,volume_ratio:8,turnover:8,pe:8,zt_quality:7 };
+let factorWeights = { pullback:14,volume_trend:11,ma_alignment:11,strength:10,entry_point:10,market_cap:10,volume_ratio:8,turnover:7,pe:8,zt_quality:6,principal_capital:5 };
 let strategyDraft = { dropMin:5, dropMax:10, peMax:50, volMin:1, volMax:5, turnoverMin:5, turnoverMax:10, mcMin:50, mcMax:200, trackingDays:30, latestFbt:140000, maxZbc:0, maxZtFrequency:2 };
 let notificationDraft = { emailEnabled:true, emailHost:'smtp.qq.com', emailPort:465, emailUser:'', emailTo:'' };
 let ztSortDraft = { sortBy:'seal_time', sortOrder:'asc' };
 let runtimeConfigState = { config:null, previous_config:null, saved_at:null, source:'config/strategy_params.py' };
-const factorNames = {pullback:'回撤幅度',volume_trend:'量能趋势',ma_alignment:'均线多头',strength:'强势确认',entry_point:'尾盘买点',market_cap:'流通市值',volume_ratio:'量比',turnover:'换手率',pe:'市盈率',zt_quality:'涨停质量'};
+const factorNames = {pullback:'回撤幅度',volume_trend:'量能趋势',ma_alignment:'均线多头',strength:'强势确认',entry_point:'尾盘买点',market_cap:'流通市值',volume_ratio:'量比',turnover:'换手率',pe:'市盈率',zt_quality:'涨停质量',principal_capital:'主力资金'};
 const strategyLabels = {
     dropMin:'回撤下限', dropMax:'回撤上限', peMax:'PE上限', volMin:'量比下限', volMax:'量比上限',
     turnoverMin:'换手率下限', turnoverMax:'换手率上限', mcMin:'流通市值下限', mcMax:'流通市值上限',

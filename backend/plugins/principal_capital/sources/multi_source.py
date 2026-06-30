@@ -230,3 +230,8 @@ def fetch_market_fund_flow_resilient(
     except Exception as exc:
         attempts.append({"source": "cache", "status": "error", "error": str(exc), "latency_ms": 0})
     return pd.DataFrame(), status_report
+
+
+def get_cached_fund_flow(max_age_seconds: int = 600) -> Tuple[pd.DataFrame, Optional[int]]:
+    """对外暴露的只读缓存接口（不发 HTTP）。"""
+    return _read_cache(cache_ttl_seconds=max_age_seconds)

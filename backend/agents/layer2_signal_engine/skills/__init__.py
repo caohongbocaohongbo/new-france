@@ -20,6 +20,14 @@ ALL_SKILLS = [
     ZTQualitySkill, EventBonusSkill,
 ]
 
+# ---- 可选注册: 主力资金插件 skill ----
+try:
+    from backend.plugins.principal_capital.skill import PrincipalCapitalSkill
+    if PrincipalCapitalSkill not in ALL_SKILLS:
+        ALL_SKILLS.append(PrincipalCapitalSkill)
+except ImportError:
+    pass
+
 def build_skills() -> list:
     """实例化所有启用的因子"""
     return [cls() for cls in ALL_SKILLS]
