@@ -10,8 +10,8 @@ from fastapi import APIRouter, BackgroundTasks, Query
 from .config import SOURCE_HEALTH_FILE
 from .service import (
     _json_safe,
-    read_history,
-    read_report,
+    read_history_resilient,
+    read_report_resilient,
     run_principal_capital_scan,
     write_report,
 )
@@ -76,7 +76,7 @@ async def trigger_principal_capital(
 @router.get("/latest")
 async def latest_principal_capital():
     try:
-        return read_report()
+        return read_report_resilient()
     except Exception as exc:
         return {"status": "error", "error": str(exc)}
 
@@ -84,10 +84,10 @@ async def latest_principal_capital():
 @router.get("/snapshot")
 async def principal_capital_snapshot(history_limit: int = Query(12, ge=1, le=1000)):
     try:
-        records = (read_history().get("records") or [])[-history_limit:]
+        records = (read_history_resilient().get("records") or [])[-history_limit:]
         return {
             "status": "ok",
-            "report": _json_safe(read_report()),
+            "report": _json_safe(read_report_resilient()),
             "history": {"status": "ok", "records": _json_safe(records)},
             "source_health": _json_safe(_read_source_health_payload()),
         }
@@ -101,7 +101,7 @@ async def principal_capital_history(
     limit: int = Query(200, ge=1, le=1000),
 ):
     try:
-        records = (read_history().get("records") or [])[-limit:]
+        records = (read_history_resilient().get("records") or [])[-limit:]
         if direction in {"buy", "sell"}:
             records = [item for item in records if item.get("direction") == direction]
         return {"status": "ok", "records": _json_safe(records[-limit:])}

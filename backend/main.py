@@ -374,8 +374,14 @@ async def _run_daily_pipeline(args, logger):
     # 4. 执行完整筛选流水线（核心链路）
     logger.info("[Step 4] 执行筛选流水线...")
     from .services.screening_service import run_full_pipeline
+    from .services.task_history import append_task_record
     import json
-    result = await run_full_pipeline(target_date=today, dry_run=args.dry_run, **screening_params)
+    try:
+        result = await run_full_pipeline(target_date=today, dry_run=args.dry_run, **screening_params)
+        append_task_record("success", "admin(cron)")
+    except Exception as exc:
+        append_task_record("failed", "admin(cron)", error=str(exc))
+        raise
 
     # 写入 latest.json（CLI 模式也需要更新，供前端轮询）
     reports_dir = PROJECT_DIR / "reports"

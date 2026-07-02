@@ -75,7 +75,7 @@ function _pcFmtTime(iso) {
         const d = new Date(iso);
         if (isNaN(d.getTime())) return String(iso);
         const pad = n => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     } catch (e) {
         return String(iso);
     }
@@ -394,7 +394,7 @@ function _pcRenderTable(containerId, rows, isSell = false) {
         return;
     }
     const headerExtra = isSell ? '<th>严重度</th>' : '';
-    const headers = `<thead><tr><th>代码</th><th>名称</th><th style="text-align:right">占比</th><th style="text-align:right">主力净流入</th><th style="text-align:right">成交额</th><th style="text-align:right">涨幅</th>${headerExtra}</tr></thead>`;
+    const headers = `<thead><tr><th>代码</th><th>名称</th><th>时间</th><th style="text-align:right">占比</th><th style="text-align:right">主力净流入</th><th style="text-align:right">成交额</th><th style="text-align:right">涨幅</th>${headerExtra}</tr></thead>`;
     const ratioColor = isSell ? '#1d4ed8' : '#dc2626';
     const bodyRows = rows.map(r => {
         const sev = r.severity || '';
@@ -408,6 +408,7 @@ function _pcRenderTable(containerId, rows, isSell = false) {
         return `<tr>
             <td>${_pcEscape(r.code || '')}</td>
             <td>${_pcEscape(r.name || '')}</td>
+            <td style="white-space:nowrap">${_pcEscape(_pcFmtTime(r.flow_time))}</td>
             <td style="text-align:right;color:${ratioColor};font-weight:600">${_pcFmtPct(r.main_inflow_ratio)}</td>
             <td style="text-align:right">${_pcFmtYi(r.main_net_inflow)}</td>
             <td style="text-align:right">${_pcFmtYi(r.total_amount)}</td>

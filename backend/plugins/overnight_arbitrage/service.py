@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 import pandas as pd
 
 from . import notifier
-from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, PROJECT_DIR, REPORT_FILE
+from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, PROJECT_DIR, REPORT_FILE, SNAPSHOT_RAW_BASE
 
 logger = logging.getLogger(__name__)
 
@@ -384,6 +384,47 @@ def read_overnight_history(history_file: Path = HISTORY_FILE) -> dict:
     if not history_file.exists():
         return _empty_history()
     return json.loads(history_file.read_text(encoding="utf-8"))
+
+
+# ---- data-snapshots 远程回退（Render 自身取不到东财，读快照分支保证与定时任务同源）----
+
+_OA_OK_STATUSES = {"completed", "completed_with_errors"}
+
+
+def _fetch_snapshot_json(filename: str) -> Optional[dict]:
+    """从 data-snapshots 分支的 GitHub raw 拉取 reports/<filename>。失败返回 None。"""
+    import requests  # 延迟导入
+    url = f"{SNAPSHOT_RAW_BASE}/reports/{filename}"
+    try:
+        resp = requests.get(url, timeout=8)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as exc:  # noqa: BLE001
+        logger.info("隔夜套利远程快照拉取失败(%s): %s", filename, exc)
+        return None
+
+
+def read_overnight_report_resilient() -> dict:
+    """读最新决策：本地为完成态直接返回，否则回退到 data-snapshots 快照。"""
+    local = read_overnight_report()
+    if local.get("status") in _OA_OK_STATUSES:
+        return local
+    remote = _fetch_snapshot_json("overnight_arbitrage_latest.json")
+    if remote and remote.get("status") in _OA_OK_STATUSES:
+        remote["_source"] = "snapshot"
+        return remote
+    return local
+
+
+def read_overnight_history_resilient() -> dict:
+    """读历史：本地有记录直接返回，否则回退到 data-snapshots 快照。"""
+    local = read_overnight_history()
+    if local.get("records"):
+        return local
+    remote = _fetch_snapshot_json("overnight_arbitrage_history.json")
+    if remote and remote.get("records"):
+        return remote
+    return local
 
 
 def _history_values(recommendations: List[dict], key: str) -> List[float]:

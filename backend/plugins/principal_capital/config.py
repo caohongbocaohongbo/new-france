@@ -50,6 +50,15 @@ HISTORY_FILE = REPORT_DIR / "principal_capital_history.json"
 SOURCE_HEALTH_FILE = DATA_DIR / "principal_capital_source_health.json"
 CACHE_FILE = DATA_DIR / "principal_capital_cache.parquet"
 
+# data-snapshots 分支的 GitHub raw 前缀。
+# 用途：Render Web Service 自身取不到东财数据（IP 被封），读接口在本地报告为空时
+# 回退到此处拉取 GitHub Actions 已生成的快照 JSON，保证页面与邮件同源。
+# 允许用环境变量 PC_SNAPSHOT_RAW_BASE 覆盖（迁移到其它仓库时用）。
+SNAPSHOT_RAW_BASE = os.environ.get(
+    "PC_SNAPSHOT_RAW_BASE",
+    "https://raw.githubusercontent.com/caohongbocaohongbo/new-france/data-snapshots",
+).rstrip("/")
+
 
 def notified_file(today_iso: str, direction: str) -> Path:
     """当日去重文件路径。"""

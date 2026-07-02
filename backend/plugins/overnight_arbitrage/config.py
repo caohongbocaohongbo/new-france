@@ -28,6 +28,14 @@ REPORT_FILE = REPORT_DIR / "overnight_arbitrage_latest.json"
 HISTORY_FILE = REPORT_DIR / "overnight_arbitrage_history.json"
 BEIJING_TZ = timezone(timedelta(hours=8))
 
+# data-snapshots 分支 GitHub raw 前缀。
+# 用途：Render Web Service 自身取不到东财数据时，读接口回退拉取 GitHub Actions
+# 已生成的快照 JSON，保证页面与邮件/定时任务同源。
+SNAPSHOT_RAW_BASE = os.environ.get(
+    "OA_SNAPSHOT_RAW_BASE",
+    "https://raw.githubusercontent.com/caohongbocaohongbo/new-france/data-snapshots",
+).rstrip("/")
+
 CONFIG = {
     "min_amount_yuan": float(os.environ.get("OA_MIN_AMOUNT", "80000000")),
     "score_thresholds": {
