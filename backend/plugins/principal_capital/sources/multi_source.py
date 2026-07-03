@@ -205,7 +205,10 @@ def _fetch_eastmoney_any() -> pd.DataFrame:
     errors = []
     for base_url in EASTMONEY_HOSTS:
         try:
-            return fetch_market_fund_flow(base_url=base_url)
+            df = fetch_market_fund_flow(base_url=base_url)
+            if df is not None and not df.empty:
+                return df
+            errors.append(f"{base_url}: empty dataframe")
         except Exception as exc:
             errors.append(f"{base_url}: {exc}")
     raise FundFlowFetchError("; ".join(errors) or "eastmoney all hosts failed")
