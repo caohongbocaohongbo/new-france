@@ -1,5 +1,6 @@
 """东方财富全市场主力资金流。"""
 import logging
+import time
 from typing import Optional
 
 import pandas as pd
@@ -8,6 +9,11 @@ import requests
 logger = logging.getLogger(__name__)
 
 DEFAULT_BASE_URL = "https://push2.eastmoney.com/api/qt/clist/get"
+EASTMONEY_HOSTS = [
+    "https://push2.eastmoney.com/api/qt/clist/get",
+    "https://push2his.eastmoney.com/api/qt/clist/get",
+    "https://62.push2.eastmoney.com/api/qt/clist/get",
+]
 DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "Referer": "https://data.eastmoney.com/zjlx/list.html",
@@ -80,8 +86,38 @@ def _parse_diff(items: list[dict]) -> list[dict]:
     return rows
 
 
+def _get_page(
+    http: requests.Session,
+    base_url: str,
+    fs: str,
+    page: int,
+    timeout: int,
+) -> list[dict]:
+    last_error = None
+    for attempt in range(2):
+        try:
+            response = http.get(
+                base_url,
+                params=_build_params(fs, page),
+                headers=DEFAULT_HEADERS,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            return (payload.get("data") or {}).get("diff") or []
+        except requests.RequestException as exc:
+            last_error = exc
+            if attempt == 0:
+                time.sleep(0.5)
+                continue
+            raise
+    if last_error:
+        raise last_error
+    return []
+
+
 def fetch_market_fund_flow(
-    timeout: int = 12,
+    timeout: int = 10,
     session: Optional[requests.Session] = None,
     base_url: str = DEFAULT_BASE_URL,
 ) -> pd.DataFrame:
@@ -91,15 +127,7 @@ def fetch_market_fund_flow(
     try:
         for fs in DEFAULT_FS_GROUPS:
             for page in range(1, 8):
-                response = http.get(
-                    base_url,
-                    params=_build_params(fs, page),
-                    headers=DEFAULT_HEADERS,
-                    timeout=timeout,
-                )
-                response.raise_for_status()
-                payload = response.json()
-                diff = (payload.get("data") or {}).get("diff") or []
+                diff = _get_page(http, base_url, fs, page, timeout)
                 if not diff:
                     break
                 rows.extend(_parse_diff(diff))

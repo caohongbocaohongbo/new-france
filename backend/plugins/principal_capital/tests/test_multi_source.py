@@ -40,7 +40,7 @@ class MultiSourceFundFlowTest(unittest.TestCase):
     def test_primary_source_success(self):
         with TemporaryDirectory() as tmp:
             patches = _patch_paths(tmp) + [
-                patch.object(msff, "fetch_market_fund_flow", return_value=_df()),
+                patch.object(msff, "_fetch_eastmoney_any", return_value=_df()),
                 patch.object(msff, "fetch_market_fund_flow_via_akshare", return_value=_df("600002")),
             ]
             for p in patches:
@@ -56,10 +56,9 @@ class MultiSourceFundFlowTest(unittest.TestCase):
     def test_fallback_to_backup(self):
         with TemporaryDirectory() as tmp:
             patches = _patch_paths(tmp) + [
-                patch.object(msff, "fetch_market_fund_flow",
-                             side_effect=[FundFlowFetchError("primary"), _df("600003")]),
+                patch.object(msff, "_fetch_eastmoney_any", side_effect=FundFlowFetchError("primary")),
                 patch.object(msff, "fetch_market_fund_flow_via_akshare",
-                             return_value=_df("600004")),
+                             return_value=_df("600003")),
             ]
             for p in patches:
                 p.start()
@@ -68,14 +67,14 @@ class MultiSourceFundFlowTest(unittest.TestCase):
             finally:
                 for p in patches:
                     p.stop()
-        self.assertEqual(status["active_source"], "eastmoney_backup")
+        self.assertEqual(status["active_source"], "akshare")
         self.assertEqual(df.iloc[0]["code"], "600003")
 
     def test_fallback_to_akshare(self):
         with TemporaryDirectory() as tmp:
             patches = _patch_paths(tmp) + [
-                patch.object(msff, "fetch_market_fund_flow",
-                             side_effect=[FundFlowFetchError("primary"), FundFlowFetchError("backup")]),
+                patch.object(msff, "_fetch_eastmoney_any",
+                             side_effect=FundFlowFetchError("primary")),
                 patch.object(msff, "fetch_market_fund_flow_via_akshare",
                              return_value=_df("600005")),
             ]
@@ -95,8 +94,8 @@ class MultiSourceFundFlowTest(unittest.TestCase):
                 p.start()
             try:
                 msff._write_cache(_df("600006"), datetime.now(BEIJING_TZ))
-                with patch.object(msff, "fetch_market_fund_flow",
-                                  side_effect=[FundFlowFetchError("primary"), FundFlowFetchError("backup")]), \
+                with patch.object(msff, "_fetch_eastmoney_any",
+                                  side_effect=FundFlowFetchError("primary")), \
                      patch.object(msff, "fetch_market_fund_flow_via_akshare",
                                   side_effect=FundFlowFetchError("akshare")):
                     df, status = msff.fetch_market_fund_flow_resilient()
@@ -112,8 +111,8 @@ class MultiSourceFundFlowTest(unittest.TestCase):
                 p.start()
             try:
                 msff._write_cache(_df("600007"), datetime.now(BEIJING_TZ) - timedelta(hours=2))
-                with patch.object(msff, "fetch_market_fund_flow",
-                                  side_effect=[FundFlowFetchError("primary"), FundFlowFetchError("backup")]), \
+                with patch.object(msff, "_fetch_eastmoney_any",
+                                  side_effect=FundFlowFetchError("primary")), \
                      patch.object(msff, "fetch_market_fund_flow_via_akshare",
                                   side_effect=FundFlowFetchError("akshare")):
                     df, status = msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=60)
@@ -122,16 +121,19 @@ class MultiSourceFundFlowTest(unittest.TestCase):
         self.assertTrue(df.empty)
         self.assertEqual(status["active_source"], "none")
 
-    def test_circuit_breaker_skips_after_three_failures(self):
+    def test_circuit_breaker_skips_after_five_failures(self):
         with TemporaryDirectory() as tmp:
             for p in _patch_paths(tmp):
                 p.start()
             try:
-                with patch.object(msff, "fetch_market_fund_flow",
+                with patch.object(msff, "_fetch_eastmoney_any",
                                   side_effect=[FundFlowFetchError("a"), FundFlowFetchError("b"),
-                                               FundFlowFetchError("c"), _df("600008")]), \
+                                               FundFlowFetchError("c"), FundFlowFetchError("d"),
+                                               FundFlowFetchError("e"), _df("600008")]), \
                      patch.object(msff, "fetch_market_fund_flow_via_akshare",
                                   side_effect=FundFlowFetchError("akshare")):
+                    msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)
+                    msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)
                     msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)
                     msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)
                     msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)

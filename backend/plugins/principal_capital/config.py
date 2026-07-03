@@ -31,8 +31,8 @@ CONFIG = {
 
     # 数据源熔断
     "data_source_cache_ttl_seconds": 1800,
-    "data_source_circuit_break_minutes": 30,
-    "data_source_failure_threshold": 3,
+    "data_source_circuit_break_minutes": 8,
+    "data_source_failure_threshold": 5,
     "enable_verify_sampling": False,
 
     # 邮件 SMTP（与主项目共享相同环境变量名以复用 secrets）
