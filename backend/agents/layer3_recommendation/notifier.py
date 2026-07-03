@@ -72,6 +72,7 @@ def _get_notify_config() -> dict:
         "email_port": int(os.environ.get("SMTP_PORT", "465")),
         "email_user": NOTIFY_CONFIG.get("email_user") or os.environ.get("SMTP_USER", ""),
         "email_to": NOTIFY_CONFIG.get("email_to") or os.environ.get("SMTP_TO", os.environ.get("SMTP_USER", "")),
+        "email_recipients": list(NOTIFY_CONFIG.get("email_recipients", []) or []),
     }
     try:
         from ...services.runtime_config import get_effective_config
@@ -82,10 +83,22 @@ def _get_notify_config() -> dict:
             "email_port": int(runtime.get("emailPort") or config["email_port"]),
             "email_user": runtime.get("emailUser") or config["email_user"],
             "email_to": runtime.get("emailTo") or config["email_to"],
+            "email_recipients": list(runtime.get("recipients") or config["email_recipients"]),
         })
     except Exception:
         pass
     return config
+
+
+def _resolve_recipient_list(config: dict) -> list[str]:
+    """默认箱(发件人/emailTo) + 配置的 recipients，去重保序过滤空。"""
+    primary = config.get("email_to") or config.get("email_user") or ""
+    ordered = []
+    for addr in [primary, *(config.get("email_recipients") or [])]:
+        addr = (addr or "").strip()
+        if addr and addr not in ordered:
+            ordered.append(addr)
+    return ordered
 
 
 def _sort_zt_list(zt_list: list, sort_by: str, sort_order: str) -> list:
@@ -818,13 +831,16 @@ def _send_via_brevo(subject: str, text_content: str, html_content: str,
                     notify_config: dict) -> tuple[bool, str]:
     """通过 Brevo HTTP API 发送 HTML 邮件"""
     try:
+        recipients = _resolve_recipient_list(notify_config)
+        if not recipients:
+            return False, "无有效收件人"
         import requests
         payload = {
             "sender": {
                 "email": notify_config["email_user"] or "noreply@new-france.onrender.com",
                 "name": "New France 选股系统",
             },
-            "to": [{"email": notify_config["email_to"]}],
+            "to": [{"email": email} for email in recipients],
             "subject": subject,
             "htmlContent": html_content,
             "textContent": text_content,
@@ -839,7 +855,7 @@ def _send_via_brevo(subject: str, text_content: str, html_content: str,
             timeout=15,
         )
         if resp.status_code in (200, 201):
-            logger.info(f"[Brevo] HTML 邮件已发送至 {notify_config['email_to']}")
+            logger.info("[Brevo] HTML 邮件已发送，共 %s 个收件人", len(recipients))
             return True, "OK"
         err = f"Brevo API 返回 {resp.status_code}: {resp.text[:200]}"
         logger.error(err)
@@ -857,20 +873,20 @@ def _send_via_smtp(subject: str, text_content: str, html_content: str,
     port = int(notify_config["email_port"])
     user = notify_config["email_user"]
     password = os.environ.get("SMTP_PASSWORD", SMTP_PASSWORD)
-    email_to = notify_config["email_to"]
+    recipients = _resolve_recipient_list(notify_config)
 
     if not password:
         return False, "SMTP密码未配置"
     if not user:
         return False, "SMTP_USER 未配置"
-    if not email_to:
+    if not recipients:
         return False, "收件邮箱未配置"
 
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = user
-        msg["To"] = email_to
+        msg["To"] = ", ".join(recipients)
         msg.attach(MIMEText(text_content, "plain", "utf-8"))
         msg.attach(MIMEText(html_content, "html", "utf-8"))
 
@@ -878,13 +894,13 @@ def _send_via_smtp(subject: str, text_content: str, html_content: str,
             with smtplib.SMTP(host, port, timeout=15) as server:
                 server.starttls()
                 server.login(user, password)
-                server.send_message(msg)
+                server.send_message(msg, from_addr=user, to_addrs=recipients)
         else:
             with smtplib.SMTP_SSL(host, port, timeout=15) as server:
                 server.login(user, password)
-                server.send_message(msg)
+                server.send_message(msg, from_addr=user, to_addrs=recipients)
 
-        logger.info(f"[SMTP] HTML 邮件已发送至 {email_to}")
+        logger.info("[SMTP] HTML 邮件已发送，共 %s 个收件人", len(recipients))
         return True, "OK"
     except smtplib.SMTPAuthenticationError as e:
         err = f"SMTP 登录失败: {user}, 错误={e}"

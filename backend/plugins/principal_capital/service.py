@@ -19,7 +19,7 @@ import pandas as pd
 from backend.api.router_system import trading_session_status
 
 # === plugin 内部依赖 ===
-from .config import CONFIG, DATA_DIR, HISTORY_FILE, REPORT_DIR, REPORT_FILE
+from .config import CONFIG, DATA_DIR, HISTORY_FILE, REPORT_DIR, REPORT_FILE, SNAPSHOT_RAW_BASE
 from .notifier import get_smtp_config, send_email
 from .sources.multi_source import fetch_market_fund_flow_resilient
 
@@ -190,6 +190,20 @@ def _format_pct(value) -> str:
     return "--" if number is None else f"{number:+.2f}%"
 
 
+def _format_time_cn(value) -> str:
+    """把 ISO 时间格式化为 YYYY/MM/DD HH:MM:SS（北京时区）。"""
+    if not value:
+        return "--"
+    try:
+        dt = datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return str(value)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=BEIJING_TZ)
+    dt = dt.astimezone(BEIJING_TZ)
+    return dt.strftime("%Y/%m/%d %H:%M:%S")
+
+
 def build_email_payload(
     buy_fresh: pd.DataFrame,
     sell_fresh: pd.DataFrame,
@@ -216,6 +230,7 @@ def build_email_payload(
             parts = [
                 _stock_code(row.get("code")),
                 str(row.get("name", "")),
+                f"时间{_format_time_cn(row.get('flow_time'))}",
                 f"占比{_format_pct(row.get('main_inflow_ratio'))}",
                 f"主力{_format_yi(row.get('main_net_inflow'))}",
                 f"成交{_format_yi(row.get('total_amount'))}",
@@ -231,7 +246,7 @@ def build_email_payload(
 
     def html_rows(df: pd.DataFrame) -> str:
         if df.empty:
-            return '<tr><td colspan="7">暂无</td></tr>'
+            return '<tr><td colspan="8">暂无</td></tr>'
         rows = []
         for _, row in df.iterrows():
             severity = row.get("severity", "")
@@ -244,6 +259,7 @@ def build_email_payload(
                 "<tr>"
                 f"<td>{html.escape(_stock_code(row.get('code')))}</td>"
                 f"<td>{html.escape(str(row.get('name', '')))}</td>"
+                f"<td>{html.escape(_format_time_cn(row.get('flow_time')))}</td>"
                 f"<td>{html.escape(_format_pct(row.get('main_inflow_ratio')))}</td>"
                 f"<td>{html.escape(_format_yi(row.get('main_net_inflow')))}</td>"
                 f"<td>{html.escape(_format_yi(row.get('total_amount')))}</td>"
@@ -265,12 +281,12 @@ def build_email_payload(
 {stale_banner}
 <h3 style="color:#b91c1c">买入区</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:16px" border="1" cellspacing="0" cellpadding="8">
-<tr style="background:#fef2f2"><th>代码</th><th>名称</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
+<tr style="background:#fef2f2"><th>代码</th><th>名称</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
 {html_rows(buy_fresh)}
 </table>
 <h3 style="color:#1d4ed8">卖出区</h3>
 <table style="width:100%;border-collapse:collapse" border="1" cellspacing="0" cellpadding="8">
-<tr style="background:#eff6ff"><th>代码</th><th>名称</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
+<tr style="background:#eff6ff"><th>代码</th><th>名称</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
 {html_rows(sell_fresh)}
 </table>
 <p style="margin-top:16px;color:#6b7280">数据源: {html.escape(str(source_status.get('active_source', '--')))} | stale={html.escape(str(source_status.get('is_stale', False)))}</p>
@@ -306,6 +322,44 @@ def read_history() -> dict:
         return {"records": []}
 
 
+# ---- data-snapshots 远程回退（Render 自身取不到东财，读快照分支保证与邮件同源）----
+
+def _fetch_snapshot_json(filename: str) -> Optional[dict]:
+    """从 data-snapshots 分支的 GitHub raw 拉取 reports/<filename>。失败返回 None。"""
+    import requests  # 延迟导入，避免 CLI/离线路径强依赖
+    url = f"{SNAPSHOT_RAW_BASE}/reports/{filename}"
+    try:
+        resp = requests.get(url, timeout=8)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as exc:  # noqa: BLE001 网络/解析异常都视为回退失败
+        logger.info("主力资金远程快照拉取失败(%s): %s", filename, exc)
+        return None
+
+
+def read_report_resilient() -> dict:
+    """读最新报告：本地为完成态直接返回，否则回退到 data-snapshots 快照。"""
+    local = read_report()
+    if local.get("status") == "completed":
+        return local
+    remote = _fetch_snapshot_json("principal_capital_latest.json")
+    if remote and remote.get("status") == "completed":
+        remote["_source"] = "snapshot"
+        return remote
+    return local
+
+
+def read_history_resilient() -> dict:
+    """读历史：本地有记录直接返回，否则回退到 data-snapshots 快照。"""
+    local = read_history()
+    if local.get("records"):
+        return local
+    remote = _fetch_snapshot_json("principal_capital_history.json")
+    if remote and remote.get("records"):
+        return remote
+    return local
+
+
 def append_history(result: dict, max_records: int = 1000) -> None:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     current = read_history()
@@ -314,6 +368,7 @@ def append_history(result: dict, max_records: int = 1000) -> None:
     for item in result.get("buy_triggered", []):
         records.append({
             "ts": ts, "direction": DIRECTION_BUY,
+            "flow_time": item.get("flow_time") or ts,
             "code": item.get("code"), "name": item.get("name"),
             "ratio": item.get("main_inflow_ratio"),
             "main_net": item.get("main_net_inflow"),
@@ -323,6 +378,7 @@ def append_history(result: dict, max_records: int = 1000) -> None:
     for item in result.get("sell_triggered", []):
         records.append({
             "ts": ts, "direction": DIRECTION_SELL,
+            "flow_time": item.get("flow_time") or ts,
             "code": item.get("code"), "name": item.get("name"),
             "ratio": item.get("main_inflow_ratio"),
             "severity": item.get("severity"),
@@ -344,6 +400,7 @@ def _fresh_rows(df: pd.DataFrame, direction: str, now: datetime,
     for _, row in df.iterrows():
         if should_notify(row.get("code"), direction, now, notified_map, cooldown_minutes):
             row_dict = row.to_dict()
+            row_dict["flow_time"] = now.isoformat()
             if direction == DIRECTION_SELL:
                 row_dict["severity"] = classify_sell_severity(row.get("main_inflow_ratio"))
             rows.append(row_dict)

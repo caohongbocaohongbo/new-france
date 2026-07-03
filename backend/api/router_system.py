@@ -1,5 +1,5 @@
 """系统 API — 健康检查、状态、配置"""
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from datetime import datetime, timezone, timedelta
 import logging
 
@@ -86,16 +86,31 @@ async def test_email_endpoint():
     """发送测试邮件"""
     try:
         from ..services.runtime_config import get_effective_config
-        from ..agents.layer3_recommendation.notifier import test_email
+        from ..agents.layer3_recommendation.notifier import _resolve_recipient_list, test_email
         notify = get_effective_config()["config"]["notification"]
         ok, msg = test_email()
+        recipients = _resolve_recipient_list(
+            {
+                "email_user": notify.get("emailUser"),
+                "email_to": notify.get("emailTo"),
+                "email_recipients": notify.get("recipients") or [],
+            }
+        )
         if ok:
-            return {"status": "ok", "message": "测试邮件已发送，请检查收件箱", "email_to": notify.get("emailTo")}
+            return {"status": "ok", "message": "测试邮件已发送，请检查收件箱", "email_to": ", ".join(recipients)}
         else:
-            return {"status": "error", "message": msg, "email_to": notify.get("emailTo")}
+            return {"status": "error", "message": msg, "email_to": ", ".join(recipients)}
     except Exception as e:
         logger.error(f"测试邮件失败: {e}")
         return {"status": "error", "message": f"发送失败: {str(e)}"}
+
+
+@router.get("/task-history")
+async def task_history(limit: int = Query(50, ge=1, le=500)):
+    from ..services.task_history import read_task_history_resilient
+
+    records = (read_task_history_resilient().get("records") or [])[-limit:]
+    return {"status": "ok", "records": list(reversed(records))}
 
 
 @router.get("/audit")

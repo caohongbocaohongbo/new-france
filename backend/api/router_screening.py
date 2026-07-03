@@ -91,12 +91,16 @@ def _execute_screening_pipeline(params: dict) -> dict:
 def _run_screening_task(params: dict):
     """后台执行筛选流水线（由 BackgroundTasks 放入线程池，不阻塞轮询接口）"""
     try:
+        from ..services.task_history import append_task_record
         result = _execute_screening_pipeline(params)
         _write_json_cache({"status": "completed", **result})
+        append_task_record("success", "admin")
         logger.info(f"后台筛选完成: STRONG_BUY={result['strong_buy']}, BUY={result['buy']}")
 
     except Exception as e:
+        from ..services.task_history import append_task_record
         logger.exception(f"后台筛选异常: {e}")
+        append_task_record("failed", "admin", error=str(e))
         _cache_error(str(e))
 
 

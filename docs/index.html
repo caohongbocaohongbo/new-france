@@ -422,11 +422,26 @@
             <div class="panel">
                 <div class="panel-header"><h2>通知配置</h2></div>
                 <div class="settings-form" id="notificationForm">
-                    <div class="form-row"><label>发件邮箱</label><input type="email" class="input" id="cfgEmailUser" data-notify-key="emailUser"></div>
-                    <div class="form-row"><label>收件邮箱</label><input type="email" class="input" id="cfgEmail" data-notify-key="emailTo"></div>
-                    <div class="form-row"><label>SMTP主机</label><input type="text" class="input" id="cfgEmailHost" data-notify-key="emailHost"></div>
-                    <div class="form-row"><label>SMTP端口</label><input type="number" class="input input-sm" id="cfgEmailPort" data-notify-key="emailPort"></div>
-                    <button class="btn btn-primary" onclick="saveNotificationConfig(event)">保存通知配置</button>
+                    <div class="form-row"><label>发件邮箱</label><input type="email" class="input" id="cfgEmailUser" data-notify-key="emailUser" readonly></div>
+                    <div class="form-row"><label>SMTP主机</label><input type="text" class="input" id="cfgEmailHost" data-notify-key="emailHost" readonly></div>
+                    <div class="form-row"><label>SMTP端口</label><input type="number" class="input input-sm" id="cfgEmailPort" data-notify-key="emailPort" readonly></div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>发件邮箱</th>
+                                    <th>收件邮箱</th>
+                                    <th>SMTP主机</th>
+                                    <th>SMTP端口</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recipientTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="settings-actions">
+                        <button id="addRecipientBtn" class="btn" onclick="openRecipientModal(null)">新增收件箱</button>
+                    </div>
                     <button class="btn" onclick="testEmail(event)">发送测试邮件</button>
                     <div id="emailStatus" class="form-status" aria-live="polite"></div>
                 </div>
@@ -444,6 +459,18 @@
                     </div>
                     <button class="btn btn-primary" onclick="manualRun(event)">手动触发执行</button>
                     <div id="runStatus" class="form-status" aria-live="polite"></div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>执行时间</th>
+                                    <th>执行状态</th>
+                                    <th>执行人</th>
+                                </tr>
+                            </thead>
+                            <tbody id="taskHistoryBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="panel">
@@ -461,6 +488,22 @@
         </div>
     </section>
 </main>
+
+<div id="recipientModal" class="modal">
+    <div class="modal-backdrop" onclick="closeRecipientModal()"></div>
+    <div class="modal-card">
+        <h3 id="recipientModalTitle">新增收件箱</h3>
+        <div class="form-row"><label>发件邮箱</label><input id="rcpUser" class="input" readonly></div>
+        <div class="form-row"><label>收件邮箱</label><input id="rcpTo" class="input" type="email"></div>
+        <div class="form-row"><label>SMTP主机</label><input id="rcpHost" class="input" readonly></div>
+        <div class="form-row"><label>SMTP端口</label><input id="rcpPort" class="input input-sm" type="number" readonly></div>
+        <div id="recipientModalError" class="form-status"></div>
+        <div class="modal-actions">
+            <button class="btn" onclick="closeRecipientModal()">取消</button>
+            <button class="btn btn-primary" onclick="confirmRecipientModal()">确认修改</button>
+        </div>
+    </div>
+</div>
 
 <!-- Stock Detail Modal -->
 <div id="stockDetailModal" class="modal-overlay" onclick="if(event.target===this)closeStockDetail()">

@@ -2290,9 +2290,10 @@ function renderScreeningEmptyState() {
 // ---- Settings ----
 let factorWeights = { pullback:14,volume_trend:11,ma_alignment:11,strength:10,entry_point:10,market_cap:10,volume_ratio:8,turnover:7,pe:8,zt_quality:6,principal_capital:5 };
 let strategyDraft = { dropMin:5, dropMax:10, peMax:50, volMin:1, volMax:5, turnoverMin:5, turnoverMax:10, mcMin:50, mcMax:200, trackingDays:30, latestFbt:140000, maxZbc:0, maxZtFrequency:2 };
-let notificationDraft = { emailEnabled:true, emailHost:'smtp.qq.com', emailPort:465, emailUser:'', emailTo:'' };
+let notificationDraft = { emailEnabled:true, emailHost:'smtp.qq.com', emailPort:465, emailUser:'', emailTo:'', recipients:[] };
 let ztSortDraft = { sortBy:'seal_time', sortOrder:'asc' };
 let runtimeConfigState = { config:null, previous_config:null, saved_at:null, source:'config/strategy_params.py' };
+let currentRecipientEditIndex = null;
 const factorNames = {pullback:'回撤幅度',volume_trend:'量能趋势',ma_alignment:'均线多头',strength:'强势确认',entry_point:'尾盘买点',market_cap:'流通市值',volume_ratio:'量比',turnover:'换手率',pe:'市盈率',zt_quality:'涨停质量',principal_capital:'主力资金'};
 const strategyLabels = {
     dropMin:'回撤下限', dropMax:'回撤上限', peMax:'PE上限', volMin:'量比下限', volMax:'量比上限',
@@ -2303,6 +2304,7 @@ const strategyLabels = {
 function setupSettingsPage() {
     renderSettingsLoading();
     loadRuntimeConfig();
+    loadTaskHistory();
     updateNextRun();
 }
 
@@ -2346,6 +2348,7 @@ function applyRuntimeConfig(data) {
     strategyDraft = { ...strategyDraft, ...(config.strategy || {}) };
     factorWeights = { ...factorWeights, ...(config.factorWeights || {}) };
     notificationDraft = { ...notificationDraft, ...(config.notification || {}) };
+    notificationDraft.recipients = Array.isArray(config.notification?.recipients) ? [...config.notification.recipients] : [...(notificationDraft.recipients || [])];
     ztSortDraft = { ...ztSortDraft, ...(config.ztSort || {}) };
     renderSettingsForms();
 }
@@ -2392,6 +2395,7 @@ function renderSettingsForms() {
             input.value = notificationDraft[key] ?? '';
             input.addEventListener('input', renderSettingsCompare);
         });
+        renderRecipientList();
     }
 
     const weightsEl = document.getElementById('factorWeightsForm');
@@ -2449,6 +2453,7 @@ function collectNotificationConfig() {
     document.querySelectorAll('#notificationForm [data-notify-key]').forEach(input => {
         notification[input.dataset.notifyKey] = input.type === 'number' ? Number(input.value) : input.value.trim();
     });
+    notification.recipients = [...(notificationDraft.recipients || [])];
     return notification;
 }
 
@@ -2500,7 +2505,7 @@ async function saveStrategyConfig(event) {
 
 async function saveNotificationConfig(event, opts = {}) {
     const payload = { notification: collectNotificationConfig() };
-    const data = await saveRuntimeConfig(payload, 'emailStatus', event, opts.silent ? '通知配置已保存，准备发送测试邮件...' : '通知配置已保存。后续邮件按该收件账号发送。');
+    const data = await saveRuntimeConfig(payload, 'emailStatus', event, opts.silent ? '通知配置已保存，准备发送测试邮件...' : '通知配置已保存。后续邮件按该收件列表发送。');
     return data;
 }
 
@@ -2518,6 +2523,15 @@ function formatSavedAt(value) {
 function formatConfigValue(value, suffix = '') {
     if (value === undefined || value === null || value === '') return '--';
     return `${value}${suffix}`;
+}
+
+function summarizeRecipients(notification) {
+    const defaultRecipient = (notification?.emailUser || '').trim();
+    const extras = Array.isArray(notification?.recipients) ? notification.recipients.filter(Boolean) : [];
+    const total = (defaultRecipient ? 1 : 0) + extras.length;
+    if (!total) return '--';
+    const preview = [defaultRecipient, ...extras].filter(Boolean).slice(0, 3).join('、');
+    return total <= 3 ? `${total} 个（${preview}）` : `${total} 个（${preview} 等）`;
 }
 
 function renderSettingsCompare() {
@@ -2538,7 +2552,7 @@ function renderSettingsCompare() {
     Object.entries(factorNames).forEach(([key, label]) => {
         rows.push([`${label}权重`, prev.factorWeights?.[key], current.factorWeights[key], '%']);
     });
-    rows.push(['收件邮箱', prev.notification?.emailTo, current.notification.emailTo, '']);
+    rows.push(['收件邮箱', summarizeRecipients(prev.notification), summarizeRecipients(current.notification), '']);
     rows.push(['发件邮箱', prev.notification?.emailUser, current.notification.emailUser, '']);
     rows.push(['SMTP主机', prev.notification?.emailHost, current.notification.emailHost, '']);
     rows.push(['SMTP端口', prev.notification?.emailPort, current.notification.emailPort, '']);
@@ -2595,11 +2609,13 @@ async function manualRun(event) {
             if (pollData.status === 'completed') {
                 const total = pollData.total_scored || pollData.results?.length || 0;
                 setFormStatus('runStatus', `筛选已完成，共 ${total} 条推荐结果，STRONG_BUY ${pollData.strong_buy || 0}、BUY ${pollData.buy || 0}、WATCH ${pollData.watch || 0}`, 'ok');
+                loadTaskHistory();
                 loadDashboard();
                 return;
             }
             if (pollData.status === 'error') {
                 setFormStatus('runStatus', '筛选失败: ' + (pollData.message || '未知错误'), 'error');
+                loadTaskHistory();
                 return;
             }
         }
@@ -2609,6 +2625,157 @@ async function manualRun(event) {
     } finally {
         btn.textContent = oldText;
         btn.disabled = false;
+    }
+}
+
+function getDefaultRecipient() {
+    return (notificationDraft.emailUser || '').trim();
+}
+
+function isValidEmail(value) {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(value || '').trim());
+}
+
+function renderRecipientList() {
+    const tbody = document.getElementById('recipientTableBody');
+    if (!tbody) return;
+    const sender = getDefaultRecipient();
+    const host = notificationDraft.emailHost || '--';
+    const port = notificationDraft.emailPort || '--';
+    const recipients = Array.isArray(notificationDraft.recipients) ? notificationDraft.recipients : [];
+    const rows = [
+        `<tr>
+            <td>${escapeHtml(sender || '--')}</td>
+            <td>${escapeHtml(sender || '--')}</td>
+            <td>${escapeHtml(String(host))}</td>
+            <td>${escapeHtml(String(port))}</td>
+            <td>默认</td>
+        </tr>`
+    ];
+    recipients.forEach((recipient, index) => {
+        rows.push(
+            `<tr>
+                <td>${escapeHtml(sender || '--')}</td>
+                <td>${escapeHtml(recipient)}</td>
+                <td>${escapeHtml(String(host))}</td>
+                <td>${escapeHtml(String(port))}</td>
+                <td>
+                    <button class="btn btn-sm" onclick="openRecipientModal(${index})">编辑</button>
+                    <button class="btn btn-sm" onclick="deleteRecipient(${index})">删除</button>
+                </td>
+            </tr>`
+        );
+    });
+    tbody.innerHTML = rows.join('');
+    const addBtn = document.getElementById('addRecipientBtn');
+    if (addBtn) addBtn.disabled = recipients.length + 1 >= 10;
+}
+
+function openRecipientModal(index) {
+    currentRecipientEditIndex = Number.isInteger(index) ? index : null;
+    const modal = document.getElementById('recipientModal');
+    const title = document.getElementById('recipientModalTitle');
+    const sender = getDefaultRecipient();
+    document.getElementById('rcpUser').value = sender;
+    document.getElementById('rcpHost').value = notificationDraft.emailHost || '';
+    document.getElementById('rcpPort').value = notificationDraft.emailPort ?? '';
+    document.getElementById('rcpTo').value = currentRecipientEditIndex === null ? '' : (notificationDraft.recipients?.[currentRecipientEditIndex] || '');
+    if (title) title.textContent = currentRecipientEditIndex === null ? '新增收件箱' : '编辑收件箱';
+    setFormStatus('recipientModalError', '');
+    modal?.classList.add('open');
+}
+
+function closeRecipientModal() {
+    currentRecipientEditIndex = null;
+    document.getElementById('rcpTo').value = '';
+    setFormStatus('recipientModalError', '');
+    document.getElementById('recipientModal')?.classList.remove('open');
+}
+
+async function confirmRecipientModal() {
+    const input = document.getElementById('rcpTo');
+    const value = String(input?.value || '').trim();
+    const sender = getDefaultRecipient();
+    const recipients = [...(notificationDraft.recipients || [])];
+    const duplicatePool = [sender, ...recipients.filter((_, idx) => idx !== currentRecipientEditIndex)];
+    if (!value) {
+        setFormStatus('recipientModalError', '收件邮箱不能为空', 'error');
+        return;
+    }
+    if (!isValidEmail(value)) {
+        setFormStatus('recipientModalError', '收件邮箱格式不正确', 'error');
+        return;
+    }
+    if (duplicatePool.includes(value)) {
+        setFormStatus('recipientModalError', '收件邮箱不能重复', 'error');
+        return;
+    }
+    const nextRecipients = [...recipients];
+    if (currentRecipientEditIndex === null) nextRecipients.push(value);
+    else nextRecipients[currentRecipientEditIndex] = value;
+    if (nextRecipients.length + (sender ? 1 : 0) > 10) {
+        setFormStatus('recipientModalError', '收件箱数量不能超过 10 个', 'error');
+        return;
+    }
+    const prevRecipients = [...recipients];
+    notificationDraft.recipients = nextRecipients;
+    closeRecipientModal();
+    renderRecipientList();
+    renderSettingsCompare();
+    try {
+        await saveNotificationConfig(null);
+    } catch (e) {
+        // 保存失败时回滚草稿，避免列表显示与后端不一致
+        notificationDraft.recipients = prevRecipients;
+        renderRecipientList();
+        renderSettingsCompare();
+    }
+}
+
+async function deleteRecipient(index) {
+    const prevRecipients = [...(notificationDraft.recipients || [])];
+    notificationDraft.recipients = prevRecipients.filter((_, idx) => idx !== index);
+    renderRecipientList();
+    renderSettingsCompare();
+    try {
+        await saveNotificationConfig(null);
+    } catch (e) {
+        // 保存失败时回滚草稿，避免列表显示与后端不一致
+        notificationDraft.recipients = prevRecipients;
+        renderRecipientList();
+        renderSettingsCompare();
+    }
+}
+
+function taskHistoryStatusLabel(status) {
+    return {
+        success: '成功',
+        failed: '失败',
+        running: '运行中',
+    }[status] || (status || '--');
+}
+
+async function loadTaskHistory() {
+    const tbody = document.getElementById('taskHistoryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="3">正在读取执行历史...</td></tr>';
+    try {
+        const resp = await apiFetch('/system/task-history', { timeout: 15000, retries: 1 });
+        const data = await readJsonResponse(resp);
+        const records = Array.isArray(data.records) ? data.records : [];
+        if (!records.length) {
+            tbody.innerHTML = '<tr><td colspan="3">暂无执行历史</td></tr>';
+            return;
+        }
+        tbody.innerHTML = records.map(item => `
+            <tr>
+                <td>${escapeHtml(item.run_time_display || item.run_time || '--')}</td>
+                <td><span class="history-status ${escapeHtml(item.status || '')}">${escapeHtml(taskHistoryStatusLabel(item.status))}</span></td>
+                <td>${escapeHtml(item.operator || '--')}</td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="3">执行历史读取失败</td></tr>';
     }
 }
 function saveConfig() {

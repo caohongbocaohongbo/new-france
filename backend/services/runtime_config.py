@@ -111,6 +111,7 @@ def _default_config() -> Dict[str, Any]:
             "emailPort": int(notify.get("email_port", 465)),
             "emailUser": str(notify.get("email_user", "")),
             "emailTo": str(notify.get("email_to", "")),
+            "recipients": list(notify.get("email_recipients", []) or []),
         },
         "ztSort": {
             "sortBy": str(sort_cfg.get("sort_by", "seal_time")),
@@ -251,7 +252,24 @@ def validate_config(config: Dict[str, Any]) -> Dict[str, Any]:
         "emailUser": _validate_email(notify.get("emailUser", ""), "发件邮箱"),
         "emailTo": _validate_email(notify.get("emailTo", ""), "收件邮箱"),
     }
-    if normalized_notify["emailEnabled"] and not normalized_notify["emailTo"]:
+    recipients = []
+    for item in notify.get("recipients") or []:
+        email = _validate_email(item, "收件邮箱")
+        if email and email not in recipients:
+            recipients.append(email)
+    total_recipients = []
+    for addr in [normalized_notify["emailUser"], normalized_notify["emailTo"], *recipients]:
+        if addr and addr not in total_recipients:
+            total_recipients.append(addr)
+    if len(total_recipients) > 10:
+        raise ConfigValidationError("收件箱数量不能超过 10 个")
+    normalized_notify["recipients"] = recipients
+    if (
+        normalized_notify["emailEnabled"]
+        and not normalized_notify["emailTo"]
+        and not normalized_notify["emailUser"]
+        and not normalized_notify["recipients"]
+    ):
         raise ConfigValidationError("启用邮件时必须填写收件邮箱")
 
     allowed_sort = {"change_pct", "turnover", "vol_ratio", "pe", "mcap", "seal_time"}
@@ -482,6 +500,7 @@ NOTIFY_CONFIG = {{
     "email_port": {int(notify["emailPort"])!r},
     "email_user": {notify["emailUser"]!r},
     "email_to": {notify["emailTo"]!r},
+    "email_recipients": {list(notify.get("recipients") or [])!r},
     "wechat_enabled": False,
     "pushplus_enabled": False,
 }}

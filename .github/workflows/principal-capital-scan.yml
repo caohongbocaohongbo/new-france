@@ -23,11 +23,15 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: principal-capital-${{ github.ref }}
   cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+  DATA_BRANCH: data-snapshots
 
 jobs:
   scan:
@@ -35,12 +39,38 @@ jobs:
     timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check workflow SHA freshness
+        id: freshness
+        run: |
+          git fetch origin "${BASE_BRANCH}" --prune
+          head_sha="$(git rev-parse HEAD)"
+          remote_sha="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if [ "${head_sha}" != "${remote_sha}" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "旧提交 workflow，不执行主力资金主链路"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-python@v5
+        if: steps.freshness.outputs.stale != 'true'
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r requirements.txt
+
+      - name: Install dependencies
+        if: steps.freshness.outputs.stale != 'true'
+        run: pip install -r requirements.txt
+
+      - name: Restore generated data snapshot
+        if: steps.freshness.outputs.stale != 'true'
+        run: bash scripts/restore_screening_data.sh
+
       - name: Run principal capital scan
+        if: steps.freshness.outputs.stale != 'true'
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
           SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
@@ -55,3 +85,7 @@ jobs:
             --sell-threshold ${{ github.event.inputs.sell_threshold || '30' }} \
             ${{ github.event.inputs.enable_verify == 'true' && '--enable-verify' || '' }} \
             ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+
+      - name: Commit generated data snapshot
+        if: always() && steps.freshness.outputs.stale != 'true'
+        run: bash scripts/commit_screening_data.sh
