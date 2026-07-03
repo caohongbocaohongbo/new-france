@@ -1,7 +1,7 @@
 """主力资金流多源协调器（plugin 独立版本）。
 
-策略: eastmoney_push2 → eastmoney_push2his → akshare → 本地缓存降级
-熔断: 连续 3 次失败标记 unhealthy，跳过 30 分钟
+策略: eastmoney(多域名轮询) → akshare(东财同源兜底) → 本地缓存降级
+熔断: 连续失败达到阈值后短时退避
 持久化: 状态文件 / 缓存文件路径都在 plugin 独立命名空间。
 """
 import json
@@ -11,17 +11,19 @@ from time import perf_counter
 from typing import Optional, Tuple
 
 import pandas as pd
+import requests
 
 from .akshare_source import fetch_market_fund_flow_via_akshare
-from .eastmoney import FundFlowFetchError, fetch_market_fund_flow
+from .eastmoney import EASTMONEY_HOSTS, FundFlowFetchError, fetch_market_fund_flow
 from .sina import fetch_codes_fund_flow_sina
+from .tencent import fetch_codes_fund_flow_tencent
 from ..config import CACHE_FILE, CONFIG, DATA_DIR, SOURCE_HEALTH_FILE
 
 logger = logging.getLogger(__name__)
 
 BEIJING_TZ = timezone(timedelta(hours=8))
-FAILURE_THRESHOLD = int(CONFIG.get("data_source_failure_threshold", 3))
-BLOCK_MINUTES = int(CONFIG.get("data_source_circuit_break_minutes", 30))
+FAILURE_THRESHOLD = int(CONFIG.get("data_source_failure_threshold", 5))
+BLOCK_MINUTES = int(CONFIG.get("data_source_circuit_break_minutes", 8))
 
 _CACHE_JSON_FILE = DATA_DIR / "principal_capital_cache.json"
 
@@ -34,8 +36,7 @@ def _now() -> datetime:
 
 def _default_health() -> dict:
     return {
-        "eastmoney_push2": {"failure_streak": 0, "blocked_until": None},
-        "eastmoney_push2his": {"failure_streak": 0, "blocked_until": None},
+        "eastmoney": {"failure_streak": 0, "blocked_until": None},
         "akshare": {"failure_streak": 0, "blocked_until": None},
         "updated_at": None,
     }
@@ -52,6 +53,18 @@ def _load_health() -> dict:
             _HEALTH = _default_health()
     else:
         _HEALTH = _default_health()
+    if "eastmoney" not in _HEALTH:
+        eastmoney_entry = (
+            _HEALTH.get("eastmoney")
+            or _HEALTH.get("eastmoney_push2")
+            or _HEALTH.get("eastmoney_push2his")
+            or {"failure_streak": 0, "blocked_until": None}
+        )
+        _HEALTH["eastmoney"] = eastmoney_entry
+        _HEALTH.pop("eastmoney_push2", None)
+        _HEALTH.pop("eastmoney_push2his", None)
+    _HEALTH.setdefault("akshare", {"failure_streak": 0, "blocked_until": None})
+    _HEALTH.setdefault("updated_at", None)
     return _HEALTH
 
 
@@ -86,12 +99,13 @@ def _mark_success(source: str) -> None:
     _save_health()
 
 
-def _mark_failure(source: str) -> None:
+def _mark_failure(source: str, transient: bool = False) -> None:
     health = _load_health()
     item = health.setdefault(source, {"failure_streak": 0, "blocked_until": None})
     item["failure_streak"] = int(item.get("failure_streak", 0)) + 1
     if item["failure_streak"] >= FAILURE_THRESHOLD:
-        item["blocked_until"] = (_now() + timedelta(minutes=BLOCK_MINUTES)).isoformat()
+        block_minutes = min(BLOCK_MINUTES, 3) if transient else BLOCK_MINUTES
+        item["blocked_until"] = (_now() + timedelta(minutes=block_minutes)).isoformat()
     _save_health()
 
 
@@ -152,22 +166,57 @@ def _read_cache(cache_ttl_seconds: int) -> Tuple[pd.DataFrame, Optional[int]]:
 def _verify_sample(df: pd.DataFrame) -> dict:
     sample_codes = [str(code).zfill(6) for code in df.head(5).get("code", []).tolist()]
     sina_rows = fetch_codes_fund_flow_sina(sample_codes, max_workers=5)
+    tencent_rows = fetch_codes_fund_flow_tencent(sample_codes, max_workers=5)
     sina_map = {item["code"]: item for item in sina_rows}
+    tencent_map = {item["code"]: item for item in tencent_rows}
     comparisons = []
     for _, row in df.head(5).iterrows():
         code = str(row.get("code", "")).zfill(6)
-        if code not in sina_map:
-            comparisons.append({"code": code, "status": "missing"})
-            continue
         base = float(row.get("main_net_inflow") or 0.0)
-        alt = float(sina_map[code].get("main_net_inflow") or 0.0)
-        denominator = abs(base) if abs(base) > 1 else max(abs(alt), 1.0)
-        error_pct = abs(base - alt) / denominator * 100
-        item = {"code": code, "eastmoney": base, "sina": alt, "error_pct": round(error_pct, 2)}
-        if error_pct > 10:
-            logger.warning("主力资金抽样核验偏差较大 %s: %.2f%%", code, error_pct)
+        sina_value = float((sina_map.get(code) or {}).get("main_net_inflow") or 0.0)
+        tencent_value = float((tencent_map.get(code) or {}).get("main_net_inflow") or 0.0)
+        item = {
+            "code": code,
+            "eastmoney": base,
+            "sina": sina_value if code in sina_map else None,
+            "tencent": tencent_value if code in tencent_map else None,
+            "sina_error_pct": None,
+            "tencent_error_pct": None,
+        }
+        if code in sina_map:
+            sina_denominator = abs(base) if abs(base) > 1 else max(abs(sina_value), 1.0)
+            sina_error_pct = abs(base - sina_value) / sina_denominator * 100
+            item["sina_error_pct"] = round(sina_error_pct, 2)
+            if sina_error_pct > 10:
+                logger.warning("主力资金新浪抽样核验偏差较大 %s: %.2f%%", code, sina_error_pct)
+        if code in tencent_map:
+            tencent_denominator = abs(base) if abs(base) > 1 else max(abs(tencent_value), 1.0)
+            tencent_error_pct = abs(base - tencent_value) / tencent_denominator * 100
+            item["tencent_error_pct"] = round(tencent_error_pct, 2)
+            if tencent_error_pct > 10:
+                logger.warning("主力资金腾讯抽样核验偏差较大 %s: %.2f%%", code, tencent_error_pct)
+        if code not in sina_map and code not in tencent_map:
+            item["status"] = "missing"
         comparisons.append(item)
     return {"sample_size": len(sample_codes), "comparisons": comparisons}
+
+
+def _fetch_eastmoney_any() -> pd.DataFrame:
+    errors = []
+    for base_url in EASTMONEY_HOSTS:
+        try:
+            return fetch_market_fund_flow(base_url=base_url)
+        except Exception as exc:
+            errors.append(f"{base_url}: {exc}")
+    raise FundFlowFetchError("; ".join(errors) or "eastmoney all hosts failed")
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    if isinstance(exc, (requests.Timeout, requests.ConnectionError)):
+        return True
+    response = getattr(exc, "response", None)
+    status_code = getattr(response, "status_code", None)
+    return bool(status_code and int(status_code) >= 500)
 
 
 def fetch_market_fund_flow_resilient(
@@ -178,9 +227,8 @@ def fetch_market_fund_flow_resilient(
     now = _now()
     attempts = []
     sources = [
-        ("eastmoney_push2", lambda: fetch_market_fund_flow()),
-        ("eastmoney_push2his", lambda: fetch_market_fund_flow(
-            base_url="https://push2his.eastmoney.com/api/qt/clist/get")),
+        ("eastmoney", _fetch_eastmoney_any),
+        # akshare 底层同为东财数据，非独立源，仅作东财主接口异常时的同源兜底
         ("akshare", lambda: fetch_market_fund_flow_via_akshare()),
     ]
     status_report = {
@@ -204,17 +252,13 @@ def fetch_market_fund_flow_resilient(
             _mark_success(source_name)
             attempts.append({"source": source_name, "status": "ok", "latency_ms": latency_ms})
             _write_cache(df, now)
-            status_report["active_source"] = (
-                "eastmoney" if source_name == "eastmoney_push2"
-                else "eastmoney_backup" if source_name == "eastmoney_push2his"
-                else "akshare"
-            )
-            if enable_verify and source_name == "eastmoney_push2":
+            status_report["active_source"] = source_name
+            if enable_verify and source_name == "eastmoney":
                 status_report["verify_result"] = _verify_sample(df)
             return df, status_report
         except Exception as exc:
             latency_ms = int((perf_counter() - start) * 1000)
-            _mark_failure(source_name)
+            _mark_failure(source_name, transient=_is_transient_error(exc))
             attempts.append({
                 "source": source_name, "status": "error",
                 "error": str(exc), "latency_ms": latency_ms,
