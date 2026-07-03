@@ -88,6 +88,18 @@ class MultiSourceResilienceTest(unittest.TestCase):
         self.assertEqual(mocked_fetch.call_args_list[0].kwargs["base_url"], "host-a")
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["base_url"], "host-b")
 
+    def test_fetch_eastmoney_any_retries_next_host_when_first_returns_empty_dataframe(self):
+        with patch.object(msff, "EASTMONEY_HOSTS", ["host-a", "host-b"]), patch.object(
+            msff,
+            "fetch_market_fund_flow",
+            side_effect=[pd.DataFrame(), _df("600011")],
+        ) as mocked_fetch:
+            df = msff._fetch_eastmoney_any()
+
+        self.assertEqual(df.iloc[0]["code"], "600011")
+        self.assertEqual(mocked_fetch.call_args_list[0].kwargs["base_url"], "host-a")
+        self.assertEqual(mocked_fetch.call_args_list[1].kwargs["base_url"], "host-b")
+
     def test_circuit_breaker_blocks_on_fifth_failure(self):
         with TemporaryDirectory() as tmp:
             patches = _patch_paths(tmp)
