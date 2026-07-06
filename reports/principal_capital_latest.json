@@ -1,13 +1,30 @@
 {
-  "status": "skipped",
-  "reason": "已收盘",
-  "now": "2026-07-03T17:53:07.985345+08:00",
+  "status": "no_data",
+  "reason": "",
+  "now": "2026-07-06T13:03:41.071544+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none"
+    "active_source": "none",
+    "attempts": [
+      {
+        "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 9089
+      },
+      {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 2561
+      }
+    ],
+    "is_stale": false,
+    "cache_age_seconds": null,
+    "verify_result": null
   },
   "scanned": 0,
   "buy_candidates": 0,
