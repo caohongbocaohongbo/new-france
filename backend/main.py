@@ -20,6 +20,9 @@ except ImportError:
 # FastAPI app 延迟加载，仅在 --serve 时需要
 _app = None
 
+from .services.data_backend.snapshots import refresh_market_snapshots
+from .services.watchlist_store import parse_watchlist
+
 
 def _empty_optional_statuses():
     """读取可选数据源状态失败时返回稳定结构。"""
@@ -178,6 +181,9 @@ def main():
                         help="运行尾盘隔夜套利 14:43 决策任务")
     parser.add_argument("--run-principal-capital-scan", action="store_true",
                         help="[插件] 执行主力资金双向扫描")
+    parser.add_argument("--refresh-data-assets", action="store_true",
+                        help="刷新 zt_pool/quotes/index_snapshot 快照(仅本地/未来常驻Worker用; "
+                             "当前 Render web+cron 部署下跨实例无效, 未接入 render.yaml)")
     parser.add_argument("--buy-threshold", type=float, default=50.0,
                         help="[插件] 主力净流入买入阈值(%%)")
     parser.add_argument("--sell-threshold", type=float, default=30.0,
@@ -221,6 +227,10 @@ def main():
         _run_principal_capital_cli(args, logger)
         return
 
+    if args.refresh_data_assets:
+        _run_refresh_data_assets(args, logger)
+        return
+
     # 默认：执行每日完整流程
     asyncio.run(_run_daily_pipeline(args, logger))
 
@@ -259,6 +269,31 @@ def _run_overnight_arbitrage_cli(args, logger):
         result.get("buy_count", 0),
         result.get("watch_count", 0),
         result.get("total_scanned", 0),
+    )
+
+
+def _run_refresh_data_assets(args, logger):
+    """刷新数据后台快照。
+
+    注意: 在当前 Render 部署(web + 每次即销毁的 cron 实例, 文件系统隔离, 无持久磁盘)下,
+    此入口写入的本地快照无法跨实例被 web 读取, 亦不 commit 到 data-snapshots, 故未接入
+    render.yaml 定时任务。仅供本地调试或未来引入常驻 Background Worker 后使用。
+    """
+    from datetime import datetime, timezone, timedelta
+
+    beijing_tz = timezone(timedelta(hours=8))
+    current = datetime.now(beijing_tz)
+    if current.weekday() >= 5 and not args.force:
+        logger.info("非交易日，跳过高频数据快照刷新")
+        return
+
+    watchlist_codes = [item.get("code") for item in parse_watchlist() if item.get("code")]
+    result = refresh_market_snapshots(watchlist_codes=watchlist_codes)
+    logger.info(
+        "数据快照刷新: status=%s assets=%s errors=%s",
+        result.get("status"),
+        ",".join(sorted((result.get("assets") or {}).keys())),
+        len(result.get("errors") or []),
     )
 
 

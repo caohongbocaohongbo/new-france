@@ -183,6 +183,14 @@ def _failed_audit_items(audit_info: dict) -> list:
     ]
 
 
+def _approved_recommendation_groups(stocks):
+    """仅保留对外可展示的推荐结果，避免 PASS/审核失败混入推荐区。"""
+    strong = [s for s in stocks if s.recommendation == "STRONG_BUY"]
+    buy = [s for s in stocks if s.recommendation == "BUY"]
+    watch = [s for s in stocks if s.recommendation == "WATCH"]
+    return strong, buy, watch
+
+
 def _get_watchlist_count() -> int:
     """获取监控列表真实条数（与前端 /watchlist/stats 一致，已去重）"""
     try:
@@ -381,6 +389,79 @@ def send_notification(scored_stocks, target_date: date,
     return ok
 
 
+def send_data_integrity_alert(target_date: date, problems: list[dict], config: dict = None) -> bool:
+    """发送核心行情源异常告警，阻断正式推荐外发。"""
+    notify_config = config or _get_notify_config()
+    if not notify_config["email_enabled"]:
+        logger.info("邮件通知未启用，跳过数据异常阻断告警")
+        return False
+
+    date_str = target_date.strftime("%Y-%m-%d")
+    lines = [
+        f"New France 数据异常阻断告警 - {date_str}",
+        "",
+        "今日正式推荐已阻断，原因是核心行情源未全部满足“目标交易日 fresh 数据”要求。",
+        "",
+        "异常明细：",
+    ]
+    rows_html = ""
+    for item in problems or []:
+        asset = html.escape(str(item.get("asset") or "--"))
+        expected_date = html.escape(str(item.get("expected_date") or "--"))
+        fetched_at = html.escape(str(item.get("fetched_at") or "--"))
+        status = html.escape(str(item.get("status") or "--"))
+        lines.append(
+            f"- asset={item.get('asset') or '--'} | expected_date={item.get('expected_date') or '--'} | "
+            f"fetched_at={item.get('fetched_at') or '--'} | status={item.get('status') or '--'}"
+        )
+        rows_html += f"""
+      <tr>
+        <td style="padding:8px;border:1px solid #E1E7EF">{asset}</td>
+        <td style="padding:8px;border:1px solid #E1E7EF">{expected_date}</td>
+        <td style="padding:8px;border:1px solid #E1E7EF">{fetched_at}</td>
+        <td style="padding:8px;border:1px solid #E1E7EF">{status}</td>
+      </tr>"""
+    lines.extend([
+        "",
+        "说明：为保证对外决策邮件真实、准确、有迹可循，系统在数据不确定时宁可阻断，不发送正式推荐内容。",
+    ])
+    text_content = "\n".join(lines)
+    html_content = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;padding:20px;color:#172033">
+  <h2 style="margin:0 0 12px 0">New France 数据异常阻断告警</h2>
+  <p style="margin:0 0 12px 0">日期：{html.escape(date_str)}</p>
+  <p style="margin:0 0 16px 0;color:#C0392B">核心行情源未全部满足“目标交易日 fresh 数据”要求，今日正式推荐已阻断。</p>
+  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;max-width:760px">
+    <thead>
+      <tr style="background:#EEF2F6">
+        <th style="padding:8px;border:1px solid #E1E7EF;text-align:left">资产</th>
+        <th style="padding:8px;border:1px solid #E1E7EF;text-align:left">目标日期</th>
+        <th style="padding:8px;border:1px solid #E1E7EF;text-align:left">采集时间</th>
+        <th style="padding:8px;border:1px solid #E1E7EF;text-align:left">状态</th>
+      </tr>
+    </thead>
+    <tbody>{rows_html}
+    </tbody>
+  </table>
+  <p style="margin:16px 0 0 0;color:#667085">系统策略：数据不够确定时，宁可阻断也不外发。</p>
+</body>
+</html>"""
+    try:
+        ok, message = _send_email(
+            subject=f"[New France] 数据异常：核心行情源非今日，已阻断今日推荐 - {date_str}",
+            text_content=text_content,
+            html_content=html_content,
+            notify_config=notify_config,
+        )
+        if not ok:
+            logger.error("数据异常阻断告警发送失败: %s", message)
+        return ok
+    except Exception as exc:  # noqa: BLE001
+        logger.error("数据异常阻断告警发送异常: %s", exc)
+        return False
+
+
 # ---------------------------------------------------------------------------
 # Plain-text content (fallback for email clients that don't render HTML)
 # ---------------------------------------------------------------------------
@@ -431,16 +512,14 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
         lines.extend(national_text)
         lines.append("")
 
-    strong = [s for s in stocks if s.recommendation == "STRONG_BUY"]
-    buy = [s for s in stocks if s.recommendation == "BUY"]
-    watch = [s for s in stocks if s.recommendation == "WATCH"]
+    strong, buy, watch = _approved_recommendation_groups(stocks)
 
-    lines.append(f"【今日筛选结果】STRONG_BUY {len(strong)} | BUY {len(buy)} | WATCH {len(watch)}")
+    lines.append(f"【历史监控池回撤推荐】STRONG_BUY {len(strong)} | BUY {len(buy)} | WATCH {len(watch)}")
     if audit_results.get("stocks"):
         lines.append(f"审核通过率: {audit_results.get('pass_rate', 100):.0f}% | 降级: {audit_results.get('downgraded', 0)} 只")
     lines.append("")
 
-    if not stocks:
+    if not (strong or buy or watch):
         lines.append("今日无符合条件的回撤买入信号。")
     else:
         for level_stocks, label in [(strong, "STRONG_BUY 强烈买入"), (buy, "BUY 建议买入"), (watch, "WATCH 观察")]:
@@ -467,7 +546,11 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
                         lines.append("  未满足项:")
                         for item in failed:
                             lines.append(f"    - {item.get('name')}: {item.get('detail')}")
-                lines.append(f"  回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}")
+                added_date = (getattr(s, "extra", {}) or {}).get("added_date", "--")
+                lines.append(
+                    f"  加入关注:{added_date} | 涨停日:{s.zt_date} | "
+                    f"回撤:{s.drop_pct:+.2f}% | 排名:#{s.rank}"
+                )
                 history_rows = _stock_price_history(s)
                 if history_rows:
                     lines.append("  价格/回撤走势:")
@@ -513,9 +596,7 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
-    strong = [s for s in stocks if s.recommendation == "STRONG_BUY"]
-    buy = [s for s in stocks if s.recommendation == "BUY"]
-    watch = [s for s in stocks if s.recommendation == "WATCH"]
+    strong, buy, watch = _approved_recommendation_groups(stocks)
 
     parts = [
         _html_head(),
@@ -531,7 +612,7 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
     # 筛选结果
     parts.append(_html_screening_summary(len(strong), len(buy), len(watch), audit_results))
 
-    if not stocks:
+    if not (strong or buy or watch):
         parts.append('<p style="color:#667085;">今日无符合条件的回撤买入信号。</p>')
     else:
         for level_stocks, label, color in [
@@ -697,7 +778,7 @@ def _html_screening_summary(strong, buy, watch, audit_results=None):
 
     return f"""
 <div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
-  <h2 style="color:#172033;font-size:16px;margin:0 0 16px 0;font-weight:600">今日筛选结果 <span style="color:#667085;font-weight:400;font-size:13px">(共{total}只)</span></h2>
+  <h2 style="color:#172033;font-size:16px;margin:0 0 16px 0;font-weight:600">历史监控池回撤推荐 <span style="color:#667085;font-weight:400;font-size:13px">(共{total}只)</span></h2>
   <table cellpadding="0" cellspacing="0" border="0" style="width:100%">
     <tr>{cards_html}
     </tr>

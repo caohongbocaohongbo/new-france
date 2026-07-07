@@ -1,12 +1,24 @@
 """系统 API — 健康检查、状态、配置"""
 from fastapi import APIRouter, Query
 from datetime import datetime, timezone, timedelta
+import math
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+def _json_safe(value):
+    """清理 NaN/Infinity，避免 JSON 序列化失败。"""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
 
 
 def trading_session_status(now: datetime) -> dict:
@@ -111,6 +123,13 @@ async def task_history(limit: int = Query(50, ge=1, le=500)):
 
     records = (read_task_history_resilient().get("records") or [])[-limit:]
     return {"status": "ok", "records": list(reversed(records))}
+
+
+@router.get("/data-assets")
+async def data_assets():
+    from ..services.data_backend.read_model import get_data_assets_overview
+
+    return _json_safe(get_data_assets_overview())
 
 
 @router.get("/audit")

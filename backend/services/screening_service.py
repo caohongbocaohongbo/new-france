@@ -14,6 +14,7 @@ import pandas as pd
 from ..agents.layer1_data_collector.agent import DataCollectorAgent
 from ..agents.layer2_signal_engine.agent import SignalEngineAgent
 from ..agents.layer3_recommendation.agent import RecommendationAgent
+from ..agents.layer3_recommendation.notifier import send_data_integrity_alert
 from ..events.engine import EventEngine
 from .runtime_config import get_effective_config, get_factor_weights_decimal
 from .watchlist_store import FRANCE_FILE, parse_watchlist
@@ -31,6 +32,34 @@ try:
 except ImportError:
     _HAS_PC_PLUGIN = False
 
+
+def _read_index_snapshot_with_cache() -> tuple[dict, dict]:
+    """统一读取指数快照。"""
+    from ..agents.layer1_data_collector.sources.index_data import fetch_index_snapshot
+    from .data_backend.snapshots import read_index_snapshot
+
+    snapshot, meta = read_index_snapshot(fetch_index_snapshot)
+    return (snapshot or {}), meta
+
+
+def _read_zt_pool_with_cache(target_date: Optional[date] = None) -> tuple[Optional[pd.DataFrame], dict]:
+    """统一读取涨停池快照。"""
+    from ..agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
+    from .data_backend.snapshots import read_zt_pool
+
+    payload, meta = read_zt_pool(lambda: fetch_zt_pool(target_date))
+    if payload is not None:
+        payload.attrs["source_meta"] = meta
+    return payload, meta
+
+
+def _read_quotes_with_cache(codes: List[str]) -> tuple[Optional[pd.DataFrame], dict]:
+    """统一读取实时行情快照。"""
+    from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
+    from .data_backend.snapshots import read_quotes
+
+    return read_quotes(codes, fetch_stock_quotes)
+
 def _read_watchlist() -> List[Dict]:
     """从 france.md 读取监控列表"""
     return parse_watchlist(FRANCE_FILE)
@@ -38,8 +67,48 @@ def _read_watchlist() -> List[Dict]:
 
 def _fetch_index_snapshot() -> dict:
     """获取上证指数真实快照，失败时保留空值而不是伪造点位。"""
-    from ..agents.layer1_data_collector.sources.index_data import fetch_index_snapshot
-    return fetch_index_snapshot()
+    snapshot, _meta = _read_index_snapshot_with_cache()
+    return snapshot
+
+
+def _validate_core_sources_for_date(target_date: date, core_source_meta: dict) -> list[dict]:
+    """校验核心行情源是否全部为目标交易日 fresh 数据。"""
+    problems = []
+    target_str = target_date.strftime("%Y-%m-%d")
+    for asset, meta in (core_source_meta or {}).items():
+        meta = meta or {}
+        fetched_at = meta.get("fetched_at")
+        status = meta.get("status")
+        fetched_day = str(fetched_at or "")[:10]
+        if not fetched_at or fetched_day != target_str or status not in {"fresh"}:
+            problems.append({
+                "asset": asset,
+                "expected_date": target_str,
+                "fetched_at": fetched_at,
+                "status": status,
+            })
+    return problems
+
+
+def _build_stock_evidence(
+    stock,
+    historical: Dict[str, pd.DataFrame],
+    quotes_meta: dict,
+    zt_meta: dict,
+    index_meta: dict,
+) -> dict:
+    history = historical.get(stock.code)
+    return {
+        "entry_reason": "watchlist_drawdown",
+        "zt_date": stock.zt_date,
+        "added_date": (stock.extra or {}).get("added_date"),
+        "quote_source": (quotes_meta or {}).get("source"),
+        "quote_fetched_at": (quotes_meta or {}).get("fetched_at"),
+        "zt_source": (zt_meta or {}).get("source"),
+        "zt_fetched_at": (zt_meta or {}).get("fetched_at"),
+        "index_fetched_at": (index_meta or {}).get("fetched_at"),
+        "history_length": len(history) if history is not None else 0,
+    }
 
 
 async def _fetch_principal_capital_map(target_date) -> dict:
@@ -206,9 +275,7 @@ async def run_full_pipeline(
     collector = DataCollectorAgent()
 
     # 获取指数涨幅
-    from ..agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
-    from ..agents.layer1_data_collector.sources.eastmoney_quote import fetch_stock_quotes
-    index_snapshot = _fetch_index_snapshot()
+    index_snapshot, index_meta = _read_index_snapshot_with_cache()
     index_gain = index_snapshot.get("gain_pct") or 0.0
     logger.info(
         "  上证指数: %s (%+.2f%%, %s)",
@@ -218,9 +285,9 @@ async def run_full_pipeline(
     )
 
     # 获取当日涨停股池
-    zt_pool = fetch_zt_pool()
+    zt_pool, zt_snapshot_meta = _read_zt_pool_with_cache(target_date)
     zt_list = []  # 涨停股列表（用于邮件通知）
-    zt_meta = zt_pool.attrs.get("source_meta", {}) if zt_pool is not None else {}
+    zt_meta = (zt_pool.attrs.get("source_meta") if zt_pool is not None else None) or zt_snapshot_meta
 
     # 交叉验证：Tushare 涨停数据（如已配置 TOKEN）
     try:
@@ -251,8 +318,8 @@ async def run_full_pipeline(
         # 拉取涨停股的实时行情（获取量比、PE等补充字段）
         zt_quote_map = {}
         try:
-            zt_quotes = fetch_stock_quotes(zt_codes)
-            if not zt_quotes.empty:
+            zt_quotes, _quote_meta = _read_quotes_with_cache(zt_codes)
+            if zt_quotes is not None and not zt_quotes.empty:
                 for _, row in zt_quotes.iterrows():
                     zt_quote_map[row["代码"]] = row
         except Exception as e:
@@ -291,6 +358,11 @@ async def run_full_pipeline(
             "total_scored": 0, "strong_buy": 0, "buy": 0, "watch": 0,
             "results": [], "index_gain": index_gain, "index_value": index_snapshot.get("value"),
             "index_snapshot": index_snapshot, "zt_list": zt_list,
+            "core_source_meta": {
+                "zt_pool": zt_snapshot_meta,
+                "index_snapshot": index_meta,
+                "quotes": {},
+            },
             "optional_sources": optional_sources,
             "errors": ["监控列表为空，请先添加股票"],
         }
@@ -307,12 +379,20 @@ async def run_full_pipeline(
     except Exception as e:
         logger.warning(f"  旁路数据源摘要读取失败: {e}")
 
-    # 拉取实时行情 + 历史K线 + 事件采集（并行，无数据依赖）
+    # 拉取实时行情快照（供阻断校验使用）
     codes = [e["code"] for e in watchlist]
-    event_engine = EventEngine()
+    quotes, quotes_meta = _read_quotes_with_cache(codes)
+    if quotes is None:
+        quotes = pd.DataFrame()
+    core_source_meta = {
+        "zt_pool": zt_snapshot_meta,
+        "index_snapshot": index_meta,
+        "quotes": quotes_meta,
+    }
 
-    quotes, historical, events, principal_capital_map = await asyncio.gather(
-        collector.collect_watchlist_quotes(codes),
+    # 拉取历史K线 + 事件采集（并行，无数据依赖）
+    event_engine = EventEngine()
+    historical, events, principal_capital_map = await asyncio.gather(
         collector.collect_historical_batch(codes),
         event_engine.collect_daily_events(target_date),
         _fetch_principal_capital_map(target_date),
@@ -519,12 +599,18 @@ async def run_full_pipeline(
     # ---- Layer 3: 生成报告 ----
     logger.info("[Layer 3] 生成报告...")
     recom = RecommendationAgent()
+    block_problems = _validate_core_sources_for_date(target_date, core_source_meta)
+    execute_dry_run = dry_run or bool(block_problems)
     summary = await recom.execute(scored, target_date, index_gain,
-                                  zt_list=zt_list, dry_run=dry_run,
+                                  zt_list=zt_list, dry_run=execute_dry_run,
                                   audit_results=audit_results,
                                   zt_meta=zt_meta,
                                   index_snapshot=index_snapshot,
                                   national_team=national_team_summary)
+    if block_problems:
+        logger.error("核心行情源非目标交易日有效数据，阻断正式推荐外发: %s", block_problems)
+        if not dry_run:
+            send_data_integrity_alert(target_date, block_problems)
 
     # ---- 构建响应 ----
     results = []
@@ -554,15 +640,17 @@ async def run_full_pipeline(
             "factors": factor_list,
             "price_history": s.extra.get("price_history", []) if getattr(s, "extra", None) else [],
             "audit": audit_map.get(s.code, {}),
+            "evidence": _build_stock_evidence(s, historical, quotes_meta, zt_snapshot_meta, index_meta),
         })
 
-    return {
+    response = {
         "date": target_date.strftime("%Y-%m-%d"),
         "index_gain": index_gain,
         "index_value": index_snapshot.get("value"),
         "index_snapshot": index_snapshot,
         "zt_list": zt_list,
         "zt_meta": zt_meta,
+        "core_source_meta": core_source_meta,
         "total_scored": summary["total_scored"],
         "strong_buy": summary["strong_buy"],
         "buy": summary["buy"],
@@ -574,3 +662,7 @@ async def run_full_pipeline(
         "watchlist_drawdown_summary": watchlist_drawdown_summary,
         "errors": errors,
     }
+    if block_problems:
+        response["status"] = "blocked_stale_data"
+        response["block_reason"] = block_problems
+    return response

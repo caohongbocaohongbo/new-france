@@ -184,6 +184,62 @@ class NotificationEnrichmentTest(unittest.TestCase):
         self.assertIn("中央汇金 增持 工商银行", html)
         self.assertIn("数据源", html)
 
+    def test_text_content_splits_zt_pool_from_watchlist_recommendations(self):
+        stock = _stock()
+        stock.recommendation = "BUY"
+        stock.extra["added_date"] = "2026-05-12"
+        zt_list = [{"code": "000001", "name": "平安银行", "price": 10.0, "change_pct": 10.0}]
+
+        text = notifier._build_text_content([stock], date(2026, 6, 1), 0, zt_list, 0, {}, {}, {})
+
+        self.assertIn("【今日涨停股列表】", text)
+        self.assertIn("【历史监控池回撤推荐】", text)
+        self.assertIn("加入关注:2026-05-12", text)
+        self.assertNotIn("【今日筛选结果】", text)
+
+    def test_text_content_excludes_pass_stocks_from_recommendation_section(self):
+        buy_stock = _stock()
+        buy_stock.recommendation = "BUY"
+        pass_stock = _stock()
+        pass_stock.code = "000656"
+        pass_stock.name = "金科股份"
+        pass_stock.recommendation = "PASS"
+        pass_stock.adjusted_score = 41
+
+        text = notifier._build_text_content([buy_stock, pass_stock], date(2026, 6, 1), 0, [], 0, {}, {}, {})
+
+        self.assertIn("达安基因(002030)", text)
+        self.assertNotIn("金科股份(000656)", text)
+        self.assertNotIn("[PASS]", text)
+
+    def test_html_content_splits_zt_pool_from_watchlist_recommendations(self):
+        stock = _stock()
+        stock.recommendation = "WATCH"
+        stock.extra["added_date"] = "2026-05-12"
+        zt_list = [{"code": "000001", "name": "平安银行", "price": 10.0, "change_pct": 10.0}]
+
+        html = notifier._build_html_content([stock], date(2026, 6, 1), 0, zt_list, 0, "seal_time", {}, {}, {})
+
+        self.assertIn("今日涨停池列表", html)
+        self.assertIn("历史监控池回撤推荐", html)
+        self.assertIn("加入关注:2026-05-12", html)
+        self.assertNotIn("今日筛选结果", html)
+
+    def test_html_content_excludes_pass_stocks_from_recommendation_section(self):
+        buy_stock = _stock()
+        buy_stock.recommendation = "BUY"
+        pass_stock = _stock()
+        pass_stock.code = "000656"
+        pass_stock.name = "金科股份"
+        pass_stock.recommendation = "PASS"
+        pass_stock.adjusted_score = 41
+
+        html = notifier._build_html_content([buy_stock, pass_stock], date(2026, 6, 1), 0, [], 0, "seal_time", {}, {}, {})
+
+        self.assertIn("达安基因", html)
+        self.assertNotIn("金科股份", html)
+        self.assertNotIn("PASS", html)
+
 
 if __name__ == "__main__":
     unittest.main()
