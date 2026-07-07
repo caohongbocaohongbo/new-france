@@ -19,3 +19,10 @@ reports/*.json
 node_modules/
 dist/
 .vite/
+
+# codex 会话残留 (env 变量未展开)
+$CODEX_HOME/
+
+# 数据后台运行时生成快照 (跨实例经 data-snapshots 分支流转, 不进主分支)
+data/data_backend/
+reports/data_backend/
