@@ -3,27 +3,31 @@
   "sources": {
     "national_team": {
       "key": "national_team",
-      "ok": true,
-      "stable": true,
-      "consecutive_successes": 18,
+      "ok": false,
+      "stable": false,
+      "consecutive_successes": 0,
       "required_successes": 3,
       "max_age_hours": 72,
-      "updated_at": "2026-07-09T18:30:42.525673+08:00",
+      "updated_at": "2026-07-10T18:29:51.817276+08:00",
       "last_success_at": "2026-07-09T18:30:42.357473+08:00",
-      "last_failure_at": null,
+      "last_failure_at": "2026-07-10T18:29:51.817286+08:00",
       "source_status": {
         "source": "东方财富股东分析",
         "source_url": "https://data.eastmoney.com/gdfx/HoldingAnalyse.html",
-        "fetched_at": "2026-07-09T18:30:42.357473+08:00",
-        "errors": [],
+        "fetched_at": "2026-07-10T18:29:51.694431+08:00",
+        "errors": [
+          "(HOLDER_NAME=\"中央汇金投资有限责任公司\"): HTTPSConnectionPool(host='datacenter-web.eastmoney.com', port=443): Read timed out."
+        ],
         "note": "证金/汇金按精确股东名过滤，社保基金按东方财富股东类型过滤"
       },
       "data": {
-        "record_count": 240,
-        "holding_count": 240,
-        "change_count": 158,
-        "event_count": 87,
+        "record_count": 210,
+        "holding_count": 210,
+        "change_count": 151,
+        "event_count": 89,
         "periods": [
+          "2026-07-14",
+          "2026-07-08",
           "2026-07-06",
           "2026-06-25",
           "2026-06-23",
@@ -58,8 +62,8 @@
           "2025-06-30"
         ]
       },
-      "error": null
+      "error": "(HOLDER_NAME=\"中央汇金投资有限责任公司\"): HTTPSConnectionPool(host='datacenter-web.eastmoney.com', port=443): Read timed out."
     }
   },
-  "updated_at": "2026-07-09T18:30:42.525686+08:00"
+  "updated_at": "2026-07-10T18:29:51.817292+08:00"
 }
