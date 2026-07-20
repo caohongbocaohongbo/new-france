@@ -1,86 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-07-20T13:40:28.707531+08:00",
+  "status": "skipped",
+  "reason": "已收盘",
+  "now": "2026-07-20T16:29:04.400936+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "akshare",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 6631
-      },
-      {
-        "source": "akshare",
-        "status": "ok",
-        "latency_ms": 104435
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 5285,
-  "buy_candidates": 1,
-  "sell_candidates": 2,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "000815",
-      "name": "美利云",
-      "price": 13.33,
-      "change_pct": 9.98,
-      "total_amount": null,
-      "main_net_inflow": 87699483.0,
-      "main_inflow_ratio": 57.15,
-      "super_net": 100435204.0,
-      "big_net": -12735721.0,
-      "mid_net": -35537220.0,
-      "small_net": -52162262.0,
-      "source": "akshare",
-      "flow_time": "2026-07-20T13:40:28.707531+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "603683",
-      "name": "晶华新材",
-      "price": 20.7,
-      "change_pct": -10.0,
-      "total_amount": null,
-      "main_net_inflow": -5348880.0,
-      "main_inflow_ratio": -43.45,
-      "super_net": -7344360.0,
-      "big_net": 1995480.0,
-      "mid_net": 2403270.0,
-      "small_net": 2945610.0,
-      "source": "akshare",
-      "flow_time": "2026-07-20T13:40:28.707531+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600755",
-      "name": "厦门国贸",
-      "price": 5.85,
-      "change_pct": -1.02,
-      "total_amount": null,
-      "main_net_inflow": -46698625.0,
-      "main_inflow_ratio": -33.85,
-      "super_net": -6024808.0,
-      "big_net": -40673817.0,
-      "mid_net": 26088263.0,
-      "small_net": 20608018.0,
-      "source": "akshare",
-      "flow_time": "2026-07-20T13:40:28.707531+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
