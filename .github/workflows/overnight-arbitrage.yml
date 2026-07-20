@@ -58,13 +58,9 @@ jobs:
       - name: Run overnight arbitrage decision
         if: steps.freshness.outputs.stale != 'true'
         env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          SMTP_TO: ${{ secrets.SMTP_TO }}
           PYTHONPATH: ${{ github.workspace }}
-        run: python -m backend.main --run-overnight-arbitrage
+        # GitHub 定时任务可能延迟数小时，只保留快照能力，不发送正式决策邮件。
+        run: python -m backend.main --run-overnight-arbitrage --dry-run
 
       - name: Commit generated data snapshot
         if: always() && steps.freshness.outputs.stale != 'true'

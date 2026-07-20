@@ -5,6 +5,8 @@ import subprocess
 import tempfile
 import unittest
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/commit_screening_data.sh"
@@ -142,23 +144,66 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn("gh pr create", workflow)
 
     def test_overnight_arbitrage_workflow_runs_before_tail_window_and_uses_snapshot_branch(self):
-        workflow = (ROOT / ".github/workflows/overnight-arbitrage.yml").read_text(encoding="utf-8")
+        workflow_text = (ROOT / ".github/workflows/overnight-arbitrage.yml").read_text(encoding="utf-8")
+        workflow = yaml.safe_load(workflow_text)
+        trigger = workflow.get("on") or workflow.get(True)
+        job = workflow["jobs"]["overnight-arbitrage"]
+        named_steps = {step.get("name"): step for step in job["steps"] if step.get("name")}
+        restore_step = named_steps["Restore generated data snapshot"]
+        run_step = named_steps["Run overnight arbitrage decision"]
+        commit_step = named_steps["Commit generated data snapshot"]
 
-        self.assertIn("Overnight Arbitrage Decision", workflow)
-        self.assertIn("43 6 * * 1-5", workflow)
-        self.assertIn("DATA_BRANCH: data-snapshots", workflow)
-        self.assertIn("bash scripts/restore_screening_data.sh", workflow)
-        self.assertIn("python -m backend.main --run-overnight-arbitrage", workflow)
-        self.assertIn("bash scripts/commit_screening_data.sh", workflow)
-        self.assertNotIn("python -m backend.main\\n", workflow)
-        self.assertNotIn("git push origin main", workflow)
+        self.assertEqual(workflow["name"], "Overnight Arbitrage Decision")
+        self.assertEqual(trigger["schedule"], [{"cron": "43 6 * * 1-5"}])
+        self.assertEqual(workflow["env"]["DATA_BRANCH"], "data-snapshots")
+        self.assertEqual(restore_step["run"], "bash scripts/restore_screening_data.sh")
+        self.assertEqual(run_step["run"], "python -m backend.main --run-overnight-arbitrage --dry-run")
+        self.assertIn("--dry-run", run_step["run"])
+        mail_env_keys = {
+            "BREVO_API_KEY",
+            "SMTP_PASSWORD",
+            "SMTP_USER",
+            "SMTP_HOST",
+            "SMTP_PORT",
+            "SMTP_TO",
+        }
+        env_scopes = [workflow.get("env", {}), job.get("env", {})]
+        env_scopes.extend(step.get("env", {}) for step in job["steps"])
+        inherited_env_keys = set().union(*(scope.keys() for scope in env_scopes))
+        self.assertTrue(mail_env_keys.isdisjoint(inherited_env_keys))
+        self.assertEqual(commit_step["run"], "bash scripts/commit_screening_data.sh")
+        self.assertNotIn("git push origin main", workflow_text)
 
     def test_render_blueprint_has_independent_overnight_arbitrage_cron(self):
-        blueprint = (ROOT / "render.yaml").read_text(encoding="utf-8")
+        blueprint = yaml.safe_load((ROOT / "render.yaml").read_text(encoding="utf-8"))
+        matching_services = [
+            service
+            for service in blueprint["services"]
+            if service.get("name") == "new-france-overnight-arbitrage"
+        ]
 
-        self.assertIn("new-france-overnight-arbitrage", blueprint)
-        self.assertIn('schedule: "43 6 * * 1-5"', blueprint)
-        self.assertIn("python -m backend.main --run-overnight-arbitrage", blueprint)
+        self.assertEqual(len(matching_services), 1)
+        overnight_cron = matching_services[0]
+        self.assertEqual({
+            key: overnight_cron[key]
+            for key in ("name", "type", "env", "region", "schedule", "buildCommand", "startCommand")
+        }, {
+            "name": "new-france-overnight-arbitrage",
+            "type": "cron",
+            "env": "python",
+            "region": "oregon",
+            "schedule": "43 6 * * 1-5",
+            "buildCommand": "pip install -r requirements.txt",
+            "startCommand": "python -m backend.main --run-overnight-arbitrage",
+        })
+        self.assertEqual({item["key"]: item for item in overnight_cron["envVars"]}, {
+            "BREVO_API_KEY": {"key": "BREVO_API_KEY", "sync": False},
+            "SMTP_PASSWORD": {"key": "SMTP_PASSWORD", "sync": False},
+            "SMTP_USER": {"key": "SMTP_USER", "value": "caohongbo183760584@gmail.com"},
+            "SMTP_HOST": {"key": "SMTP_HOST", "value": "smtp.gmail.com"},
+            "SMTP_PORT": {"key": "SMTP_PORT", "value": "587"},
+            "SMTP_TO": {"key": "SMTP_TO", "value": "896256756@qq.com"},
+        })
 
 
 if __name__ == "__main__":

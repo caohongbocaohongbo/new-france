@@ -12,6 +12,8 @@ services:
     envVars:
       - key: BREVO_API_KEY
         sync: false
+      - key: OA_TRIGGER_TOKEN
+        sync: false
       - key: SMTP_PASSWORD
         sync: false
       - key: SMTP_USER
@@ -47,12 +49,12 @@ services:
       - key: SMTP_TO
         value: "896256756@qq.com"
 
-  # ---- 定时任务 (尾盘隔夜套利 14:43 决策) ----
+  # ---- 定时任务 (隔夜套利，UTC 06:43 = 北京时间 14:43，周一至周五) ----
   - type: cron
     name: new-france-overnight-arbitrage
     env: python
     region: oregon
-    schedule: "43 6 * * 1-5"  # UTC 06:43 = 北京时间 14:43
+    schedule: "43 6 * * 1-5"
     buildCommand: pip install -r requirements.txt
     startCommand: python -m backend.main --run-overnight-arbitrage
     envVars:

@@ -3,16 +3,32 @@ import html
 import json
 import logging
 import math
-from datetime import date, datetime
+from datetime import date, datetime, time
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 
 from . import notifier
-from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, PROJECT_DIR, REPORT_FILE, SNAPSHOT_RAW_BASE
+from .config import (
+    BEIJING_TZ,
+    CONFIG,
+    HISTORY_FILE,
+    NOTIFICATION_STATE_FILE,
+    PROJECT_DIR,
+    REPORT_FILE,
+    SNAPSHOT_RAW_BASE,
+)
 
 logger = logging.getLogger(__name__)
+
+REQUIRED_QUOTE_FIELDS = {
+    "current_price": "最新价",
+    "change_pct": "涨跌幅",
+    "amount": "成交额",
+    "turnover": "换手率",
+    "volume_ratio": "量比",
+}
 
 
 def _json_safe(value):
@@ -138,13 +154,28 @@ def _build_empty_reason(total: int, quote_source_status: Optional[List[dict]]) -
     return "全市场行情主备源均不可用或返回空数据，未扫描到可判断股票。"
 
 
-def _reject_reason(row: dict) -> Optional[str]:
+def _scope_reject_reason(row: dict) -> Optional[str]:
     code = str(row.get("代码", "")).zfill(6)
     name = str(row.get("名称", "")).upper()
     if _is_excluded_market(code):
         return "创业板已排除"
     if "ST" in name or "退" in name:
         return "ST或退市风险已排除"
+    return None
+
+
+def _missing_quote_fields(row: dict) -> List[str]:
+    return [
+        field_name
+        for field_name, source_field in REQUIRED_QUOTE_FIELDS.items()
+        if _float(row.get(source_field)) is None
+    ]
+
+
+def _reject_reason(row: dict) -> Optional[str]:
+    scope_reason = _scope_reject_reason(row)
+    if scope_reason:
+        return scope_reason
     price = _float(row.get("最新价"), 0) or 0
     if price <= 0:
         return "停牌或无有效价格"
@@ -205,6 +236,7 @@ def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
     seal_time = int(zt_info.get("seal_time") or 0)
     break_count = int(zt_info.get("break_count") or 0)
     consecutive = int(zt_info.get("consecutive") or 0)
+    missing_quote_fields = _missing_quote_fields(row)
 
     score = 0.0
     score += _clip((change_pct - 5.5) * 4.2, 0, 22)
@@ -277,9 +309,10 @@ def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
         "break_count": break_count,
         "consecutive": consecutive,
         "minute_strength": minute or {},
+        "missing_quote_fields": missing_quote_fields,
         "reasons": reasons[:6],
         "risks": risks[:5],
-        "valid_until": "14:55",
+        "valid_until": "14:40-14:55",
     }
 
 
@@ -301,15 +334,25 @@ def build_overnight_decision(
     zt_map = _build_zt_map(zt_pool)
 
     rejected = []
+    removed = []
     candidates = []
     total = 0 if quotes is None else len(quotes)
     if quotes is not None and not quotes.empty:
         for _, series in quotes.iterrows():
             row = series.to_dict()
             code = str(row.get("代码", "")).zfill(6)
+            name = str(row.get("名称", ""))
+            scope_reason = _scope_reject_reason(row)
+            if scope_reason:
+                rejected.append({"code": code, "name": name, "reason": scope_reason})
+                continue
+            missing_fields = _missing_quote_fields(row)
+            if missing_fields:
+                removed.append({"code": code, "name": name, "missing_fields": missing_fields})
+                continue
             reason = _reject_reason(row)
             if reason:
-                rejected.append({"code": code, "name": str(row.get("名称", "")), "reason": reason})
+                rejected.append({"code": code, "name": name, "reason": reason})
                 continue
             item = _decision_item(row, zt_map.get(code, {}), minute_strength.get(code, {}))
             if item["action"] != "PASS":
@@ -318,7 +361,14 @@ def build_overnight_decision(
                 rejected.append({"code": code, "name": item["name"], "reason": "综合分未达买入阈值"})
 
     candidates.sort(key=lambda item: item["decision_score"], reverse=True)
-    results = candidates[:limit]
+    candidate_removed = [
+        {"code": item["code"], "name": item["name"], "missing_fields": item["missing_quote_fields"]}
+        for item in candidates
+        if item.get("missing_quote_fields")
+    ]
+    removed.extend(item for item in candidate_removed if item not in removed)
+    complete_candidates = [item for item in candidates if not item.get("missing_quote_fields")]
+    results = complete_candidates[:limit]
     errors = errors or []
     has_quotes = total > 0
     status = "completed" if not errors else "completed_with_errors"
@@ -331,12 +381,18 @@ def build_overnight_decision(
         "date": target_date.strftime("%Y-%m-%d"),
         "generated_at": generated_at,
         "decision_time": "14:43",
-        "valid_window": "14:43-14:55",
+        "valid_window": "14:40-14:55",
         "buy_count": sum(1 for item in results if item["action"] == "BUY"),
         "watch_count": sum(1 for item in results if item["action"] == "WATCH"),
         "total_candidates": len(results),
         "total_scanned": total,
         "results": results,
+        "data_quality": {
+            "status": "complete",
+            "required_fields": list(REQUIRED_QUOTE_FIELDS),
+            "removed_count": len(removed),
+            "removed": removed,
+        },
         "rejected": rejected[:50],
         "source_status": {
             "quotes": normalized_quote_status,
@@ -779,6 +835,26 @@ def _fetch_yahoo_5m_strength(codes: Iterable[str]) -> Dict[str, dict]:
     return result
 
 
+def _notification_already_sent(target_date: date, state_file: Path) -> bool:
+    try:
+        payload = json.loads(state_file.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return False
+    return payload.get("date") == target_date.strftime("%Y-%m-%d") and bool(payload.get("sent"))
+
+
+def _mark_notification_sent(target_date: date, generated_at: str, state_file: Path) -> None:
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text(
+        json.dumps({
+            "date": target_date.strftime("%Y-%m-%d"),
+            "sent": True,
+            "sent_at": generated_at,
+        }, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 async def run_overnight_arbitrage(
     target_date: Optional[date] = None,
     *,
@@ -786,10 +862,18 @@ async def run_overnight_arbitrage(
     zt_fetcher: Optional[Callable[..., Optional[pd.DataFrame]]] = None,
     minute_fetcher: Optional[Callable[[Iterable[str]], Dict[str, dict]]] = None,
     dry_run: bool = False,
+    current_time: Optional[datetime] = None,
+    notification_state_file: Optional[Path] = None,
 ) -> dict:
     """执行尾盘隔夜套利任务，并写入独立报告缓存。"""
-    target_date = target_date or datetime.now(BEIJING_TZ).date()
-    generated_at = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M:%S")
+    current_time = current_time or datetime.now(BEIJING_TZ)
+    if current_time.tzinfo is None:
+        current_time = current_time.replace(tzinfo=BEIJING_TZ)
+    else:
+        current_time = current_time.astimezone(BEIJING_TZ)
+    target_date = target_date or current_time.date()
+    generated_at = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    notification_state_file = notification_state_file or NOTIFICATION_STATE_FILE
     quote_fetcher = quote_fetcher or _eastmoney_all_a_snapshot
     if zt_fetcher is None:
         from .sources.zt_pool import fetch_zt_pool
@@ -838,6 +922,27 @@ async def run_overnight_arbitrage(
         quote_source_status=quote_source_status,
         errors=errors,
     )
+    blocked_reasons = []
+    if dry_run:
+        blocked_reasons.append("dry_run")
+    if target_date.weekday() >= 5:
+        blocked_reasons.append("non_trading_day")
+    if current_time.date() != target_date or not time(14, 40) <= current_time.time().replace(tzinfo=None) <= time(14, 55):
+        blocked_reasons.append("outside_valid_window")
+    if decision.get("status") == "data_unavailable":
+        blocked_reasons.append("data_unavailable")
+    if not decision.get("results"):
+        blocked_reasons.append("no_complete_candidates")
+    if decision.get("source_status", {}).get("eastmoney_zt_pool", {}).get("status") != "ok":
+        blocked_reasons.append("zt_pool_unavailable")
+    if _notification_already_sent(target_date, notification_state_file):
+        blocked_reasons.append("already_sent")
+    decision["notification"] = {
+        "eligible": not blocked_reasons,
+        "sent": False,
+        "channel": "brevo_https_or_smtp",
+        "blocked_reasons": blocked_reasons,
+    }
     if dry_run:
         decision["history_summary"] = {
             "status": "skipped_dry_run",
@@ -859,8 +964,14 @@ async def run_overnight_arbitrage(
                 "error": str(exc),
             }
     write_overnight_report(decision)
-    if not dry_run:
-        notify_overnight_decision(decision)
+    if decision["notification"]["eligible"]:
+        sent = notify_overnight_decision(decision)
+        decision["notification"]["sent"] = bool(sent)
+        if sent:
+            _mark_notification_sent(target_date, generated_at, notification_state_file)
+        else:
+            decision["notification"]["blocked_reasons"].append("email_send_failed")
+        write_overnight_report(decision)
     return decision
 
 
@@ -916,14 +1027,19 @@ def _overnight_quote_status_text(source_status: dict) -> List[str]:
 
 
 def _build_overnight_text_content(decision: dict, buy_items: List[dict], watch_items: List[dict]) -> str:
+    removed_count = max(_int((decision.get("data_quality") or {}).get("removed_count")), 0)
     lines = [
         "【尾盘隔夜套利 14:43 决策】",
-        f"日期: {decision.get('date')} | 有效窗口: {decision.get('valid_window')}",
+        f"日期: {decision.get('date')} | 实际生成: {decision.get('generated_at', '--')} | 有效窗口: {decision.get('valid_window')}",
         f"状态: {decision.get('status', 'completed')} | 扫描: {decision.get('total_scanned', 0)}",
-        f"BUY: {decision.get('buy_count', 0)} | WATCH: {decision.get('watch_count', 0)}",
+        f"Top20构成: BUY {decision.get('buy_count', 0)} | WATCH {decision.get('watch_count', 0)}",
+    ]
+    if removed_count > 0:
+        lines.append(f"数据质量: 已剔除 {removed_count} 只行情字段不全个股")
+    lines.extend([
         "说明: 当日尾盘买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。",
         "",
-    ]
+    ])
     lines.extend(_overnight_candidate_text_lines("BUY 候选", buy_items))
     lines.append("")
     lines.extend(_overnight_candidate_text_lines("WATCH 候选", watch_items))
@@ -1070,6 +1186,15 @@ def _html_overnight_source_section(decision: dict) -> str:
 
 def _build_overnight_html_content(decision: dict, buy_items: List[dict], watch_items: List[dict]) -> str:
     status_color = "#16A36A" if decision.get("status") == "completed" else "#F39C12"
+    removed_count = max(_int((decision.get("data_quality") or {}).get("removed_count")), 0)
+    removed_notice = f"已剔除 {removed_count} 只行情字段不全个股" if removed_count > 0 else ""
+    removed_notice_html = (
+        '<p style="color:#B54708;background:#FFFAEB;border:1px solid #FEDF89;'
+        'border-radius:6px;padding:9px 12px;font-size:12px;line-height:1.6;margin:12px 0 0 0">'
+        f"{html.escape(removed_notice)}</p>"
+        if removed_notice
+        else ""
+    )
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1080,7 +1205,7 @@ def _build_overnight_html_content(decision: dict, buy_items: List[dict], watch_i
 <div style="max-width:900px;margin:0 auto;padding:24px">
   <div style="background:#EEF3F8;border:1px solid #D8E2EC;border-radius:12px;padding:28px 32px;margin-bottom:24px">
     <h1 style="color:#172033;font-size:22px;margin:0 0 4px 0;font-weight:700">New France 尾盘隔夜套利</h1>
-    <p style="color:#667085;font-size:13px;margin:0 0 16px 0">{html.escape(str(decision.get('date') or '--'))} | 有效窗口 {html.escape(str(decision.get('valid_window') or '--'))}</p>
+    <p style="color:#667085;font-size:13px;margin:0 0 16px 0">{html.escape(str(decision.get('date') or '--'))} | 实际生成 {html.escape(str(decision.get('generated_at') or '--'))} | 有效窗口 {html.escape(str(decision.get('valid_window') or '--'))} | 展示范围 Top20</p>
     <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-spacing:8px;margin:0 -8px">
       <tr>
         <td style="padding:14px 16px;background:#FFFFFF;border:1px solid #DCE5EF;border-radius:8px;text-align:center">
@@ -1101,6 +1226,7 @@ def _build_overnight_html_content(decision: dict, buy_items: List[dict], watch_i
         </td>
       </tr>
     </table>
+    {removed_notice_html}
     <p style="color:#667085;font-size:12px;line-height:1.6;margin:12px 0 0 0">当日尾盘买入决策；次日09:30-09:35仅用于卖出复盘和参数校准。</p>
   </div>
   {_html_overnight_candidate_section('BUY 候选', buy_items, '#E74C3C')}
@@ -1116,11 +1242,18 @@ def _build_overnight_html_content(decision: dict, buy_items: List[dict], watch_i
 
 def notify_overnight_decision(decision: dict) -> bool:
     """发送尾盘套利轻量邮件。失败不影响报告落盘。"""
-    config = notifier.get_smtp_config()
+    config = {
+        **notifier.get_smtp_config(),
+        "idempotency_key": f"overnight-arbitrage-{decision.get('date')}",
+    }
 
     buy_items = [item for item in decision.get("results", []) if item.get("action") == "BUY"][:5]
     watch_items = [item for item in decision.get("results", []) if item.get("action") == "WATCH"][:5]
-    subject = f"New France 尾盘隔夜套利 {decision.get('date')} BUY={decision.get('buy_count', 0)} WATCH={decision.get('watch_count', 0)}"
+    generated_time = str(decision.get("generated_at") or "")[11:16] or "--:--"
+    subject = (
+        f"New France 尾盘隔夜套利 {decision.get('date')} {generated_time} "
+        f"Top20 BUY={decision.get('buy_count', 0)} WATCH={decision.get('watch_count', 0)}"
+    )
     text_content = _build_overnight_text_content(decision, buy_items, watch_items)
     html_content = _build_overnight_html_content(decision, buy_items, watch_items)
     try:

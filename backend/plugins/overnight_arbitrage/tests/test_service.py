@@ -1,3 +1,4 @@
+import json
 import unittest
 from datetime import date
 from pathlib import Path
@@ -58,13 +59,17 @@ class OvernightArbitrageServiceTest(unittest.TestCase):
 
         self.assertEqual(decision["strategy"], "overnight_arbitrage")
         self.assertEqual(decision["date"], "2026-06-04")
-        self.assertEqual(decision["valid_window"], "14:43-14:55")
+        self.assertEqual(decision["valid_window"], "14:40-14:55")
         self.assertEqual(decision["buy_count"], 1)
         self.assertEqual(decision["watch_count"], 1)
         self.assertEqual([item["code"] for item in decision["results"]], ["600001", "000002"])
         self.assertEqual(decision["results"][0]["action"], "BUY")
         self.assertEqual(decision["results"][0]["pe"], 18.6)
         self.assertEqual(decision["results"][0]["intraday_pullback_pct"], -2.38)
+        self.assertEqual(
+            [item["valid_until"] for item in decision["results"]],
+            ["14:40-14:55"] * len(decision["results"]),
+        )
         self.assertGreater(decision["results"][0]["decision_score"], decision["results"][1]["decision_score"])
         self.assertIn("尾盘承接", " ".join(decision["results"][0]["reasons"]))
         rejected = {item["code"]: item["reason"] for item in decision["rejected"]}
@@ -145,17 +150,17 @@ class OvernightArbitrageServiceTest(unittest.TestCase):
 
     def test_write_overnight_report_uses_independent_cache_file(self):
         payload = {"status": "completed", "strategy": "overnight_arbitrage", "results": []}
-        original_text = REPORT_FILE.read_text(encoding="utf-8") if REPORT_FILE.exists() else None
-        try:
-            write_overnight_report(payload)
-            self.assertTrue(REPORT_FILE.exists())
-            self.assertIn("overnight_arbitrage", REPORT_FILE.read_text(encoding="utf-8"))
-            self.assertTrue(str(REPORT_FILE).endswith("reports/overnight_arbitrage_latest.json"))
-        finally:
-            if original_text is None:
-                REPORT_FILE.unlink(missing_ok=True)
-            else:
-                REPORT_FILE.write_text(original_text, encoding="utf-8")
+        self.assertEqual(REPORT_FILE.name, "overnight_arbitrage_latest.json")
+        self.assertEqual(REPORT_FILE.parent.name, "reports")
+
+        with TemporaryDirectory() as tmp:
+            report_file = Path(tmp) / "overnight_arbitrage_latest.json"
+
+            write_overnight_report(payload, report_file=report_file)
+
+            self.assertTrue(report_file.exists())
+            self.assertEqual(report_file.name, "overnight_arbitrage_latest.json")
+            self.assertEqual(json.loads(report_file.read_text(encoding="utf-8")), payload)
 
     def test_history_dedupes_same_trading_day_and_aggregates_dimensions(self):
         with TemporaryDirectory() as tmp:
