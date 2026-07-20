@@ -97,7 +97,7 @@ async function runOvernightArbitrage() {
     }
 
     try {
-        const startResp = await _oaApiFetch('/overnight-arbitrage/run', { method: 'POST', timeout: 60000, retries: 1 });
+        const startResp = await _oaApiFetch('/overnight-arbitrage/run?dry_run=true', { method: 'POST', timeout: 60000, retries: 1 });
         const startData = await startResp.json();
         if (startData.status !== 'started') {
             throw new Error(startData.message || '启动失败');

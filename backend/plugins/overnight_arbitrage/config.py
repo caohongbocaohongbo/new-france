@@ -26,6 +26,7 @@ DATA_DIR = _resolve_dir("OA_DATA_DIR", PROJECT_DIR / "data")
 REPORT_DIR = _resolve_dir("OA_REPORT_DIR", PROJECT_DIR / "reports")
 REPORT_FILE = REPORT_DIR / "overnight_arbitrage_latest.json"
 HISTORY_FILE = REPORT_DIR / "overnight_arbitrage_history.json"
+NOTIFICATION_STATE_FILE = REPORT_DIR / "overnight_arbitrage_notification_state.json"
 BEIJING_TZ = timezone(timedelta(hours=8))
 
 # data-snapshots 分支 GitHub raw 前缀。
