@@ -84,6 +84,7 @@ jobs:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           PYTHONPATH: ${{ github.workspace }}
         run: |
+          timeout --signal=TERM 120 \
           python -m backend.main --run-principal-capital-scan \
             --buy-threshold ${{ github.event.inputs.buy_threshold || '50' }} \
             --sell-threshold ${{ github.event.inputs.sell_threshold || '30' }} \

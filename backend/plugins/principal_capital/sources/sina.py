@@ -1,6 +1,10 @@
 """新浪单股主力资金流，用于抽样核验或小批量查询。"""
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    TimeoutError as FuturesTimeoutError,
+    as_completed,
+)
 from typing import List, Optional
 
 import requests
@@ -77,8 +81,13 @@ def fetch_codes_fund_flow_sina(
     codes: List[str],
     max_workers: int = 10,
     timeout: int = 8,
+    batch_timeout: float = 30.0,
 ) -> List[dict]:
-    """并发查询多只股票的新浪主力资金。"""
+    """并发查询多只股票的新浪主力资金。
+
+    batch_timeout: 整批抓取的墙钟上限，超时则返回已拿到的部分并放弃
+    剩余（新浪本就是抽样核验用途），避免个别慢股把整批 join 拖到分钟级。
+    """
     results: List[dict] = []
     if not codes:
         return results
@@ -87,8 +96,17 @@ def fetch_codes_fund_flow_sina(
             executor.submit(fetch_single_stock_fund_flow_sina, code, timeout): code
             for code in codes
         }
-        for future in as_completed(futures):
-            item = future.result()
-            if item:
-                results.append(item)
+        try:
+            for future in as_completed(futures, timeout=batch_timeout):
+                try:
+                    item = future.result()
+                except Exception:
+                    continue
+                if item:
+                    results.append(item)
+        except FuturesTimeoutError:
+            logger.warning(
+                "新浪主力资金抽样超出墙钟上限 %ss，返回已拿到的 %d 条",
+                batch_timeout, len(results),
+            )
     return results

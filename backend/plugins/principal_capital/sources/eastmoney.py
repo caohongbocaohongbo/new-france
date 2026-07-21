@@ -93,46 +93,48 @@ def _get_page(
     page: int,
     timeout: int,
 ) -> list[dict]:
-    last_error = None
-    for attempt in range(2):
-        try:
-            response = http.get(
-                base_url,
-                params=_build_params(fs, page),
-                headers=DEFAULT_HEADERS,
-                timeout=timeout,
-            )
-            response.raise_for_status()
-            payload = response.json()
-            return (payload.get("data") or {}).get("diff") or []
-        except requests.RequestException as exc:
-            last_error = exc
-            if attempt == 0:
-                time.sleep(0.5)
-                continue
-            raise
-    if last_error:
-        raise last_error
-    return []
+    # 收紧策略：单请求超时短、不重试。宁可整轮快速失败并 skip，
+    # 也不让 timeout×retry×多页 累积到分钟级把整个 job 拖到被强杀。
+    response = http.get(
+        base_url,
+        params=_build_params(fs, page),
+        headers=DEFAULT_HEADERS,
+        timeout=timeout,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    return (payload.get("data") or {}).get("diff") or []
 
 
 def fetch_market_fund_flow(
-    timeout: int = 10,
+    timeout: int = 5,
     session: Optional[requests.Session] = None,
     base_url: str = DEFAULT_BASE_URL,
+    budget_seconds: float = 60.0,
 ) -> pd.DataFrame:
-    """抓取东方财富全市场主力资金流。"""
+    """抓取东方财富全市场主力资金流。
+
+    budget_seconds: 整轮抓取的墙钟预算，超出即抛异常终止本轮（由上层
+    捕获后 skip），避免慢响应累积把 GitHub Actions job 拖到被强杀。
+    """
     http = session or requests.Session()
     rows: list[dict] = []
+    deadline = time.monotonic() + budget_seconds
     try:
         for fs in DEFAULT_FS_GROUPS:
             for page in range(1, 8):
+                if time.monotonic() > deadline:
+                    raise FundFlowFetchError(
+                        f"东方财富抓取超出墙钟预算 {budget_seconds}s，本轮放弃"
+                    )
                 diff = _get_page(http, base_url, fs, page, timeout)
                 if not diff:
                     break
                 rows.extend(_parse_diff(diff))
                 if len(diff) < 200:
                     break
+    except FundFlowFetchError:
+        raise
     except requests.RequestException as exc:
         logger.warning("东方财富主力资金抓取失败: %s", exc)
         raise FundFlowFetchError(str(exc)) from exc
