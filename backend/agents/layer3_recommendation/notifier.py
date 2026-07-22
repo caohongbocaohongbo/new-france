@@ -14,6 +14,10 @@ from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
+# 邮件「价格/回撤走势」表格最多渲染的行数（交易日）。统计与回撤为全量，
+# 仅在渲染时封顶最近 N 行，兼顾邮件可读性。N=60≈3 个月。
+EMAIL_HISTORY_MAX_ROWS = 60
+
 NOTIFY_CONFIG = {
     "email_enabled": True,
     "email_user": os.environ.get("SMTP_USER", ""),
@@ -147,7 +151,7 @@ def _fmt_num(value, digits=1, suffix=""):
 def _build_price_history_series(hist, watch_date: str, ref_price: float) -> list:
     """邮件渲染用的轻量序列生成，便于独立测试。"""
     from ...services.drawdown import build_cumulative_price_history_series
-    return build_cumulative_price_history_series(hist, watch_date, ref_price, limit=12)
+    return build_cumulative_price_history_series(hist, watch_date, ref_price, limit=EMAIL_HISTORY_MAX_ROWS)
 
 
 def _stock_price_history(stock) -> list:
@@ -156,7 +160,7 @@ def _stock_price_history(stock) -> list:
     if not rows:
         return []
     normalized = []
-    for row in rows[-12:]:
+    for row in rows[-EMAIL_HISTORY_MAX_ROWS:]:
         try:
             normalized.append({
                 "date": str(row.get("date", ""))[:10],

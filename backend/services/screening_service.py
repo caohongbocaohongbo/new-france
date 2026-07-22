@@ -22,6 +22,12 @@ from .drawdown import build_cumulative_price_history_series, latest_cumulative_d
 
 logger = logging.getLogger(__name__)
 
+# 历史K线抓取窗口上限（自然日）。动态窗口按最早加入关注日推导，最多回溯约1年，
+# 避免个别超老关注项拖慢筛选管线。
+MAX_HISTORY_DAYS = 400
+# 历史K线抓取窗口下限（自然日），保证短观察期股票也有足够上下文。
+MIN_HISTORY_DAYS = 60
+
 # 主力资金插件可选, 失败不影响主链路
 try:
     from backend.plugins.principal_capital.sources.multi_source import (
@@ -160,19 +166,40 @@ async def _fetch_principal_capital_map(target_date) -> dict:
     return {}
 
 
+def _compute_history_days(watchlist: List[Dict], target_date: date) -> int:
+    """按 watchlist 最早加入关注日推导历史K线抓取窗口（自然日）。
+
+    保证推荐股票的走势能回溯到 watch_date；受 [MIN_HISTORY_DAYS, MAX_HISTORY_DAYS] 约束。
+    """
+    earliest: Optional[date] = None
+    for entry in watchlist:
+        raw = entry.get("added_date") or entry.get("zt_date") or ""
+        raw = str(raw)[:10]
+        try:
+            d = date.fromisoformat(raw)
+        except (TypeError, ValueError):
+            continue
+        if earliest is None or d < earliest:
+            earliest = d
+    if earliest is None:
+        return MIN_HISTORY_DAYS
+    span = (target_date - earliest).days + 10  # +10 自然日缓冲，抵消停牌/节假日
+    return max(MIN_HISTORY_DAYS, min(span, MAX_HISTORY_DAYS))
+
+
 def _build_price_history_series(hist: Optional[pd.DataFrame],
                                 watch_date: str,
                                 ref_price: float,
                                 current_price: Optional[float] = None,
                                 current_date: Optional[date] = None) -> List[Dict]:
-    """生成从关注日起的收盘价和参考价回撤序列。"""
+    """生成从关注日起的收盘价和参考价回撤序列（全量，不在存储层截断）。"""
     return build_cumulative_price_history_series(
         hist,
         watch_date,
         ref_price,
         current_price=current_price,
         current_date=current_date,
-        limit=12,
+        limit=None,
     )
 
 
@@ -392,12 +419,15 @@ async def run_full_pipeline(
 
     # 拉取历史K线 + 事件采集（并行，无数据依赖）
     event_engine = EventEngine()
+    # 动态抓取窗口：覆盖 watchlist 中最早的加入关注日，保证推荐股票走势数据能回溯到
+    # watch_date（受 MAX_HISTORY_DAYS 封顶，MIN_HISTORY_DAYS 兜底）。
+    history_days = _compute_history_days(watchlist, target_date)
     historical, events, principal_capital_map = await asyncio.gather(
-        collector.collect_historical_batch(codes),
+        collector.collect_historical_batch(codes, days=history_days),
         event_engine.collect_daily_events(target_date),
         _fetch_principal_capital_map(target_date),
     )
-    logger.info(f"  实时行情: {len(quotes)} 只")
+    logger.info(f"  实时行情: {len(quotes)} 只 | 历史窗口: {history_days} 自然日")
 
     # ---- 事件匹配 ----
     watchlist_names = [e["name"] for e in watchlist]
