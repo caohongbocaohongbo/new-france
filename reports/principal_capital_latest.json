@@ -1,13 +1,30 @@
 {
-  "status": "skipped",
-  "reason": "休市中",
-  "now": "2026-07-24T12:58:19.605618+08:00",
+  "status": "no_data",
+  "reason": "",
+  "now": "2026-07-24T13:03:21.958793+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none"
+    "active_source": "none",
+    "attempts": [
+      {
+        "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='62.push2delay.eastmoney.com', port=443): Read timed out. (read timeout=5)",
+        "latency_ms": 10859
+      },
+      {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 2537
+      }
+    ],
+    "is_stale": false,
+    "cache_age_seconds": null,
+    "verify_result": null
   },
   "scanned": 0,
   "buy_candidates": 0,
