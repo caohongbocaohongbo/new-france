@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-07-29T14:19:29.750213+08:00",
+  "now": "2026-07-29T14:26:27.946120+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,14 +11,13 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 7162
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
         "status": "ok",
-        "latency_ms": 106196
+        "latency_ms": 101733
       }
     ],
     "is_stale": false,
@@ -29,42 +28,9 @@
   "buy_candidates": 2,
   "sell_candidates": 2,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "603599",
-      "name": "广信股份",
-      "price": 10.4,
-      "change_pct": 1.96,
-      "total_amount": null,
-      "main_net_inflow": -90561166.0,
-      "main_inflow_ratio": -44.06,
-      "super_net": 2276159.0,
-      "big_net": -92837325.0,
-      "mid_net": 28097232.0,
-      "small_net": 62463935.0,
-      "source": "akshare",
-      "flow_time": "2026-07-29T14:19:29.750213+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "603823",
-      "name": "百合花",
-      "price": 55.34,
-      "change_pct": -10.0,
-      "total_amount": null,
-      "main_net_inflow": -19153174.0,
-      "main_inflow_ratio": -41.96,
-      "super_net": -25495138.0,
-      "big_net": 6341964.0,
-      "mid_net": 8112844.0,
-      "small_net": 11040330.0,
-      "source": "akshare",
-      "flow_time": "2026-07-29T14:19:29.750213+08:00",
-      "severity": "alert"
-    }
-  ]
+  "sell_triggered": []
 }
