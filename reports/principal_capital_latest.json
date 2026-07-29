@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-07-29T13:35:35.495118+08:00",
+  "now": "2026-07-29T13:42:20.443740+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,13 +11,14 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 6244
       },
       {
         "source": "akshare",
         "status": "ok",
-        "latency_ms": 101580
+        "latency_ms": 107641
       }
     ],
     "is_stale": false,
@@ -26,11 +27,28 @@
   },
   "scanned": 5287,
   "buy_candidates": 2,
-  "sell_candidates": 4,
+  "sell_candidates": 5,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "600035",
+      "name": "楚天高速",
+      "price": 3.51,
+      "change_pct": 0.86,
+      "total_amount": null,
+      "main_net_inflow": -16818805.0,
+      "main_inflow_ratio": -30.78,
+      "super_net": -6941350.0,
+      "big_net": -9877455.0,
+      "mid_net": 4882816.0,
+      "small_net": 11935989.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:42:20.443740+08:00",
+      "severity": "warn"
+    }
+  ]
 }
