@@ -1,21 +1,133 @@
 {
-  "status": "skipped",
-  "reason": "休市中",
-  "now": "2026-07-29T12:55:40.740865+08:00",
+  "status": "completed",
+  "reason": "",
+  "now": "2026-07-29T13:14:49.196894+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none"
+    "active_source": "akshare",
+    "attempts": [
+      {
+        "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 6176
+      },
+      {
+        "source": "akshare",
+        "status": "ok",
+        "latency_ms": 100807
+      }
+    ],
+    "is_stale": false,
+    "cache_age_seconds": null,
+    "verify_result": null
   },
-  "scanned": 0,
-  "buy_candidates": 0,
-  "sell_candidates": 0,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 5287,
+  "buy_candidates": 2,
+  "sell_candidates": 4,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 4,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "600227",
+      "name": "赤天化",
+      "price": 3.38,
+      "change_pct": 10.1,
+      "total_amount": null,
+      "main_net_inflow": 187457083.0,
+      "main_inflow_ratio": 52.08,
+      "super_net": 148898332.0,
+      "big_net": 38558751.0,
+      "mid_net": -71503824.0,
+      "small_net": -115953258.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:14:49.196894+08:00"
+    },
+    {
+      "code": "000892",
+      "name": "欢瑞世纪",
+      "price": 3.51,
+      "change_pct": 10.03,
+      "total_amount": null,
+      "main_net_inflow": 81222468.0,
+      "main_inflow_ratio": 50.69,
+      "super_net": 92933203.0,
+      "big_net": -11710735.0,
+      "mid_net": -31162760.0,
+      "small_net": -50059708.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:14:49.196894+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "603599",
+      "name": "广信股份",
+      "price": 10.3,
+      "change_pct": 0.98,
+      "total_amount": null,
+      "main_net_inflow": -88175934.0,
+      "main_inflow_ratio": -51.36,
+      "super_net": 1575645.0,
+      "big_net": -89751579.0,
+      "mid_net": 30823327.0,
+      "small_net": 57352608.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:14:49.196894+08:00",
+      "severity": "danger"
+    },
+    {
+      "code": "603823",
+      "name": "百合花",
+      "price": 55.34,
+      "change_pct": -10.0,
+      "total_amount": null,
+      "main_net_inflow": -14725974.0,
+      "main_inflow_ratio": -38.06,
+      "super_net": -18549968.0,
+      "big_net": 3823994.0,
+      "mid_net": 6098468.0,
+      "small_net": 8627506.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:14:49.196894+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600469",
+      "name": "风神股份",
+      "price": 5.15,
+      "change_pct": 0.59,
+      "total_amount": null,
+      "main_net_inflow": -9961119.0,
+      "main_inflow_ratio": -35.03,
+      "super_net": 0.0,
+      "big_net": -9961119.0,
+      "mid_net": 368862.0,
+      "small_net": 9592257.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:14:49.196894+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000778",
+      "name": "新兴铸管",
+      "price": 3.8,
+      "change_pct": 0.53,
+      "total_amount": null,
+      "main_net_inflow": -91156773.0,
+      "main_inflow_ratio": -33.52,
+      "super_net": -122250314.0,
+      "big_net": 31093541.0,
+      "mid_net": 27895163.0,
+      "small_net": 63261610.0,
+      "source": "akshare",
+      "flow_time": "2026-07-29T13:14:49.196894+08:00",
+      "severity": "warn"
+    }
+  ]
 }
