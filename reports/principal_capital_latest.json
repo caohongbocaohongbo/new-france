@@ -1,27 +1,29 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-07-29T13:49:19.709184+08:00",
+  "now": "2026-07-29T13:56:04.082325+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "akshare",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 6727
       },
       {
         "source": "akshare",
-        "status": "ok",
-        "latency_ms": 100877
+        "status": "error",
+        "error": "HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=15)",
+        "latency_ms": 30458
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 441,
     "verify_result": null
   },
   "scanned": 5287,
