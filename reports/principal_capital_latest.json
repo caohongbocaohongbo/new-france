@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-05T13:57:34.263877+08:00",
+  "now": "2026-08-05T14:04:30.991659+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,14 +11,13 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 8979
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
         "status": "ok",
-        "latency_ms": 104306
+        "latency_ms": 105432
       }
     ],
     "is_stale": false,
@@ -27,11 +26,44 @@
   },
   "scanned": 5290,
   "buy_candidates": 1,
-  "sell_candidates": 1,
+  "sell_candidates": 2,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "600363",
+      "name": "联创光电",
+      "price": 24.64,
+      "change_pct": -10.01,
+      "total_amount": null,
+      "main_net_inflow": -47176113.0,
+      "main_inflow_ratio": -44.81,
+      "super_net": -28163889.0,
+      "big_net": -19012224.0,
+      "mid_net": 8722930.0,
+      "small_net": 38453184.0,
+      "source": "akshare",
+      "flow_time": "2026-08-05T14:04:30.991659+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "600724",
+      "name": "宁波富达",
+      "price": 5.02,
+      "change_pct": -1.76,
+      "total_amount": null,
+      "main_net_inflow": -13178877.0,
+      "main_inflow_ratio": -30.36,
+      "super_net": -6261476.0,
+      "big_net": -6917401.0,
+      "mid_net": 5298020.0,
+      "small_net": 7880857.0,
+      "source": "akshare",
+      "flow_time": "2026-08-05T14:04:30.991659+08:00",
+      "severity": "warn"
+    }
+  ]
 }
