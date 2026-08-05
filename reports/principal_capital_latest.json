@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-05T13:02:35.538599+08:00",
+  "now": "2026-08-05T13:09:30.028240+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -13,12 +13,12 @@
         "source": "eastmoney",
         "status": "error",
         "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 6181
+        "latency_ms": 6258
       },
       {
         "source": "akshare",
         "status": "ok",
-        "latency_ms": 102993
+        "latency_ms": 102661
       }
     ],
     "is_stale": false,
@@ -27,44 +27,28 @@
   },
   "scanned": 5290,
   "buy_candidates": 1,
-  "sell_candidates": 1,
-  "buy_fresh_count": 1,
+  "sell_candidates": 2,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600611",
-      "name": "大众交通",
-      "price": 4.69,
-      "change_pct": 10.09,
-      "total_amount": null,
-      "main_net_inflow": 122810147.0,
-      "main_inflow_ratio": 58.2,
-      "super_net": 139935299.0,
-      "big_net": -17125152.0,
-      "mid_net": -60348743.0,
-      "small_net": -62461405.0,
-      "source": "akshare",
-      "flow_time": "2026-08-05T13:02:35.538599+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600363",
-      "name": "联创光电",
-      "price": 24.64,
-      "change_pct": -10.01,
+      "code": "000735",
+      "name": "罗 牛 山",
+      "price": 5.23,
+      "change_pct": -0.95,
       "total_amount": null,
-      "main_net_inflow": -37792831.0,
-      "main_inflow_ratio": -42.57,
-      "super_net": -22319281.0,
-      "big_net": -15473550.0,
-      "mid_net": 7051968.0,
-      "small_net": 30740864.0,
+      "main_net_inflow": -27880809.0,
+      "main_inflow_ratio": -31.46,
+      "super_net": -4904505.0,
+      "big_net": -22976304.0,
+      "mid_net": 14242227.0,
+      "small_net": 13638582.0,
       "source": "akshare",
-      "flow_time": "2026-08-05T13:02:35.538599+08:00",
-      "severity": "alert"
+      "flow_time": "2026-08-05T13:09:30.028240+08:00",
+      "severity": "warn"
     }
   ]
 }
