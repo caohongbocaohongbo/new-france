@@ -1,21 +1,70 @@
 {
-  "status": "skipped",
-  "reason": "休市中",
-  "now": "2026-08-05T12:57:32.240368+08:00",
+  "status": "completed",
+  "reason": "",
+  "now": "2026-08-05T13:02:35.538599+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none"
+    "active_source": "akshare",
+    "attempts": [
+      {
+        "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 6181
+      },
+      {
+        "source": "akshare",
+        "status": "ok",
+        "latency_ms": 102993
+      }
+    ],
+    "is_stale": false,
+    "cache_age_seconds": null,
+    "verify_result": null
   },
-  "scanned": 0,
-  "buy_candidates": 0,
-  "sell_candidates": 0,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 5290,
+  "buy_candidates": 1,
+  "sell_candidates": 1,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "600611",
+      "name": "大众交通",
+      "price": 4.69,
+      "change_pct": 10.09,
+      "total_amount": null,
+      "main_net_inflow": 122810147.0,
+      "main_inflow_ratio": 58.2,
+      "super_net": 139935299.0,
+      "big_net": -17125152.0,
+      "mid_net": -60348743.0,
+      "small_net": -62461405.0,
+      "source": "akshare",
+      "flow_time": "2026-08-05T13:02:35.538599+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "600363",
+      "name": "联创光电",
+      "price": 24.64,
+      "change_pct": -10.01,
+      "total_amount": null,
+      "main_net_inflow": -37792831.0,
+      "main_inflow_ratio": -42.57,
+      "super_net": -22319281.0,
+      "big_net": -15473550.0,
+      "mid_net": 7051968.0,
+      "small_net": 30740864.0,
+      "source": "akshare",
+      "flow_time": "2026-08-05T13:02:35.538599+08:00",
+      "severity": "alert"
+    }
+  ]
 }
