@@ -1,13 +1,30 @@
 {
-  "status": "skipped",
-  "reason": "休市中",
-  "now": "2026-08-06T12:58:34.784391+08:00",
+  "status": "no_data",
+  "reason": "",
+  "now": "2026-08-06T13:03:38.050104+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none"
+    "active_source": "none",
+    "attempts": [
+      {
+        "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 6885
+      },
+      {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 10146
+      }
+    ],
+    "is_stale": false,
+    "cache_age_seconds": null,
+    "verify_result": null
   },
   "scanned": 0,
   "buy_candidates": 0,
