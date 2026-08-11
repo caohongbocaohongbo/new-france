@@ -62,6 +62,23 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn('restore_file "reports/latest.json"', restore_script)
         self.assertIn('restore_file "reports/overnight_arbitrage_history.json"', restore_script)
 
+    def test_snapshot_commit_includes_principal_capital_source_health_everywhere(self):
+        script = SCRIPT.read_text(encoding="utf-8")
+        health_file = "data/principal_capital_source_health.json"
+
+        file_loops = [
+            line
+            for line in script.splitlines()
+            if line.strip().startswith("for file in data/")
+        ]
+        self.assertEqual(len(file_loops), 2)
+        copy_loop, add_loop = file_loops
+        cleanup_line = next(line for line in script.splitlines() if line.strip().startswith("rm -rf data/"))
+
+        self.assertIn(health_file, copy_loop)
+        self.assertIn(health_file, cleanup_line)
+        self.assertIn(health_file, add_loop)
+
     def test_daily_screening_snapshot_script_handles_generated_changes_without_branch_checkout_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
