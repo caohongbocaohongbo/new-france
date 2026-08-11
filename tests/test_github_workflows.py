@@ -55,6 +55,28 @@ class GitHubWorkflowTest(unittest.TestCase):
             4,
         )
 
+    def test_principal_capital_watchdog_has_manual_and_redundant_schedules(self):
+        workflow_path = ROOT / ".github/workflows/principal-capital-watchdog.yml"
+        workflow_text = workflow_path.read_text(encoding="utf-8")
+        workflow = yaml.safe_load(workflow_text)
+        trigger = workflow.get("on") or workflow.get(True)
+        job = workflow["jobs"]["watchdog"]
+        named_steps = {step.get("name"): step for step in job["steps"] if step.get("name")}
+
+        self.assertEqual(workflow["name"], "Principal Capital Watchdog")
+        self.assertIn("workflow_dispatch", trigger)
+        self.assertEqual(
+            trigger["schedule"],
+            [{"cron": "45 1 * * 1-5"}, {"cron": "15 5 * * 1-5"}],
+        )
+        self.assertEqual(named_steps["Restore generated data snapshot"]["run"], "bash scripts/restore_screening_data.sh")
+        self.assertEqual(named_steps["Run principal capital watchdog"]["run"], "python scripts/principal_capital_watchdog.py")
+        self.assertEqual(named_steps["Commit generated data snapshot"]["run"], "bash scripts/commit_screening_data.sh")
+        env_scopes = [workflow.get("env", {}), job.get("env", {})]
+        env_scopes.extend(step.get("env", {}) for step in job["steps"])
+        env_keys = set().union(*(scope.keys() for scope in env_scopes))
+        self.assertTrue({"SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "SMTP_TO", "BREVO_API_KEY", "PYTHONPATH"}.issubset(env_keys))
+
     def test_daily_screening_snapshot_script_has_stale_sha_and_retry_guards(self):
         script = SCRIPT.read_text(encoding="utf-8")
         restore_script = (ROOT / "scripts/restore_screening_data.sh").read_text(encoding="utf-8")

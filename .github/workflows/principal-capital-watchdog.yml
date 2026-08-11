@@ -1,0 +1,54 @@
+name: Principal Capital Watchdog
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 北京时间 09:45 / 13:15，作为 cron-job.org 手动配置之外的冗余兜底。
+    - cron: '45 1 * * 1-5'
+    - cron: '15 5 * * 1-5'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: principal-capital-watchdog-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+  DATA_BRANCH: data-snapshots
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore generated data snapshot
+        run: bash scripts/restore_screening_data.sh
+
+      - name: Run principal capital watchdog
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: python scripts/principal_capital_watchdog.py
+
+      - name: Commit generated data snapshot
+        if: always()
+        run: bash scripts/commit_screening_data.sh
