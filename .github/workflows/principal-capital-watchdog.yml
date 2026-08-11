@@ -51,4 +51,4 @@ jobs:
 
       - name: Commit generated data snapshot
         if: always()
-        run: bash scripts/commit_screening_data.sh
+        run: bash scripts/commit_screening_data.sh || echo "快照提交失败（忽略，不影响看门狗结果）"

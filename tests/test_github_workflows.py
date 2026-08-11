@@ -71,7 +71,8 @@ class GitHubWorkflowTest(unittest.TestCase):
         )
         self.assertEqual(named_steps["Restore generated data snapshot"]["run"], "bash scripts/restore_screening_data.sh")
         self.assertEqual(named_steps["Run principal capital watchdog"]["run"], "python scripts/principal_capital_watchdog.py")
-        self.assertEqual(named_steps["Commit generated data snapshot"]["run"], "bash scripts/commit_screening_data.sh")
+        self.assertIn("bash scripts/commit_screening_data.sh", named_steps["Commit generated data snapshot"]["run"])
+        self.assertIn("|| echo", named_steps["Commit generated data snapshot"]["run"])
         env_scopes = [workflow.get("env", {}), job.get("env", {})]
         env_scopes.extend(step.get("env", {}) for step in job["steps"])
         env_keys = set().union(*(scope.keys() for scope in env_scopes))
