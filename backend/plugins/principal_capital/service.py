@@ -19,7 +19,15 @@ import pandas as pd
 from backend.api.router_system import trading_session_status
 
 # === plugin 内部依赖 ===
-from .config import CONFIG, DATA_DIR, HISTORY_FILE, REPORT_DIR, REPORT_FILE, SNAPSHOT_RAW_BASE
+from .config import (
+    CONFIG,
+    DATA_DIR,
+    HISTORY_FILE,
+    REPORT_DIR,
+    REPORT_FILE,
+    SNAPSHOT_RAW_BASE,
+    SOURCE_HEALTH_FILE,
+)
 from .notifier import get_smtp_config, send_email
 from .sources.multi_source import fetch_market_fund_flow_resilient
 
@@ -324,10 +332,10 @@ def read_history() -> dict:
 
 # ---- data-snapshots 远程回退（Render 自身取不到东财，读快照分支保证与邮件同源）----
 
-def _fetch_snapshot_json(filename: str) -> Optional[dict]:
-    """从 data-snapshots 分支的 GitHub raw 拉取 reports/<filename>。失败返回 None。"""
+def _fetch_snapshot_json(filename: str, directory: str = "reports") -> Optional[dict]:
+    """从 data-snapshots 分支拉取 JSON 快照，失败返回 None。"""
     import requests  # 延迟导入，避免 CLI/离线路径强依赖
-    url = f"{SNAPSHOT_RAW_BASE}/reports/{filename}"
+    url = f"{SNAPSHOT_RAW_BASE}/{directory}/{filename}"
     try:
         resp = requests.get(url, timeout=8)
         resp.raise_for_status()
@@ -366,6 +374,25 @@ def read_report_resilient() -> dict:
         remote["_source"] = "snapshot"
         return remote
     return local
+
+
+def read_source_health_resilient() -> dict:
+    """优先读取本地健康状态，Render 本地为空时回退到快照分支。"""
+    if SOURCE_HEALTH_FILE.exists():
+        try:
+            local = json.loads(SOURCE_HEALTH_FILE.read_text(encoding="utf-8"))
+            if isinstance(local, dict):
+                return local
+        except (json.JSONDecodeError, OSError):
+            pass
+    remote = _fetch_snapshot_json(
+        "principal_capital_source_health.json",
+        directory="data",
+    )
+    if isinstance(remote, dict):
+        remote["_source"] = "snapshot"
+        return remote
+    return {"sources": {}}
 
 
 def read_history_resilient() -> dict:

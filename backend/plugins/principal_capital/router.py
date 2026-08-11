@@ -2,31 +2,21 @@
 
 挂载点: /api/v1/principal-capital (由 backend.main 注入)
 """
-import json
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Query
 
-from .config import SOURCE_HEALTH_FILE
 from .service import (
     _json_safe,
     read_history_resilient,
     read_report_resilient,
+    read_source_health_resilient,
     run_principal_capital_scan,
     write_report,
 )
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-
-def _read_source_health_payload() -> dict:
-    if not SOURCE_HEALTH_FILE.exists():
-        return {"sources": {}}
-    try:
-        return json.loads(SOURCE_HEALTH_FILE.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return {"sources": {}}
 
 
 def _run_scan_task(**kwargs):
@@ -89,7 +79,7 @@ async def principal_capital_snapshot(history_limit: int = Query(12, ge=1, le=100
             "status": "ok",
             "report": _json_safe(read_report_resilient()),
             "history": {"status": "ok", "records": _json_safe(records)},
-            "source_health": _json_safe(_read_source_health_payload()),
+            "source_health": _json_safe(read_source_health_resilient()),
         }
     except Exception as exc:
         return {"status": "error", "error": str(exc)}
@@ -112,6 +102,6 @@ async def principal_capital_history(
 @router.get("/source-health")
 async def principal_capital_source_health():
     try:
-        return _json_safe(_read_source_health_payload())
+        return _json_safe(read_source_health_resilient())
     except Exception as exc:
         return {"status": "error", "error": str(exc)}

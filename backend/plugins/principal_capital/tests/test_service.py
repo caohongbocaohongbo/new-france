@@ -54,6 +54,23 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
         self.assertIn("source_status", result)
         fetch_snapshot.assert_not_called()
 
+    def test_read_source_health_resilient_reads_snapshot_when_local_file_missing(self):
+        with TemporaryDirectory() as tmp, \
+             patch.object(pcs, "SOURCE_HEALTH_FILE", Path(tmp) / "missing.json"), \
+             patch.object(
+                 pcs,
+                 "_fetch_snapshot_json",
+                 return_value={"eastmoney": {"failure_streak": 2}, "updated_at": "2026-08-11T09:40:00+08:00"},
+             ) as fetch_snapshot:
+            result = pcs.read_source_health_resilient()
+
+        self.assertEqual(result["eastmoney"]["failure_streak"], 2)
+        self.assertEqual(result["_source"], "snapshot")
+        fetch_snapshot.assert_called_once_with(
+            "principal_capital_source_health.json",
+            directory="data",
+        )
+
     def test_filter_buy_candidates_hits_threshold(self):
         df = pd.DataFrame([_row("600001", "主板一号", 55), _row("600002", "主板二号", 49)])
         result = pcs.filter_buy_candidates(df)
