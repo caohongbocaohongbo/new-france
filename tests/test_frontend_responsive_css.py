@@ -207,6 +207,16 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         # frontend 与 docs 镜像保持一致
         self.assertEqual(frontend_plugin, docs_plugin)
 
+    def test_principal_capital_status_copy_is_complete_and_synced_to_docs(self):
+        frontend_plugin = (ROOT / "frontend/js/plugins/principal_capital.js").read_text(encoding="utf-8")
+        docs_plugin = (ROOT / "docs/js/plugins/principal_capital.js").read_text(encoding="utf-8")
+
+        self.assertEqual(frontend_plugin, docs_plugin)
+        self.assertIn("数据源失败/无数据", frontend_plugin)
+        self.assertIn("非交易时段", frontend_plugin)
+        self.assertIn("已扫描·暂无信号", frontend_plugin)
+        self.assertIn("主力资金监控尚未产生快照", frontend_plugin)
+
     def test_docs_publish_directory_matches_frontend_for_national_team(self):
         for rel in ["index.html", "js/app.js", "css/styles.css"]:
             frontend_text = (ROOT / "frontend" / rel).read_text(encoding="utf-8")

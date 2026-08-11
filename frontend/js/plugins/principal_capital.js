@@ -82,11 +82,11 @@ function _pcFmtTime(iso) {
 }
 
 const PC_STATUS_LABEL = {
-    completed: '已完成',
-    no_data: '数据源全部不可用',
-    skipped: '已跳过(非交易时段)',
-    error: '异常',
-    empty: '暂无记录',
+    completed: '已扫描',
+    no_data: '数据源失败/无数据',
+    skipped: '非交易时段',
+    error: '运行异常',
+    empty: '未运行',
     running: '运行中...',
 };
 
@@ -345,7 +345,7 @@ async function pcLoadSourceHealth() {
 function _pcRenderReport(data) {
     const meta = document.getElementById('pcMeta');
     if (data.status === 'empty') {
-        if (meta) meta.textContent = '暂无扫描结果，点击"执行扫描"开始';
+        if (meta) meta.textContent = '主力资金监控尚未产生快照';
         _pcRenderTable('pcBuyTable', []);
         _pcRenderTable('pcSellTable', [], true);
         document.getElementById('pcBuyCount').textContent = '0';
@@ -354,10 +354,6 @@ function _pcRenderReport(data) {
     }
     if (data.status === 'running') {
         if (meta) meta.textContent = '扫描任务进行中...';
-        return;
-    }
-    if (data.status === 'error') {
-        if (meta) meta.textContent = '错误: ' + (data.error || '未知错误');
         return;
     }
     const buy = data.buy_triggered || [];
@@ -376,13 +372,15 @@ function _pcRenderReport(data) {
 
     // 状态行差异化提示
     if (data.status === 'no_data') {
-        _pcSetStatus('扫描失败:全部数据源不可达(详见底部数据源状态)', 'error');
+        _pcSetStatus('数据源失败/无数据（详见底部数据源状态）', true);
+    } else if (data.status === 'error') {
+        _pcSetStatus(`运行异常：${data.reason || data.error || '未知错误'}`, true);
     } else if (data.status === 'skipped') {
-        _pcSetStatus(`已跳过:${data.reason || '非交易时段'}`);
+        _pcSetStatus(`非交易时段：${data.reason || '本轮已跳过'}`);
     } else if (buy.length === 0 && sell.length === 0) {
-        _pcSetStatus(`完成:本轮无信号 (已扫描 ${data.scanned || 0} 只)`, 'ok');
+        _pcSetStatus(`已扫描·暂无信号（共 ${data.scanned || 0} 只）`);
     } else {
-        _pcSetStatus(`完成:买 ${buy.length} 卖 ${sell.length}${data.email_sent ? ' (已邮件)' : ''}`, 'ok');
+        _pcSetStatus(`已扫描：买 ${buy.length} 卖 ${sell.length}${data.email_sent ? '（已邮件）' : ''}`);
     }
 }
 

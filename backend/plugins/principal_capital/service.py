@@ -337,13 +337,32 @@ def _fetch_snapshot_json(filename: str) -> Optional[dict]:
         return None
 
 
+def _normalize_report_payload(payload: Optional[dict]) -> dict:
+    """补齐前端区分任务状态所需的稳定字段。"""
+    normalized = dict(payload or {})
+    normalized.setdefault("status", "empty")
+    normalized.setdefault("now", None)
+    normalized.setdefault("reason", str(normalized.get("error") or ""))
+    source_status = normalized.get("source_status")
+    if not isinstance(source_status, dict):
+        source_status = {"active_source": "none"}
+    else:
+        source_status = dict(source_status)
+        source_status.setdefault("active_source", "none")
+    normalized["source_status"] = source_status
+    normalized.setdefault("buy_triggered", [])
+    normalized.setdefault("sell_triggered", [])
+    return normalized
+
+
 def read_report_resilient() -> dict:
-    """读最新报告：本地为完成态直接返回，否则回退到 data-snapshots 快照。"""
-    local = read_report()
+    """读最新报告：本地完成态优先，否则返回远程快照的真实状态。"""
+    local = _normalize_report_payload(read_report())
     if local.get("status") == "completed":
         return local
     remote = _fetch_snapshot_json("principal_capital_latest.json")
-    if remote and remote.get("status") == "completed":
+    if remote and remote.get("status"):
+        remote = _normalize_report_payload(remote)
         remote["_source"] = "snapshot"
         return remote
     return local

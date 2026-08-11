@@ -25,6 +25,35 @@ def _row(code, name, ratio, amount=2e8, change_pct=3.0):
 
 class PrincipalCapitalServiceTest(unittest.TestCase):
 
+    def test_read_report_resilient_returns_remote_non_completed_statuses(self):
+        for status in ("no_data", "skipped", "error"):
+            with self.subTest(status=status), \
+                 patch.object(pcs, "read_report", return_value={"status": "empty"}), \
+                 patch.object(
+                     pcs,
+                     "_fetch_snapshot_json",
+                     return_value={"status": status, "now": "2026-08-11T09:45:00+08:00"},
+                 ):
+                result = pcs.read_report_resilient()
+
+            self.assertEqual(result["status"], status)
+            self.assertEqual(result["_source"], "snapshot")
+            self.assertEqual(result["now"], "2026-08-11T09:45:00+08:00")
+            self.assertIn("reason", result)
+            self.assertIn("source_status", result)
+
+    def test_read_report_resilient_keeps_local_completed_report_first(self):
+        local = {"status": "completed", "now": "2026-08-11T09:40:00+08:00"}
+        with patch.object(pcs, "read_report", return_value=local), \
+             patch.object(pcs, "_fetch_snapshot_json") as fetch_snapshot:
+            result = pcs.read_report_resilient()
+
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["now"], local["now"])
+        self.assertIn("reason", result)
+        self.assertIn("source_status", result)
+        fetch_snapshot.assert_not_called()
+
     def test_filter_buy_candidates_hits_threshold(self):
         df = pd.DataFrame([_row("600001", "主板一号", 55), _row("600002", "主板二号", 49)])
         result = pcs.filter_buy_candidates(df)
