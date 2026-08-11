@@ -95,6 +95,7 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn('restore_file "data/france.md"', restore_script)
         self.assertIn('restore_file "reports/latest.json"', restore_script)
         self.assertIn('restore_file "reports/overnight_arbitrage_history.json"', restore_script)
+        self.assertIn('restore_file "reports/principal_capital_watchdog_state.json"', restore_script)
 
     def test_snapshot_commit_includes_principal_capital_source_health_everywhere(self):
         script = SCRIPT.read_text(encoding="utf-8")
