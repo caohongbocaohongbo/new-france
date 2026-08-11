@@ -43,6 +43,18 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn("bash scripts/commit_screening_data.sh", workflow)
         self.assertNotIn("git push origin main", workflow)
 
+    def test_principal_capital_stale_skip_emits_warning_without_changing_gates(self):
+        workflow = (ROOT / ".github/workflows/principal-capital-scan.yml").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "::warning::旧提交 workflow，本次未执行主力资金扫描（stale skip）",
+            workflow,
+        )
+        self.assertGreaterEqual(
+            workflow.count("if: steps.freshness.outputs.stale != 'true'"),
+            4,
+        )
+
     def test_daily_screening_snapshot_script_has_stale_sha_and_retry_guards(self):
         script = SCRIPT.read_text(encoding="utf-8")
         restore_script = (ROOT / "scripts/restore_screening_data.sh").read_text(encoding="utf-8")

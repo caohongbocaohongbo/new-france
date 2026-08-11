@@ -59,6 +59,7 @@ jobs:
           if [ "${head_sha}" != "${remote_sha}" ]; then
             echo "stale=true" >> "$GITHUB_OUTPUT"
             echo "旧提交 workflow，不执行主力资金主链路"
+            echo "::warning::旧提交 workflow，本次未执行主力资金扫描（stale skip）"
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
