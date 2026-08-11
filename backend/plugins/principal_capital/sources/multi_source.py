@@ -229,6 +229,8 @@ def fetch_market_fund_flow_resilient(
     """带熔断与缓存降级的全市场主力资金流查询。"""
     now = _now()
     attempts = []
+    # TODO: 若未来接入新浪/腾讯兜底，只能限定关注池、涨停池或既有候选的二次确认；
+    # 不得对全市场逐股并发请求，必须以 Semaphore 限流，避免 5 分钟内触发限频封禁。
     sources = [
         ("eastmoney", _fetch_eastmoney_any),
         # akshare 底层同为东财数据，非独立源，仅作东财主接口异常时的同源兜底
