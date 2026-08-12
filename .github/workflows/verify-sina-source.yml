@@ -1,0 +1,28 @@
+name: Verify Sina Source
+
+# 一次性诊断：验证新浪数据源在 GitHub Actions（美国 IP）能否访问。
+# 只做连通性抽查（榜单前几页 + 少量资金流），几秒完成，不发邮件、不落快照。
+# 用途：决定主力资金免费源能否改用新浪（东财对海外 IP 失效后的替代评估）。
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify sina connectivity (US IP)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m backend.main --verify-sina-source

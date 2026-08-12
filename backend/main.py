@@ -190,6 +190,8 @@ def main():
                         help="[插件] 主力净流出卖出阈值(%%)")
     parser.add_argument("--enable-verify", action="store_true",
                         help="[插件] 启用新浪抽样核验主力资金数据")
+    parser.add_argument("--verify-sina-source", action="store_true",
+                        help="[插件] 轻量验证新浪数据源连通性(榜单+资金流抽查, 几秒完成)")
     args = parser.parse_args()
 
     if args.init_db:
@@ -227,6 +229,10 @@ def main():
         _run_principal_capital_cli(args, logger)
         return
 
+    if args.verify_sina_source:
+        _run_verify_sina_source(logger)
+        return
+
     if args.refresh_data_assets:
         _run_refresh_data_assets(args, logger)
         return
@@ -252,6 +258,25 @@ def _run_principal_capital_cli(args, logger):
         result.get("sell_fresh_count"),
         result.get("email_sent"),
     )
+
+
+def _run_verify_sina_source(logger):
+    """[插件] 轻量验证新浪数据源在当前网络环境(如 GitHub 美国 IP)的连通性。"""
+    from .plugins.principal_capital.sources.sina_market import verify_sina_connectivity
+    r = verify_sina_connectivity()
+    logger.info(
+        "新浪连通性验证: 榜单=%s(%d只/%dms) 资金流=%s(%d/%d成功/%dms)",
+        "OK" if r["node_ok"] else "FAIL", r["list_count"], r["list_ms"],
+        "OK" if r["moneyflow_ok"] else "FAIL",
+        r["sample_success"], r["sample_requested"], r["flow_ms"],
+    )
+    if r.get("error"):
+        logger.error("验证错误: %s", r["error"])
+    if r.get("samples"):
+        logger.info("样例: %s", r["samples"])
+    passed = r["node_ok"] and r["moneyflow_ok"]
+    logger.info("判定: %s", "通过 - 新浪在当前环境可用" if passed else "未通过 - 新浪在当前环境不可用")
+    raise SystemExit(0 if passed else 1)
 
 
 def _run_overnight_arbitrage_cli(args, logger):
