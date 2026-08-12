@@ -1,7 +1,7 @@
 {
   "status": "no_data",
   "reason": "",
-  "now": "2026-08-12T13:16:11.024640+08:00",
+  "now": "2026-08-12T13:21:13.748303+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,13 +11,15 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 9512
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 4099
       }
     ],
     "is_stale": false,
