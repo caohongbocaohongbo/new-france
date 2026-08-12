@@ -420,7 +420,7 @@ function _pcRenderTable(containerId, rows, isSell = false) {
 function _pcRenderSourceHealth(data) {
     const el = document.getElementById('pcSourceHealth');
     if (!el) return;
-    const sources = ['eastmoney', 'akshare'];
+    const sources = ['eastmoney', 'akshare', 'sina'];
     const hasAnyKnown = data && sources.some(k => data[k] && typeof data[k] === 'object');
     if (!hasAnyKnown) {
         // 后端返回 {detail:"Not Found"} / {} / 错误响应 时，避免误显示"正常"

@@ -80,7 +80,8 @@ def _is_star_market(code: str) -> bool:
 
 def _is_main_board(code: str) -> bool:
     c = _stock_code(code)
-    return c.startswith("60") or c.startswith("000") or c.startswith("001")
+    # 沪深主板：沪市 60；深市 000/001/002/003（002/003 为深市主板，原先漏含）
+    return c.startswith(("60", "000", "001", "002", "003"))
 
 
 def _is_st_name(name: str) -> bool:

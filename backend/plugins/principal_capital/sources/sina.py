@@ -50,9 +50,16 @@ def fetch_single_stock_fund_flow_sina(
         )
         response.raise_for_status()
         data = response.json()
-        if not isinstance(data, list) or not data:
+        # 新浪单股查询返回 dict，逗号批量查询返回 list；两种都要接受。
+        # （历史 bug：旧代码只认 list，导致单股查询恒返回 None）
+        if isinstance(data, list):
+            item = (data[0] if data else None)
+        elif isinstance(data, dict):
+            item = data
+        else:
+            item = None
+        if not item:
             return None
-        item = data[0] or {}
         r0_in = _to_float(item.get("r0_in"))
         r0_out = _to_float(item.get("r0_out"))
         r1_in = _to_float(item.get("r1_in"))
@@ -61,15 +68,25 @@ def fetch_single_stock_fund_flow_sina(
         r2_out = _to_float(item.get("r2_out"))
         r3_in = _to_float(item.get("r3_in"))
         r3_out = _to_float(item.get("r3_out"))
-        main_net = (r0_in + r1_in) - (r0_out + r1_out)
+        super_net = r0_in - r0_out
+        big_net = r1_in - r1_out
+        mid_net = r2_in - r2_out
+        small_net = r3_in - r3_out
+        main_net = super_net + big_net
         total_amount = r0_in + r0_out + r1_in + r1_out + r2_in + r2_out + r3_in + r3_out
         ratio = (main_net / total_amount * 100) if total_amount > 0 else None
         return {
             "code": str(code).zfill(6),
             "name": str(item.get("name", "")).strip(),
             "price": _to_float(item.get("trade")),
+            "change_pct": round(_to_float(item.get("changeratio")) * 100, 4),
+            "total_amount": round(total_amount, 2),
             "main_net_inflow": round(main_net, 2),
             "main_inflow_ratio": None if ratio is None else round(ratio, 4),
+            "super_net": round(super_net, 2),
+            "big_net": round(big_net, 2),
+            "mid_net": round(mid_net, 2),
+            "small_net": round(small_net, 2),
             "source": "sina",
         }
     except Exception as exc:

@@ -97,7 +97,9 @@ class MultiSourceFundFlowTest(unittest.TestCase):
                 with patch.object(msff, "_fetch_eastmoney_any",
                                   side_effect=FundFlowFetchError("primary")), \
                      patch.object(msff, "fetch_market_fund_flow_via_akshare",
-                                  side_effect=FundFlowFetchError("akshare")):
+                                  side_effect=FundFlowFetchError("akshare")), \
+                     patch.object(msff, "fetch_market_fund_flow_via_sina",
+                                  side_effect=FundFlowFetchError("sina")):
                     df, status = msff.fetch_market_fund_flow_resilient()
             finally:
                 pass  # cleanup happens via TemporaryDirectory
@@ -114,7 +116,9 @@ class MultiSourceFundFlowTest(unittest.TestCase):
                 with patch.object(msff, "_fetch_eastmoney_any",
                                   side_effect=FundFlowFetchError("primary")), \
                      patch.object(msff, "fetch_market_fund_flow_via_akshare",
-                                  side_effect=FundFlowFetchError("akshare")):
+                                  side_effect=FundFlowFetchError("akshare")), \
+                     patch.object(msff, "fetch_market_fund_flow_via_sina",
+                                  side_effect=FundFlowFetchError("sina")):
                     df, status = msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=60)
             finally:
                 pass
@@ -131,7 +135,9 @@ class MultiSourceFundFlowTest(unittest.TestCase):
                                                FundFlowFetchError("c"), FundFlowFetchError("d"),
                                                FundFlowFetchError("e"), _df("600008")]), \
                      patch.object(msff, "fetch_market_fund_flow_via_akshare",
-                                  side_effect=FundFlowFetchError("akshare")):
+                                  side_effect=FundFlowFetchError("akshare")), \
+                     patch.object(msff, "fetch_market_fund_flow_via_sina",
+                                  side_effect=FundFlowFetchError("sina")):
                     msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)
                     msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)
                     msff.fetch_market_fund_flow_resilient(cache_ttl_seconds=1)

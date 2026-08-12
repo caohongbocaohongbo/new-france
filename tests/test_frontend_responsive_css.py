@@ -216,7 +216,7 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn("非交易时段", frontend_plugin)
         self.assertIn("已扫描·暂无信号", frontend_plugin)
         self.assertIn("主力资金监控尚未产生快照", frontend_plugin)
-        self.assertIn("const sources = ['eastmoney', 'akshare']", frontend_plugin)
+        self.assertIn("const sources = ['eastmoney', 'akshare', 'sina']", frontend_plugin)
 
     def test_docs_publish_directory_matches_frontend_for_national_team(self):
         for rel in ["index.html", "js/app.js", "css/styles.css"]:

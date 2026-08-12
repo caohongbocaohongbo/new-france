@@ -16,6 +16,7 @@ import requests
 from .akshare_source import fetch_market_fund_flow_via_akshare
 from .eastmoney import EASTMONEY_HOSTS, FundFlowFetchError, fetch_market_fund_flow
 from .sina import fetch_codes_fund_flow_sina
+from .sina_market import fetch_market_fund_flow_via_sina
 from .tencent import fetch_codes_fund_flow_tencent
 from ..config import CACHE_FILE, CONFIG, DATA_DIR, SOURCE_HEALTH_FILE
 
@@ -38,6 +39,7 @@ def _default_health() -> dict:
     return {
         "eastmoney": {"failure_streak": 0, "blocked_until": None},
         "akshare": {"failure_streak": 0, "blocked_until": None},
+        "sina": {"failure_streak": 0, "blocked_until": None},
         "updated_at": None,
     }
 
@@ -64,6 +66,7 @@ def _load_health() -> dict:
         _HEALTH.pop("eastmoney_push2", None)
         _HEALTH.pop("eastmoney_push2his", None)
     _HEALTH.setdefault("akshare", {"failure_streak": 0, "blocked_until": None})
+    _HEALTH.setdefault("sina", {"failure_streak": 0, "blocked_until": None})
     _HEALTH.setdefault("updated_at", None)
     return _HEALTH
 
@@ -229,12 +232,13 @@ def fetch_market_fund_flow_resilient(
     """带熔断与缓存降级的全市场主力资金流查询。"""
     now = _now()
     attempts = []
-    # TODO: 若未来接入新浪/腾讯兜底，只能限定关注池、涨停池或既有候选的二次确认；
-    # 不得对全市场逐股并发请求，必须以 Semaphore 限流，避免 5 分钟内触发限频封禁。
     sources = [
         ("eastmoney", _fetch_eastmoney_any),
         # akshare 底层同为东财数据，非独立源，仅作东财主接口异常时的同源兜底
         ("akshare", lambda: fetch_market_fund_flow_via_akshare()),
+        # sina 为独立数据源：东财/akshare 同源，一旦同时失效由新浪全主板接管。
+        # 走单股并发（非批量），code 直接对应不错位；线程池并发已在 fetch 内限流。
+        ("sina", lambda: fetch_market_fund_flow_via_sina()),
     ]
     status_report = {
         "active_source": "none",
