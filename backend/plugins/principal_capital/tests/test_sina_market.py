@@ -69,6 +69,57 @@ class SinaMarketTest(unittest.TestCase):
             written = json.loads(cache_file.read_text(encoding="utf-8"))
             self.assertEqual(written["codes"], ["600000", "002415", "000001"])
 
+    def test_page_timeout_retries_then_skips_without_failing_whole_list(self):
+        """单页超时重试一次仍失败 → 跳过该页，其余页照常累积，不整份判空。"""
+        page2 = [{"code": "000001", "symbol": "sz000001"}]
+        with patch.object(sm.requests, "Session") as SessionCls, \
+             patch.object(sm.time, "sleep"):
+            sess = SessionCls.return_value
+            good_resp = sess.get.return_value
+            good_resp.raise_for_status.return_value = None
+            # 第1页两次都超时(首次+重试)，第2页成功，第3页空终止
+            good_resp.json.side_effect = [page2, []]
+            sess.get.side_effect = [
+                sm.requests.exceptions.ReadTimeout("t1"),
+                sm.requests.exceptions.ReadTimeout("t1-retry"),
+                good_resp, good_resp,
+            ]
+            codes = sm._fetch_main_board_codes_remote(max_pages=5)
+        self.assertEqual(codes, ["000001"])
+
+    def test_remote_empty_falls_back_to_stale_cache(self):
+        """实时拉取返回空 → 降级用过期缓存，并记录清单日期供上层标注。"""
+        with TemporaryDirectory() as tmp:
+            cache_file = Path(tmp) / "sina_codes.json"
+            stale = datetime.now(sm.BEIJING_TZ) - timedelta(days=5)
+            cache_file.write_text(json.dumps({
+                "cached_at": stale.isoformat(), "codes": ["600000", "000001"],
+            }), encoding="utf-8")
+            with patch.object(sm, "SINA_CODES_CACHE_FILE", cache_file), \
+                 patch.object(sm, "_fetch_main_board_codes_remote", return_value=[]):
+                codes = sm.fetch_main_board_codes()
+            self.assertEqual(codes, ["600000", "000001"])
+            self.assertEqual(sm.get_last_codes_stale_date(), stale.strftime("%m-%d"))
+
+    def test_fresh_fetch_clears_stale_date(self):
+        """实时拉取成功时 stale 日期应为 None（不误报滞后）。"""
+        with TemporaryDirectory() as tmp:
+            with patch.object(sm, "SINA_CODES_CACHE_FILE", Path(tmp) / "c.json"), \
+                 patch.object(sm, "DATA_DIR", Path(tmp)), \
+                 patch.object(sm, "_fetch_main_board_codes_remote",
+                              return_value=["600000"]):
+                sm.fetch_main_board_codes()
+            self.assertIsNone(sm.get_last_codes_stale_date())
+
+    def test_stale_codes_date_propagates_to_dataframe_attrs(self):
+        """清单降级日期须经 df.attrs 回传，供 multi_source 写入 source_status。"""
+        rows = [{"code": "600000", "name": "浦发银行", "main_net_inflow": 1e7}]
+        with patch.object(sm, "fetch_main_board_codes", return_value=["600000"]), \
+             patch.object(sm, "get_last_codes_stale_date", return_value="08-10"), \
+             patch.object(sm, "fetch_codes_fund_flow_sina", return_value=rows):
+            df = sm.fetch_market_fund_flow_via_sina()
+        self.assertEqual(df.attrs.get("codes_stale_date"), "08-10")
+
     def test_fetch_market_fund_flow_assembles_dataframe(self):
         rows = [
             {"code": "600000", "name": "浦发银行", "price": 9.1, "change_pct": 1.0,

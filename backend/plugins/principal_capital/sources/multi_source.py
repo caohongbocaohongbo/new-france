@@ -245,6 +245,8 @@ def fetch_market_fund_flow_resilient(
         "attempts": attempts,
         "is_stale": False,
         "cache_age_seconds": None,
+        # 新浪清单若走过期缓存降级，记录其日期(MM-DD)供邮件/页面标注；否则 None。
+        "codes_stale_date": None,
         "verify_result": None,
     }
 
@@ -262,6 +264,7 @@ def fetch_market_fund_flow_resilient(
             attempts.append({"source": source_name, "status": "ok", "latency_ms": latency_ms})
             _write_cache(df, now)
             status_report["active_source"] = source_name
+            status_report["codes_stale_date"] = df.attrs.get("codes_stale_date")
             if enable_verify and source_name == "eastmoney":
                 status_report["verify_result"] = _verify_sample(df)
             return df, status_report

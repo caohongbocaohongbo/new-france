@@ -181,6 +181,41 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
         self.assertIn("卖出区", text)
         self.assertIn("danger", html.lower())
 
+    def test_fund_flow_cache_notice_reports_minutes(self):
+        """资金流缓存降级：邮件须标注约 N 分钟前（分钟级）。"""
+        buy = pd.DataFrame([_row("600001", "主板一号", 60)])
+        _, text, html = pcs.build_email_payload(
+            buy, pd.DataFrame(),
+            datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ),
+            {"active_source": "cache", "is_stale": True, "cache_age_seconds": 600},
+        )
+        self.assertIn("10 分钟前", text)
+        self.assertIn("数据滞后提示", html)
+        self.assertIn("10 分钟前", html)
+
+    def test_codes_stale_notice_reports_date_not_minutes(self):
+        """主板清单降级：标注日期(天级)，且说明信号本身仍实时。"""
+        buy = pd.DataFrame([_row("600001", "主板一号", 60)])
+        _, text, html = pcs.build_email_payload(
+            buy, pd.DataFrame(),
+            datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ),
+            {"active_source": "sina", "is_stale": False, "codes_stale_date": "08-10"},
+        )
+        self.assertIn("08-10", text)
+        self.assertIn("信号本身仍为实时", text)
+        self.assertIn("08-10", html)
+
+    def test_no_notice_when_all_fresh(self):
+        """全实时时不产生任何滞后提示 banner。"""
+        buy = pd.DataFrame([_row("600001", "主板一号", 60)])
+        _, text, html = pcs.build_email_payload(
+            buy, pd.DataFrame(),
+            datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ),
+            {"active_source": "eastmoney", "is_stale": False},
+        )
+        self.assertNotIn("数据滞后提示", text)
+        self.assertNotIn("数据滞后提示", html)
+
 
 if __name__ == "__main__":
     unittest.main()

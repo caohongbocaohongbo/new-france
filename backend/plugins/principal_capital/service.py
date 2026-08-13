@@ -213,6 +213,31 @@ def _format_time_cn(value) -> str:
     return dt.strftime("%Y/%m/%d %H:%M:%S")
 
 
+def _staleness_notices(source_status: dict) -> list:
+    """据 source_status 生成人类可读的数据滞后提示（可能 0-2 条）。
+
+    - 资金流缓存降级(active_source == cache)：精确到分钟——缓存 TTL 仅 30 分钟，
+      分钟级差异直接影响决策价值；
+    - 主板清单降级(codes_stale_date 存在)：精确到天——清单只决定扫描范围、变动极慢。
+    返回纯文本列表，text 版直接用，HTML 版包一层 banner。
+    """
+    notices = []
+    if source_status.get("active_source") == "cache":
+        age = source_status.get("cache_age_seconds")
+        if isinstance(age, (int, float)):
+            minutes = max(1, int(round(age / 60)))
+            notices.append(f"资金流为约 {minutes} 分钟前的缓存数据，非实时，请谨慎参考。")
+        else:
+            notices.append("资金流为缓存降级数据，非实时，请谨慎参考。")
+    codes_stale_date = source_status.get("codes_stale_date")
+    if codes_stale_date:
+        notices.append(
+            f"主板股票清单为 {codes_stale_date} 的旧数据（当日实时清单拉取失败），"
+            "可能漏掉此后新上市个股，信号本身仍为实时。"
+        )
+    return notices
+
+
 def build_email_payload(
     buy_fresh: pd.DataFrame,
     sell_fresh: pd.DataFrame,
@@ -250,7 +275,10 @@ def build_email_payload(
             lines.append(" | ".join(parts))
         return "\n".join(lines) + "\n"
 
+    notices = _staleness_notices(source_status)
     text = text_lines(buy_fresh, "买入区") + "\n" + text_lines(sell_fresh, "卖出区", include_severity=True)
+    if notices:
+        text += "\n【数据滞后提示】\n" + "\n".join(f"· {n}" for n in notices) + "\n"
     text += f"\n数据源: {source_status.get('active_source', '--')} / stale={source_status.get('is_stale', False)}\n"
 
     def html_rows(df: pd.DataFrame) -> str:
@@ -279,10 +307,12 @@ def build_email_payload(
         return "".join(rows)
 
     stale_banner = ""
-    if source_status.get("is_stale"):
+    if notices:
+        items = "".join(f"<li>{html.escape(n)}</li>" for n in notices)
         stale_banner = (
             "<div style='padding:10px 12px;background:#fee2e2;color:#b91c1c;"
-            "border-radius:8px;margin-bottom:12px'>当前使用缓存降级数据，请谨慎参考。</div>"
+            "border-radius:8px;margin-bottom:12px'><strong>数据滞后提示</strong>"
+            f"<ul style='margin:6px 0 0;padding-left:20px'>{items}</ul></div>"
         )
     html_content = f"""<!DOCTYPE html>
 <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:20px;color:#111827">

@@ -9,8 +9,9 @@
 """
 import json
 import logging
+import time
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import requests
@@ -36,6 +37,10 @@ SINA_NODE_HEADERS = {
 # 排除创业板(300/301)、科创板(688)、北交所(8x/920/430)。
 MAIN_BOARD_PREFIXES = ("60", "000", "001", "002", "003")
 
+# 最近一次取清单若走了过期缓存降级，记录其日期(MM-DD)；否则 None。
+# 由 fetch_main_board_codes 写、get_last_codes_stale_date 读，供上层标注滞后。
+_last_codes_stale_date: Optional[str] = None
+
 # 与东财 fetch_market_fund_flow 一致的列结构，供上层 _base_filter 复用。
 _COLUMNS = [
     "code", "name", "price", "change_pct", "total_amount",
@@ -48,15 +53,20 @@ def _is_main_board_code(code: str) -> bool:
     return str(code or "").zfill(6).startswith(MAIN_BOARD_PREFIXES)
 
 
-def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 12) -> List[str]:
+def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 18) -> List[str]:
     """从新浪全A榜单分页翻取沪深主板代码清单（纯网络，无缓存）。
 
     榜单按涨跌幅排序，主板股散落各页，必须翻完所有页才能取全，
     因此 max_pages 需覆盖全A股数量（约 5400 只 / 80 每页 ≈ 68 页）。
+
+    跨太平洋抖动下单页偶发超时属常态，因此单页失败重试 1 次；仍失败则
+    跳过该页继续翻（已翻到的页照常累积），避免一页拖垮整份清单。只有全部
+    页都失败（codes 为空）才视为拉取失败，交由上层降级到旧缓存。
     """
     codes: List[str] = []
     seen = set()
     session = requests.Session()
+    empty_streak = 0
     for page in range(1, max_pages + 1):
         params = {
             "page": page,
@@ -67,13 +77,29 @@ def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 12) -> Li
             "symbol": "",
             "_s_r_a": "page",
         }
-        resp = session.get(
-            SINA_NODE_URL, params=params, headers=SINA_NODE_HEADERS, timeout=timeout
-        )
-        resp.raise_for_status()
-        data = resp.json()
+        data = None
+        for attempt in range(2):  # 首次 + 重试 1 次
+            try:
+                resp = session.get(
+                    SINA_NODE_URL, params=params, headers=SINA_NODE_HEADERS, timeout=timeout
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                break
+            except Exception as exc:  # noqa: BLE001 单页失败不应中断整份清单
+                if attempt == 0:
+                    time.sleep(0.5)
+                    continue
+                logger.warning("主板清单第 %d 页拉取失败（已重试）：%s", page, exc)
+                data = None
+        if data is None:
+            continue  # 该页放弃，继续下一页
         if not data:
-            break
+            empty_streak += 1
+            if empty_streak >= 2:  # 连续空页视为翻到末尾
+                break
+            continue
+        empty_streak = 0
         for item in data:
             code = str(item.get("code") or "").zfill(6)
             if not code or code in seen or not _is_main_board_code(code):
@@ -85,22 +111,31 @@ def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 12) -> Li
     return codes
 
 
-def _read_codes_cache(ttl_seconds: int) -> Optional[List[str]]:
-    """读主板代码清单缓存，未命中/过期/损坏返回 None。"""
+def _read_codes_cache(
+    ttl_seconds: int, allow_stale: bool = False
+) -> Tuple[Optional[List[str]], Optional[datetime]]:
+    """读主板代码清单缓存，返回 (codes, cached_at)。
+
+    未命中/损坏返回 (None, None)。allow_stale=False 时过期同样返回 (None, None)；
+    allow_stale=True 时忽略 TTL 返回缓存及其写入时间，供网络失败后的降级路径
+    据 cached_at 计算滞后天数。
+    """
     if not SINA_CODES_CACHE_FILE.exists():
-        return None
+        return None, None
     try:
         payload = json.loads(SINA_CODES_CACHE_FILE.read_text(encoding="utf-8"))
         cached_at = datetime.fromisoformat(payload["cached_at"])
         codes = payload.get("codes") or []
     except (json.JSONDecodeError, OSError, KeyError, ValueError):
-        return None
+        return None, None
     if cached_at.tzinfo is None:
         cached_at = cached_at.replace(tzinfo=BEIJING_TZ)
+    if not codes:
+        return None, None
     age = (datetime.now(BEIJING_TZ) - cached_at).total_seconds()
-    if age > ttl_seconds or not codes:
-        return None
-    return codes
+    if age > ttl_seconds and not allow_stale:
+        return None, None
+    return codes, cached_at
 
 
 def _write_codes_cache(codes: List[str]) -> None:
@@ -111,24 +146,49 @@ def _write_codes_cache(codes: List[str]) -> None:
     )
 
 
+def get_last_codes_stale_date() -> Optional[str]:
+    """返回最近一次 fetch_main_board_codes 若走了过期缓存降级时的清单日期。
+
+    命中新鲜缓存或实时拉取成功时为 None。格式 MM-DD，供上层标注清单滞后。
+    """
+    return _last_codes_stale_date
+
+
 def fetch_main_board_codes(
-    max_pages: int = 80, timeout: int = 12, use_cache: bool = True
+    max_pages: int = 80, timeout: int = 18, use_cache: bool = True
 ) -> List[str]:
     """取沪深主板代码清单，默认带缓存。
 
     主板成分变动极慢（仅新股上市增量），缓存 TTL 内直接复用，省去每轮翻页
     约 25s（美国 IP 实测）。缓存未命中时翻页拉取并落盘。
     use_cache=False 时强制走网络（供连通性验证等场景）。
+
+    网络拉取返回空时降级读过期缓存（allow_stale）——只要曾成功过一次，就不会
+    因榜单单次抖动而让整条新浪源判空；此时记录缓存日期供上层标注滞后。
     """
+    global _last_codes_stale_date
+    _last_codes_stale_date = None
     ttl = int(CONFIG.get("sina_codes_cache_ttl_seconds", 259200))
     if use_cache:
-        cached = _read_codes_cache(ttl)
+        cached, _ = _read_codes_cache(ttl)
         if cached:
             logger.info("主板代码清单命中缓存：%d 只", len(cached))
             return cached
     codes = _fetch_main_board_codes_remote(max_pages=max_pages, timeout=timeout)
-    if use_cache and codes:
-        _write_codes_cache(codes)
+    if codes:
+        if use_cache:
+            _write_codes_cache(codes)
+        return codes
+    # 实时拉取失败：降级到过期缓存（stale better than none）
+    if use_cache:
+        stale_codes, cached_at = _read_codes_cache(ttl, allow_stale=True)
+        if stale_codes:
+            _last_codes_stale_date = cached_at.strftime("%m-%d") if cached_at else None
+            logger.warning(
+                "主板清单实时拉取失败，降级使用 %s 的旧缓存：%d 只",
+                _last_codes_stale_date, len(stale_codes),
+            )
+            return stale_codes
     return codes
 
 
@@ -235,8 +295,10 @@ def fetch_market_fund_flow_via_sina(
     """
     if max_workers is None:
         max_workers = int(CONFIG.get("sina_max_workers", 40))
+    codes_stale_date = None
     if codes is None:
         codes = fetch_main_board_codes()
+        codes_stale_date = get_last_codes_stale_date()
     if not codes:
         raise FundFlowFetchError("新浪主板代码清单为空")
     rows = fetch_codes_fund_flow_sina(
@@ -249,5 +311,7 @@ def fetch_market_fund_flow_via_sina(
         if col not in df.columns:
             df[col] = None
     df = df[_COLUMNS].drop_duplicates(subset=["code"], keep="first").reset_index(drop=True)
+    # 清单若走了过期缓存降级，用 df.attrs 回传日期供上层标注滞后（pandas 原生元数据通道）
+    df.attrs["codes_stale_date"] = codes_stale_date
     logger.info("新浪全主板主力资金流：请求 %d 只，成功 %d 只", len(codes), len(df))
     return df
