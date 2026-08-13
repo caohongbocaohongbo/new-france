@@ -1,7 +1,7 @@
 {
   "status": "no_data",
   "reason": "",
-  "now": "2026-08-13T13:00:50.719196+08:00",
+  "now": "2026-08-13T16:06:09.603667+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -12,20 +12,20 @@
       {
         "source": "eastmoney",
         "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 11995
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3058
       },
       {
         "source": "akshare",
         "status": "error",
         "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1610
+        "latency_ms": 1829
       },
       {
         "source": "sina",
         "status": "error",
-        "error": "502 Server Error: Bad Gateway for url: https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=29&num=80&sort=changepercent&asc=0&node=hs_a&symbol=&_s_r_a=page",
-        "latency_ms": 45312
+        "error": "HTTPSConnectionPool(host='vip.stock.finance.sina.com.cn', port=443): Read timed out. (read timeout=12)",
+        "latency_ms": 23885
       }
     ],
     "is_stale": false,
