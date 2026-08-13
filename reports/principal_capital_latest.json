@@ -1,13 +1,36 @@
 {
-  "status": "skipped",
-  "reason": "休市中",
-  "now": "2026-08-13T12:55:46.994089+08:00",
+  "status": "no_data",
+  "reason": "",
+  "now": "2026-08-13T13:00:50.719196+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none"
+    "active_source": "none",
+    "attempts": [
+      {
+        "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 11995
+      },
+      {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1610
+      },
+      {
+        "source": "sina",
+        "status": "error",
+        "error": "502 Server Error: Bad Gateway for url: https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=29&num=80&sort=changepercent&asc=0&node=hs_a&symbol=&_s_r_a=page",
+        "latency_ms": 45312
+      }
+    ],
+    "is_stale": false,
+    "cache_age_seconds": null,
+    "verify_result": null
   },
   "scanned": 0,
   "buy_candidates": 0,
