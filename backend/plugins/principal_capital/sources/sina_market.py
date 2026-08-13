@@ -125,6 +125,50 @@ def verify_sina_connectivity(list_pages: int = 2, sample_size: int = 30) -> dict
     return result
 
 
+def verify_sina_full_timing(max_workers: int = 20) -> dict:
+    """全量计时验证：拉全主板清单 + 全量查资金流，测真实耗时/成功率/并发表现。
+
+    仅用于评估当前网络环境（如 GitHub 美国 IP）能否把全主板扫描塞进墙钟预算。
+    不落库、不截断（batch_timeout 放宽），结果供 CLI 打印与方案决策。
+    """
+    from time import perf_counter
+
+    result = {
+        "max_workers": max_workers,
+        "list_count": 0,
+        "flow_success": 0,
+        "success_rate": 0.0,
+        "list_ms": 0,
+        "flow_ms": 0,
+        "total_ms": 0,
+        "throughput_per_sec": 0.0,
+        "error": None,
+    }
+    try:
+        t0 = perf_counter()
+        codes = fetch_main_board_codes()
+        result["list_ms"] = int((perf_counter() - t0) * 1000)
+        result["list_count"] = len(codes)
+        if not codes:
+            result["error"] = "榜单接口返回空"
+            return result
+
+        t1 = perf_counter()
+        # batch_timeout 放宽到 10 分钟，确保测出真实全量耗时而非被截断
+        rows = fetch_codes_fund_flow_sina(
+            codes, max_workers=max_workers, batch_timeout=600.0
+        )
+        flow_s = perf_counter() - t1
+        result["flow_ms"] = int(flow_s * 1000)
+        result["flow_success"] = len(rows)
+        result["success_rate"] = round(len(rows) / len(codes) * 100, 1) if codes else 0.0
+        result["throughput_per_sec"] = round(len(rows) / flow_s, 1) if flow_s > 0 else 0.0
+        result["total_ms"] = result["list_ms"] + result["flow_ms"]
+    except Exception as exc:  # noqa: BLE001 计时入口需捕获全部异常并如实上报
+        result["error"] = f"{type(exc).__name__}: {exc}"
+    return result
+
+
 def fetch_market_fund_flow_via_sina(
     max_workers: int = 20,
     batch_timeout: float = 90.0,

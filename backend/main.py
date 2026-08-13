@@ -192,6 +192,10 @@ def main():
                         help="[插件] 启用新浪抽样核验主力资金数据")
     parser.add_argument("--verify-sina-source", action="store_true",
                         help="[插件] 轻量验证新浪数据源连通性(榜单+资金流抽查, 几秒完成)")
+    parser.add_argument("--verify-sina-full", action="store_true",
+                        help="[插件] 全量计时验证(全主板清单+资金流, 测真实耗时/成功率)")
+    parser.add_argument("--sina-workers", type=int, default=20,
+                        help="[插件] 新浪全量验证的并发线程数(默认20)")
     args = parser.parse_args()
 
     if args.init_db:
@@ -231,6 +235,10 @@ def main():
 
     if args.verify_sina_source:
         _run_verify_sina_source(logger)
+        return
+
+    if args.verify_sina_full:
+        _run_verify_sina_full(args, logger)
         return
 
     if args.refresh_data_assets:
@@ -277,6 +285,27 @@ def _run_verify_sina_source(logger):
     passed = r["node_ok"] and r["moneyflow_ok"]
     logger.info("判定: %s", "通过 - 新浪在当前环境可用" if passed else "未通过 - 新浪在当前环境不可用")
     raise SystemExit(0 if passed else 1)
+
+
+def _run_verify_sina_full(args, logger):
+    """[插件] 全量计时验证：测当前环境下全主板扫描的真实耗时/成功率/吞吐。"""
+    from .plugins.principal_capital.sources.sina_market import verify_sina_full_timing
+    r = verify_sina_full_timing(max_workers=args.sina_workers)
+    logger.info(
+        "新浪全量计时(workers=%d): 清单%d只/%dms, 资金流成功%d/%d(%.1f%%)/%dms, "
+        "总计%dms, 吞吐%.1f只/秒",
+        r["max_workers"], r["list_count"], r["list_ms"],
+        r["flow_success"], r["list_count"], r["success_rate"], r["flow_ms"],
+        r["total_ms"], r["throughput_per_sec"],
+    )
+    if r.get("error"):
+        logger.error("验证错误: %s", r["error"])
+    # 给出对 120s 墙钟的判定
+    within = r["total_ms"] <= 120000 and not r.get("error")
+    logger.info(
+        "墙钟判定: 全量总耗时 %.1fs %s 120s 墙钟",
+        r["total_ms"] / 1000, "≤ 可塞入" if within else "> 超出",
+    )
 
 
 def _run_overnight_arbitrage_cli(args, logger):

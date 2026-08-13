@@ -1,16 +1,28 @@
 name: Verify Sina Source
 
-# 一次性诊断：验证新浪数据源在 GitHub Actions（美国 IP）能否访问。
-# 只做连通性抽查（榜单前几页 + 少量资金流），几秒完成，不发邮件、不落快照。
-# 用途：决定主力资金免费源能否改用新浪（东财对海外 IP 失效后的替代评估）。
+# 验证新浪数据源在 GitHub Actions（美国 IP）的可用性。
+# - mode=light（默认）：连通性抽查，几秒完成。
+# - mode=full：全主板全量计时，测真实耗时/成功率/吞吐，用于决定能否塞进扫描墙钟。
+# 不发邮件、不落快照。
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: '验证模式：light=连通性抽查 / full=全量计时'
+        type: choice
+        default: 'light'
+        options:
+          - light
+          - full
+      workers:
+        description: 'full 模式并发线程数（默认20，可试 30/40）'
+        default: '20'
 
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +34,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Verify sina connectivity (US IP)
+      - name: Verify sina source (US IP)
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: python -m backend.main --verify-sina-source
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "full" ]; then
+            python -m backend.main --verify-sina-full --sina-workers "${{ github.event.inputs.workers || '20' }}"
+          else
+            python -m backend.main --verify-sina-source
+          fi
