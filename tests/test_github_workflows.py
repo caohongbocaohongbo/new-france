@@ -115,6 +115,25 @@ class GitHubWorkflowTest(unittest.TestCase):
         self.assertIn(health_file, cleanup_line)
         self.assertIn(health_file, add_loop)
 
+    def test_snapshot_includes_sina_codes_cache_everywhere(self):
+        """新浪主板代码清单缓存须同时纳入 commit 三处与 restore，防 commit/restore 不一致。"""
+        script = SCRIPT.read_text(encoding="utf-8")
+        restore_script = (ROOT / "scripts/restore_screening_data.sh").read_text(encoding="utf-8")
+        codes_file = "data/principal_capital_sina_codes.json"
+
+        file_loops = [
+            line for line in script.splitlines()
+            if line.strip().startswith("for file in data/")
+        ]
+        self.assertEqual(len(file_loops), 2)
+        copy_loop, add_loop = file_loops
+        cleanup_line = next(line for line in script.splitlines() if line.strip().startswith("rm -rf data/"))
+
+        self.assertIn(codes_file, copy_loop)
+        self.assertIn(codes_file, cleanup_line)
+        self.assertIn(codes_file, add_loop)
+        self.assertIn(f'restore_file "{codes_file}"', restore_script)
+
     def test_daily_screening_snapshot_script_handles_generated_changes_without_branch_checkout_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)

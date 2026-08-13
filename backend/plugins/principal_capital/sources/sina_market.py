@@ -7,16 +7,21 @@
   - 资金流：MoneyFlow 单股接口并发查询（单股返回可用 code 直接对应，天然不错位；
     逗号批量接口会乱序且不带 code，故不用批量）
 """
+import json
 import logging
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
 
 import pandas as pd
 import requests
 
 from .eastmoney import FundFlowFetchError
 from .sina import fetch_codes_fund_flow_sina
+from ..config import CONFIG, DATA_DIR, SINA_CODES_CACHE_FILE
 
 logger = logging.getLogger(__name__)
+
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 SINA_NODE_URL = (
     "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
@@ -43,8 +48,8 @@ def _is_main_board_code(code: str) -> bool:
     return str(code or "").zfill(6).startswith(MAIN_BOARD_PREFIXES)
 
 
-def fetch_main_board_codes(max_pages: int = 80, timeout: int = 12) -> List[str]:
-    """从新浪全A榜单分页取沪深主板代码清单。
+def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 12) -> List[str]:
+    """从新浪全A榜单分页翻取沪深主板代码清单（纯网络，无缓存）。
 
     榜单按涨跌幅排序，主板股散落各页，必须翻完所有页才能取全，
     因此 max_pages 需覆盖全A股数量（约 5400 只 / 80 每页 ≈ 68 页）。
@@ -80,6 +85,53 @@ def fetch_main_board_codes(max_pages: int = 80, timeout: int = 12) -> List[str]:
     return codes
 
 
+def _read_codes_cache(ttl_seconds: int) -> Optional[List[str]]:
+    """读主板代码清单缓存，未命中/过期/损坏返回 None。"""
+    if not SINA_CODES_CACHE_FILE.exists():
+        return None
+    try:
+        payload = json.loads(SINA_CODES_CACHE_FILE.read_text(encoding="utf-8"))
+        cached_at = datetime.fromisoformat(payload["cached_at"])
+        codes = payload.get("codes") or []
+    except (json.JSONDecodeError, OSError, KeyError, ValueError):
+        return None
+    if cached_at.tzinfo is None:
+        cached_at = cached_at.replace(tzinfo=BEIJING_TZ)
+    age = (datetime.now(BEIJING_TZ) - cached_at).total_seconds()
+    if age > ttl_seconds or not codes:
+        return None
+    return codes
+
+
+def _write_codes_cache(codes: List[str]) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {"cached_at": datetime.now(BEIJING_TZ).isoformat(), "codes": codes}
+    SINA_CODES_CACHE_FILE.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def fetch_main_board_codes(
+    max_pages: int = 80, timeout: int = 12, use_cache: bool = True
+) -> List[str]:
+    """取沪深主板代码清单，默认带缓存。
+
+    主板成分变动极慢（仅新股上市增量），缓存 TTL 内直接复用，省去每轮翻页
+    约 25s（美国 IP 实测）。缓存未命中时翻页拉取并落盘。
+    use_cache=False 时强制走网络（供连通性验证等场景）。
+    """
+    ttl = int(CONFIG.get("sina_codes_cache_ttl_seconds", 259200))
+    if use_cache:
+        cached = _read_codes_cache(ttl)
+        if cached:
+            logger.info("主板代码清单命中缓存：%d 只", len(cached))
+            return cached
+    codes = _fetch_main_board_codes_remote(max_pages=max_pages, timeout=timeout)
+    if use_cache and codes:
+        _write_codes_cache(codes)
+    return codes
+
+
 def verify_sina_connectivity(list_pages: int = 2, sample_size: int = 30) -> dict:
     """轻量连通性验证：只拉清单前几页 + 抽查少量资金流，几秒内完成。
 
@@ -101,7 +153,8 @@ def verify_sina_connectivity(list_pages: int = 2, sample_size: int = 30) -> dict
     }
     try:
         t0 = perf_counter()
-        codes = fetch_main_board_codes(max_pages=list_pages)
+        # 连通性验证测真实网络，绕过缓存
+        codes = fetch_main_board_codes(max_pages=list_pages, use_cache=False)
         result["list_ms"] = int((perf_counter() - t0) * 1000)
         result["list_count"] = len(codes)
         result["node_ok"] = len(codes) > 0
@@ -146,7 +199,8 @@ def verify_sina_full_timing(max_workers: int = 20) -> dict:
     }
     try:
         t0 = perf_counter()
-        codes = fetch_main_board_codes()
+        # 计时验证测真实翻页耗时，绕过缓存
+        codes = fetch_main_board_codes(use_cache=False)
         result["list_ms"] = int((perf_counter() - t0) * 1000)
         result["list_count"] = len(codes)
         if not codes:
@@ -170,14 +224,17 @@ def verify_sina_full_timing(max_workers: int = 20) -> dict:
 
 
 def fetch_market_fund_flow_via_sina(
-    max_workers: int = 20,
-    batch_timeout: float = 90.0,
+    max_workers: Optional[int] = None,
+    batch_timeout: float = 110.0,
     codes: List[str] = None,
 ) -> pd.DataFrame:
     """新浪全主板主力资金流，返回与东财一致的 DataFrame 列结构。
 
+    max_workers 默认取 CONFIG（美国 IP 实测 40 并发全主板 ~54s，100% 成功）。
     codes 显式传入时跳过榜单拉取（便于测试/复用现成清单）。
     """
+    if max_workers is None:
+        max_workers = int(CONFIG.get("sina_max_workers", 40))
     if codes is None:
         codes = fetch_main_board_codes()
     if not codes:

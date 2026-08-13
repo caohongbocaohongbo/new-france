@@ -1,5 +1,9 @@
 """sina_market 全主板数据源单元测试。"""
+import json
 import unittest
+from datetime import datetime, timedelta
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from backend.plugins.principal_capital.sources import sina_market as sm
@@ -29,8 +33,41 @@ class SinaMarketTest(unittest.TestCase):
             resp.raise_for_status.return_value = None
             # 第一页返回数据，第二页返回空以终止翻页
             resp.json.side_effect = [page1, []]
-            codes = sm.fetch_main_board_codes(max_pages=5)
+            codes = sm.fetch_main_board_codes(max_pages=5, use_cache=False)
         self.assertEqual(codes, ["600000", "002415"])
+
+    def test_codes_cache_hit_skips_network(self):
+        """缓存命中时不应触发网络翻页。"""
+        with TemporaryDirectory() as tmp:
+            cache_file = Path(tmp) / "sina_codes.json"
+            cache_file.write_text(json.dumps({
+                "cached_at": (sm.datetime.now(sm.BEIJING_TZ)).isoformat(),
+                "codes": ["600000", "000001"],
+            }), encoding="utf-8")
+            with patch.object(sm, "SINA_CODES_CACHE_FILE", cache_file), \
+                 patch.object(sm, "_fetch_main_board_codes_remote") as remote:
+                codes = sm.fetch_main_board_codes()
+            self.assertEqual(codes, ["600000", "000001"])
+            remote.assert_not_called()
+
+    def test_codes_cache_expired_refetches_and_writes(self):
+        """缓存过期时重新翻页并回写。"""
+        with TemporaryDirectory() as tmp:
+            cache_file = Path(tmp) / "sina_codes.json"
+            stale = datetime.now(sm.BEIJING_TZ) - timedelta(days=10)
+            cache_file.write_text(json.dumps({
+                "cached_at": stale.isoformat(), "codes": ["600000"],
+            }), encoding="utf-8")
+            with patch.object(sm, "SINA_CODES_CACHE_FILE", cache_file), \
+                 patch.object(sm, "DATA_DIR", Path(tmp)), \
+                 patch.object(sm, "_fetch_main_board_codes_remote",
+                              return_value=["600000", "002415", "000001"]) as remote:
+                codes = sm.fetch_main_board_codes()
+            remote.assert_called_once()
+            self.assertEqual(codes, ["600000", "002415", "000001"])
+            # 回写后缓存应为新清单
+            written = json.loads(cache_file.read_text(encoding="utf-8"))
+            self.assertEqual(written["codes"], ["600000", "002415", "000001"])
 
     def test_fetch_market_fund_flow_assembles_dataframe(self):
         rows = [

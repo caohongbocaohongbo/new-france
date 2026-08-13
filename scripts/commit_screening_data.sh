@@ -33,7 +33,7 @@ trap cleanup EXIT
 
 mkdir -p "${snapshot_dir}/data" "${snapshot_dir}/reports"
 
-for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json; do
+for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json; do
   if [[ -f "${file}" ]]; then
     cp "${file}" "${snapshot_dir}/${file}"
   fi
@@ -72,13 +72,13 @@ git -C "${data_worktree_dir}" config user.email "github-actions[bot]@users.norep
   fi
 
   mkdir -p data reports
-  rm -rf data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/snapshot_manifest.json reports
+  rm -rf data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json data/snapshot_manifest.json reports
   mkdir -p data reports
   cp -R "${snapshot_dir}/data/." data/
   cp -R "${snapshot_dir}/reports/." reports/
 
   add_paths=(data/snapshot_manifest.json)
-  for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json reports; do
+  for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json reports; do
     if [[ -e "${file}" ]]; then
       add_paths+=("${file}")
     fi

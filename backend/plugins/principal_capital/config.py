@@ -35,6 +35,10 @@ CONFIG = {
     "data_source_failure_threshold": 5,
     "enable_verify_sampling": False,
 
+    # 新浪兜底源
+    "sina_max_workers": 40,                       # 并发线程数（美国 IP 实测 40 并发仍 100% 成功）
+    "sina_codes_cache_ttl_seconds": 259200,       # 主板代码清单缓存 3 天（新股极少，省每轮翻页 ~25s）
+
     # 邮件 SMTP（与主项目共享相同环境变量名以复用 secrets）
     "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
     "smtp_port": int(os.environ.get("SMTP_PORT", "587")),
@@ -49,6 +53,7 @@ REPORT_FILE = REPORT_DIR / "principal_capital_latest.json"
 HISTORY_FILE = REPORT_DIR / "principal_capital_history.json"
 SOURCE_HEALTH_FILE = DATA_DIR / "principal_capital_source_health.json"
 CACHE_FILE = DATA_DIR / "principal_capital_cache.parquet"
+SINA_CODES_CACHE_FILE = DATA_DIR / "principal_capital_sina_codes.json"
 
 # data-snapshots 分支的 GitHub raw 前缀。
 # 用途：Render Web Service 自身取不到东财数据（IP 被封），读接口在本地报告为空时
