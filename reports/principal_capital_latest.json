@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-14T14:09:06.554420+08:00",
+  "now": "2026-08-14T14:15:14.396070+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 14225
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1491
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 64980
+        "latency_ms": 59748
       }
     ],
     "is_stale": false,
@@ -32,11 +34,28 @@
   },
   "scanned": 3193,
   "buy_candidates": 16,
-  "sell_candidates": 32,
+  "sell_candidates": 30,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "601788",
+      "name": "光大证券",
+      "price": 14.59,
+      "change_pct": -1.4855,
+      "total_amount": 244180035.29,
+      "main_net_inflow": -74069829.6,
+      "main_inflow_ratio": -30.3341,
+      "super_net": -64274365.8,
+      "big_net": -9795463.8,
+      "mid_net": 8808247.27,
+      "small_net": 4680542.48,
+      "source": "sina",
+      "flow_time": "2026-08-14T14:15:14.396070+08:00",
+      "severity": "warn"
+    }
+  ]
 }
