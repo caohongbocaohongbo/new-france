@@ -180,6 +180,10 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
         self.assertIn("买入区", text)
         self.assertIn("卖出区", text)
         self.assertIn("danger", html.lower())
+        # 价格列：表头 + 数值均应出现（价格 10.00 来自 _row 默认 price=10.0）
+        self.assertIn("<th>价格</th>", html)
+        self.assertIn("价10.00", text)
+        self.assertIn("10.00", html)
 
     def test_fund_flow_cache_notice_reports_minutes(self):
         """资金流缓存降级：邮件须标注约 N 分钟前（分钟级）。"""

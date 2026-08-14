@@ -199,6 +199,12 @@ def _format_pct(value) -> str:
     return "--" if number is None else f"{number:+.2f}%"
 
 
+def _format_price(value) -> str:
+    """当前价格，保留 2 位小数；缺失显示 --。"""
+    number = _float(value)
+    return "--" if number is None else f"{number:.2f}"
+
+
 def _format_time_cn(value) -> str:
     """把 ISO 时间格式化为 YYYY/MM/DD HH:MM:SS（北京时区）。"""
     if not value:
@@ -264,6 +270,7 @@ def build_email_payload(
             parts = [
                 _stock_code(row.get("code")),
                 str(row.get("name", "")),
+                f"价{_format_price(row.get('price'))}",
                 f"时间{_format_time_cn(row.get('flow_time'))}",
                 f"占比{_format_pct(row.get('main_inflow_ratio'))}",
                 f"主力{_format_yi(row.get('main_net_inflow'))}",
@@ -283,7 +290,7 @@ def build_email_payload(
 
     def html_rows(df: pd.DataFrame) -> str:
         if df.empty:
-            return '<tr><td colspan="8">暂无</td></tr>'
+            return '<tr><td colspan="9">暂无</td></tr>'
         rows = []
         for _, row in df.iterrows():
             severity = row.get("severity", "")
@@ -296,6 +303,7 @@ def build_email_payload(
                 "<tr>"
                 f"<td>{html.escape(_stock_code(row.get('code')))}</td>"
                 f"<td>{html.escape(str(row.get('name', '')))}</td>"
+                f"<td>{html.escape(_format_price(row.get('price')))}</td>"
                 f"<td>{html.escape(_format_time_cn(row.get('flow_time')))}</td>"
                 f"<td>{html.escape(_format_pct(row.get('main_inflow_ratio')))}</td>"
                 f"<td>{html.escape(_format_yi(row.get('main_net_inflow')))}</td>"
@@ -320,12 +328,12 @@ def build_email_payload(
 {stale_banner}
 <h3 style="color:#b91c1c">买入区</h3>
 <table style="width:100%;border-collapse:collapse;margin-bottom:16px" border="1" cellspacing="0" cellpadding="8">
-<tr style="background:#fef2f2"><th>代码</th><th>名称</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
+<tr style="background:#fef2f2"><th>代码</th><th>名称</th><th>价格</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
 {html_rows(buy_fresh)}
 </table>
 <h3 style="color:#1d4ed8">卖出区</h3>
 <table style="width:100%;border-collapse:collapse" border="1" cellspacing="0" cellpadding="8">
-<tr style="background:#eff6ff"><th>代码</th><th>名称</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
+<tr style="background:#eff6ff"><th>代码</th><th>名称</th><th>价格</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
 {html_rows(sell_fresh)}
 </table>
 <p style="margin-top:16px;color:#6b7280">数据源: {html.escape(str(source_status.get('active_source', '--')))} | stale={html.escape(str(source_status.get('is_stale', False)))}</p>
