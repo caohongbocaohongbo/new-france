@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-14T13:07:12.751725+08:00",
+  "now": "2026-08-14T13:13:17.454123+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 7470
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1500
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 60887
+        "latency_ms": 62001
       }
     ],
     "is_stale": false,
@@ -31,77 +33,12 @@
     "verify_result": null
   },
   "scanned": 3193,
-  "buy_candidates": 18,
-  "sell_candidates": 49,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "buy_candidates": 16,
+  "sell_candidates": 43,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "601609",
-      "name": "金田股份",
-      "price": 10.95,
-      "change_pct": 10.0503,
-      "total_amount": 578999588.18,
-      "main_net_inflow": 290070531.45,
-      "main_inflow_ratio": 50.0986,
-      "super_net": 233740980.7,
-      "big_net": 56329550.75,
-      "mid_net": 31524767.1,
-      "small_net": 16932896.35,
-      "source": "sina",
-      "flow_time": "2026-08-14T13:07:12.751725+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "002034",
-      "name": "旺能环境",
-      "price": 13.88,
-      "change_pct": -1.2802,
-      "total_amount": 57658765.4,
-      "main_net_inflow": -19453073.93,
-      "main_inflow_ratio": -33.7383,
-      "super_net": -9299727.0,
-      "big_net": -10153346.93,
-      "mid_net": -2129130.6,
-      "small_net": -231864.07,
-      "source": "sina",
-      "flow_time": "2026-08-14T13:07:12.751725+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000065",
-      "name": "北方国际",
-      "price": 9.03,
-      "change_pct": -1.3115,
-      "total_amount": 96342331.0,
-      "main_net_inflow": -29210882.0,
-      "main_inflow_ratio": -30.3199,
-      "super_net": -11192638.0,
-      "big_net": -18018244.0,
-      "mid_net": -1067135.0,
-      "small_net": -5952.0,
-      "source": "sina",
-      "flow_time": "2026-08-14T13:07:12.751725+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000858",
-      "name": "五 粮 液",
-      "price": 73.86,
-      "change_pct": -1.6773,
-      "total_amount": 1808207821.9,
-      "main_net_inflow": -544546596.18,
-      "main_inflow_ratio": -30.1153,
-      "super_net": -601481211.96,
-      "big_net": 56934615.78,
-      "mid_net": 22482097.14,
-      "small_net": 1399764.0,
-      "source": "sina",
-      "flow_time": "2026-08-14T13:07:12.751725+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
