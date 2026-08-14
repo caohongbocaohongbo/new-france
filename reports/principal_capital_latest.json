@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-14T14:46:18.832684+08:00",
+  "now": "2026-08-14T14:52:26.776476+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3813
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1539
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 64021
+        "latency_ms": 64695
       }
     ],
     "is_stale": false,
@@ -32,7 +34,7 @@
   },
   "scanned": 3193,
   "buy_candidates": 16,
-  "sell_candidates": 27,
+  "sell_candidates": 26,
   "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
@@ -40,19 +42,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603605",
-      "name": "珀莱雅",
-      "price": 57.03,
-      "change_pct": -2.5628,
-      "total_amount": 251245691.99,
-      "main_net_inflow": -76772552.64,
-      "main_inflow_ratio": -30.5568,
-      "super_net": -29386093.44,
-      "big_net": -47386459.2,
-      "mid_net": -14688095.03,
-      "small_net": 639504.08,
+      "code": "000531",
+      "name": "穗恒运Ａ",
+      "price": 5.74,
+      "change_pct": -1.8803,
+      "total_amount": 49735103.0,
+      "main_net_inflow": -15685167.0,
+      "main_inflow_ratio": -31.5374,
+      "super_net": -5412865.0,
+      "big_net": -10272302.0,
+      "mid_net": -2922881.84,
+      "small_net": -2416576.16,
       "source": "sina",
-      "flow_time": "2026-08-14T14:46:18.832684+08:00",
+      "flow_time": "2026-08-14T14:52:26.776476+08:00",
       "severity": "warn"
     }
   ]
