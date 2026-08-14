@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-14T13:50:23.637893+08:00",
+  "now": "2026-08-14T13:56:39.114556+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3588
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1501
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 65541
+        "latency_ms": 63717
       }
     ],
     "is_stale": false,
@@ -34,7 +32,7 @@
   },
   "scanned": 3193,
   "buy_candidates": 16,
-  "sell_candidates": 39,
+  "sell_candidates": 35,
   "buy_fresh_count": 0,
   "sell_fresh_count": 2,
   "email_sent": true,
@@ -42,35 +40,35 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002511",
-      "name": "中顺洁柔",
-      "price": 7.06,
-      "change_pct": -1.5342,
-      "total_amount": 54785687.77,
-      "main_net_inflow": -16726874.53,
-      "main_inflow_ratio": -30.5315,
-      "super_net": -8540654.0,
-      "big_net": -8186220.53,
-      "mid_net": -695116.0,
-      "small_net": 612978.6,
+      "code": "603130",
+      "name": "云中马",
+      "price": 41.8,
+      "change_pct": -1.97,
+      "total_amount": 56004845.0,
+      "main_net_inflow": -23228468.0,
+      "main_inflow_ratio": -41.4758,
+      "super_net": -18348000.0,
+      "big_net": -4880468.0,
+      "mid_net": -1748702.0,
+      "small_net": 359639.0,
       "source": "sina",
-      "flow_time": "2026-08-14T13:50:23.637893+08:00",
-      "severity": "warn"
+      "flow_time": "2026-08-14T13:56:39.114556+08:00",
+      "severity": "alert"
     },
     {
-      "code": "000731",
-      "name": "四川美丰",
-      "price": 5.79,
-      "change_pct": -1.1945,
-      "total_amount": 20722977.11,
-      "main_net_inflow": -6222228.89,
-      "main_inflow_ratio": -30.0257,
-      "super_net": -1294843.0,
-      "big_net": -4927385.89,
-      "mid_net": -473685.0,
-      "small_net": -255973.0,
+      "code": "600777",
+      "name": "新潮能源",
+      "price": 4.12,
+      "change_pct": -1.199,
+      "total_amount": 59488853.44,
+      "main_net_inflow": -22881963.4,
+      "main_inflow_ratio": -38.4643,
+      "super_net": -15729918.56,
+      "big_net": -7152044.84,
+      "mid_net": -3030675.8,
+      "small_net": 965791.28,
       "source": "sina",
-      "flow_time": "2026-08-14T13:50:23.637893+08:00",
+      "flow_time": "2026-08-14T13:56:39.114556+08:00",
       "severity": "warn"
     }
   ]
