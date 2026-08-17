@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-17T10:45:20.813814+08:00",
+  "now": "2026-08-17T10:51:00.339819+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 6805
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1100
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 34639
+        "latency_ms": 30962
       }
     ],
     "is_stale": false,
@@ -32,140 +34,11 @@
   },
   "scanned": 2729,
   "buy_candidates": 25,
-  "sell_candidates": 19,
+  "sell_candidates": 17,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 8,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "002936",
-      "name": "郑州银行",
-      "price": 1.75,
-      "change_pct": -0.5682,
-      "total_amount": 59773581.08,
-      "main_net_inflow": -24974718.5,
-      "main_inflow_ratio": -41.7822,
-      "super_net": -24869583.0,
-      "big_net": -105135.5,
-      "mid_net": -1075148.56,
-      "small_net": -3068933.02,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "002235",
-      "name": "安妮股份",
-      "price": 9.4,
-      "change_pct": -9.8754,
-      "total_amount": 568174689.37,
-      "main_net_inflow": -232582223.91,
-      "main_inflow_ratio": -40.935,
-      "super_net": -184541009.15,
-      "big_net": -48041214.76,
-      "mid_net": -7290759.5,
-      "small_net": -2807035.0,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "001205",
-      "name": "盛航股份",
-      "price": 14.07,
-      "change_pct": 2.1787,
-      "total_amount": 50087505.6,
-      "main_net_inflow": -19669107.0,
-      "main_inflow_ratio": -39.2695,
-      "super_net": -18891458.0,
-      "big_net": -777649.0,
-      "mid_net": 2906336.0,
-      "small_net": 560153.4,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601916",
-      "name": "浙商银行",
-      "price": 2.91,
-      "change_pct": -0.6826,
-      "total_amount": 103886825.5,
-      "main_net_inflow": -39956418.4,
-      "main_inflow_ratio": -38.4615,
-      "super_net": -34327566.7,
-      "big_net": -5628851.7,
-      "mid_net": -1857877.5,
-      "small_net": -292240.6,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600282",
-      "name": "南钢股份",
-      "price": 4.55,
-      "change_pct": -0.8715,
-      "total_amount": 82430531.52,
-      "main_net_inflow": -30617092.52,
-      "main_inflow_ratio": -37.1429,
-      "super_net": -15018263.52,
-      "big_net": -15598829.0,
-      "mid_net": -5363517.0,
-      "small_net": -4982114.0,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002686",
-      "name": "亿利达",
-      "price": 6.16,
-      "change_pct": -3.5994,
-      "total_amount": 50834294.0,
-      "main_net_inflow": -17096565.0,
-      "main_inflow_ratio": -33.632,
-      "super_net": -3317973.0,
-      "big_net": -13778592.0,
-      "mid_net": -2244274.0,
-      "small_net": -131359.0,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000839",
-      "name": "国安股份",
-      "price": 2.78,
-      "change_pct": -2.4561,
-      "total_amount": 100297773.65,
-      "main_net_inflow": -33727381.55,
-      "main_inflow_ratio": -33.6272,
-      "super_net": -19150048.65,
-      "big_net": -14577332.9,
-      "mid_net": -5170910.0,
-      "small_net": -2878972.1,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601901",
-      "name": "方正证券",
-      "price": 6.85,
-      "change_pct": -0.7246,
-      "total_amount": 126591756.26,
-      "main_net_inflow": -39608749.9,
-      "main_inflow_ratio": -31.2886,
-      "super_net": -36294324.9,
-      "big_net": -3314425.0,
-      "mid_net": -12759836.36,
-      "small_net": -684124.0,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:45:20.813814+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
