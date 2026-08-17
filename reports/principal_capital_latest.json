@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-17T10:05:03.213235+08:00",
+  "now": "2026-08-17T10:11:07.648862+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4740
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 18912
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 35798
+        "latency_ms": 30687
       }
     ],
     "is_stale": false,
@@ -33,75 +31,58 @@
     "verify_result": null
   },
   "scanned": 2729,
-  "buy_candidates": 22,
-  "sell_candidates": 40,
+  "buy_candidates": 23,
+  "sell_candidates": 29,
   "buy_fresh_count": 3,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 0,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "603916",
-      "name": "苏博特",
-      "price": 12.16,
-      "change_pct": 10.0452,
-      "total_amount": 282056300.87,
-      "main_net_inflow": 182076707.23,
-      "main_inflow_ratio": 64.5533,
-      "super_net": 147094739.83,
-      "big_net": 34981967.4,
-      "mid_net": 5268017.06,
-      "small_net": 271421.0,
+      "code": "600824",
+      "name": "益民集团",
+      "price": 3.89,
+      "change_pct": 9.887,
+      "total_amount": 63186029.01,
+      "main_net_inflow": 41039836.01,
+      "main_inflow_ratio": 64.9508,
+      "super_net": 20343739.86,
+      "big_net": 20696096.15,
+      "mid_net": 4204972.0,
+      "small_net": 87345.0,
       "source": "sina",
-      "flow_time": "2026-08-17T10:05:03.213235+08:00"
+      "flow_time": "2026-08-17T10:11:07.648862+08:00"
     },
     {
-      "code": "601700",
-      "name": "风范股份",
-      "price": 7.22,
-      "change_pct": 10.061,
-      "total_amount": 1108308321.01,
-      "main_net_inflow": 565142249.11,
-      "main_inflow_ratio": 50.9914,
-      "super_net": 544121786.44,
-      "big_net": 21020462.67,
-      "mid_net": 1450342.0,
-      "small_net": 47698.0,
+      "code": "002448",
+      "name": "中原内配",
+      "price": 13.63,
+      "change_pct": 10.0081,
+      "total_amount": 450703470.4,
+      "main_net_inflow": 248824444.4,
+      "main_inflow_ratio": 55.208,
+      "super_net": 215096351.0,
+      "big_net": 33728093.4,
+      "mid_net": 5017972.0,
+      "small_net": 765493.0,
       "source": "sina",
-      "flow_time": "2026-08-17T10:05:03.213235+08:00"
+      "flow_time": "2026-08-17T10:11:07.648862+08:00"
     },
     {
-      "code": "603050",
-      "name": "科林电气",
-      "price": 18.61,
-      "change_pct": 3.7347,
-      "total_amount": 70240314.34,
-      "main_net_inflow": 35754872.96,
-      "main_inflow_ratio": 50.9036,
-      "super_net": 27610494.0,
-      "big_net": 8144378.96,
-      "mid_net": -33736.84,
-      "small_net": -375117.26,
+      "code": "601366",
+      "name": "利群股份",
+      "price": 3.85,
+      "change_pct": 10.0,
+      "total_amount": 81571116.9,
+      "main_net_inflow": 42072584.8,
+      "main_inflow_ratio": 51.5778,
+      "super_net": 30724409.8,
+      "big_net": 11348175.0,
+      "mid_net": 4501459.0,
+      "small_net": 947605.1,
       "source": "sina",
-      "flow_time": "2026-08-17T10:05:03.213235+08:00"
+      "flow_time": "2026-08-17T10:11:07.648862+08:00"
     }
   ],
-  "sell_triggered": [
-    {
-      "code": "603868",
-      "name": "飞科电器",
-      "price": 30.32,
-      "change_pct": 0.1983,
-      "total_amount": 10343699.0,
-      "main_net_inflow": -3378764.0,
-      "main_inflow_ratio": -32.6649,
-      "super_net": -2992990.0,
-      "big_net": -385774.0,
-      "mid_net": 551264.0,
-      "small_net": -129413.0,
-      "source": "sina",
-      "flow_time": "2026-08-17T10:05:03.213235+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
