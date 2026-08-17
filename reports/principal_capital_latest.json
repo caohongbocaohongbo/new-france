@@ -1,75 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-08-14T14:58:41.778263+08:00",
+  "status": "skipped",
+  "reason": "未开盘",
+  "now": "2026-08-17T09:25:44.896463+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 64443
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 3193,
-  "buy_candidates": 16,
-  "sell_candidates": 22,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "600777",
-      "name": "新潮能源",
-      "price": 4.11,
-      "change_pct": -1.4388,
-      "total_amount": 80857115.66,
-      "main_net_inflow": -29910094.98,
-      "main_inflow_ratio": -36.9913,
-      "super_net": -21475698.56,
-      "big_net": -8434396.42,
-      "mid_net": -2505742.8,
-      "small_net": 1772565.28,
-      "source": "sina",
-      "flow_time": "2026-08-14T14:58:41.778263+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603130",
-      "name": "云中马",
-      "price": 41.96,
-      "change_pct": -1.5947,
-      "total_amount": 70049164.0,
-      "main_net_inflow": -22990326.0,
-      "main_inflow_ratio": -32.8203,
-      "super_net": -19612640.0,
-      "big_net": -3377686.0,
-      "mid_net": -1308079.0,
-      "small_net": 975541.0,
-      "source": "sina",
-      "flow_time": "2026-08-14T14:58:41.778263+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
