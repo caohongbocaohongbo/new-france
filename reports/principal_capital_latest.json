@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T13:18:37.935604+08:00",
+  "now": "2026-08-18T13:24:28.167314+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3056
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1457
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 43315
+        "latency_ms": 42694
       }
     ],
     "is_stale": false,
@@ -30,77 +32,29 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1361,
-  "buy_candidates": 11,
-  "sell_candidates": 27,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
+  "scanned": 1322,
+  "buy_candidates": 10,
+  "sell_candidates": 28,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "000020",
-      "name": "深华发Ａ",
-      "price": 12.49,
-      "change_pct": 10.0441,
-      "total_amount": 77302350.17,
-      "main_net_inflow": 43238173.98,
-      "main_inflow_ratio": 55.9338,
-      "super_net": 33549948.0,
-      "big_net": 9688225.98,
-      "mid_net": 6767300.0,
-      "small_net": 3634809.81,
-      "source": "sina",
-      "flow_time": "2026-08-18T13:18:37.935604+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601456",
-      "name": "国联民生",
-      "price": 8.85,
-      "change_pct": -1.1173,
-      "total_amount": 101416257.0,
-      "main_net_inflow": -38316978.0,
-      "main_inflow_ratio": -37.7819,
-      "super_net": -26469909.0,
-      "big_net": -11847069.0,
-      "mid_net": -2816215.0,
-      "small_net": -659120.0,
+      "code": "002334",
+      "name": "英威腾",
+      "price": 6.59,
+      "change_pct": -2.0802,
+      "total_amount": 54669902.0,
+      "main_net_inflow": -17790721.84,
+      "main_inflow_ratio": -32.5421,
+      "super_net": -2216676.0,
+      "big_net": -15574045.84,
+      "mid_net": -3921746.0,
+      "small_net": -1468631.68,
       "source": "sina",
-      "flow_time": "2026-08-18T13:18:37.935604+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002926",
-      "name": "华西证券",
-      "price": 8.28,
-      "change_pct": -1.6627,
-      "total_amount": 69329869.0,
-      "main_net_inflow": -21370014.0,
-      "main_inflow_ratio": -30.8237,
-      "super_net": -12262507.0,
-      "big_net": -9107507.0,
-      "mid_net": -1458891.0,
-      "small_net": -2157688.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T13:18:37.935604+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002797",
-      "name": "第一创业",
-      "price": 6.42,
-      "change_pct": -1.5337,
-      "total_amount": 208871837.67,
-      "main_net_inflow": -63939410.62,
-      "main_inflow_ratio": -30.6118,
-      "super_net": -56470402.49,
-      "big_net": -7469008.13,
-      "mid_net": -4233542.07,
-      "small_net": -1043774.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T13:18:37.935604+08:00",
+      "flow_time": "2026-08-18T13:24:28.167314+08:00",
       "severity": "warn"
     }
   ]
