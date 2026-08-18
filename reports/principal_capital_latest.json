@@ -1,45 +1,58 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T13:36:08.883209+08:00",
+  "now": "2026-08-18T13:42:11.207966+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 8473
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 7559
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 42628
+        "status": "ok",
+        "latency_ms": 42371
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 406,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1597,
-  "buy_candidates": 11,
-  "sell_candidates": 33,
-  "buy_fresh_count": 0,
+  "scanned": 1126,
+  "buy_candidates": 10,
+  "sell_candidates": 8,
+  "buy_fresh_count": 1,
   "sell_fresh_count": 0,
-  "email_sent": false,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "600353",
+      "name": "旭光电子",
+      "price": 37.54,
+      "change_pct": 9.9912,
+      "total_amount": 2162454968.77,
+      "main_net_inflow": 1098955165.53,
+      "main_inflow_ratio": 50.8198,
+      "super_net": 1017164630.79,
+      "big_net": 81790534.74,
+      "mid_net": 40899830.0,
+      "small_net": 23847059.76,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:42:11.207966+08:00"
+    }
+  ],
   "sell_triggered": []
 }
