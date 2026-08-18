@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T13:42:11.207966+08:00",
+  "now": "2026-08-18T13:47:59.352726+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4260
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1187
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42371
+        "latency_ms": 42322
       }
     ],
     "is_stale": false,
@@ -30,29 +32,62 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1126,
-  "buy_candidates": 10,
-  "sell_candidates": 8,
+  "scanned": 1592,
+  "buy_candidates": 12,
+  "sell_candidates": 21,
   "buy_fresh_count": 1,
-  "sell_fresh_count": 0,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600353",
-      "name": "旭光电子",
-      "price": 37.54,
-      "change_pct": 9.9912,
-      "total_amount": 2162454968.77,
-      "main_net_inflow": 1098955165.53,
-      "main_inflow_ratio": 50.8198,
-      "super_net": 1017164630.79,
-      "big_net": 81790534.74,
-      "mid_net": 40899830.0,
-      "small_net": 23847059.76,
+      "code": "000852",
+      "name": "石化机械",
+      "price": 5.79,
+      "change_pct": 10.076,
+      "total_amount": 150137788.34,
+      "main_net_inflow": 76189532.08,
+      "main_inflow_ratio": 50.7464,
+      "super_net": 57755831.68,
+      "big_net": 18433700.4,
+      "mid_net": 15065979.0,
+      "small_net": 9000269.1,
       "source": "sina",
-      "flow_time": "2026-08-18T13:42:11.207966+08:00"
+      "flow_time": "2026-08-18T13:47:59.352726+08:00"
     }
   ],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "002076",
+      "name": "星光股份",
+      "price": 2.11,
+      "change_pct": -1.8605,
+      "total_amount": 47634552.0,
+      "main_net_inflow": -15166465.0,
+      "main_inflow_ratio": -31.8392,
+      "super_net": -12456789.0,
+      "big_net": -2709676.0,
+      "mid_net": -2588079.0,
+      "small_net": -2120762.0,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:47:59.352726+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600685",
+      "name": "中船防务",
+      "price": 25.85,
+      "change_pct": -2.2315,
+      "total_amount": 170695253.51,
+      "main_net_inflow": -53060614.36,
+      "main_inflow_ratio": -31.085,
+      "super_net": -22920367.0,
+      "big_net": -30140247.36,
+      "mid_net": -8803511.54,
+      "small_net": -2077688.05,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:47:59.352726+08:00",
+      "severity": "warn"
+    }
+  ]
 }
