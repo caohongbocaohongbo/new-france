@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T13:24:28.167314+08:00",
+  "now": "2026-08-18T13:30:20.958084+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3056
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1457
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42694
+        "latency_ms": 42348
       }
     ],
     "is_stale": false,
@@ -32,29 +30,125 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1322,
-  "buy_candidates": 10,
-  "sell_candidates": 28,
+  "scanned": 1597,
+  "buy_candidates": 11,
+  "sell_candidates": 33,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 7,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002334",
-      "name": "英威腾",
-      "price": 6.59,
-      "change_pct": -2.0802,
-      "total_amount": 54669902.0,
-      "main_net_inflow": -17790721.84,
-      "main_inflow_ratio": -32.5421,
-      "super_net": -2216676.0,
-      "big_net": -15574045.84,
-      "mid_net": -3921746.0,
-      "small_net": -1468631.68,
+      "code": "002358",
+      "name": "森源电气",
+      "price": 5.47,
+      "change_pct": -2.4955,
+      "total_amount": 53107841.0,
+      "main_net_inflow": -22587630.0,
+      "main_inflow_ratio": -42.5316,
+      "super_net": -7407793.0,
+      "big_net": -15179837.0,
+      "mid_net": -5207349.0,
+      "small_net": -1266198.0,
       "source": "sina",
-      "flow_time": "2026-08-18T13:24:28.167314+08:00",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "600527",
+      "name": "江南高纤",
+      "price": 2.17,
+      "change_pct": -1.3636,
+      "total_amount": 49370600.76,
+      "main_net_inflow": -18477009.24,
+      "main_inflow_ratio": -37.4251,
+      "super_net": -15311602.24,
+      "big_net": -3165407.0,
+      "mid_net": -2848519.0,
+      "small_net": -972171.0,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "001391",
+      "name": "国货航",
+      "price": 4.15,
+      "change_pct": -1.1905,
+      "total_amount": 61949797.22,
+      "main_net_inflow": -22565278.0,
+      "main_inflow_ratio": -36.4251,
+      "super_net": -18825346.0,
+      "big_net": -3739932.0,
+      "mid_net": -6820279.0,
+      "small_net": -4692438.22,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600284",
+      "name": "浦东建设",
+      "price": 5.09,
+      "change_pct": -2.3033,
+      "total_amount": 48778429.85,
+      "main_net_inflow": -15746558.08,
+      "main_inflow_ratio": -32.2818,
+      "super_net": -10121994.2,
+      "big_net": -5624563.88,
+      "mid_net": -747887.0,
+      "small_net": -684612.45,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600764",
+      "name": "中国海防",
+      "price": 17.84,
+      "change_pct": -2.193,
+      "total_amount": 66191968.6,
+      "main_net_inflow": -21309886.0,
+      "main_inflow_ratio": -32.1941,
+      "super_net": -2193491.0,
+      "big_net": -19116395.0,
+      "mid_net": -4889895.0,
+      "small_net": -2064517.6,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002961",
+      "name": "瑞达期货",
+      "price": 18.59,
+      "change_pct": -2.5681,
+      "total_amount": 64099738.0,
+      "main_net_inflow": -20008723.0,
+      "main_inflow_ratio": -31.215,
+      "super_net": -9862424.0,
+      "big_net": -10146299.0,
+      "mid_net": -6277305.0,
+      "small_net": -1622854.0,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600035",
+      "name": "楚天高速",
+      "price": 3.37,
+      "change_pct": -0.8824,
+      "total_amount": 25896949.98,
+      "main_net_inflow": -7845053.0,
+      "main_inflow_ratio": -30.2933,
+      "super_net": -5350659.0,
+      "big_net": -2494394.0,
+      "mid_net": -2522261.24,
+      "small_net": -2918983.74,
+      "source": "sina",
+      "flow_time": "2026-08-18T13:30:20.958084+08:00",
       "severity": "warn"
     }
   ]
