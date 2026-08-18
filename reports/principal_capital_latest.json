@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T10:11:26.894665+08:00",
+  "now": "2026-08-18T10:17:13.634887+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3393
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1341
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 39942
+        "latency_ms": 37813
       }
     ],
     "is_stale": false,
@@ -30,45 +32,61 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1361,
-  "buy_candidates": 11,
-  "sell_candidates": 49,
+  "scanned": 1463,
+  "buy_candidates": 10,
+  "sell_candidates": 50,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600855",
-      "name": "航天长峰",
-      "price": 12.66,
-      "change_pct": -2.2394,
-      "total_amount": 30549316.26,
-      "main_net_inflow": -9495827.0,
-      "main_inflow_ratio": -31.0836,
-      "super_net": -2549946.0,
-      "big_net": -6945881.0,
-      "mid_net": -3370528.37,
-      "small_net": 492725.41,
+      "code": "600035",
+      "name": "楚天高速",
+      "price": 3.38,
+      "change_pct": -0.5882,
+      "total_amount": 10799827.0,
+      "main_net_inflow": -4943247.0,
+      "main_inflow_ratio": -45.7715,
+      "super_net": -3266094.0,
+      "big_net": -1677153.0,
+      "mid_net": -472348.0,
+      "small_net": -1183196.0,
       "source": "sina",
-      "flow_time": "2026-08-18T10:11:26.894665+08:00",
+      "flow_time": "2026-08-18T10:17:13.634887+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "002516",
+      "name": "旷达科技",
+      "price": 5.36,
+      "change_pct": -1.107,
+      "total_amount": 16861053.0,
+      "main_net_inflow": -5538465.0,
+      "main_inflow_ratio": -32.8477,
+      "super_net": 0.0,
+      "big_net": -5538465.0,
+      "mid_net": -1979925.0,
+      "small_net": -2245019.0,
+      "source": "sina",
+      "flow_time": "2026-08-18T10:17:13.634887+08:00",
       "severity": "warn"
     },
     {
-      "code": "000425",
-      "name": "徐工机械",
-      "price": 7.89,
-      "change_pct": -0.8794,
-      "total_amount": 200083280.84,
-      "main_net_inflow": -61138195.48,
-      "main_inflow_ratio": -30.5564,
-      "super_net": -53536297.48,
-      "big_net": -7601898.0,
-      "mid_net": -6285348.32,
-      "small_net": -2528010.0,
+      "code": "002955",
+      "name": "鸿合科技",
+      "price": 35.0,
+      "change_pct": -5.3543,
+      "total_amount": 92019200.0,
+      "main_net_inflow": -29540896.0,
+      "main_inflow_ratio": -32.103,
+      "super_net": -9683102.0,
+      "big_net": -19857794.0,
+      "mid_net": -2380500.0,
+      "small_net": -581992.0,
       "source": "sina",
-      "flow_time": "2026-08-18T10:11:26.894665+08:00",
+      "flow_time": "2026-08-18T10:17:13.634887+08:00",
       "severity": "warn"
     }
   ]
