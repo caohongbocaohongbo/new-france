@@ -1,34 +1,33 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T10:28:46.149848+08:00",
+  "now": "2026-08-18T10:34:38.809033+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3697
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1504
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 42037
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 38651
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 391,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,57 +35,25 @@
   "buy_candidates": 12,
   "sell_candidates": 51,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603213",
-      "name": "镇洋发展",
-      "price": 13.64,
-      "change_pct": -0.7278,
-      "total_amount": 18130610.39,
-      "main_net_inflow": -9421018.39,
-      "main_inflow_ratio": -51.9619,
-      "super_net": -8910453.39,
-      "big_net": -510565.0,
-      "mid_net": -1499875.84,
-      "small_net": -760789.84,
+      "code": "002261",
+      "name": "拓维信息",
+      "price": 25.98,
+      "change_pct": -2.7331,
+      "total_amount": 571531167.04,
+      "main_net_inflow": -207915970.62,
+      "main_inflow_ratio": -36.3788,
+      "super_net": -195656699.42,
+      "big_net": -12259271.2,
+      "mid_net": 2678609.2,
+      "small_net": 174726.4,
       "source": "sina",
-      "flow_time": "2026-08-18T10:28:46.149848+08:00",
-      "severity": "danger"
-    },
-    {
-      "code": "601515",
-      "name": "衢州东峰",
-      "price": 3.42,
-      "change_pct": -0.8696,
-      "total_amount": 20433710.04,
-      "main_net_inflow": -7005970.96,
-      "main_inflow_ratio": -34.2863,
-      "super_net": -4193904.0,
-      "big_net": -2812066.96,
-      "mid_net": -760565.0,
-      "small_net": -712898.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T10:28:46.149848+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601106",
-      "name": "中国一重",
-      "price": 3.09,
-      "change_pct": -1.5924,
-      "total_amount": 64949591.64,
-      "main_net_inflow": -20724598.93,
-      "main_inflow_ratio": -31.9087,
-      "super_net": -16713679.0,
-      "big_net": -4010919.93,
-      "mid_net": -2653440.07,
-      "small_net": -2958706.64,
-      "source": "sina",
-      "flow_time": "2026-08-18T10:28:46.149848+08:00",
+      "flow_time": "2026-08-18T10:34:38.809033+08:00",
       "severity": "warn"
     }
   ]
