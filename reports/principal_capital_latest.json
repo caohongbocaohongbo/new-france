@@ -1,141 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-08-18T11:26:44.501404+08:00",
+  "status": "skipped",
+  "reason": "休市中",
+  "now": "2026-08-18T12:55:45.892677+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5269
-      },
-      {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1507
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 41760
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 1490,
-  "buy_candidates": 11,
-  "sell_candidates": 42,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 6,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "001391",
-      "name": "国货航",
-      "price": 4.15,
-      "change_pct": -1.1905,
-      "total_amount": 49515100.0,
-      "main_net_inflow": -18228039.0,
-      "main_inflow_ratio": -36.8131,
-      "super_net": -15477700.0,
-      "big_net": -2750339.0,
-      "mid_net": -5800626.0,
-      "small_net": -3822939.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T11:26:44.501404+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "001213",
-      "name": "中铁特货",
-      "price": 3.5,
-      "change_pct": -0.5682,
-      "total_amount": 10032560.0,
-      "main_net_inflow": -3347210.0,
-      "main_inflow_ratio": -33.3635,
-      "super_net": 0.0,
-      "big_net": -3347210.0,
-      "mid_net": -352805.0,
-      "small_net": -1127899.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T11:26:44.501404+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000875",
-      "name": "电投绿能",
-      "price": 4.99,
-      "change_pct": -1.9646,
-      "total_amount": 93707560.0,
-      "main_net_inflow": -30403906.17,
-      "main_inflow_ratio": -32.4455,
-      "super_net": -18860506.71,
-      "big_net": -11543399.46,
-      "mid_net": -6505445.0,
-      "small_net": -5268571.75,
-      "source": "sina",
-      "flow_time": "2026-08-18T11:26:44.501404+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601236",
-      "name": "红塔证券",
-      "price": 6.83,
-      "change_pct": -1.443,
-      "total_amount": 51794570.9,
-      "main_net_inflow": -16309098.7,
-      "main_inflow_ratio": -31.488,
-      "super_net": -8883210.0,
-      "big_net": -7425888.7,
-      "mid_net": 1545867.1,
-      "small_net": -1069755.3,
-      "source": "sina",
-      "flow_time": "2026-08-18T11:26:44.501404+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600918",
-      "name": "中泰证券",
-      "price": 5.48,
-      "change_pct": -1.6158,
-      "total_amount": 93922454.06,
-      "main_net_inflow": -29033666.44,
-      "main_inflow_ratio": -30.9124,
-      "super_net": -20152078.44,
-      "big_net": -8881588.0,
-      "mid_net": 1743663.62,
-      "small_net": 828566.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T11:26:44.501404+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002955",
-      "name": "鸿合科技",
-      "price": 34.82,
-      "change_pct": -5.841,
-      "total_amount": 146511277.9,
-      "main_net_inflow": -44341250.9,
-      "main_inflow_ratio": -30.2647,
-      "super_net": -17143749.9,
-      "big_net": -27197501.0,
-      "mid_net": -2951380.0,
-      "small_net": -973009.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T11:26:44.501404+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
