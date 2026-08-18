@@ -1,74 +1,77 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-18T14:17:25.333168+08:00",
+  "now": "2026-08-18T14:23:15.885877+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 7099
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1297
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 45135
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 40739
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 399,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1469,
   "buy_candidates": 11,
   "sell_candidates": 16,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002743",
-      "name": "富煌钢构",
-      "price": 4.47,
-      "change_pct": 10.0985,
-      "total_amount": 58071276.0,
-      "main_net_inflow": 29123648.0,
-      "main_inflow_ratio": 50.1516,
-      "super_net": 17699726.0,
-      "big_net": 11423922.0,
-      "mid_net": 6674252.0,
-      "small_net": 7370136.0,
-      "source": "sina",
-      "flow_time": "2026-08-18T14:17:25.333168+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603213",
-      "name": "镇洋发展",
-      "price": 13.67,
-      "change_pct": -0.5095,
-      "total_amount": 24984931.39,
-      "main_net_inflow": -9879658.39,
-      "main_inflow_ratio": -39.5425,
-      "super_net": -8910453.39,
-      "big_net": -969205.0,
-      "mid_net": -1509564.84,
-      "small_net": -314896.8,
+      "code": "601456",
+      "name": "国联民生",
+      "price": 8.85,
+      "change_pct": -1.1173,
+      "total_amount": 115570410.32,
+      "main_net_inflow": -37155542.7,
+      "main_inflow_ratio": -32.1497,
+      "super_net": -26469909.0,
+      "big_net": -10685633.7,
+      "mid_net": -1791479.02,
+      "small_net": -1092224.0,
       "source": "sina",
-      "flow_time": "2026-08-18T14:17:25.333168+08:00",
+      "flow_time": "2026-08-18T14:23:15.885877+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002926",
+      "name": "华西证券",
+      "price": 8.28,
+      "change_pct": -1.6627,
+      "total_amount": 83146108.0,
+      "main_net_inflow": -26300561.0,
+      "main_inflow_ratio": -31.6317,
+      "super_net": -15405029.0,
+      "big_net": -10895532.0,
+      "mid_net": -2051524.61,
+      "small_net": -4618594.39,
+      "source": "sina",
+      "flow_time": "2026-08-18T14:23:15.885877+08:00",
       "severity": "warn"
     }
   ]
