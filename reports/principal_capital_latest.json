@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T14:07:30.555780+08:00",
+  "now": "2026-08-19T14:13:24.030964+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='push2his.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\")); https://62.push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='62.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='62.push2.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+        "latency_ms": 14454
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1630
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 48183
+        "latency_ms": 48022
       }
     ],
     "is_stale": false,
@@ -30,110 +32,13 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1214,
+  "scanned": 1195,
   "buy_candidates": 6,
-  "sell_candidates": 28,
+  "sell_candidates": 26,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 6,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "600586",
-      "name": "金晶科技",
-      "price": 4.07,
-      "change_pct": -4.2353,
-      "total_amount": 53546428.0,
-      "main_net_inflow": -20573836.0,
-      "main_inflow_ratio": -38.4224,
-      "super_net": -12674632.0,
-      "big_net": -7899204.0,
-      "mid_net": -4752570.0,
-      "small_net": -1338146.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:07:30.555780+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603668",
-      "name": "天马科技",
-      "price": 10.32,
-      "change_pct": -3.6415,
-      "total_amount": 96972747.4,
-      "main_net_inflow": -33205264.6,
-      "main_inflow_ratio": -34.2419,
-      "super_net": -16627557.0,
-      "big_net": -16577707.6,
-      "mid_net": -2334983.1,
-      "small_net": 1742329.9,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:07:30.555780+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600400",
-      "name": "红豆股份",
-      "price": 3.08,
-      "change_pct": -7.2289,
-      "total_amount": 190596229.06,
-      "main_net_inflow": -60321682.4,
-      "main_inflow_ratio": -31.6489,
-      "super_net": -42999313.4,
-      "big_net": -17322369.0,
-      "mid_net": -3025913.34,
-      "small_net": 2423200.32,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:07:30.555780+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600777",
-      "name": "新潮能源",
-      "price": 4.1,
-      "change_pct": -1.9139,
-      "total_amount": 60189753.0,
-      "main_net_inflow": -18405446.0,
-      "main_inflow_ratio": -30.579,
-      "super_net": -9577946.0,
-      "big_net": -8827500.0,
-      "mid_net": -5248473.0,
-      "small_net": -1618200.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:07:30.555780+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002978",
-      "name": "安宁股份",
-      "price": 25.49,
-      "change_pct": -2.1497,
-      "total_amount": 64222603.48,
-      "main_net_inflow": -19369169.9,
-      "main_inflow_ratio": -30.1594,
-      "super_net": -14361442.0,
-      "big_net": -5007727.9,
-      "mid_net": -1352152.5,
-      "small_net": 2875224.48,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:07:30.555780+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603809",
-      "name": "豪能股份",
-      "price": 8.87,
-      "change_pct": -4.521,
-      "total_amount": 106262970.01,
-      "main_net_inflow": -31949283.77,
-      "main_inflow_ratio": -30.0662,
-      "super_net": -20253995.0,
-      "big_net": -11695288.77,
-      "mid_net": -3557225.23,
-      "small_net": 4689349.61,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:07:30.555780+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
