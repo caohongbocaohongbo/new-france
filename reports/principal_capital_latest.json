@@ -1,34 +1,33 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T13:48:56.536300+08:00",
+  "now": "2026-08-19T13:55:07.895652+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='push2his.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\")); https://62.push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='62.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='62.push2.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
-        "latency_ms": 14557
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1672
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 49908
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 47291
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 418,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,42 +35,9 @@
   "buy_candidates": 8,
   "sell_candidates": 28,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "000629",
-      "name": "钒钛股份",
-      "price": 3.0,
-      "change_pct": -1.9608,
-      "total_amount": 253344259.11,
-      "main_net_inflow": -79435184.34,
-      "main_inflow_ratio": -31.3546,
-      "super_net": -63419400.34,
-      "big_net": -16015784.0,
-      "mid_net": -6706406.11,
-      "small_net": -2282558.18,
-      "source": "sina",
-      "flow_time": "2026-08-19T13:48:56.536300+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002140",
-      "name": "东华科技",
-      "price": 8.91,
-      "change_pct": -2.5164,
-      "total_amount": 39897507.0,
-      "main_net_inflow": -12111549.84,
-      "main_inflow_ratio": -30.3567,
-      "super_net": -1158027.0,
-      "big_net": -10953522.84,
-      "mid_net": -3192275.0,
-      "small_net": -4026890.16,
-      "source": "sina",
-      "flow_time": "2026-08-19T13:48:56.536300+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
