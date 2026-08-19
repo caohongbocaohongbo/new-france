@@ -1,34 +1,33 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T14:50:00.638419+08:00",
+  "now": "2026-08-19T14:56:24.126649+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='push2his.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\")); https://62.push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='62.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='62.push2.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
-        "latency_ms": 14575
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 9613
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 55129
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 50787
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 434,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,58 +35,9 @@
   "buy_candidates": 9,
   "sell_candidates": 27,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "000629",
-      "name": "钒钛股份",
-      "price": 2.98,
-      "change_pct": -2.6144,
-      "total_amount": 306810143.99,
-      "main_net_inflow": -99522285.22,
-      "main_inflow_ratio": -32.4377,
-      "super_net": -81524847.22,
-      "big_net": -17997438.0,
-      "mid_net": -5153191.11,
-      "small_net": 257200.82,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:50:00.638419+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000541",
-      "name": "佛山照明",
-      "price": 4.83,
-      "change_pct": -1.6293,
-      "total_amount": 30262097.6,
-      "main_net_inflow": -9219753.2,
-      "main_inflow_ratio": -30.4663,
-      "super_net": -5175805.0,
-      "big_net": -4043948.2,
-      "mid_net": -2688430.8,
-      "small_net": 200370.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:50:00.638419+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002140",
-      "name": "东华科技",
-      "price": 8.91,
-      "change_pct": -2.5164,
-      "total_amount": 50424989.6,
-      "main_net_inflow": -15146254.84,
-      "main_inflow_ratio": -30.0372,
-      "super_net": -1158027.0,
-      "big_net": -13988227.84,
-      "mid_net": -4507727.6,
-      "small_net": -4794245.16,
-      "source": "sina",
-      "flow_time": "2026-08-19T14:50:00.638419+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
