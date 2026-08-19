@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T14:19:31.085772+08:00",
+  "now": "2026-08-19T14:25:22.194229+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='push2his.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\")); https://62.push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='62.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='62.push2.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+        "latency_ms": 14513
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1722
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 48355
+        "latency_ms": 52156
       }
     ],
     "is_stale": false,
@@ -30,13 +32,110 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1173,
+  "scanned": 1359,
   "buy_candidates": 7,
-  "sell_candidates": 22,
+  "sell_candidates": 30,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 6,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "600117",
+      "name": "西宁特钢",
+      "price": 2.22,
+      "change_pct": -3.4783,
+      "total_amount": 30960641.46,
+      "main_net_inflow": -11696996.0,
+      "main_inflow_ratio": -37.7802,
+      "super_net": -7875763.0,
+      "big_net": -3821233.0,
+      "mid_net": -2076324.0,
+      "small_net": -1070663.46,
+      "source": "sina",
+      "flow_time": "2026-08-19T14:25:22.194229+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600010",
+      "name": "包钢股份",
+      "price": 2.17,
+      "change_pct": -2.2523,
+      "total_amount": 646674317.55,
+      "main_net_inflow": -239310776.99,
+      "main_inflow_ratio": -37.0064,
+      "super_net": -192827158.67,
+      "big_net": -46483618.32,
+      "mid_net": -20202597.81,
+      "small_net": 2152810.43,
+      "source": "sina",
+      "flow_time": "2026-08-19T14:25:22.194229+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "001391",
+      "name": "国货航",
+      "price": 4.05,
+      "change_pct": -1.937,
+      "total_amount": 102750443.24,
+      "main_net_inflow": -35509629.18,
+      "main_inflow_ratio": -34.5591,
+      "super_net": -29151622.38,
+      "big_net": -6358006.8,
+      "mid_net": -5553812.0,
+      "small_net": -788393.66,
+      "source": "sina",
+      "flow_time": "2026-08-19T14:25:22.194229+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "605318",
+      "name": "法狮龙",
+      "price": 76.11,
+      "change_pct": -10.0035,
+      "total_amount": 150148747.48,
+      "main_net_inflow": -48808702.0,
+      "main_inflow_ratio": -32.5069,
+      "super_net": -22804707.0,
+      "big_net": -26003995.0,
+      "mid_net": -20167031.0,
+      "small_net": -6492138.48,
+      "source": "sina",
+      "flow_time": "2026-08-19T14:25:22.194229+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603880",
+      "name": "南卫股份",
+      "price": 8.45,
+      "change_pct": -10.0106,
+      "total_amount": 167061685.08,
+      "main_net_inflow": -50401092.38,
+      "main_inflow_ratio": -30.1692,
+      "super_net": -31534421.38,
+      "big_net": -18866671.0,
+      "mid_net": -5183495.1,
+      "small_net": -2570108.0,
+      "source": "sina",
+      "flow_time": "2026-08-19T14:25:22.194229+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000727",
+      "name": "冠捷科技",
+      "price": 2.15,
+      "change_pct": -4.8673,
+      "total_amount": 188468393.0,
+      "main_net_inflow": -56819482.0,
+      "main_inflow_ratio": -30.148,
+      "super_net": -54840783.61,
+      "big_net": -1978698.39,
+      "mid_net": -2463966.0,
+      "small_net": 3907319.0,
+      "source": "sina",
+      "flow_time": "2026-08-19T14:25:22.194229+08:00",
+      "severity": "warn"
+    }
+  ]
 }
