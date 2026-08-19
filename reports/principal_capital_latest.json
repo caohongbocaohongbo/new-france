@@ -1,43 +1,93 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T11:08:30.546774+08:00",
+  "now": "2026-08-19T11:14:07.927074+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 8676
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 5454
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 33886
+        "status": "ok",
+        "latency_ms": 35021
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 385,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1826,
-  "buy_candidates": 11,
-  "sell_candidates": 51,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 1320,
+  "buy_candidates": 8,
+  "sell_candidates": 29,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "000505",
+      "name": "京粮控股",
+      "price": 7.47,
+      "change_pct": 10.0147,
+      "total_amount": 416863483.91,
+      "main_net_inflow": 233446256.58,
+      "main_inflow_ratio": 56.0006,
+      "super_net": 187487828.58,
+      "big_net": 45958428.0,
+      "mid_net": 40027524.39,
+      "small_net": 17175591.72,
+      "source": "sina",
+      "flow_time": "2026-08-19T11:14:07.927074+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "600300",
+      "name": "维维股份",
+      "price": 3.22,
+      "change_pct": -3.0121,
+      "total_amount": 74059630.24,
+      "main_net_inflow": -23456534.0,
+      "main_inflow_ratio": -31.6725,
+      "super_net": -13637079.0,
+      "big_net": -9819455.0,
+      "mid_net": -6938571.0,
+      "small_net": -4482539.24,
+      "source": "sina",
+      "flow_time": "2026-08-19T11:14:07.927074+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002832",
+      "name": "比音勒芬",
+      "price": 25.87,
+      "change_pct": -1.8961,
+      "total_amount": 127857619.04,
+      "main_net_inflow": -40141871.6,
+      "main_inflow_ratio": -31.3958,
+      "super_net": -31958376.52,
+      "big_net": -8183495.08,
+      "mid_net": 3142549.0,
+      "small_net": 2544520.52,
+      "source": "sina",
+      "flow_time": "2026-08-19T11:14:07.927074+08:00",
+      "severity": "warn"
+    }
+  ]
 }
