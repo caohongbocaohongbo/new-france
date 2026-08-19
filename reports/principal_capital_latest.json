@@ -1,34 +1,33 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T10:51:16.494259+08:00",
+  "now": "2026-08-19T10:57:03.194635+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3738
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 3275
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 34364
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 32727
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 379,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,106 +35,9 @@
   "buy_candidates": 9,
   "sell_candidates": 40,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 6,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "002747",
-      "name": "埃斯顿",
-      "price": 36.05,
-      "change_pct": -9.965,
-      "total_amount": 2092311433.67,
-      "main_net_inflow": -724643289.04,
-      "main_inflow_ratio": -34.6336,
-      "super_net": -703643616.69,
-      "big_net": -20999672.35,
-      "mid_net": -1286474.01,
-      "small_net": 3364.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T10:51:16.494259+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600271",
-      "name": "航天信息",
-      "price": 6.71,
-      "change_pct": -2.1866,
-      "total_amount": 56461023.1,
-      "main_net_inflow": -18190228.5,
-      "main_inflow_ratio": -32.2173,
-      "super_net": -3854012.0,
-      "big_net": -14336216.5,
-      "mid_net": -2272549.34,
-      "small_net": -550516.74,
-      "source": "sina",
-      "flow_time": "2026-08-19T10:51:16.494259+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000876",
-      "name": "新 希 望",
-      "price": 6.97,
-      "change_pct": -3.0598,
-      "total_amount": 235894480.15,
-      "main_net_inflow": -75137377.86,
-      "main_inflow_ratio": -31.8521,
-      "super_net": -57986147.0,
-      "big_net": -17151230.86,
-      "mid_net": -4651625.53,
-      "small_net": -2350866.92,
-      "source": "sina",
-      "flow_time": "2026-08-19T10:51:16.494259+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002140",
-      "name": "东华科技",
-      "price": 8.95,
-      "change_pct": -2.0788,
-      "total_amount": 29336545.0,
-      "main_net_inflow": -9205742.84,
-      "main_inflow_ratio": -31.3798,
-      "super_net": -1158027.0,
-      "big_net": -8047715.84,
-      "mid_net": -2219548.0,
-      "small_net": -1935466.16,
-      "source": "sina",
-      "flow_time": "2026-08-19T10:51:16.494259+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600810",
-      "name": "神马股份",
-      "price": 6.26,
-      "change_pct": -1.8809,
-      "total_amount": 26690343.0,
-      "main_net_inflow": -8324079.19,
-      "main_inflow_ratio": -31.1876,
-      "super_net": -3674629.0,
-      "big_net": -4649450.19,
-      "mid_net": -735468.81,
-      "small_net": -1482823.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T10:51:16.494259+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000993",
-      "name": "闽东电力",
-      "price": 9.71,
-      "change_pct": -2.3139,
-      "total_amount": 38747367.76,
-      "main_net_inflow": -12019808.0,
-      "main_inflow_ratio": -31.021,
-      "super_net": -6369925.0,
-      "big_net": -5649883.0,
-      "mid_net": -2825286.24,
-      "small_net": -639642.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T10:51:16.494259+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
