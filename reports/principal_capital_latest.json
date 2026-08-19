@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T14:13:24.030964+08:00",
+  "now": "2026-08-19T14:19:31.085772+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='push2his.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\")); https://62.push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='62.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2 (Caused by NewConnectionError(\"HTTPSConnection(host='62.push2.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
-        "latency_ms": 14454
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1630
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 48022
+        "latency_ms": 48355
       }
     ],
     "is_stale": false,
@@ -32,9 +30,9 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1195,
-  "buy_candidates": 6,
-  "sell_candidates": 26,
+  "scanned": 1173,
+  "buy_candidates": 7,
+  "sell_candidates": 22,
   "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
