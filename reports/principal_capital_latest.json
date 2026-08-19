@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T13:07:04.464071+08:00",
+  "now": "2026-08-19T13:12:58.838600+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3766
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1441
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 50140
+        "latency_ms": 48610
       }
     ],
     "is_stale": false,
@@ -30,93 +32,60 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1245,
-  "buy_candidates": 8,
-  "sell_candidates": 21,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 4,
+  "scanned": 1353,
+  "buy_candidates": 10,
+  "sell_candidates": 22,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "603506",
-      "name": "南都物业",
-      "price": 11.88,
-      "change_pct": 10.0,
-      "total_amount": 78317321.68,
-      "main_net_inflow": 63242786.4,
-      "main_inflow_ratio": 80.752,
-      "super_net": 44968636.4,
-      "big_net": 18274150.0,
-      "mid_net": 6142287.28,
-      "small_net": 4043952.0,
+      "code": "001338",
+      "name": "永顺泰",
+      "price": 9.63,
+      "change_pct": 10.0571,
+      "total_amount": 218688510.95,
+      "main_net_inflow": 122166838.95,
+      "main_inflow_ratio": 55.8634,
+      "super_net": 83507063.13,
+      "big_net": 38659775.82,
+      "mid_net": 21602238.0,
+      "small_net": 13989234.0,
       "source": "sina",
-      "flow_time": "2026-08-19T13:07:04.464071+08:00"
+      "flow_time": "2026-08-19T13:12:58.838600+08:00"
+    },
+    {
+      "code": "000020",
+      "name": "深华发Ａ",
+      "price": 13.74,
+      "change_pct": 10.008,
+      "total_amount": 252469269.24,
+      "main_net_inflow": 136184869.24,
+      "main_inflow_ratio": 53.9412,
+      "super_net": 118817424.24,
+      "big_net": 17367445.0,
+      "mid_net": 10339584.0,
+      "small_net": 7525398.0,
+      "source": "sina",
+      "flow_time": "2026-08-19T13:12:58.838600+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "603668",
-      "name": "天马科技",
-      "price": 10.33,
-      "change_pct": -3.5481,
-      "total_amount": 85309433.4,
-      "main_net_inflow": -32538400.6,
-      "main_inflow_ratio": -38.1416,
-      "super_net": -16627557.0,
-      "big_net": -15910843.6,
-      "mid_net": -2254668.1,
-      "small_net": 979962.9,
+      "code": "000541",
+      "name": "佛山照明",
+      "price": 4.85,
+      "change_pct": -1.222,
+      "total_amount": 21210466.6,
+      "main_net_inflow": -7246384.4,
+      "main_inflow_ratio": -34.1642,
+      "super_net": -4160056.0,
+      "big_net": -3086328.4,
+      "mid_net": -1687579.0,
+      "small_net": -181664.0,
       "source": "sina",
-      "flow_time": "2026-08-19T13:07:04.464071+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600400",
-      "name": "红豆股份",
-      "price": 3.09,
-      "change_pct": -6.9277,
-      "total_amount": 157849492.34,
-      "main_net_inflow": -58966140.4,
-      "main_inflow_ratio": -37.3559,
-      "super_net": -43022555.4,
-      "big_net": -15943585.0,
-      "mid_net": -5775511.38,
-      "small_net": -156210.44,
-      "source": "sina",
-      "flow_time": "2026-08-19T13:07:04.464071+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600586",
-      "name": "金晶科技",
-      "price": 4.11,
-      "change_pct": -3.2941,
-      "total_amount": 42788323.0,
-      "main_net_inflow": -15303653.0,
-      "main_inflow_ratio": -35.766,
-      "super_net": -10420231.0,
-      "big_net": -4883422.0,
-      "mid_net": -3673870.0,
-      "small_net": -287084.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T13:07:04.464071+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600777",
-      "name": "新潮能源",
-      "price": 4.12,
-      "change_pct": -1.4354,
-      "total_amount": 43508223.0,
-      "main_net_inflow": -13297866.0,
-      "main_inflow_ratio": -30.564,
-      "super_net": -6688616.0,
-      "big_net": -6609250.0,
-      "mid_net": -4957648.0,
-      "small_net": -1605683.0,
-      "source": "sina",
-      "flow_time": "2026-08-19T13:07:04.464071+08:00",
+      "flow_time": "2026-08-19T13:12:58.838600+08:00",
       "severity": "warn"
     }
   ]
