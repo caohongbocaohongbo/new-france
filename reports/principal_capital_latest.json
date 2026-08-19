@@ -1,43 +1,109 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-19T13:31:09.856166+08:00",
+  "now": "2026-08-19T13:37:00.806628+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5422
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1609
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 48023
+        "status": "ok",
+        "latency_ms": 49978
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 431,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1439,
-  "buy_candidates": 10,
-  "sell_candidates": 27,
+  "scanned": 1291,
+  "buy_candidates": 9,
+  "sell_candidates": 26,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 4,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603351",
+      "name": "威尔药业",
+      "price": 27.15,
+      "change_pct": -2.4434,
+      "total_amount": 36954615.0,
+      "main_net_inflow": -12292426.0,
+      "main_inflow_ratio": -33.2636,
+      "super_net": -11721122.0,
+      "big_net": -571304.0,
+      "mid_net": -2997415.0,
+      "small_net": -676314.0,
+      "source": "sina",
+      "flow_time": "2026-08-19T13:37:00.806628+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002641",
+      "name": "公元股份",
+      "price": 3.87,
+      "change_pct": -1.5267,
+      "total_amount": 19140245.07,
+      "main_net_inflow": -6347870.27,
+      "main_inflow_ratio": -33.165,
+      "super_net": -2791604.8,
+      "big_net": -3556265.47,
+      "mid_net": -875668.0,
+      "small_net": -944394.8,
+      "source": "sina",
+      "flow_time": "2026-08-19T13:37:00.806628+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600653",
+      "name": "申华控股",
+      "price": 1.65,
+      "change_pct": -1.7857,
+      "total_amount": 21877400.0,
+      "main_net_inflow": -7013737.0,
+      "main_inflow_ratio": -32.0593,
+      "super_net": -5742825.0,
+      "big_net": -1270912.0,
+      "mid_net": -263247.0,
+      "small_net": -1263028.0,
+      "source": "sina",
+      "flow_time": "2026-08-19T13:37:00.806628+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600369",
+      "name": "西南证券",
+      "price": 3.99,
+      "change_pct": -1.2376,
+      "total_amount": 87652707.23,
+      "main_net_inflow": -26641311.0,
+      "main_inflow_ratio": -30.3942,
+      "super_net": -18131981.0,
+      "big_net": -8509330.0,
+      "mid_net": -1601540.75,
+      "small_net": -1978237.48,
+      "source": "sina",
+      "flow_time": "2026-08-19T13:37:00.806628+08:00",
+      "severity": "warn"
+    }
+  ]
 }
