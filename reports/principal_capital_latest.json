@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-20T10:17:59.917208+08:00",
+  "now": "2026-08-20T10:23:56.847551+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 8131
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 8772
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 35739
+        "latency_ms": 35951
       }
     ],
     "is_stale": false,
@@ -34,74 +32,59 @@
   },
   "scanned": 2461,
   "buy_candidates": 16,
-  "sell_candidates": 24,
-  "buy_fresh_count": 2,
-  "sell_fresh_count": 2,
+  "sell_candidates": 21,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "601877",
-      "name": "正泰电器",
-      "price": 26.28,
-      "change_pct": 10.0042,
-      "total_amount": 770348035.47,
-      "main_net_inflow": 464091431.71,
-      "main_inflow_ratio": 60.2444,
-      "super_net": 367048514.83,
-      "big_net": 97042916.88,
-      "mid_net": 28185089.76,
-      "small_net": 3981420.0,
-      "source": "sina",
-      "flow_time": "2026-08-20T10:17:59.917208+08:00"
-    },
-    {
-      "code": "001225",
-      "name": "和泰机电",
-      "price": 47.19,
-      "change_pct": 10.0,
-      "total_amount": 73729823.0,
-      "main_net_inflow": 40005761.0,
-      "main_inflow_ratio": 54.2599,
-      "super_net": 22659627.0,
-      "big_net": 17346134.0,
-      "mid_net": 7613553.0,
-      "small_net": 2950315.0,
-      "source": "sina",
-      "flow_time": "2026-08-20T10:17:59.917208+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600509",
-      "name": "天富能源",
-      "price": 7.29,
-      "change_pct": -0.9511,
-      "total_amount": 64752902.2,
-      "main_net_inflow": -26601039.6,
-      "main_inflow_ratio": -41.0808,
-      "super_net": -16895155.6,
-      "big_net": -9705884.0,
-      "mid_net": 686645.46,
-      "small_net": 117121.6,
+      "code": "600885",
+      "name": "宏发股份",
+      "price": 34.34,
+      "change_pct": -2.4709,
+      "total_amount": 206028900.72,
+      "main_net_inflow": -63844666.72,
+      "main_inflow_ratio": -30.9882,
+      "super_net": -34805384.2,
+      "big_net": -29039282.52,
+      "mid_net": -5010942.4,
+      "small_net": -474528.4,
       "source": "sina",
-      "flow_time": "2026-08-20T10:17:59.917208+08:00",
-      "severity": "alert"
+      "flow_time": "2026-08-20T10:23:56.847551+08:00",
+      "severity": "warn"
     },
     {
-      "code": "601456",
-      "name": "国联民生",
-      "price": 8.72,
-      "change_pct": -0.3429,
-      "total_amount": 34551693.0,
-      "main_net_inflow": -11857092.58,
-      "main_inflow_ratio": -34.317,
-      "super_net": -8414212.58,
-      "big_net": -3442880.0,
-      "mid_net": -323041.0,
-      "small_net": 93448.58,
+      "code": "601619",
+      "name": "嘉泽新能",
+      "price": 4.08,
+      "change_pct": -2.6253,
+      "total_amount": 94353728.81,
+      "main_net_inflow": -28467501.42,
+      "main_inflow_ratio": -30.171,
+      "super_net": -21278618.28,
+      "big_net": -7188883.14,
+      "mid_net": -2048770.51,
+      "small_net": 1094484.06,
       "source": "sina",
-      "flow_time": "2026-08-20T10:17:59.917208+08:00",
+      "flow_time": "2026-08-20T10:23:56.847551+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002676",
+      "name": "顺威股份",
+      "price": 4.91,
+      "change_pct": -1.4056,
+      "total_amount": 33781304.0,
+      "main_net_inflow": -10160306.0,
+      "main_inflow_ratio": -30.0767,
+      "super_net": -2521540.0,
+      "big_net": -7638766.0,
+      "mid_net": 811730.0,
+      "small_net": -1035098.0,
+      "source": "sina",
+      "flow_time": "2026-08-20T10:23:56.847551+08:00",
       "severity": "warn"
     }
   ]
