@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-20T10:06:28.543865+08:00",
+  "now": "2026-08-20T10:12:19.053411+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 10212
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1377
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 34551
+        "latency_ms": 35451
       }
     ],
     "is_stale": false,
@@ -34,44 +32,44 @@
   },
   "scanned": 2461,
   "buy_candidates": 14,
-  "sell_candidates": 21,
+  "sell_candidates": 22,
   "buy_fresh_count": 1,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600569",
-      "name": "安阳钢铁",
-      "price": 1.73,
-      "change_pct": 1.1696,
-      "total_amount": 10288587.0,
-      "main_net_inflow": 6119519.0,
-      "main_inflow_ratio": 59.4787,
-      "super_net": 3751937.0,
-      "big_net": 2367582.0,
-      "mid_net": -1542649.0,
-      "small_net": -546873.0,
+      "code": "002491",
+      "name": "通鼎互联",
+      "price": 19.27,
+      "change_pct": 9.9886,
+      "total_amount": 2376229667.1,
+      "main_net_inflow": 1230895151.46,
+      "main_inflow_ratio": 51.8003,
+      "super_net": 1177423111.87,
+      "big_net": 53472039.59,
+      "mid_net": 172201.0,
+      "small_net": 0.0,
       "source": "sina",
-      "flow_time": "2026-08-20T10:06:28.543865+08:00"
+      "flow_time": "2026-08-20T10:12:19.053411+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "000564",
-      "name": "供销大集",
-      "price": 1.45,
-      "change_pct": -2.6846,
-      "total_amount": 329211208.54,
-      "main_net_inflow": -128205210.82,
-      "main_inflow_ratio": -38.9431,
-      "super_net": -57571891.88,
-      "big_net": -70633318.94,
-      "mid_net": -11096889.0,
-      "small_net": -1431630.0,
+      "code": "601916",
+      "name": "浙商银行",
+      "price": 2.89,
+      "change_pct": -0.6873,
+      "total_amount": 109175938.1,
+      "main_net_inflow": -50288883.7,
+      "main_inflow_ratio": -46.0622,
+      "super_net": -51341969.7,
+      "big_net": 1053086.0,
+      "mid_net": -1112577.4,
+      "small_net": 1493603.0,
       "source": "sina",
-      "flow_time": "2026-08-20T10:06:28.543865+08:00",
-      "severity": "warn"
+      "flow_time": "2026-08-20T10:12:19.053411+08:00",
+      "severity": "alert"
     }
   ]
 }
