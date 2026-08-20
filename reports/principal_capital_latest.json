@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-20T10:12:19.053411+08:00",
+  "now": "2026-08-20T10:17:59.917208+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 8131
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 8772
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 35451
+        "latency_ms": 35739
       }
     ],
     "is_stale": false,
@@ -31,45 +33,76 @@
     "verify_result": null
   },
   "scanned": 2461,
-  "buy_candidates": 14,
-  "sell_candidates": 22,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
+  "buy_candidates": 16,
+  "sell_candidates": 24,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "002491",
-      "name": "通鼎互联",
-      "price": 19.27,
-      "change_pct": 9.9886,
-      "total_amount": 2376229667.1,
-      "main_net_inflow": 1230895151.46,
-      "main_inflow_ratio": 51.8003,
-      "super_net": 1177423111.87,
-      "big_net": 53472039.59,
-      "mid_net": 172201.0,
-      "small_net": 0.0,
+      "code": "601877",
+      "name": "正泰电器",
+      "price": 26.28,
+      "change_pct": 10.0042,
+      "total_amount": 770348035.47,
+      "main_net_inflow": 464091431.71,
+      "main_inflow_ratio": 60.2444,
+      "super_net": 367048514.83,
+      "big_net": 97042916.88,
+      "mid_net": 28185089.76,
+      "small_net": 3981420.0,
       "source": "sina",
-      "flow_time": "2026-08-20T10:12:19.053411+08:00"
+      "flow_time": "2026-08-20T10:17:59.917208+08:00"
+    },
+    {
+      "code": "001225",
+      "name": "和泰机电",
+      "price": 47.19,
+      "change_pct": 10.0,
+      "total_amount": 73729823.0,
+      "main_net_inflow": 40005761.0,
+      "main_inflow_ratio": 54.2599,
+      "super_net": 22659627.0,
+      "big_net": 17346134.0,
+      "mid_net": 7613553.0,
+      "small_net": 2950315.0,
+      "source": "sina",
+      "flow_time": "2026-08-20T10:17:59.917208+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "601916",
-      "name": "浙商银行",
-      "price": 2.89,
-      "change_pct": -0.6873,
-      "total_amount": 109175938.1,
-      "main_net_inflow": -50288883.7,
-      "main_inflow_ratio": -46.0622,
-      "super_net": -51341969.7,
-      "big_net": 1053086.0,
-      "mid_net": -1112577.4,
-      "small_net": 1493603.0,
+      "code": "600509",
+      "name": "天富能源",
+      "price": 7.29,
+      "change_pct": -0.9511,
+      "total_amount": 64752902.2,
+      "main_net_inflow": -26601039.6,
+      "main_inflow_ratio": -41.0808,
+      "super_net": -16895155.6,
+      "big_net": -9705884.0,
+      "mid_net": 686645.46,
+      "small_net": 117121.6,
       "source": "sina",
-      "flow_time": "2026-08-20T10:12:19.053411+08:00",
+      "flow_time": "2026-08-20T10:17:59.917208+08:00",
       "severity": "alert"
+    },
+    {
+      "code": "601456",
+      "name": "国联民生",
+      "price": 8.72,
+      "change_pct": -0.3429,
+      "total_amount": 34551693.0,
+      "main_net_inflow": -11857092.58,
+      "main_inflow_ratio": -34.317,
+      "super_net": -8414212.58,
+      "big_net": -3442880.0,
+      "mid_net": -323041.0,
+      "small_net": 93448.58,
+      "source": "sina",
+      "flow_time": "2026-08-20T10:17:59.917208+08:00",
+      "severity": "warn"
     }
   ]
 }
