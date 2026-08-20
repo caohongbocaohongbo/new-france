@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-20T10:00:49.311974+08:00",
+  "now": "2026-08-20T10:06:28.543865+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 10212
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1377
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 34517
+        "latency_ms": 34551
       }
     ],
     "is_stale": false,
@@ -32,43 +34,43 @@
   },
   "scanned": 2461,
   "buy_candidates": 14,
-  "sell_candidates": 24,
+  "sell_candidates": 21,
   "buy_fresh_count": 1,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600539",
-      "name": "狮头股份",
-      "price": 15.36,
-      "change_pct": 10.0287,
-      "total_amount": 266125253.16,
-      "main_net_inflow": 154306839.16,
-      "main_inflow_ratio": 57.9828,
-      "super_net": 136625424.0,
-      "big_net": 17681415.16,
-      "mid_net": 1693551.0,
-      "small_net": 64405.0,
+      "code": "600569",
+      "name": "安阳钢铁",
+      "price": 1.73,
+      "change_pct": 1.1696,
+      "total_amount": 10288587.0,
+      "main_net_inflow": 6119519.0,
+      "main_inflow_ratio": 59.4787,
+      "super_net": 3751937.0,
+      "big_net": 2367582.0,
+      "mid_net": -1542649.0,
+      "small_net": -546873.0,
       "source": "sina",
-      "flow_time": "2026-08-20T10:00:49.311974+08:00"
+      "flow_time": "2026-08-20T10:06:28.543865+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "000987",
-      "name": "越秀资本",
-      "price": 7.38,
-      "change_pct": 0.1357,
-      "total_amount": 42616524.24,
-      "main_net_inflow": -14230195.0,
-      "main_inflow_ratio": -33.3913,
-      "super_net": -9811462.0,
-      "big_net": -4418733.0,
-      "mid_net": -228032.0,
-      "small_net": -904213.24,
+      "code": "000564",
+      "name": "供销大集",
+      "price": 1.45,
+      "change_pct": -2.6846,
+      "total_amount": 329211208.54,
+      "main_net_inflow": -128205210.82,
+      "main_inflow_ratio": -38.9431,
+      "super_net": -57571891.88,
+      "big_net": -70633318.94,
+      "mid_net": -11096889.0,
+      "small_net": -1431630.0,
       "source": "sina",
-      "flow_time": "2026-08-20T10:00:49.311974+08:00",
+      "flow_time": "2026-08-20T10:06:28.543865+08:00",
       "severity": "warn"
     }
   ]
