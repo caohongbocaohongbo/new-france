@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-20T11:04:33.826873+08:00",
+  "now": "2026-08-20T11:10:40.940020+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 7368
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 18549
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38248
+        "latency_ms": 38180
       }
     ],
     "is_stale": false,
@@ -34,11 +32,28 @@
   },
   "scanned": 2461,
   "buy_candidates": 18,
-  "sell_candidates": 15,
+  "sell_candidates": 14,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "000564",
+      "name": "供销大集",
+      "price": 1.45,
+      "change_pct": -2.6846,
+      "total_amount": 463576162.54,
+      "main_net_inflow": -150620733.82,
+      "main_inflow_ratio": -32.491,
+      "super_net": -45638211.88,
+      "big_net": -104982521.94,
+      "mid_net": -27709985.05,
+      "small_net": -5791078.95,
+      "source": "sina",
+      "flow_time": "2026-08-20T11:10:40.940020+08:00",
+      "severity": "warn"
+    }
+  ]
 }
