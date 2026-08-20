@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-20T13:24:26.118083+08:00",
+  "now": "2026-08-20T13:30:21.146840+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3497
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1285
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 46627
+        "latency_ms": 45726
       }
     ],
     "is_stale": false,
@@ -33,12 +31,28 @@
     "verify_result": null
   },
   "scanned": 2461,
-  "buy_candidates": 16,
+  "buy_candidates": 17,
   "sell_candidates": 13,
-  "buy_fresh_count": 0,
+  "buy_fresh_count": 1,
   "sell_fresh_count": 0,
-  "email_sent": false,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "603637",
+      "name": "镇海股份",
+      "price": 14.06,
+      "change_pct": 10.0156,
+      "total_amount": 136617266.64,
+      "main_net_inflow": 76244424.0,
+      "main_inflow_ratio": 55.8088,
+      "super_net": 48693686.0,
+      "big_net": 27550738.0,
+      "mid_net": 6809018.84,
+      "small_net": 5449083.0,
+      "source": "sina",
+      "flow_time": "2026-08-20T13:30:21.146840+08:00"
+    }
+  ],
   "sell_triggered": []
 }
