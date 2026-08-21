@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-21T13:54:17.817086+08:00",
+  "now": "2026-08-21T14:00:07.002915+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4900
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1480
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 46455
+        "latency_ms": 50401
       }
     ],
     "is_stale": false,
@@ -30,13 +32,46 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2461,
+  "scanned": 2460,
   "buy_candidates": 13,
-  "sell_candidates": 26,
+  "sell_candidates": 27,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "601992",
+      "name": "金隅集团",
+      "price": 1.38,
+      "change_pct": -0.7194,
+      "total_amount": 28919065.0,
+      "main_net_inflow": -13178960.0,
+      "main_inflow_ratio": -45.5719,
+      "super_net": -7402044.0,
+      "big_net": -5776916.0,
+      "mid_net": -658668.0,
+      "small_net": -635123.0,
+      "source": "sina",
+      "flow_time": "2026-08-21T14:00:07.002915+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "603700",
+      "name": "宁水集团",
+      "price": 11.41,
+      "change_pct": -1.8072,
+      "total_amount": 36913598.0,
+      "main_net_inflow": -12287453.0,
+      "main_inflow_ratio": -33.2871,
+      "super_net": -9181968.0,
+      "big_net": -3105485.0,
+      "mid_net": -2930107.0,
+      "small_net": -263158.0,
+      "source": "sina",
+      "flow_time": "2026-08-21T14:00:07.002915+08:00",
+      "severity": "warn"
+    }
+  ]
 }
