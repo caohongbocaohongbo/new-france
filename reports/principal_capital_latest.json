@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-21T10:27:11.871427+08:00",
+  "now": "2026-08-21T10:32:58.621277+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 6586
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 10568
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 24133
+        "latency_ms": 24471
       }
     ],
     "is_stale": false,
@@ -34,27 +32,92 @@
   },
   "scanned": 2461,
   "buy_candidates": 15,
-  "sell_candidates": 98,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 0,
+  "sell_candidates": 87,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 5,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
+  "buy_triggered": [],
+  "sell_triggered": [
     {
-      "code": "002988",
-      "name": "豪美新材",
-      "price": 24.11,
-      "change_pct": 9.9909,
-      "total_amount": 233957884.0,
-      "main_net_inflow": 134061448.0,
-      "main_inflow_ratio": 57.3015,
-      "super_net": 91446346.0,
-      "big_net": 42615102.0,
-      "mid_net": 13366989.0,
-      "small_net": 1881975.0,
+      "code": "600518",
+      "name": "康美药业",
+      "price": 1.36,
+      "change_pct": -2.1583,
+      "total_amount": 140988260.99,
+      "main_net_inflow": -82579569.3,
+      "main_inflow_ratio": -58.5719,
+      "super_net": -75401196.0,
+      "big_net": -7178373.3,
+      "mid_net": -6556254.86,
+      "small_net": -2407085.95,
       "source": "sina",
-      "flow_time": "2026-08-21T10:27:11.871427+08:00"
+      "flow_time": "2026-08-21T10:32:58.621277+08:00",
+      "severity": "danger"
+    },
+    {
+      "code": "002252",
+      "name": "上海莱士",
+      "price": 4.86,
+      "change_pct": -3.3797,
+      "total_amount": 223325570.8,
+      "main_net_inflow": -89173042.0,
+      "main_inflow_ratio": -39.9296,
+      "super_net": -84934393.4,
+      "big_net": -4238648.6,
+      "mid_net": -185977.0,
+      "small_net": 1184905.0,
+      "source": "sina",
+      "flow_time": "2026-08-21T10:32:58.621277+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603068",
+      "name": "博通集成",
+      "price": 37.93,
+      "change_pct": -8.3816,
+      "total_amount": 277355360.64,
+      "main_net_inflow": -102068104.64,
+      "main_inflow_ratio": -36.8005,
+      "super_net": -46724691.0,
+      "big_net": -55343413.64,
+      "mid_net": 1117047.34,
+      "small_net": 1561180.0,
+      "source": "sina",
+      "flow_time": "2026-08-21T10:32:58.621277+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000999",
+      "name": "华润三九",
+      "price": 24.47,
+      "change_pct": -2.3543,
+      "total_amount": 156452392.93,
+      "main_net_inflow": -51226752.62,
+      "main_inflow_ratio": -32.7427,
+      "super_net": -43380871.0,
+      "big_net": -7845881.62,
+      "mid_net": -1607371.77,
+      "small_net": 579932.0,
+      "source": "sina",
+      "flow_time": "2026-08-21T10:32:58.621277+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000568",
+      "name": "泸州老窖",
+      "price": 85.04,
+      "change_pct": -1.2426,
+      "total_amount": 183326108.19,
+      "main_net_inflow": -55172904.9,
+      "main_inflow_ratio": -30.0955,
+      "super_net": -46855058.68,
+      "big_net": -8317846.22,
+      "mid_net": 1862023.07,
+      "small_net": 188461.52,
+      "source": "sina",
+      "flow_time": "2026-08-21T10:32:58.621277+08:00",
+      "severity": "warn"
     }
-  ],
-  "sell_triggered": []
+  ]
 }
