@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-21T11:07:20.492208+08:00",
+  "now": "2026-08-21T11:13:17.406399+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 6658
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 8578
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 51233
+        "latency_ms": 25710
       }
     ],
     "is_stale": false,
@@ -30,61 +32,29 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2460,
-  "buy_candidates": 16,
-  "sell_candidates": 51,
+  "scanned": 2461,
+  "buy_candidates": 15,
+  "sell_candidates": 50,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601518",
-      "name": "吉林高速",
-      "price": 2.75,
-      "change_pct": -0.722,
-      "total_amount": 15173623.8,
-      "main_net_inflow": -7363443.0,
-      "main_inflow_ratio": -48.5279,
-      "super_net": -3986950.0,
-      "big_net": -3376493.0,
-      "mid_net": -1587031.0,
-      "small_net": -621649.8,
-      "source": "sina",
-      "flow_time": "2026-08-21T11:07:20.492208+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600035",
-      "name": "楚天高速",
-      "price": 3.35,
-      "change_pct": -0.8876,
-      "total_amount": 13247879.6,
-      "main_net_inflow": -4398377.6,
-      "main_inflow_ratio": -33.2006,
-      "super_net": -2051325.6,
-      "big_net": -2347052.0,
-      "mid_net": -727236.76,
-      "small_net": -606853.24,
-      "source": "sina",
-      "flow_time": "2026-08-21T11:07:20.492208+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000881",
-      "name": "中广核技",
-      "price": 6.45,
-      "change_pct": -0.463,
-      "total_amount": 15653247.86,
-      "main_net_inflow": -5159735.0,
-      "main_inflow_ratio": -32.9627,
+      "code": "002616",
+      "name": "长青集团",
+      "price": 4.73,
+      "change_pct": -1.6632,
+      "total_amount": 15875926.0,
+      "main_net_inflow": -5398344.0,
+      "main_inflow_ratio": -34.0033,
       "super_net": 0.0,
-      "big_net": -5159735.0,
-      "mid_net": -426275.14,
-      "small_net": -656270.0,
+      "big_net": -5398344.0,
+      "mid_net": 571341.0,
+      "small_net": 1785693.0,
       "source": "sina",
-      "flow_time": "2026-08-21T11:07:20.492208+08:00",
+      "flow_time": "2026-08-21T11:13:17.406399+08:00",
       "severity": "warn"
     }
   ]
