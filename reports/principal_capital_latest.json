@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-21T13:06:53.164732+08:00",
+  "now": "2026-08-21T13:12:48.744511+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3460
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1615
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 51577
+        "latency_ms": 47612
       }
     ],
     "is_stale": false,
@@ -34,73 +36,89 @@
   "buy_candidates": 14,
   "sell_candidates": 44,
   "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 4,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "001203",
-      "name": "大中矿业",
-      "price": 28.26,
-      "change_pct": 6.8431,
-      "total_amount": 1050939914.32,
-      "main_net_inflow": 530145430.12,
-      "main_inflow_ratio": 50.4449,
-      "super_net": 458090998.12,
-      "big_net": 72054432.0,
-      "mid_net": 21875558.0,
-      "small_net": 8395953.0,
+      "code": "603318",
+      "name": "水发燃气",
+      "price": 9.54,
+      "change_pct": 10.0346,
+      "total_amount": 382762874.56,
+      "main_net_inflow": 192137921.84,
+      "main_inflow_ratio": 50.1976,
+      "super_net": 162713597.52,
+      "big_net": 29424324.32,
+      "mid_net": 20776778.72,
+      "small_net": 12757608.0,
       "source": "sina",
-      "flow_time": "2026-08-21T13:06:53.164732+08:00"
+      "flow_time": "2026-08-21T13:12:48.744511+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "605005",
-      "name": "合兴股份",
-      "price": 15.53,
-      "change_pct": -1.4594,
-      "total_amount": 10216542.0,
-      "main_net_inflow": -4109224.0,
-      "main_inflow_ratio": -40.2213,
-      "super_net": -2200736.0,
-      "big_net": -1908488.0,
-      "mid_net": -1421008.0,
-      "small_net": 94872.0,
+      "code": "601618",
+      "name": "中国中冶",
+      "price": 2.54,
+      "change_pct": -1.5504,
+      "total_amount": 100382707.84,
+      "main_net_inflow": -34588813.16,
+      "main_inflow_ratio": -34.4569,
+      "super_net": -31412848.16,
+      "big_net": -3175965.0,
+      "mid_net": -3946749.0,
+      "small_net": -1863312.0,
       "source": "sina",
-      "flow_time": "2026-08-21T13:06:53.164732+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "603439",
-      "name": "三力制药",
-      "price": 12.3,
-      "change_pct": -4.7988,
-      "total_amount": 105622745.0,
-      "main_net_inflow": -38524649.0,
-      "main_inflow_ratio": -36.4738,
-      "super_net": -34569391.0,
-      "big_net": -3955258.0,
-      "mid_net": 1455771.0,
-      "small_net": -1983481.0,
-      "source": "sina",
-      "flow_time": "2026-08-21T13:06:53.164732+08:00",
+      "flow_time": "2026-08-21T13:12:48.744511+08:00",
       "severity": "warn"
     },
     {
-      "code": "002603",
-      "name": "以岭药业",
-      "price": 16.48,
-      "change_pct": -5.1784,
-      "total_amount": 541693172.08,
-      "main_net_inflow": -164105065.44,
-      "main_inflow_ratio": -30.2948,
-      "super_net": -148506002.04,
-      "big_net": -15599063.4,
-      "mid_net": 8089715.0,
-      "small_net": 1880780.0,
+      "code": "600320",
+      "name": "振华重工",
+      "price": 4.0,
+      "change_pct": -0.9901,
+      "total_amount": 58569330.48,
+      "main_net_inflow": -18567282.52,
+      "main_inflow_ratio": -31.7014,
+      "super_net": -15930521.28,
+      "big_net": -2636761.24,
+      "mid_net": -1608015.0,
+      "small_net": -341604.4,
       "source": "sina",
-      "flow_time": "2026-08-21T13:06:53.164732+08:00",
+      "flow_time": "2026-08-21T13:12:48.744511+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000999",
+      "name": "华润三九",
+      "price": 24.33,
+      "change_pct": -2.913,
+      "total_amount": 213786169.78,
+      "main_net_inflow": -65798340.87,
+      "main_inflow_ratio": -30.7776,
+      "super_net": -48629399.0,
+      "big_net": -17168941.87,
+      "mid_net": -5233627.27,
+      "small_net": -476574.9,
+      "source": "sina",
+      "flow_time": "2026-08-21T13:12:48.744511+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600987",
+      "name": "航民股份",
+      "price": 6.41,
+      "change_pct": -1.8377,
+      "total_amount": 25273556.0,
+      "main_net_inflow": -7594413.78,
+      "main_inflow_ratio": -30.0489,
+      "super_net": -3513233.0,
+      "big_net": -4081180.78,
+      "mid_net": -2100096.22,
+      "small_net": -874002.0,
+      "source": "sina",
+      "flow_time": "2026-08-21T13:12:48.744511+08:00",
       "severity": "warn"
     }
   ]
