@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-21T11:13:17.406399+08:00",
+  "now": "2026-08-21T11:19:04.060196+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 6658
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 8578
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 25710
+        "latency_ms": 26424
       }
     ],
     "is_stale": false,
@@ -33,28 +31,44 @@
     "verify_result": null
   },
   "scanned": 2461,
-  "buy_candidates": 15,
-  "sell_candidates": 50,
+  "buy_candidates": 14,
+  "sell_candidates": 49,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002616",
-      "name": "长青集团",
-      "price": 4.73,
-      "change_pct": -1.6632,
-      "total_amount": 15875926.0,
-      "main_net_inflow": -5398344.0,
-      "main_inflow_ratio": -34.0033,
-      "super_net": 0.0,
-      "big_net": -5398344.0,
-      "mid_net": 571341.0,
-      "small_net": 1785693.0,
+      "code": "601158",
+      "name": "重庆水务",
+      "price": 4.09,
+      "change_pct": -1.2077,
+      "total_amount": 14251393.8,
+      "main_net_inflow": -5010425.0,
+      "main_inflow_ratio": -35.1574,
+      "super_net": -3109149.0,
+      "big_net": -1901276.0,
+      "mid_net": -905725.0,
+      "small_net": -929875.8,
       "source": "sina",
-      "flow_time": "2026-08-21T11:13:17.406399+08:00",
+      "flow_time": "2026-08-21T11:19:04.060196+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603236",
+      "name": "移远通信",
+      "price": 57.44,
+      "change_pct": -4.0748,
+      "total_amount": 586958326.47,
+      "main_net_inflow": -198444286.97,
+      "main_inflow_ratio": -33.8089,
+      "super_net": -165034183.37,
+      "big_net": -33410103.6,
+      "mid_net": 1430613.8,
+      "small_net": 1522061.12,
+      "source": "sina",
+      "flow_time": "2026-08-21T11:19:04.060196+08:00",
       "severity": "warn"
     }
   ]
