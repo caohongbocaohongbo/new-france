@@ -1,61 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-08-21T11:24:36.284307+08:00",
+  "status": "skipped",
+  "reason": "休市中",
+  "now": "2026-08-21T12:55:38.079758+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5181
-      },
-      {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 8717
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 26790
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 2461,
-  "buy_candidates": 14,
-  "sell_candidates": 45,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "000717",
-      "name": "中南股份",
-      "price": 2.21,
-      "change_pct": -0.4504,
-      "total_amount": 33433629.0,
-      "main_net_inflow": -14599916.0,
-      "main_inflow_ratio": -43.6684,
-      "super_net": -17793783.0,
-      "big_net": 3193867.0,
-      "mid_net": -1378467.0,
-      "small_net": 200918.0,
-      "source": "sina",
-      "flow_time": "2026-08-21T11:24:36.284307+08:00",
-      "severity": "alert"
-    }
-  ]
+  "sell_triggered": []
 }
