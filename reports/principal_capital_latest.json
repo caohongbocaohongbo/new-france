@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-21T10:21:41.836934+08:00",
+  "now": "2026-08-21T10:27:11.871427+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 6586
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 10568
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 24524
+        "latency_ms": 24133
       }
     ],
     "is_stale": false,
@@ -32,92 +34,27 @@
   },
   "scanned": 2461,
   "buy_candidates": 15,
-  "sell_candidates": 114,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 5,
+  "sell_candidates": 98,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 0,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": [
+  "buy_triggered": [
     {
-      "code": "000717",
-      "name": "中南股份",
-      "price": 2.18,
-      "change_pct": -1.8018,
-      "total_amount": 27121139.0,
-      "main_net_inflow": -17365012.0,
-      "main_inflow_ratio": -64.0276,
-      "super_net": -17793783.0,
-      "big_net": 428771.0,
-      "mid_net": -1020042.0,
-      "small_net": -406161.0,
+      "code": "002988",
+      "name": "豪美新材",
+      "price": 24.11,
+      "change_pct": 9.9909,
+      "total_amount": 233957884.0,
+      "main_net_inflow": 134061448.0,
+      "main_inflow_ratio": 57.3015,
+      "super_net": 91446346.0,
+      "big_net": 42615102.0,
+      "mid_net": 13366989.0,
+      "small_net": 1881975.0,
       "source": "sina",
-      "flow_time": "2026-08-21T10:21:41.836934+08:00",
-      "severity": "danger"
-    },
-    {
-      "code": "601456",
-      "name": "国联民生",
-      "price": 8.73,
-      "change_pct": -0.9081,
-      "total_amount": 35892543.0,
-      "main_net_inflow": -12124270.0,
-      "main_inflow_ratio": -33.7794,
-      "super_net": -8957511.0,
-      "big_net": -3166759.0,
-      "mid_net": -1227467.5,
-      "small_net": -187092.5,
-      "source": "sina",
-      "flow_time": "2026-08-21T10:21:41.836934+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600519",
-      "name": "贵州茅台",
-      "price": 1277.0,
-      "change_pct": -1.1227,
-      "total_amount": 1446458759.34,
-      "main_net_inflow": -448628586.28,
-      "main_inflow_ratio": -31.0157,
-      "super_net": -432846822.28,
-      "big_net": -15781764.0,
-      "mid_net": 2182948.0,
-      "small_net": 0.0,
-      "source": "sina",
-      "flow_time": "2026-08-21T10:21:41.836934+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002103",
-      "name": "广博股份",
-      "price": 6.46,
-      "change_pct": -1.8237,
-      "total_amount": 16151357.0,
-      "main_net_inflow": -4950815.0,
-      "main_inflow_ratio": -30.6526,
-      "super_net": -1613790.0,
-      "big_net": -3337025.0,
-      "mid_net": -2022052.0,
-      "small_net": -576054.0,
-      "source": "sina",
-      "flow_time": "2026-08-21T10:21:41.836934+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601339",
-      "name": "百隆东方",
-      "price": 7.78,
-      "change_pct": -2.3839,
-      "total_amount": 19781680.0,
-      "main_net_inflow": -6025976.0,
-      "main_inflow_ratio": -30.4624,
-      "super_net": -1007247.0,
-      "big_net": -5018729.0,
-      "mid_net": -2054585.0,
-      "small_net": -290241.0,
-      "source": "sina",
-      "flow_time": "2026-08-21T10:21:41.836934+08:00",
-      "severity": "warn"
+      "flow_time": "2026-08-21T10:27:11.871427+08:00"
     }
-  ]
+  ],
+  "sell_triggered": []
 }
