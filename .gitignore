@@ -26,3 +26,12 @@ $CODEX_HOME/
 # 数据后台运行时生成快照 (跨实例经 data-snapshots 分支流转, 不进主分支)
 data/data_backend/
 reports/data_backend/
+
+# smart_money_radar 盘中雷达运行时数据 (阶段状态/去重/回放, 本地生成不进库)
+data/smart_money_radar_*.json
+data/smart_money_radar_*.sqlite3
+
+# 本地过程产物 (codex diff 输出 / pytdx 连通性验证脚本, 不进库)
+output/
+verify_tdx*.py
+
