@@ -16,6 +16,7 @@ from backend.plugins.principal_capital.service import (
     _is_star_market,
     _stock_code,
     should_notify,
+    _fetch_snapshot_json,
 )
 
 from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, LATEST_FILE, NOTIFIED_DIR, REPLAY_DB_FILE, STATE_DIR
@@ -213,17 +214,22 @@ def load_watch_pool(force: bool = False, now: Optional[datetime] = None) -> list
     if not force and expires_at and now < expires_at and _POOL_CACHE.get("source_file") == source_file:
         return list(_POOL_CACHE["items"])
     path = Path(source_file)
-    if not path.exists():
-        _POOL_CACHE.update({
-            "expires_at": now + timedelta(minutes=CONFIG["pool_refresh_min"]),
-            "items": [],
-            "source_file": source_file,
-        })
-        return []
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        payload = {}
+    payload = {}
+    if path.exists():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            payload = {}
+    # 本地文件不存在、或数据不是 completed 状态（no_data / empty / 旧日期），
+    # 自动从 GitHub data-snapshots 分支拉取最新快照，与 principal_capital 保持同源
+    if not payload or payload.get("status") != "completed":
+        try:
+            remote = _fetch_snapshot_json("principal_capital_latest.json")
+            if remote and remote.get("status") == "completed":
+                logger.info("load_watch_pool: 本地报告不可用，已从快照分支拉取")
+                payload = remote
+        except Exception as exc:
+            logger.info("load_watch_pool: 快照拉取失败，使用本地数据: %s", exc)
     dedup = {}
     for raw in _candidate_lists(payload):
         if not isinstance(raw, dict):

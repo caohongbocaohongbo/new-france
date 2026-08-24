@@ -23,14 +23,19 @@ def write_pool(path, items):
 
 def test_load_watch_pool_filters_non_main_board_and_limits(tmp_path, monkeypatch):
     pool_file = tmp_path / "principal_capital_latest.json"
-    write_pool(
-        pool_file,
-        [
-            {"code": "600001", "name": "主板A", "main_inflow_ratio": 61, "total_amount": 2e8},
-            {"code": "300001", "name": "创业板", "main_inflow_ratio": 70, "total_amount": 2e8},
-            {"code": "688001", "name": "科创板", "main_inflow_ratio": 70, "total_amount": 2e8},
-            {"code": "600002", "name": "ST风险", "main_inflow_ratio": 70, "total_amount": 2e8},
-        ],
+    # 写入 status=completed，确保不触发快照回退
+    pool_file.write_text(
+        json.dumps({
+            "status": "completed",
+            "buy_triggered": [
+                {"code": "600001", "name": "主板A", "main_inflow_ratio": 61, "total_amount": 2e8},
+                {"code": "300001", "name": "创业板", "main_inflow_ratio": 70, "total_amount": 2e8},
+                {"code": "688001", "name": "科创板", "main_inflow_ratio": 70, "total_amount": 2e8},
+                {"code": "600002", "name": "ST风险", "main_inflow_ratio": 70, "total_amount": 2e8},
+            ],
+            "sell_triggered": [],
+        }),
+        encoding="utf-8",
     )
     cfg = dict(service.CONFIG)
     cfg.update({"pool_source_file": str(pool_file), "pool_max": 1})
@@ -39,6 +44,56 @@ def test_load_watch_pool_filters_non_main_board_and_limits(tmp_path, monkeypatch
     result = service.load_watch_pool(force=True)
 
     assert [item["code"] for item in result] == ["600001"]
+
+
+def test_load_watch_pool_falls_back_to_snapshot_when_local_is_stale(tmp_path, monkeypatch):
+    """本地文件 status=no_data 时，应自动从快照分支拉取并返回候选。"""
+    pool_file = tmp_path / "principal_capital_latest.json"
+    pool_file.write_text(
+        json.dumps({"status": "no_data", "buy_triggered": [], "sell_triggered": []}),
+        encoding="utf-8",
+    )
+    remote_payload = {
+        "status": "completed",
+        "buy_triggered": [
+            {"code": "600001", "name": "主板A", "main_inflow_ratio": 62, "total_amount": 2e8}
+        ],
+        "sell_triggered": [],
+    }
+    cfg = dict(service.CONFIG)
+    cfg.update({"pool_source_file": str(pool_file), "pool_max": 10})
+    monkeypatch.setattr(service, "CONFIG", cfg)
+    monkeypatch.setattr(service, "_fetch_snapshot_json", lambda *a, **k: remote_payload)
+
+    result = service.load_watch_pool(force=True)
+
+    assert len(result) == 1
+    assert result[0]["code"] == "600001"
+
+
+def test_load_watch_pool_does_not_call_snapshot_when_local_is_completed(tmp_path, monkeypatch):
+    """本地文件 status=completed 时，不应调用快照拉取。"""
+    pool_file = tmp_path / "principal_capital_latest.json"
+    write_pool(pool_file, [{"code": "600002", "name": "主板B", "main_inflow_ratio": 60, "total_amount": 2e8}])
+    # write_pool 写的是 buy_triggered 格式，不含 status=completed，需要直接写
+    pool_file.write_text(
+        json.dumps({
+            "status": "completed",
+            "buy_triggered": [{"code": "600002", "name": "主板B", "main_inflow_ratio": 60, "total_amount": 2e8}],
+            "sell_triggered": [],
+        }),
+        encoding="utf-8",
+    )
+    snapshot_called = []
+    cfg = dict(service.CONFIG)
+    cfg.update({"pool_source_file": str(pool_file), "pool_max": 10})
+    monkeypatch.setattr(service, "CONFIG", cfg)
+    monkeypatch.setattr(service, "_fetch_snapshot_json", lambda *a, **k: snapshot_called.append(1) or {})
+
+    result = service.load_watch_pool(force=True)
+
+    assert not snapshot_called
+    assert result[0]["code"] == "600002"
 
 
 def test_run_radar_once_empty_pool_writes_latest_without_email(tmp_path, monkeypatch, fixed_now):
