@@ -1,199 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-08-24T09:44:23.388041+08:00",
+  "status": "skipped",
+  "reason": "休市中",
+  "now": "2026-08-24T12:55:41.730245+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5676
-      },
-      {
-        "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 33159
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 1954,
-  "buy_candidates": 14,
-  "sell_candidates": 15,
-  "buy_fresh_count": 6,
-  "sell_fresh_count": 4,
-  "email_sent": true,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002703",
-      "name": "浙江世宝",
-      "price": 15.02,
-      "change_pct": 10.0366,
-      "total_amount": 249557725.3,
-      "main_net_inflow": 194195107.3,
-      "main_inflow_ratio": 77.8157,
-      "super_net": 161053477.3,
-      "big_net": 33141630.0,
-      "mid_net": 6475122.0,
-      "small_net": 304906.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00"
-    },
-    {
-      "code": "603200",
-      "name": "上海洗霸",
-      "price": 39.13,
-      "change_pct": 10.0084,
-      "total_amount": 85074650.0,
-      "main_net_inflow": 52188207.0,
-      "main_inflow_ratio": 61.344,
-      "super_net": 29416183.0,
-      "big_net": 22772024.0,
-      "mid_net": 9635327.0,
-      "small_net": 1704658.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00"
-    },
-    {
-      "code": "000723",
-      "name": "美锦能源",
-      "price": 3.89,
-      "change_pct": 9.887,
-      "total_amount": 416027591.16,
-      "main_net_inflow": 240279613.78,
-      "main_inflow_ratio": 57.7557,
-      "super_net": 213562780.93,
-      "big_net": 26716832.85,
-      "mid_net": 124228.0,
-      "small_net": 0.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00"
-    },
-    {
-      "code": "002580",
-      "name": "圣阳股份",
-      "price": 21.05,
-      "change_pct": 9.9791,
-      "total_amount": 365644695.56,
-      "main_net_inflow": 207393576.56,
-      "main_inflow_ratio": 56.72,
-      "super_net": 198160540.56,
-      "big_net": 9233036.0,
-      "mid_net": 255735.0,
-      "small_net": 0.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00"
-    },
-    {
-      "code": "002882",
-      "name": "金龙羽",
-      "price": 23.76,
-      "change_pct": 10.0,
-      "total_amount": 220921117.0,
-      "main_net_inflow": 123875681.0,
-      "main_inflow_ratio": 56.0724,
-      "super_net": 109883448.0,
-      "big_net": 13992233.0,
-      "mid_net": 54930.0,
-      "small_net": -92166.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00"
-    },
-    {
-      "code": "002192",
-      "name": "融捷股份",
-      "price": 79.76,
-      "change_pct": 9.9986,
-      "total_amount": 1547115116.9,
-      "main_net_inflow": 817919469.26,
-      "main_inflow_ratio": 52.8674,
-      "super_net": 764592651.1,
-      "big_net": 53326818.16,
-      "mid_net": 2919216.0,
-      "small_net": 23928.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600433",
-      "name": "冠豪高新",
-      "price": 3.27,
-      "change_pct": -0.6079,
-      "total_amount": 11445475.0,
-      "main_net_inflow": -3787022.0,
-      "main_inflow_ratio": -33.0875,
-      "super_net": 0.0,
-      "big_net": -3787022.0,
-      "mid_net": -449149.0,
-      "small_net": -111938.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600388",
-      "name": "紫金龙净",
-      "price": 17.5,
-      "change_pct": -1.2972,
-      "total_amount": 33757557.0,
-      "main_net_inflow": -11107629.0,
-      "main_inflow_ratio": -32.9041,
-      "super_net": -10162137.0,
-      "big_net": -945492.0,
-      "mid_net": -687788.0,
-      "small_net": -674982.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600784",
-      "name": "鲁银投资",
-      "price": 7.7,
-      "change_pct": -1.0283,
-      "total_amount": 11238179.0,
-      "main_net_inflow": -3501137.0,
-      "main_inflow_ratio": -31.154,
-      "super_net": 0.0,
-      "big_net": -3501137.0,
-      "mid_net": -39865.0,
-      "small_net": -468843.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002670",
-      "name": "国盛证券",
-      "price": 10.6,
-      "change_pct": -0.7491,
-      "total_amount": 39315305.0,
-      "main_net_inflow": -12204473.0,
-      "main_inflow_ratio": -31.0425,
-      "super_net": -6983945.0,
-      "big_net": -5220528.0,
-      "mid_net": -1842092.0,
-      "small_net": -1102948.0,
-      "source": "sina",
-      "flow_time": "2026-08-24T09:44:23.388041+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
