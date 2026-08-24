@@ -140,6 +140,15 @@ def get_app():
         import logging
         logging.getLogger(__name__).info("隔夜套利插件未加载: %s", exc)
 
+    try:
+        from .plugins.smart_money_radar import register_router as _smr_register_router
+        _app.include_router(_smr_register_router(),
+                            prefix="/api/v1/smart-money-radar",
+                            tags=["盘中雷达"])
+    except ImportError as exc:
+        import logging
+        logging.getLogger(__name__).info("盘中雷达插件未加载: %s", exc)
+
     # 托管前端静态文件
     frontend_dir = PROJECT_DIR / "frontend"
     if frontend_dir.is_dir():
@@ -181,6 +190,12 @@ def main():
                         help="运行尾盘隔夜套利 14:43 决策任务")
     parser.add_argument("--run-principal-capital-scan", action="store_true",
                         help="[插件] 执行主力资金双向扫描")
+    parser.add_argument("--run-radar-once", action="store_true",
+                        help="[插件] 执行 smart_money_radar 盘中雷达单轮扫描")
+    parser.add_argument("--run-radar-daemon", action="store_true",
+                        help="[插件] 启动 smart_money_radar 本地常驻雷达")
+    parser.add_argument("--verify-tdx", action="store_true",
+                        help="[插件] 验证 pytdx 行情源连通性")
     parser.add_argument("--refresh-data-assets", action="store_true",
                         help="刷新 zt_pool/quotes/index_snapshot 快照(仅本地/未来常驻Worker用; "
                              "当前 Render web+cron 部署下跨实例无效, 未接入 render.yaml)")
@@ -233,6 +248,18 @@ def main():
         _run_principal_capital_cli(args, logger)
         return
 
+    if args.run_radar_once:
+        _run_smart_money_radar_once_cli(args, logger)
+        return
+
+    if args.run_radar_daemon:
+        _run_smart_money_radar_daemon_cli(args, logger)
+        return
+
+    if args.verify_tdx:
+        _run_verify_tdx_cli(args, logger)
+        return
+
     if args.verify_sina_source:
         _run_verify_sina_source(logger)
         return
@@ -266,6 +293,49 @@ def _run_principal_capital_cli(args, logger):
         result.get("sell_fresh_count"),
         result.get("email_sent"),
     )
+
+
+def _run_smart_money_radar_once_cli(args, logger):
+    """[插件] 盘中雷达单轮扫描 CLI 入口。"""
+    try:
+        from .plugins.smart_money_radar import run_radar_once_cli
+    except ImportError as exc:
+        logger.error("盘中雷达插件未安装: %s", exc)
+        return
+    result = run_radar_once_cli(args)
+    logger.info(
+        "盘中雷达单轮: status=%s pool=%s hits=%s email=%s",
+        result.get("status"),
+        result.get("pool_count"),
+        result.get("hit_count"),
+        result.get("email_sent"),
+    )
+
+
+def _run_smart_money_radar_daemon_cli(args, logger):
+    """[插件] 盘中雷达常驻 CLI 入口。"""
+    try:
+        from .plugins.smart_money_radar import run_radar_daemon_cli
+    except ImportError as exc:
+        logger.error("盘中雷达插件未安装: %s", exc)
+        return
+    logger.info("盘中雷达常驻任务启动")
+    run_radar_daemon_cli(args)
+
+
+def _run_verify_tdx_cli(args, logger):
+    """[插件] 验证 pytdx 行情源连通性。"""
+    try:
+        from .plugins.smart_money_radar import run_verify_tdx_cli
+    except ImportError as exc:
+        logger.error("盘中雷达插件未安装: %s", exc)
+        raise SystemExit(1)
+    result = run_verify_tdx_cli(args)
+    if result.get("ok"):
+        logger.info("TDX 验证通过: server=%s", result.get("server"))
+        raise SystemExit(0)
+    logger.error("TDX 验证失败: %s", result.get("error"))
+    raise SystemExit(1)
 
 
 def _run_verify_sina_source(logger):

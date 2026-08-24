@@ -41,8 +41,18 @@ new-france/
 ├── render.yaml                 # Render Blueprint
 ├── requirements.txt
 ├── CLAUDE.md                   # 本文件
+├── smart_money_radar_开发方案.md  # 盘中雷达插件完整开发方案（codex 施工文档）
 └── .claude/skills/             # Agent Skills
     └── pre-deploy-review.md    # 部署前代码审查
+
+## 盘中雷达插件（待开发）
+
+backend/plugins/smart_money_radar/  ← 聪明钱预启动雷达（本地运行，国内 IP）
+- 基于 pytdx 采集观察池实时五档/逐笔数据（已实测可用，2026-08-18）
+- 全 12 个盘中指标 → Smart Money Score + Launch Score → 四阶段报警 → 邮件
+- 采集端必须跑在本地电脑（国内 IP），Render 那套完全不动
+- 详细方案见：smart_money_radar_开发方案.md
+- Phase 0 数据验证已完成；从 Phase 1 开始施工
 ```
 
 ## 开发工作流
