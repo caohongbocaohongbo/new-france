@@ -7,15 +7,30 @@ from backend.plugins.principal_capital.notifier import send_email
 from .config import CONFIG
 
 
+# 按最高命中阶段生成 subject 前缀：emoji 是邮件标题里唯一跨客户端的"颜色"手段，
+# 🔴 体现最高紧急度，让重要信号在收件箱一眼可辨。
+STAGE_SUBJECT_PREFIX = {
+    "启动": "🚀🔴【启动】",
+    "启动前夕": "⚡🔴【预启动】",
+    "吸筹确认": "🟠【吸筹】",
+    "启动失败": "⚠️【失效】",
+    "潜伏": "🟡【观察】",
+}
+DEFAULT_SUBJECT_PREFIX = "🟡【观察】"
+
+
 def _tag() -> str:
     return "《本地雷达》" if CONFIG.get("radar_source") == "local" else "《云端雷达》"
 
 
 def build_payload(hits: list, source: str, now: datetime) -> tuple:
     tag = _tag()
-    subject = f"{tag} 盘中信号 {len(hits)}只 {now.strftime('%H:%M')}"
     priority = {"启动前夕": 0, "启动": 0, "吸筹确认": 1, "潜伏": 2, "启动失败": 3, "观察池": 4}
     hits = sorted(hits, key=lambda item: (priority.get(item.get("stage"), 9), -(float(item.get("smart_money_score") or 0))))
+    # hits 已按阶段优先级排序，第一个即最高优先级阶段，据此决定标题紧急度
+    top_stage = hits[0].get("stage") if hits else None
+    stage_prefix = STAGE_SUBJECT_PREFIX.get(top_stage, DEFAULT_SUBJECT_PREFIX)
+    subject = f"{stage_prefix}{tag} {len(hits)}只 {now.strftime('%H:%M')}"
     lines = [f"{tag} {source} 盘中雷达命中 {len(hits)} 只", ""]
     rows = []
     for i, item in enumerate(hits):

@@ -6,6 +6,16 @@ import pytest
 BEIJING_TZ = timezone(timedelta(hours=8))
 
 
+@pytest.fixture(autouse=True)
+def _no_snapshot_network(monkeypatch):
+    """铁律：测试绝不联网。默认 stub 掉 load_watch_pool 的快照回退，
+    返回 None（等同快照不可用）。需要验证快照回退的用例自行 monkeypatch 覆盖。
+    同时清空模块级 _POOL_CACHE，隔离测试间的观察池缓存串扰。"""
+    from backend.plugins.smart_money_radar import service
+    monkeypatch.setattr(service, "_fetch_snapshot_json", lambda *a, **k: None)
+    service._POOL_CACHE.update({"expires_at": None, "items": [], "source_file": None})
+
+
 @pytest.fixture
 def fixed_now():
     return datetime(2026, 8, 18, 10, 30, tzinfo=BEIJING_TZ)

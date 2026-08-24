@@ -249,12 +249,17 @@ def build_email_payload(
     sell_fresh: pd.DataFrame,
     now: datetime,
     source_status: dict,
+    include_buy: bool = True,
 ) -> Tuple[str, str, str]:
     buy_count = len(buy_fresh)
     sell_count = len(sell_fresh)
     danger_count = sum(1 for _, row in sell_fresh.iterrows() if row.get("severity") == "danger")
     stamp = now.strftime("%Y-%m-%d %H:%M")
-    if buy_count and sell_count:
+    if not include_buy:
+        # 降级模式：买入区不再进邮件（仅作雷达数据源），标题弱化为「行情参考」
+        # 明确低优先级，把注意力让给「盘中雷达」邮件
+        subject = f"[行情参考] 主力派发 {sell_count} 只 - {stamp}"
+    elif buy_count and sell_count:
         suffix = f" [DANGER级×{danger_count}]" if danger_count else ""
         subject = f"买{buy_count}卖{sell_count}{suffix} - {stamp}"
     elif buy_count:
@@ -283,7 +288,10 @@ def build_email_payload(
         return "\n".join(lines) + "\n"
 
     notices = _staleness_notices(source_status)
-    text = text_lines(buy_fresh, "买入区") + "\n" + text_lines(sell_fresh, "卖出区", include_severity=True)
+    if include_buy:
+        text = text_lines(buy_fresh, "买入区") + "\n" + text_lines(sell_fresh, "卖出区", include_severity=True)
+    else:
+        text = text_lines(sell_fresh, "卖出区", include_severity=True)
     if notices:
         text += "\n【数据滞后提示】\n" + "\n".join(f"· {n}" for n in notices) + "\n"
     text += f"\n数据源: {source_status.get('active_source', '--')} / stale={source_status.get('is_stale', False)}\n"
@@ -322,15 +330,23 @@ def build_email_payload(
             "border-radius:8px;margin-bottom:12px'><strong>数据滞后提示</strong>"
             f"<ul style='margin:6px 0 0;padding-left:20px'>{items}</ul></div>"
         )
+    if include_buy:
+        buy_section = f"""<h3 style="color:#b91c1c">买入区</h3>
+<table style="width:100%;border-collapse:collapse;margin-bottom:16px" border="1" cellspacing="0" cellpadding="8">
+<tr style="background:#fef2f2"><th>代码</th><th>名称</th><th>价格</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
+{html_rows(buy_fresh)}
+</table>"""
+    else:
+        buy_section = (
+            "<p style='margin:0 0 16px;padding:10px 12px;background:#f8fafc;color:#64748b;"
+            "border-radius:8px;font-size:13px'>本邮件为主力资金<strong>派发参考</strong>（低优先级）。"
+            "重要买入信号请以「盘中雷达」邮件为准。</p>"
+        )
     html_content = f"""<!DOCTYPE html>
 <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:20px;color:#111827">
 <h2 style="margin:0 0 12px">主力资金双向监控</h2>
 {stale_banner}
-<h3 style="color:#b91c1c">买入区</h3>
-<table style="width:100%;border-collapse:collapse;margin-bottom:16px" border="1" cellspacing="0" cellpadding="8">
-<tr style="background:#fef2f2"><th>代码</th><th>名称</th><th>价格</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
-{html_rows(buy_fresh)}
-</table>
+{buy_section}
 <h3 style="color:#1d4ed8">卖出区</h3>
 <table style="width:100%;border-collapse:collapse" border="1" cellspacing="0" cellpadding="8">
 <tr style="background:#eff6ff"><th>代码</th><th>名称</th><th>价格</th><th>时间</th><th>占比</th><th>主力净流入</th><th>成交额</th><th>涨幅</th><th>级别</th></tr>
@@ -557,14 +573,22 @@ def run_principal_capital_scan(
 
     email_sent = False
     email_error = None
-    if (not buy_fresh.empty or not sell_fresh.empty) and not dry_run:
-        subject, text, html_content = build_email_payload(buy_fresh, sell_fresh, now, source_status)
+    # 降级：买入区不再单独触发邮件（仅作雷达数据源写入 latest.json），
+    # 仅当有卖出/派发信号时才发邮件，且邮件正文不含买入区（include_buy=False）
+    if not sell_fresh.empty and not dry_run:
+        subject, text, html_content = build_email_payload(
+            buy_fresh, sell_fresh, now, source_status, include_buy=False
+        )
         email_sent, email_error = send_email(subject, text, html_content, get_smtp_config())
 
-    if dry_run or email_sent:
+    # 买入去重独立于邮件：买入不再发邮件但仍写入 latest.json 供雷达消费，
+    # 当日去重需照常保存，否则同一只票每轮都会重复进 buy_triggered。
+    if dry_run or not buy_fresh.empty:
         buy_map = _update_notified_map(buy_map, buy_fresh, now)
-        sell_map = _update_notified_map(sell_map, sell_fresh, now)
         save_notified_map(today, DIRECTION_BUY, buy_map)
+    # 卖出去重绑定邮件发送成功（保持原冷却语义：发出去才算已通知）
+    if dry_run or email_sent:
+        sell_map = _update_notified_map(sell_map, sell_fresh, now)
         save_notified_map(today, DIRECTION_SELL, sell_map)
 
     result = {

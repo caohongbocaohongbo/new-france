@@ -185,6 +185,25 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
         self.assertIn("价10.00", text)
         self.assertIn("10.00", html)
 
+    def test_build_email_payload_degraded_mode_drops_buy_and_weakens_subject(self):
+        """降级模式 include_buy=False：标题弱化为[行情参考]、无DANGER、正文无买入区。"""
+        buy = pd.DataFrame([_row("600001", "主板一号", 60)])
+        sell = pd.DataFrame([{**_row("600002", "主板二号", -55), "severity": "danger"}])
+        subject, text, html = pcs.build_email_payload(
+            buy, sell,
+            datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ),
+            {"active_source": "eastmoney", "is_stale": False},
+            include_buy=False,
+        )
+        self.assertIn("[行情参考]", subject)
+        self.assertIn("主力派发", subject)
+        self.assertNotIn("DANGER", subject)
+        # 正文买入区被移除，卖出区保留
+        self.assertNotIn("买入区", text)
+        self.assertIn("卖出区", text)
+        self.assertNotIn("<h3 style=\"color:#b91c1c\">买入区</h3>", html)
+        self.assertIn("盘中雷达", html)  # 降级说明引导到雷达邮件
+
     def test_fund_flow_cache_notice_reports_minutes(self):
         """资金流缓存降级：邮件须标注约 N 分钟前（分钟级）。"""
         buy = pd.DataFrame([_row("600001", "主板一号", 60)])
