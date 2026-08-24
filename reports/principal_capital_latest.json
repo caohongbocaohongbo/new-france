@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-24T13:43:13.214062+08:00",
+  "now": "2026-08-24T13:49:05.361606+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 10198
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 3704
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 49033
+        "latency_ms": 59729
       }
     ],
     "is_stale": false,
@@ -31,12 +33,45 @@
     "verify_result": null
   },
   "scanned": 2779,
-  "buy_candidates": 14,
+  "buy_candidates": 15,
   "sell_candidates": 25,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "002975",
+      "name": "博杰股份",
+      "price": 110.61,
+      "change_pct": 10.005,
+      "total_amount": 539380373.76,
+      "main_net_inflow": 274722720.66,
+      "main_inflow_ratio": 50.933,
+      "super_net": 166878855.54,
+      "big_net": 107843865.12,
+      "mid_net": 58325759.1,
+      "small_net": 21967146.0,
+      "source": "sina",
+      "flow_time": "2026-08-24T13:49:05.361606+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "002496",
+      "name": "辉丰股份",
+      "price": 2.01,
+      "change_pct": -3.8277,
+      "total_amount": 42573686.0,
+      "main_net_inflow": -13601897.0,
+      "main_inflow_ratio": -31.9491,
+      "super_net": -5165754.0,
+      "big_net": -8436143.0,
+      "mid_net": 495068.0,
+      "small_net": 1243679.0,
+      "source": "sina",
+      "flow_time": "2026-08-24T13:49:05.361606+08:00",
+      "severity": "warn"
+    }
+  ]
 }
