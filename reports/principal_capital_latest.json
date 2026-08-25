@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-25T13:07:01.973350+08:00",
+  "now": "2026-08-25T13:13:03.581616+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3220
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1395
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 58488
+        "latency_ms": 52595
       }
     ],
     "is_stale": false,
@@ -30,59 +32,13 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1207,
-  "buy_candidates": 14,
+  "scanned": 1228,
+  "buy_candidates": 12,
   "sell_candidates": 1,
-  "buy_fresh_count": 3,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002742",
-      "name": "冀衡医药",
-      "price": 4.68,
-      "change_pct": 10.1176,
-      "total_amount": 214405936.76,
-      "main_net_inflow": 149372755.28,
-      "main_inflow_ratio": 69.6682,
-      "super_net": 101476748.0,
-      "big_net": 47896007.28,
-      "mid_net": 16126809.72,
-      "small_net": 10169857.76,
-      "source": "sina",
-      "flow_time": "2026-08-25T13:07:01.973350+08:00"
-    },
-    {
-      "code": "600838",
-      "name": "上海九百",
-      "price": 8.02,
-      "change_pct": 10.0137,
-      "total_amount": 92750033.71,
-      "main_net_inflow": 55442556.72,
-      "main_inflow_ratio": 59.7763,
-      "super_net": 35260560.72,
-      "big_net": 20181996.0,
-      "mid_net": 13016588.02,
-      "small_net": 9526001.67,
-      "source": "sina",
-      "flow_time": "2026-08-25T13:07:01.973350+08:00"
-    },
-    {
-      "code": "600103",
-      "name": "青山纸业",
-      "price": 3.15,
-      "change_pct": 10.1399,
-      "total_amount": 472957560.35,
-      "main_net_inflow": 274659346.5,
-      "main_inflow_ratio": 58.0727,
-      "super_net": 194019876.7,
-      "big_net": 80639469.8,
-      "mid_net": 35071927.0,
-      "small_net": 18377740.45,
-      "source": "sina",
-      "flow_time": "2026-08-25T13:07:01.973350+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
