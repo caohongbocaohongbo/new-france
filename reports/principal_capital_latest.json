@@ -1,88 +1,45 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-25T10:12:14.834142+08:00",
+  "now": "2026-08-25T10:18:01.425565+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4330
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 17670
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 43735
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 51835
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 420,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1755,
   "buy_candidates": 33,
   "sell_candidates": 3,
-  "buy_fresh_count": 3,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002418",
-      "name": "康盛股份",
-      "price": 4.05,
-      "change_pct": 10.0543,
-      "total_amount": 180950886.32,
-      "main_net_inflow": 103683983.17,
-      "main_inflow_ratio": 57.2995,
-      "super_net": 68046704.67,
-      "big_net": 35637278.5,
-      "mid_net": 9942228.15,
-      "small_net": 28495.0,
-      "source": "sina",
-      "flow_time": "2026-08-25T10:12:14.834142+08:00"
-    },
-    {
-      "code": "600507",
-      "name": "方大特钢",
-      "price": 4.26,
-      "change_pct": 1.4286,
-      "total_amount": 45848540.54,
-      "main_net_inflow": 25249052.56,
-      "main_inflow_ratio": 55.0706,
-      "super_net": 24957005.56,
-      "big_net": 292047.0,
-      "mid_net": 1883004.62,
-      "small_net": 1841703.0,
-      "source": "sina",
-      "flow_time": "2026-08-25T10:12:14.834142+08:00"
-    },
-    {
-      "code": "600569",
-      "name": "安阳钢铁",
-      "price": 1.8,
-      "change_pct": 2.2727,
-      "total_amount": 17769473.97,
-      "main_net_inflow": 9227161.8,
-      "main_inflow_ratio": 51.927,
-      "super_net": 6379545.8,
-      "big_net": 2847616.0,
-      "mid_net": -13398.17,
-      "small_net": -575320.0,
-      "source": "sina",
-      "flow_time": "2026-08-25T10:12:14.834142+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
