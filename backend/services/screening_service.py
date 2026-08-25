@@ -613,6 +613,53 @@ async def run_full_pipeline(
                 s.adjusted_score = min(s.adjusted_score, 54.0)
             logger.info(f"  降级: {s.name}({s.code}) {old_rec} → {s.recommendation}")
 
+    # [邮件升级] 模块 A：生成可执行操作计划（在审核降级完成后填充，避免仓位基于未降级得分计算）
+    if runtime_config.get("actionPlan", {}).get("enabled", True):
+        from .action_planner import build_action_plan
+        for s in scored:
+            if s.recommendation in ("STRONG_BUY", "BUY", "WATCH"):
+                try:
+                    plan = build_action_plan(s, historical.get(s.code))
+                    if plan:
+                        s.extra["action_plan"] = plan
+                except Exception as e:
+                    logger.warning(f"[邮件升级] 操作计划生成失败 {s.code}: {e}")
+    else:
+        logger.info("[邮件升级] 操作计划已禁用")
+
+    # [邮件升级] 模块 B：策略胜率回测（滚动模拟，零持久化，失败不阻断）
+    backtest_result = None
+    if runtime_config.get("backtest", {}).get("enabled", True):
+        try:
+            from .backtest import run_rolling_backtest
+            hold_days = runtime_config.get("backtest", {}).get("holdDays", [1, 3, 5])
+            backtest_result = run_rolling_backtest(
+                historical, runtime_config.get("strategy", {}), hold_days_list=hold_days
+            )
+            logger.info("[邮件升级] 回测完成: 样本=%s", backtest_result.get("sample_count", 0))
+        except Exception as e:
+            logger.warning(f"[邮件升级] 回测失败，跳过: {e}")
+    else:
+        logger.info("[邮件升级] 回测已禁用")
+
+    # [邮件升级] 模块 C：LLM 智能解读（带规则降级）
+    insights = {}
+    if runtime_config.get("llm", {}).get("enabled", False):
+        try:
+            from .llm_insight import generate_insights
+            insights = await generate_insights(scored, backtest_result)
+        except Exception as e:
+            logger.warning(f"[邮件升级] LLM 解读异常，回退规则文案: {e}")
+            insights = {}
+    else:
+        logger.info("[邮件升级] LLM 解读未启用，使用规则文案")
+    from .llm_insight import rule_based_insight
+    for s in scored:
+        if s.code in insights:
+            s.extra["insight"] = insights[s.code]
+        elif s.recommendation in ("STRONG_BUY", "BUY"):
+            s.extra["insight"] = rule_based_insight(s)
+
     recommended_codes = {
         s.code for s in scored
         if str(s.recommendation).upper() in {"STRONG_BUY", "BUY", "WATCH"}
@@ -636,7 +683,8 @@ async def run_full_pipeline(
                                   audit_results=audit_results,
                                   zt_meta=zt_meta,
                                   index_snapshot=index_snapshot,
-                                  national_team=national_team_summary)
+                                  national_team=national_team_summary,
+                                  backtest=backtest_result)
     if block_problems:
         logger.error("核心行情源非目标交易日有效数据，阻断正式推荐外发: %s", block_problems)
         if not dry_run:

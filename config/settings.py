@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # ---- 策略 ----
     tracking_days: int = 30
 
+    # ---- LLM 智能解读（邮件升级） ----
+    anthropic_api_key: str = Field(default="", repr=False)
+
     class Config:
         env_file = str(PROJECT_DIR / ".env")
         env_file_encoding = "utf-8"

@@ -357,7 +357,8 @@ def send_notification(scored_stocks, target_date: date,
                       audit_results: dict = None,
                       zt_meta: dict = None,
                       index_snapshot: dict = None,
-                      national_team: dict = None) -> bool:
+                      national_team: dict = None,
+                      backtest: dict = None) -> bool:
     """发送邮件通知"""
     notify_config = _get_notify_config()
     if not notify_config["email_enabled"]:
@@ -374,6 +375,8 @@ def send_notification(scored_stocks, target_date: date,
         index_snapshot = {}
     if national_team is None:
         national_team = {}
+    if backtest is None:
+        backtest = {}
 
     # 按配置排序涨停列表
     sort_by, sort_order = _get_zt_sort_config()
@@ -382,8 +385,8 @@ def send_notification(scored_stocks, target_date: date,
     # 监控列表条数（与前端一致）
     wl_count = _get_watchlist_count()
 
-    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results, zt_meta, index_snapshot, national_team)
-    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results, zt_meta, index_snapshot, national_team)
+    text_content = _build_text_content(scored_stocks, target_date, index_gain, zt_list, wl_count, audit_results, zt_meta, index_snapshot, national_team, backtest)
+    html_content = _build_html_content(scored_stocks, target_date, index_gain, zt_list, wl_count, sort_by, audit_results, zt_meta, index_snapshot, national_team, backtest)
     ok, _ = _send_email(
         subject=f"New France 涨停回撤推荐 - {target_date.strftime('%Y-%m-%d')}",
         text_content=text_content,
@@ -470,7 +473,7 @@ def send_data_integrity_alert(target_date: date, problems: list[dict], config: d
 # Plain-text content (fallback for email clients that don't render HTML)
 # ---------------------------------------------------------------------------
 
-def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None, national_team: dict = None) -> str:
+def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None, national_team: dict = None, backtest: dict = None) -> str:
     if audit_results is None:
         audit_results = {}
     if zt_meta is None:
@@ -479,6 +482,8 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
         index_snapshot = {}
     if national_team is None:
         national_team = {}
+    if backtest is None:
+        backtest = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -522,6 +527,18 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
     if audit_results.get("stocks"):
         lines.append(f"审核通过率: {audit_results.get('pass_rate', 100):.0f}% | 降级: {audit_results.get('downgraded', 0)} 只")
     lines.append("")
+
+    # [邮件升级] 战法历史表现（滚动回测）
+    if backtest:
+        lines.append("【战法历史表现】")
+        lines.append(
+            f"样本数: {backtest.get('sample_count', 0)} | "
+            f"胜率 T+1={_text_win_rate(backtest, 1)} T+3={_text_win_rate(backtest, 3)} T+5={_text_win_rate(backtest, 5)} | "
+            f"均收益 T+1={_text_avg_return(backtest, 1)} T+3={_text_avg_return(backtest, 3)} T+5={_text_avg_return(backtest, 5)} | "
+            f"平均最大回撤 {backtest.get('avg_max_drawdown', 0):.2f}%"
+        )
+        lines.append(f"说明: {backtest.get('disclaimer', '')}")
+        lines.append("")
 
     if not (strong or buy or watch):
         lines.append("今日无符合条件的回撤买入信号。")
@@ -569,6 +586,23 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
                         continue
                     mark = "✓" if r.passed else "✗"
                     lines.append(f"    {mark} {r.name}({r.weight*100:.0f}%): {r.detail}")
+                # [邮件升级] 可执行操作计划 + 智能解读
+                _extra = getattr(s, "extra", {}) or {}
+                _plan = _extra.get("action_plan")
+                if _plan:
+                    lines.append(
+                        f"  操作计划: 买入{_fmt_price(_plan.get('buy_low'))}-{_fmt_price(_plan.get('buy_high'))} | "
+                        f"止损{_fmt_price(_plan.get('stop_loss'))} | "
+                        f"目标{_fmt_price(_plan.get('target_1'))}/{_fmt_price(_plan.get('target_2'))} | "
+                        f"盈亏比{_plan.get('risk_reward')} | 仓位{_plan.get('position')}"
+                    )
+                else:
+                    lines.append("  操作计划: 数据不足，暂不给出操作计划")
+                _insight = _extra.get("insight")
+                if _insight:
+                    lines.append(f"  推荐理由: {_insight.get('reason', '--')}")
+                    lines.append(f"  风险提示: {_insight.get('risk', '--')}")
+                    lines.append(f"  操作逻辑: {_insight.get('operation', '--')}")
                 lines.append("")
 
     lines.append("-" * 40)
@@ -588,7 +622,7 @@ def _build_text_content(stocks, target_date, index_gain, zt_list: list, wl_count
 # HTML content (primary — 带样式的表格)
 # ---------------------------------------------------------------------------
 
-def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None, national_team: dict = None) -> str:
+def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count: int = 0, sort_by: str = "seal_time", audit_results: dict = None, zt_meta: dict = None, index_snapshot: dict = None, national_team: dict = None, backtest: dict = None) -> str:
     if audit_results is None:
         audit_results = {}
     if zt_meta is None:
@@ -597,6 +631,8 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
         index_snapshot = {}
     if national_team is None:
         national_team = {}
+    if backtest is None:
+        backtest = {}
     date_str = target_date.strftime("%Y-%m-%d")
     weekday = WEEKDAY_CN[target_date.weekday()]
 
@@ -615,6 +651,10 @@ def _build_html_content(stocks, target_date, index_gain, zt_list: list, wl_count
 
     # 筛选结果
     parts.append(_html_screening_summary(len(strong), len(buy), len(watch), audit_results))
+
+    # [邮件升级] 战法历史表现卡片
+    if backtest:
+        parts.append(_html_backtest_card(backtest))
 
     if not (strong or buy or watch):
         parts.append('<p style="color:#667085;">今日无符合条件的回撤买入信号。</p>')
@@ -826,6 +866,9 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None,
         added_date = extra.get("added_date") or "--"
         screening_date = target_date.strftime("%Y-%m-%d") if target_date else "--"
         history_html = _html_price_history(_stock_price_history(s))
+        # [邮件升级] 操作计划 + 智能解读
+        action_plan_html = _html_action_plan(extra.get("action_plan"))
+        insight_html = _html_insight(extra.get("insight"))
         items_html += f"""
     <div style="background:#F8FAFC;border:1px solid #E1E7EF;border-radius:8px;padding:16px;margin-bottom:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -849,6 +892,8 @@ def _html_recommendation_section(level_stocks, label, color, audit_results=None,
       </div>
       {downgrade_html}
       {history_html}
+      {action_plan_html}
+      {insight_html}
       <div style="margin-top:4px">{factors_html}</div>
     </div>"""
 
@@ -895,6 +940,105 @@ def _html_price_history(rows: list) -> str:
           </tbody>
         </table>
       </div>"""
+
+
+# ---------------------------------------------------------------------------
+# [邮件升级] 可执行操作计划 + 战法回测 + 智能解读 渲染辅助
+# ---------------------------------------------------------------------------
+
+def _text_win_rate(backtest: dict, day: int) -> str:
+    value = (backtest.get("win_rate") or {}).get(day)
+    if value is None:
+        return "--"
+    try:
+        return f"{float(value):.1f}%"
+    except (TypeError, ValueError):
+        return "--"
+
+
+def _text_avg_return(backtest: dict, day: int) -> str:
+    value = (backtest.get("avg_return") or {}).get(day)
+    if value is None:
+        return "--"
+    try:
+        return f"{float(value):+.2f}%"
+    except (TypeError, ValueError):
+        return "--"
+
+
+def _fmt_price(value, digits: int = 2) -> str:
+    if value is None or value == "":
+        return "--"
+    try:
+        return f"{float(value):.{digits}f}"
+    except (TypeError, ValueError):
+        return "--"
+
+
+def _html_action_plan(plan) -> str:
+    if not plan:
+        return (
+            '<div style="margin-top:8px;padding:10px 12px;background:#F8FAFC;border:1px solid #E1E7EF;border-radius:6px">'
+            '<div style="font-size:12px;color:#172033;font-weight:600;margin-bottom:4px">操作计划</div>'
+            '<div style="font-size:12px;color:#667085">数据不足，暂不给出操作计划</div></div>'
+        )
+    warnings_html = ""
+    for w in plan.get("warnings") or []:
+        warnings_html += f'<span style="color:#B54708;font-size:11px;margin-right:8px">{html.escape(str(w))}</span>'
+    return f'''
+      <div style="margin-top:8px;padding:10px 12px;background:#F8FAFC;border:1px solid #E1E7EF;border-radius:6px">
+        <div style="font-size:12px;color:#172033;font-weight:600;margin-bottom:6px">操作计划 <span style="color:#667085;font-weight:400">{html.escape(str(plan.get("position") or "--"))}</span></div>
+        <div style="font-size:12px;color:#172033;line-height:1.8">
+          买入区间 {_fmt_price(plan.get("buy_low"))} ~ {_fmt_price(plan.get("buy_high"))} |
+          止损 {_fmt_price(plan.get("stop_loss"))} |
+          目标1 {_fmt_price(plan.get("target_1"))} |
+          目标2 {_fmt_price(plan.get("target_2"))} |
+          盈亏比 {plan.get("risk_reward") if plan.get("risk_reward") is not None else "--"}
+        </div>
+        <div style="font-size:11px;color:#667085;margin-top:4px">支撑 {_fmt_price(plan.get("support"))} · 波动率(ATR/现价) {plan.get("atr_pct") if plan.get("atr_pct") is not None else "--"}{" " if warnings_html else ""}{warnings_html}</div>
+      </div>'''
+
+
+def _html_insight(insight) -> str:
+    if not insight:
+        return ""
+
+    def _cell(label, color, text):
+        return (
+            f'<div style="margin-top:6px"><span style="color:{color};font-weight:600;font-size:12px">{label}</span>'
+            f'<span style="color:#172033;font-size:12px;margin-left:6px">{html.escape(str(text or "--"))}</span></div>'
+        )
+
+    return f'''
+      <div style="margin-top:8px;padding:10px 12px;background:#F3F6FA;border:1px solid #E1E7EF;border-radius:6px">
+        {_cell("推荐理由", "#16A36A", insight.get("reason"))}
+        {_cell("风险提示", "#E74C3C", insight.get("risk"))}
+        {_cell("操作逻辑", "#3B82F6", insight.get("operation"))}
+      </div>'''
+
+
+def _html_backtest_card(backtest) -> str:
+    if not backtest:
+        return ""
+    return f'''
+<div style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+  <h2 style="color:#172033;font-size:16px;margin:0 0 12px 0;font-weight:600">战法历史表现 <span style="color:#667085;font-weight:400;font-size:13px">(滚动回测)</span></h2>
+  <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead>
+      <tr style="background:#EEF2F6;color:#5B6472">
+        <th style="padding:8px 10px;text-align:left;font-weight:600">持有期</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:600">胜率</th>
+        <th style="padding:8px 10px;text-align:right;font-weight:600">平均收益</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:8px 10px;color:#172033">T+1</td><td style="padding:8px 10px;text-align:right;color:#172033">{_text_win_rate(backtest, 1)}</td><td style="padding:8px 10px;text-align:right;color:#172033">{_text_avg_return(backtest, 1)}</td></tr>
+      <tr><td style="padding:8px 10px;color:#172033">T+3</td><td style="padding:8px 10px;text-align:right;color:#172033">{_text_win_rate(backtest, 3)}</td><td style="padding:8px 10px;text-align:right;color:#172033">{_text_avg_return(backtest, 3)}</td></tr>
+      <tr><td style="padding:8px 10px;color:#172033">T+5</td><td style="padding:8px 10px;text-align:right;color:#172033">{_text_win_rate(backtest, 5)}</td><td style="padding:8px 10px;text-align:right;color:#172033">{_text_avg_return(backtest, 5)}</td></tr>
+    </tbody>
+  </table>
+  <p style="color:#667085;font-size:11px;line-height:1.6;margin:10px 0 0 0">样本 {backtest.get("sample_count", 0)} 个 · 平均最大回撤 {backtest.get("avg_max_drawdown", 0):.2f}% · {html.escape(str(backtest.get("disclaimer") or ""))}</p>
+</div>'''
 
 
 def _html_footer():

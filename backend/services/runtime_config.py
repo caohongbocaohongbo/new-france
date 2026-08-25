@@ -121,6 +121,10 @@ def _default_config() -> Dict[str, Any]:
             "cronExpression": "10 15 * * 1-5",
             "runTime": "15:10",
         },
+        # [邮件升级] 新增配置项（默认值）
+        "actionPlan": {"enabled": True},
+        "backtest": {"enabled": True, "holdDays": [1, 3, 5]},
+        "llm": {"enabled": False, "model": "claude-haiku-4-5-20251001"},
     }
 
 
@@ -288,6 +292,18 @@ def validate_config(config: Dict[str, Any]) -> Dict[str, Any]:
         "schedule": {
             "cronExpression": str(cfg.get("schedule", {}).get("cronExpression") or "10 15 * * 1-5"),
             "runTime": str(cfg.get("schedule", {}).get("runTime") or "15:10"),
+        },
+        # [邮件升级] 新增配置项（归一化，保持向后兼容，不参与权重/阈值校验）
+        "actionPlan": {
+            "enabled": bool((cfg.get("actionPlan") or {}).get("enabled", True)),
+        },
+        "backtest": {
+            "enabled": bool((cfg.get("backtest") or {}).get("enabled", True)),
+            "holdDays": [int(d) for d in ((cfg.get("backtest") or {}).get("holdDays") or [1, 3, 5])],
+        },
+        "llm": {
+            "enabled": bool((cfg.get("llm") or {}).get("enabled", False)),
+            "model": str((cfg.get("llm") or {}).get("model") or "claude-haiku-4-5-20251001"),
         },
     }
 
