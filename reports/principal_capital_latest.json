@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-25T10:30:13.704880+08:00",
+  "now": "2026-08-25T10:36:34.876952+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 9879
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 12522
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 55995
+        "latency_ms": 46899
       }
     ],
     "is_stale": false,
@@ -32,13 +30,44 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1258,
+  "scanned": 1196,
   "buy_candidates": 22,
   "sell_candidates": 3,
-  "buy_fresh_count": 0,
+  "buy_fresh_count": 2,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "000726",
+      "name": "鲁 泰Ａ",
+      "price": 5.95,
+      "change_pct": 0.8475,
+      "total_amount": 19507171.0,
+      "main_net_inflow": 11803813.0,
+      "main_inflow_ratio": 60.5101,
+      "super_net": 9350425.0,
+      "big_net": 2453388.0,
+      "mid_net": -152493.0,
+      "small_net": 718835.0,
+      "source": "sina",
+      "flow_time": "2026-08-25T10:36:34.876952+08:00"
+    },
+    {
+      "code": "601518",
+      "name": "吉林高速",
+      "price": 2.79,
+      "change_pct": 1.087,
+      "total_amount": 30046106.2,
+      "main_net_inflow": 15597594.2,
+      "main_inflow_ratio": 51.9122,
+      "super_net": 10016361.0,
+      "big_net": 5581233.2,
+      "mid_net": 2432685.0,
+      "small_net": 1973561.0,
+      "source": "sina",
+      "flow_time": "2026-08-25T10:36:34.876952+08:00"
+    }
+  ],
   "sell_triggered": []
 }
