@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T10:18:45.268622+08:00",
+  "now": "2026-08-26T10:24:35.510157+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3581
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1472
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40632
+        "latency_ms": 41406
       }
     ],
     "is_stale": false,
@@ -33,92 +31,28 @@
     "verify_result": null
   },
   "scanned": 2779,
-  "buy_candidates": 25,
-  "sell_candidates": 32,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 4,
+  "buy_candidates": 20,
+  "sell_candidates": 21,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002395",
-      "name": "双象股份",
-      "price": 12.88,
-      "change_pct": 5.3148,
-      "total_amount": 32834741.0,
-      "main_net_inflow": 17058001.0,
-      "main_inflow_ratio": 51.9511,
-      "super_net": 9789899.0,
-      "big_net": 7268102.0,
-      "mid_net": -133215.0,
-      "small_net": 250975.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:18:45.268622+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "001390",
-      "name": "古麒绒材",
-      "price": 17.13,
-      "change_pct": -0.8107,
-      "total_amount": 10027713.2,
-      "main_net_inflow": -3528452.0,
-      "main_inflow_ratio": -35.187,
-      "super_net": -1074816.0,
-      "big_net": -2453636.0,
-      "mid_net": -167673.0,
-      "small_net": 17825.8,
+      "code": "001228",
+      "name": "永泰运",
+      "price": 28.91,
+      "change_pct": -1.4656,
+      "total_amount": 19211072.0,
+      "main_net_inflow": -6233487.0,
+      "main_inflow_ratio": -32.4474,
+      "super_net": 0.0,
+      "big_net": -6233487.0,
+      "mid_net": -1522090.0,
+      "small_net": -1154563.0,
       "source": "sina",
-      "flow_time": "2026-08-26T10:18:45.268622+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002986",
-      "name": "宇新股份",
-      "price": 13.26,
-      "change_pct": -1.0448,
-      "total_amount": 32462184.32,
-      "main_net_inflow": -10058087.68,
-      "main_inflow_ratio": -30.984,
-      "super_net": -12409261.0,
-      "big_net": 2351173.32,
-      "mid_net": 252139.8,
-      "small_net": 303348.36,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:18:45.268622+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002201",
-      "name": "九鼎新材",
-      "price": 8.09,
-      "change_pct": -0.6143,
-      "total_amount": 33332164.0,
-      "main_net_inflow": -10223628.0,
-      "main_inflow_ratio": -30.672,
-      "super_net": -6066579.0,
-      "big_net": -4157049.0,
-      "mid_net": -382192.0,
-      "small_net": -127178.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:18:45.268622+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002745",
-      "name": "木林森",
-      "price": 11.01,
-      "change_pct": -1.6964,
-      "total_amount": 135217910.96,
-      "main_net_inflow": -41106138.96,
-      "main_inflow_ratio": -30.3999,
-      "super_net": -29013158.96,
-      "big_net": -12092980.0,
-      "mid_net": 474161.0,
-      "small_net": -783571.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:18:45.268622+08:00",
+      "flow_time": "2026-08-26T10:24:35.510157+08:00",
       "severity": "warn"
     }
   ]
