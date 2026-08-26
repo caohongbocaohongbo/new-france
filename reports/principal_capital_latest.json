@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T13:36:58.248071+08:00",
+  "now": "2026-08-26T13:43:05.785564+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 7843
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1417
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 55406
+        "latency_ms": 52014
       }
     ],
     "is_stale": false,
@@ -32,8 +30,8 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1030,
-  "buy_candidates": 7,
+  "scanned": 1206,
+  "buy_candidates": 10,
   "sell_candidates": 6,
   "buy_fresh_count": 0,
   "sell_fresh_count": 0,
