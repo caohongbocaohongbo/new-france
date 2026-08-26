@@ -1,93 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T13:24:59.365581+08:00",
+  "now": "2026-08-26T13:31:04.571618+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 7311
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1643
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 52235
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 50764
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 415,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1373,
   "buy_candidates": 10,
   "sell_candidates": 8,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002078",
-      "name": "太阳纸业",
-      "price": 15.26,
-      "change_pct": 9.9424,
-      "total_amount": 834524063.4,
-      "main_net_inflow": 606550964.57,
-      "main_inflow_ratio": 72.6823,
-      "super_net": 505667354.7,
-      "big_net": 100883609.87,
-      "mid_net": 46712513.67,
-      "small_net": 15091463.16,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:24:59.365581+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "001390",
-      "name": "古麒绒材",
-      "price": 17.02,
-      "change_pct": -1.4476,
-      "total_amount": 23052738.2,
-      "main_net_inflow": -8113725.0,
-      "main_inflow_ratio": -35.1964,
-      "super_net": -2082323.0,
-      "big_net": -6031402.0,
-      "mid_net": -1381095.0,
-      "small_net": 436231.8,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:24:59.365581+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600751",
-      "name": "海航科技",
-      "price": 3.13,
-      "change_pct": -0.6349,
-      "total_amount": 65891402.48,
-      "main_net_inflow": -22200319.0,
-      "main_inflow_ratio": -33.6923,
-      "super_net": -16134317.0,
-      "big_net": -6066002.0,
-      "mid_net": -1183843.0,
-      "small_net": 318243.98,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:24:59.365581+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
