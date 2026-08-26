@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T11:05:37.471548+08:00",
+  "now": "2026-08-26T11:11:48.988323+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4106
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1380
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 61360
+        "latency_ms": 41540
       }
     ],
     "is_stale": false,
@@ -34,7 +32,7 @@
   },
   "scanned": 2779,
   "buy_candidates": 19,
-  "sell_candidates": 10,
+  "sell_candidates": 9,
   "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
@@ -42,19 +40,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603897",
-      "name": "长城科技",
-      "price": 30.12,
-      "change_pct": -2.9952,
-      "total_amount": 188667329.4,
-      "main_net_inflow": -62658813.4,
-      "main_inflow_ratio": -33.2113,
-      "super_net": -20290798.4,
-      "big_net": -42368015.0,
-      "mid_net": -7523942.0,
-      "small_net": 1456726.0,
+      "code": "603867",
+      "name": "新化股份",
+      "price": 28.79,
+      "change_pct": -0.4151,
+      "total_amount": 61054862.95,
+      "main_net_inflow": -19087234.9,
+      "main_inflow_ratio": -31.2624,
+      "super_net": -7152346.0,
+      "big_net": -11934888.9,
+      "mid_net": -5256594.45,
+      "small_net": -322185.86,
       "source": "sina",
-      "flow_time": "2026-08-26T11:05:37.471548+08:00",
+      "flow_time": "2026-08-26T11:11:48.988323+08:00",
       "severity": "warn"
     }
   ]
