@@ -1,75 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-08-25T14:31:28.133695+08:00",
+  "status": "skipped",
+  "reason": "未开盘",
+  "now": "2026-08-26T09:25:44.872216+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 48507
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 2098,
-  "buy_candidates": 17,
-  "sell_candidates": 2,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600715",
-      "name": "文投控股",
-      "price": 1.58,
-      "change_pct": 1.9355,
-      "total_amount": 35596606.0,
-      "main_net_inflow": 17889513.0,
-      "main_inflow_ratio": 50.2562,
-      "super_net": 15421213.0,
-      "big_net": 2468300.0,
-      "mid_net": 604506.0,
-      "small_net": 1597413.0,
-      "source": "sina",
-      "flow_time": "2026-08-25T14:31:28.133695+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "603668",
-      "name": "天马科技",
-      "price": 9.99,
-      "change_pct": 0.3012,
-      "total_amount": 56789472.0,
-      "main_net_inflow": -19188233.0,
-      "main_inflow_ratio": -33.7884,
-      "super_net": -20416358.0,
-      "big_net": 1228125.0,
-      "mid_net": 784642.0,
-      "small_net": 1810454.2,
-      "source": "sina",
-      "flow_time": "2026-08-25T14:31:28.133695+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
