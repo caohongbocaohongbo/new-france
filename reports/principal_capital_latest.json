@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T11:17:36.289875+08:00",
+  "now": "2026-08-26T11:24:27.669849+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3334
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?fid=f62&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A0%2Bt%3A6%2Bf%3A%212%2Cm%3A0%2Bt%3A13%2Bf%3A%212%2Cm%3A0%2Bt%3A80%2Bf%3A%212%2Cm%3A1%2Bt%3A2%2Bf%3A%212%2Cm%3A1%2Bt%3A23%2Bf%3A%212%2Cm%3A0%2Bt%3A7%2Bf%3A%212%2Cm%3A1%2Bt%3A3%2Bf%3A%212&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)')))",
-        "latency_ms": 61199
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 41188
+        "latency_ms": 44618
       }
     ],
     "is_stale": false,
@@ -34,59 +32,27 @@
   },
   "scanned": 2779,
   "buy_candidates": 19,
-  "sell_candidates": 10,
+  "sell_candidates": 8,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603229",
-      "name": "奥翔药业",
-      "price": 8.08,
-      "change_pct": -0.8589,
-      "total_amount": 51983787.98,
-      "main_net_inflow": -18758626.0,
-      "main_inflow_ratio": -36.0855,
-      "super_net": -16164207.25,
-      "big_net": -2594418.75,
-      "mid_net": -3088071.04,
-      "small_net": -163877.56,
+      "code": "001390",
+      "name": "古麒绒材",
+      "price": 17.17,
+      "change_pct": -0.579,
+      "total_amount": 13968757.2,
+      "main_net_inflow": -4413176.0,
+      "main_inflow_ratio": -31.5932,
+      "super_net": -1074816.0,
+      "big_net": -3338360.0,
+      "mid_net": -394210.0,
+      "small_net": 335968.8,
       "source": "sina",
-      "flow_time": "2026-08-26T11:17:36.289875+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "605133",
-      "name": "嵘泰股份",
-      "price": 27.8,
-      "change_pct": -0.8913,
-      "total_amount": 62747167.0,
-      "main_net_inflow": -18912967.0,
-      "main_inflow_ratio": -30.1415,
-      "super_net": -4682623.0,
-      "big_net": -14230344.0,
-      "mid_net": -2511736.0,
-      "small_net": -179542.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T11:17:36.289875+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603170",
-      "name": "宝立食品",
-      "price": 12.34,
-      "change_pct": -0.7241,
-      "total_amount": 14627314.0,
-      "main_net_inflow": -4398976.0,
-      "main_inflow_ratio": -30.0737,
-      "super_net": -3623173.0,
-      "big_net": -775803.0,
-      "mid_net": -918679.0,
-      "small_net": -646335.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T11:17:36.289875+08:00",
+      "flow_time": "2026-08-26T11:24:27.669849+08:00",
       "severity": "warn"
     }
   ]
