@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T10:48:14.132060+08:00",
+  "now": "2026-08-26T10:53:59.878379+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3469
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 3973
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 41314
+        "latency_ms": 42118
       }
     ],
     "is_stale": false,
@@ -31,61 +33,12 @@
     "verify_result": null
   },
   "scanned": 2779,
-  "buy_candidates": 18,
-  "sell_candidates": 11,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "buy_candidates": 19,
+  "sell_candidates": 10,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603093",
-      "name": "南华期货",
-      "price": 12.71,
-      "change_pct": 10.0433,
-      "total_amount": 361225973.69,
-      "main_net_inflow": 207501361.84,
-      "main_inflow_ratio": 57.4436,
-      "super_net": 173299703.68,
-      "big_net": 34201658.16,
-      "mid_net": 5418548.4,
-      "small_net": -1424088.25,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:48:14.132060+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600897",
-      "name": "厦门空港",
-      "price": 14.79,
-      "change_pct": 0.9556,
-      "total_amount": 28415401.05,
-      "main_net_inflow": -10093468.8,
-      "main_inflow_ratio": -35.5211,
-      "super_net": -10308661.4,
-      "big_net": 215192.6,
-      "mid_net": 510613.31,
-      "small_net": 354515.74,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:48:14.132060+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600984",
-      "name": "建设机械",
-      "price": 4.68,
-      "change_pct": -5.2632,
-      "total_amount": 690448450.13,
-      "main_net_inflow": -209893106.67,
-      "main_inflow_ratio": -30.3995,
-      "super_net": -237563462.1,
-      "big_net": 27670355.43,
-      "mid_net": 13219755.6,
-      "small_net": 3384769.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T10:48:14.132060+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
