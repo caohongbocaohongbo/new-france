@@ -1,124 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T13:12:58.923782+08:00",
+  "now": "2026-08-26T13:19:05.624324+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 9880
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1575
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 50899
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 50962
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 417,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1199,
   "buy_candidates": 10,
   "sell_candidates": 6,
-  "buy_fresh_count": 2,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600479",
-      "name": "千金药业",
-      "price": 11.02,
-      "change_pct": 9.98,
-      "total_amount": 233283159.02,
-      "main_net_inflow": 154869793.8,
-      "main_inflow_ratio": 66.387,
-      "super_net": 107778556.76,
-      "big_net": 47091237.04,
-      "mid_net": 29906737.2,
-      "small_net": 16258368.02,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:12:58.923782+08:00"
-    },
-    {
-      "code": "600362",
-      "name": "江西铜业",
-      "price": 48.57,
-      "change_pct": 10.0113,
-      "total_amount": 3478125285.63,
-      "main_net_inflow": 2020329158.03,
-      "main_inflow_ratio": 58.0867,
-      "super_net": 1840794605.38,
-      "big_net": 179534552.65,
-      "mid_net": 82797764.7,
-      "small_net": 17125782.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:12:58.923782+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "000755",
-      "name": "山西高速",
-      "price": 4.82,
-      "change_pct": 0.2079,
-      "total_amount": 15982851.0,
-      "main_net_inflow": -5400196.0,
-      "main_inflow_ratio": -33.7874,
-      "super_net": 0.0,
-      "big_net": -5400196.0,
-      "mid_net": 464195.0,
-      "small_net": -177168.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:12:58.923782+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601900",
-      "name": "南方传媒",
-      "price": 11.67,
-      "change_pct": -1.519,
-      "total_amount": 53181935.0,
-      "main_net_inflow": -17193170.0,
-      "main_inflow_ratio": -32.329,
-      "super_net": -8221815.0,
-      "big_net": -8971355.0,
-      "mid_net": -4285329.0,
-      "small_net": -1991762.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:12:58.923782+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "001228",
-      "name": "永泰运",
-      "price": 28.65,
-      "change_pct": -2.3517,
-      "total_amount": 34586827.0,
-      "main_net_inflow": -11020822.0,
-      "main_inflow_ratio": -31.8642,
-      "super_net": -1678416.0,
-      "big_net": -9342406.0,
-      "mid_net": -1985554.0,
-      "small_net": -1739431.0,
-      "source": "sina",
-      "flow_time": "2026-08-26T13:12:58.923782+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
