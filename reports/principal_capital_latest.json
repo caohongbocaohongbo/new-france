@@ -1,75 +1,45 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T14:31:13.021388+08:00",
+  "now": "2026-08-26T14:37:11.767566+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 9447
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 11704
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 54673
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 54856
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 434,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1764,
   "buy_candidates": 12,
   "sell_candidates": 4,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600468",
-      "name": "百利电气",
-      "price": 6.57,
-      "change_pct": 10.0503,
-      "total_amount": 289756813.4,
-      "main_net_inflow": 217924774.7,
-      "main_inflow_ratio": 75.2095,
-      "super_net": 175937586.8,
-      "big_net": 41987187.9,
-      "mid_net": 28239831.0,
-      "small_net": 19134533.7,
-      "source": "sina",
-      "flow_time": "2026-08-26T14:31:13.021388+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "002595",
-      "name": "豪迈科技",
-      "price": 46.85,
-      "change_pct": -2.1921,
-      "total_amount": 172303776.4,
-      "main_net_inflow": -63558639.25,
-      "main_inflow_ratio": -36.8875,
-      "super_net": -33815652.5,
-      "big_net": -29742986.75,
-      "mid_net": -12326304.7,
-      "small_net": -19915161.15,
-      "source": "sina",
-      "flow_time": "2026-08-26T14:31:13.021388+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
