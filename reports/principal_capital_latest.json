@@ -1,45 +1,58 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-26T14:37:11.767566+08:00",
+  "now": "2026-08-26T14:43:30.611861+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 9447
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 11704
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 54856
+        "status": "ok",
+        "latency_ms": 54855
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 434,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1764,
-  "buy_candidates": 12,
-  "sell_candidates": 4,
-  "buy_fresh_count": 0,
+  "scanned": 1004,
+  "buy_candidates": 8,
+  "sell_candidates": 3,
+  "buy_fresh_count": 1,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "601038",
+      "name": "一拖股份",
+      "price": 14.33,
+      "change_pct": 9.977,
+      "total_amount": 266377190.44,
+      "main_net_inflow": 138990034.28,
+      "main_inflow_ratio": 52.1779,
+      "super_net": 101116272.98,
+      "big_net": 37873761.3,
+      "mid_net": 20326611.16,
+      "small_net": 14431743.0,
+      "source": "sina",
+      "flow_time": "2026-08-26T14:43:30.611861+08:00"
+    }
+  ],
   "sell_triggered": []
 }
