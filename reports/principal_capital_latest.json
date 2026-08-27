@@ -1,44 +1,92 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T10:13:17.755136+08:00",
+  "now": "2026-08-27T10:18:58.301332+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5608
+      },
+      {
+        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1345
-      },
-      {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 35721
+        "status": "ok",
+        "latency_ms": 34278
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 383,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1686,
-  "buy_candidates": 15,
-  "sell_candidates": 35,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 1583,
+  "buy_candidates": 14,
+  "sell_candidates": 21,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "000506",
+      "name": "招金黄金",
+      "price": 22.23,
+      "change_pct": 9.995,
+      "total_amount": 1966319098.0,
+      "main_net_inflow": 983631341.0,
+      "main_inflow_ratio": 50.024,
+      "super_net": 957351478.02,
+      "big_net": 26279862.98,
+      "mid_net": 3806317.0,
+      "small_net": 0.0,
+      "source": "sina",
+      "flow_time": "2026-08-27T10:18:58.301332+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "002555",
+      "name": "三七互娱",
+      "price": 17.94,
+      "change_pct": -1.3744,
+      "total_amount": 263392613.0,
+      "main_net_inflow": -91451917.0,
+      "main_inflow_ratio": -34.7208,
+      "super_net": -79339855.48,
+      "big_net": -12112061.52,
+      "mid_net": 1517906.0,
+      "small_net": 1099184.0,
+      "source": "sina",
+      "flow_time": "2026-08-27T10:18:58.301332+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000507",
+      "name": "珠海港",
+      "price": 5.02,
+      "change_pct": -0.3968,
+      "total_amount": 14323768.52,
+      "main_net_inflow": -4811814.0,
+      "main_inflow_ratio": -33.5932,
+      "super_net": -1600579.0,
+      "big_net": -3211235.0,
+      "mid_net": 784123.0,
+      "small_net": -369841.52,
+      "source": "sina",
+      "flow_time": "2026-08-27T10:18:58.301332+08:00",
+      "severity": "warn"
+    }
+  ]
 }
