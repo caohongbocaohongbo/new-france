@@ -1,32 +1,35 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T13:54:05.095124+08:00",
+  "now": "2026-08-27T14:00:00.937531+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 8072
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 11685
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 50125
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 46801
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 422,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -34,26 +37,9 @@
   "buy_candidates": 16,
   "sell_candidates": 2,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "000507",
-      "name": "珠海港",
-      "price": 5.03,
-      "change_pct": -0.1984,
-      "total_amount": 29091514.92,
-      "main_net_inflow": -8821681.4,
-      "main_inflow_ratio": -30.3239,
-      "super_net": -1600579.0,
-      "big_net": -7221102.4,
-      "mid_net": 323804.0,
-      "small_net": -492851.52,
-      "source": "sina",
-      "flow_time": "2026-08-27T13:54:05.095124+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
