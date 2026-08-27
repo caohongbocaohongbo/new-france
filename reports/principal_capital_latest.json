@@ -1,205 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T10:54:35.158228+08:00",
+  "now": "2026-08-27T11:00:31.415694+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 7688
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 8086
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 35159
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 36449
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 392,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1814,
   "buy_candidates": 15,
   "sell_candidates": 34,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 9,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "605258",
-      "name": "协和电子",
-      "price": 31.9,
-      "change_pct": 10.0,
-      "total_amount": 111258167.9,
-      "main_net_inflow": 62265479.0,
-      "main_inflow_ratio": 55.9649,
-      "super_net": 40929130.0,
-      "big_net": 21336349.0,
-      "mid_net": 5632501.0,
-      "small_net": 1126699.9,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600023",
-      "name": "浙能电力",
-      "price": 4.89,
-      "change_pct": -1.2121,
-      "total_amount": 98789575.16,
-      "main_net_inflow": -47479316.16,
-      "main_inflow_ratio": -48.0611,
-      "super_net": -37930757.2,
-      "big_net": -9548558.96,
-      "mid_net": -760204.56,
-      "small_net": 435330.04,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600050",
-      "name": "中国联通",
-      "price": 4.28,
-      "change_pct": -0.6961,
-      "total_amount": 190601239.52,
-      "main_net_inflow": -69133202.4,
-      "main_inflow_ratio": -36.2711,
-      "super_net": -73795922.4,
-      "big_net": 4662720.0,
-      "mid_net": 3514292.48,
-      "small_net": 3397214.4,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603357",
-      "name": "设计总院",
-      "price": 6.01,
-      "change_pct": -1.1513,
-      "total_amount": 12237269.0,
-      "main_net_inflow": -4028917.0,
-      "main_inflow_ratio": -32.9233,
-      "super_net": 0.0,
-      "big_net": -4028917.0,
-      "mid_net": -333284.0,
-      "small_net": -747910.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600177",
-      "name": "雅戈尔",
-      "price": 7.77,
-      "change_pct": -1.5209,
-      "total_amount": 99678941.9,
-      "main_net_inflow": -32541667.52,
-      "main_inflow_ratio": -32.6465,
-      "super_net": -22872161.2,
-      "big_net": -9669506.32,
-      "mid_net": -2147230.9,
-      "small_net": 470700.32,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600064",
-      "name": "南京高科",
-      "price": 7.67,
-      "change_pct": -1.1598,
-      "total_amount": 55657614.0,
-      "main_net_inflow": -17947815.2,
-      "main_inflow_ratio": -32.2468,
-      "super_net": -12237651.0,
-      "big_net": -5710164.2,
-      "mid_net": -48924.8,
-      "small_net": 2016773.2,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002252",
-      "name": "上海莱士",
-      "price": 4.86,
-      "change_pct": -2.0161,
-      "total_amount": 110481851.0,
-      "main_net_inflow": -34403898.0,
-      "main_inflow_ratio": -31.1399,
-      "super_net": -30301737.0,
-      "big_net": -4102161.0,
-      "mid_net": 425347.0,
-      "small_net": 1776800.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600777",
-      "name": "新潮能源",
-      "price": 4.05,
-      "change_pct": -1.699,
-      "total_amount": 44443252.4,
-      "main_net_inflow": -13481307.4,
-      "main_inflow_ratio": -30.3338,
-      "super_net": -6509150.4,
-      "big_net": -6972157.0,
-      "mid_net": 229374.0,
-      "small_net": 778279.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601288",
-      "name": "农业银行",
-      "price": 6.74,
-      "change_pct": -1.7493,
-      "total_amount": 1265005739.42,
-      "main_net_inflow": -382870621.51,
-      "main_inflow_ratio": -30.2663,
-      "super_net": -274148047.41,
-      "big_net": -108722574.1,
-      "mid_net": -19341356.25,
-      "small_net": -1330523.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601228",
-      "name": "广州港",
-      "price": 3.05,
-      "change_pct": -2.2436,
-      "total_amount": 48553400.58,
-      "main_net_inflow": -14569164.68,
-      "main_inflow_ratio": -30.0065,
-      "super_net": -15482503.68,
-      "big_net": 913339.0,
-      "mid_net": 157767.9,
-      "small_net": 1813464.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:54:35.158228+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
