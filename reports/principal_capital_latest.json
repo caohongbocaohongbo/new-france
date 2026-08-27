@@ -1,140 +1,59 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T11:17:41.552596+08:00",
+  "now": "2026-08-27T11:23:26.943250+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2738
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1379
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 35793
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 36849
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 382,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1783,
   "buy_candidates": 15,
   "sell_candidates": 20,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 5,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002515",
-      "name": "金字火腿",
-      "price": 8.55,
-      "change_pct": 9.6154,
-      "total_amount": 981151680.91,
-      "main_net_inflow": 511098589.7,
-      "main_inflow_ratio": 52.0917,
-      "super_net": 489275577.31,
-      "big_net": 21823012.39,
-      "mid_net": -12348383.11,
-      "small_net": -2906318.2,
-      "source": "sina",
-      "flow_time": "2026-08-27T11:17:41.552596+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601186",
-      "name": "中国铁建",
-      "price": 6.06,
-      "change_pct": -0.9804,
-      "total_amount": 110042280.41,
-      "main_net_inflow": -41562422.01,
-      "main_inflow_ratio": -37.7695,
-      "super_net": -29289758.01,
-      "big_net": -12272664.0,
-      "mid_net": -2173746.0,
-      "small_net": 2176415.6,
+      "code": "000507",
+      "name": "珠海港",
+      "price": 5.02,
+      "change_pct": -0.3968,
+      "total_amount": 21483381.52,
+      "main_net_inflow": -6556394.0,
+      "main_inflow_ratio": -30.5184,
+      "super_net": -1600579.0,
+      "big_net": -4955815.0,
+      "mid_net": 715275.0,
+      "small_net": -527096.52,
       "source": "sina",
-      "flow_time": "2026-08-27T11:17:41.552596+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600217",
-      "name": "中再资环",
-      "price": 3.22,
-      "change_pct": -0.3096,
-      "total_amount": 23418758.0,
-      "main_net_inflow": -7343461.0,
-      "main_inflow_ratio": -31.3572,
-      "super_net": 1140190.0,
-      "big_net": -8483651.0,
-      "mid_net": -880381.0,
-      "small_net": 1168760.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T11:17:41.552596+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002103",
-      "name": "广博股份",
-      "price": 6.51,
-      "change_pct": -0.9132,
-      "total_amount": 20387237.0,
-      "main_net_inflow": -6306971.0,
-      "main_inflow_ratio": -30.9359,
-      "super_net": -1253200.0,
-      "big_net": -5053771.0,
-      "mid_net": -88107.0,
-      "small_net": 519483.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T11:17:41.552596+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000002",
-      "name": "万 科Ａ",
-      "price": 3.09,
-      "change_pct": -1.278,
-      "total_amount": 133853342.8,
-      "main_net_inflow": -41048589.2,
-      "main_inflow_ratio": -30.6668,
-      "super_net": -42808169.0,
-      "big_net": 1759579.8,
-      "mid_net": -1444122.0,
-      "small_net": 1451388.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T11:17:41.552596+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601021",
-      "name": "春秋航空",
-      "price": 43.83,
-      "change_pct": -1.0833,
-      "total_amount": 71631662.38,
-      "main_net_inflow": -21567888.59,
-      "main_inflow_ratio": -30.1094,
-      "super_net": -9595954.0,
-      "big_net": -11971934.59,
-      "mid_net": -2145042.0,
-      "small_net": 813969.79,
-      "source": "sina",
-      "flow_time": "2026-08-27T11:17:41.552596+08:00",
+      "flow_time": "2026-08-27T11:23:26.943250+08:00",
       "severity": "warn"
     }
   ]
