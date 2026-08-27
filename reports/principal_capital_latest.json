@@ -1,75 +1,45 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T13:42:15.561895+08:00",
+  "now": "2026-08-27T13:48:06.608616+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 7175
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1402
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 45761
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 46278
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 405,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1425,
   "buy_candidates": 17,
   "sell_candidates": 3,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002536",
-      "name": "飞龙股份",
-      "price": 54.23,
-      "change_pct": 10.0,
-      "total_amount": 3048983496.59,
-      "main_net_inflow": 1594127245.22,
-      "main_inflow_ratio": 52.2839,
-      "super_net": 1402961947.31,
-      "big_net": 191165297.91,
-      "mid_net": 55013772.13,
-      "small_net": 17874208.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T13:42:15.561895+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "603776",
-      "name": "永安行",
-      "price": 20.15,
-      "change_pct": 0.1989,
-      "total_amount": 25414296.53,
-      "main_net_inflow": -8690302.0,
-      "main_inflow_ratio": -34.1945,
-      "super_net": -8396398.0,
-      "big_net": -293904.0,
-      "mid_net": 32478.0,
-      "small_net": 964955.09,
-      "source": "sina",
-      "flow_time": "2026-08-27T13:42:15.561895+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
