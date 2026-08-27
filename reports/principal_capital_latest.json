@@ -1,45 +1,59 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T13:48:06.608616+08:00",
+  "now": "2026-08-27T13:54:05.095124+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 7175
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1402
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 46278
+        "status": "ok",
+        "latency_ms": 50125
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 405,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1425,
-  "buy_candidates": 17,
-  "sell_candidates": 3,
+  "scanned": 1400,
+  "buy_candidates": 16,
+  "sell_candidates": 2,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "000507",
+      "name": "珠海港",
+      "price": 5.03,
+      "change_pct": -0.1984,
+      "total_amount": 29091514.92,
+      "main_net_inflow": -8821681.4,
+      "main_inflow_ratio": -30.3239,
+      "super_net": -1600579.0,
+      "big_net": -7221102.4,
+      "mid_net": 323804.0,
+      "small_net": -492851.52,
+      "source": "sina",
+      "flow_time": "2026-08-27T13:54:05.095124+08:00",
+      "severity": "warn"
+    }
+  ]
 }
