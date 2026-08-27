@@ -1,156 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T10:43:08.902625+08:00",
+  "now": "2026-08-27T10:48:54.945886+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4098
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1451
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 35055
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 36313
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 382,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1476,
   "buy_candidates": 15,
   "sell_candidates": 21,
-  "buy_fresh_count": 2,
-  "sell_fresh_count": 5,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002190",
-      "name": "成飞集成",
-      "price": 25.01,
-      "change_pct": 7.8017,
-      "total_amount": 378418008.51,
-      "main_net_inflow": 243881131.45,
-      "main_inflow_ratio": 64.4475,
-      "super_net": 172385095.97,
-      "big_net": 71496035.48,
-      "mid_net": -1223047.94,
-      "small_net": -1241843.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00"
-    },
-    {
-      "code": "603435",
-      "name": "嘉德利",
-      "price": 53.3,
-      "change_pct": 10.0103,
-      "total_amount": 160597766.03,
-      "main_net_inflow": 81374151.03,
-      "main_inflow_ratio": 50.6695,
-      "super_net": 63745481.03,
-      "big_net": 17628670.0,
-      "mid_net": 9422872.0,
-      "small_net": 2352387.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600157",
-      "name": "永泰能源",
-      "price": 1.57,
-      "change_pct": -1.2579,
-      "total_amount": 341393088.78,
-      "main_net_inflow": -118420041.2,
-      "main_inflow_ratio": -34.6873,
-      "super_net": -118359307.2,
-      "big_net": -60734.0,
-      "mid_net": -2471484.0,
-      "small_net": -1558933.58,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600210",
-      "name": "紫江企业",
-      "price": 6.0,
-      "change_pct": -1.4778,
-      "total_amount": 40751312.0,
-      "main_net_inflow": -12649199.0,
-      "main_inflow_ratio": -31.04,
-      "super_net": -10533643.0,
-      "big_net": -2115556.0,
-      "mid_net": 316300.0,
-      "small_net": 823939.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600328",
-      "name": "中盐化工",
-      "price": 6.29,
-      "change_pct": -1.4107,
-      "total_amount": 55714743.58,
-      "main_net_inflow": -17273625.3,
-      "main_inflow_ratio": -31.0037,
-      "super_net": -10256011.0,
-      "big_net": -7017614.3,
-      "mid_net": -44971.92,
-      "small_net": -811256.8,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000591",
-      "name": "太阳能",
-      "price": 4.27,
-      "change_pct": -1.1574,
-      "total_amount": 68724680.0,
-      "main_net_inflow": -20803076.0,
-      "main_inflow_ratio": -30.2702,
-      "super_net": -12557573.0,
-      "big_net": -8245503.0,
-      "mid_net": -3337495.0,
-      "small_net": -2560045.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601326",
-      "name": "秦港股份",
-      "price": 3.38,
-      "change_pct": -2.029,
-      "total_amount": 40038171.0,
-      "main_net_inflow": -12080283.0,
-      "main_inflow_ratio": -30.1719,
-      "super_net": -5211130.0,
-      "big_net": -6869153.0,
-      "mid_net": -1225329.0,
-      "small_net": -762769.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T10:43:08.902625+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
