@@ -1,93 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-27T13:12:54.129469+08:00",
+  "now": "2026-08-27T13:18:50.849986+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4632
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1215
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 45455
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 44485
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 401,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1485,
   "buy_candidates": 16,
   "sell_candidates": 6,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002953",
-      "name": "日丰股份",
-      "price": 11.88,
-      "change_pct": 10.0,
-      "total_amount": 203149246.2,
-      "main_net_inflow": 114269244.8,
-      "main_inflow_ratio": 56.2489,
-      "super_net": 75771053.0,
-      "big_net": 38498191.8,
-      "mid_net": 18359269.8,
-      "small_net": 12680887.12,
-      "source": "sina",
-      "flow_time": "2026-08-27T13:12:54.129469+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600050",
-      "name": "中国联通",
-      "price": 4.28,
-      "change_pct": -0.6961,
-      "total_amount": 248484117.52,
-      "main_net_inflow": -82763576.4,
-      "main_inflow_ratio": -33.3074,
-      "super_net": -82200198.4,
-      "big_net": -563378.0,
-      "mid_net": 2482061.48,
-      "small_net": 4065927.4,
-      "source": "sina",
-      "flow_time": "2026-08-27T13:12:54.129469+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000900",
-      "name": "现代投资",
-      "price": 3.73,
-      "change_pct": -0.2674,
-      "total_amount": 28722546.0,
-      "main_net_inflow": -9057918.0,
-      "main_inflow_ratio": -31.5359,
-      "super_net": -7000359.0,
-      "big_net": -2057559.0,
-      "mid_net": 882020.0,
-      "small_net": -456044.0,
-      "source": "sina",
-      "flow_time": "2026-08-27T13:12:54.129469+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
