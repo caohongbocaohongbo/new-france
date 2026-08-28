@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T14:36:04.036157+08:00",
+  "now": "2026-08-28T14:41:59.340330+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5294
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 1542
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 44897
+        "latency_ms": 41435
       }
     ],
     "is_stale": false,
@@ -33,8 +31,8 @@
     "verify_result": null
   },
   "scanned": 2868,
-  "buy_candidates": 19,
-  "sell_candidates": 5,
+  "buy_candidates": 18,
+  "sell_candidates": 4,
   "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
