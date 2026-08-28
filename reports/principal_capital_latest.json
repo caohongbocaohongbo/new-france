@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T14:18:27.149024+08:00",
+  "now": "2026-08-28T14:24:15.660839+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5320
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1410
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42932
+        "latency_ms": 45191
       }
     ],
     "is_stale": false,
@@ -32,7 +34,7 @@
   },
   "scanned": 2868,
   "buy_candidates": 20,
-  "sell_candidates": 5,
+  "sell_candidates": 6,
   "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
@@ -40,19 +42,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002605",
-      "name": "姚记科技",
-      "price": 17.12,
-      "change_pct": -1.3825,
-      "total_amount": 117905947.11,
-      "main_net_inflow": -37820868.2,
-      "main_inflow_ratio": -32.0772,
-      "super_net": -23068485.0,
-      "big_net": -14752383.2,
-      "mid_net": -3226238.45,
-      "small_net": -1759991.0,
+      "code": "002839",
+      "name": "张家港行",
+      "price": 4.27,
+      "change_pct": -2.9545,
+      "total_amount": 164606596.0,
+      "main_net_inflow": -50492186.8,
+      "main_inflow_ratio": -30.6745,
+      "super_net": -46872154.6,
+      "big_net": -3620032.2,
+      "mid_net": -5548284.2,
+      "small_net": -4595419.4,
       "source": "sina",
-      "flow_time": "2026-08-28T14:18:27.149024+08:00",
+      "flow_time": "2026-08-28T14:24:15.660839+08:00",
       "severity": "warn"
     }
   ]
