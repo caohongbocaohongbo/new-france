@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T14:06:36.449764+08:00",
+  "now": "2026-08-28T14:12:24.665465+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4741
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1242
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42814
+        "latency_ms": 50948
       }
     ],
     "is_stale": false,
@@ -30,61 +32,29 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2867,
-  "buy_candidates": 19,
+  "scanned": 2863,
+  "buy_candidates": 20,
   "sell_candidates": 5,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600933",
-      "name": "爱柯迪",
-      "price": 13.48,
-      "change_pct": -2.8818,
-      "total_amount": 137730243.02,
-      "main_net_inflow": -49908661.0,
-      "main_inflow_ratio": -36.2365,
-      "super_net": -24361990.0,
-      "big_net": -25546671.0,
-      "mid_net": -11877579.48,
-      "small_net": -3879800.54,
+      "code": "603014",
+      "name": "威高血净",
+      "price": 31.98,
+      "change_pct": -0.3738,
+      "total_amount": 32262970.27,
+      "main_net_inflow": -10007873.99,
+      "main_inflow_ratio": -31.0197,
+      "super_net": 0.0,
+      "big_net": -10007873.99,
+      "mid_net": -114929.0,
+      "small_net": -2944751.26,
       "source": "sina",
-      "flow_time": "2026-08-28T14:06:36.449764+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603707",
-      "name": "健友股份",
-      "price": 7.83,
-      "change_pct": -4.9757,
-      "total_amount": 124544683.88,
-      "main_net_inflow": -42559101.68,
-      "main_inflow_ratio": -34.1718,
-      "super_net": -18317270.0,
-      "big_net": -24241831.68,
-      "mid_net": -5836280.08,
-      "small_net": -3006527.88,
-      "source": "sina",
-      "flow_time": "2026-08-28T14:06:36.449764+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600967",
-      "name": "内蒙一机",
-      "price": 11.09,
-      "change_pct": -1.2467,
-      "total_amount": 199333514.26,
-      "main_net_inflow": -66337502.0,
-      "main_inflow_ratio": -33.2797,
-      "super_net": -52514322.0,
-      "big_net": -13823180.0,
-      "mid_net": -3846943.74,
-      "small_net": -3587928.0,
-      "source": "sina",
-      "flow_time": "2026-08-28T14:06:36.449764+08:00",
+      "flow_time": "2026-08-28T14:12:24.665465+08:00",
       "severity": "warn"
     }
   ]
