@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T14:12:24.665465+08:00",
+  "now": "2026-08-28T14:18:27.149024+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4741
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1242
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 50948
+        "latency_ms": 42932
       }
     ],
     "is_stale": false,
@@ -32,7 +30,7 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2863,
+  "scanned": 2868,
   "buy_candidates": 20,
   "sell_candidates": 5,
   "buy_fresh_count": 0,
@@ -42,19 +40,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603014",
-      "name": "威高血净",
-      "price": 31.98,
-      "change_pct": -0.3738,
-      "total_amount": 32262970.27,
-      "main_net_inflow": -10007873.99,
-      "main_inflow_ratio": -31.0197,
-      "super_net": 0.0,
-      "big_net": -10007873.99,
-      "mid_net": -114929.0,
-      "small_net": -2944751.26,
+      "code": "002605",
+      "name": "姚记科技",
+      "price": 17.12,
+      "change_pct": -1.3825,
+      "total_amount": 117905947.11,
+      "main_net_inflow": -37820868.2,
+      "main_inflow_ratio": -32.0772,
+      "super_net": -23068485.0,
+      "big_net": -14752383.2,
+      "mid_net": -3226238.45,
+      "small_net": -1759991.0,
       "source": "sina",
-      "flow_time": "2026-08-28T14:12:24.665465+08:00",
+      "flow_time": "2026-08-28T14:18:27.149024+08:00",
       "severity": "warn"
     }
   ]
