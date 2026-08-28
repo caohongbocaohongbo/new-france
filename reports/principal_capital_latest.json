@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T11:18:47.972880+08:00",
+  "now": "2026-08-28T11:24:42.619582+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3675
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 4322
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47088
+        "latency_ms": 48560
       }
     ],
     "is_stale": false,
@@ -34,43 +34,10 @@
   "scanned": 2868,
   "buy_candidates": 20,
   "sell_candidates": 11,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603029",
-      "name": "天鹅股份",
-      "price": 18.28,
-      "change_pct": 9.988,
-      "total_amount": 155523024.4,
-      "main_net_inflow": 91430332.4,
-      "main_inflow_ratio": 58.7889,
-      "super_net": 69297525.4,
-      "big_net": 22132807.0,
-      "mid_net": 3190900.0,
-      "small_net": 1115432.0,
-      "source": "sina",
-      "flow_time": "2026-08-28T11:18:47.972880+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "002454",
-      "name": "松芝股份",
-      "price": 5.13,
-      "change_pct": -0.5814,
-      "total_amount": 21116968.0,
-      "main_net_inflow": -6891331.0,
-      "main_inflow_ratio": -32.6341,
-      "super_net": -1282500.0,
-      "big_net": -5608831.0,
-      "mid_net": 330403.4,
-      "small_net": -211207.6,
-      "source": "sina",
-      "flow_time": "2026-08-28T11:18:47.972880+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
