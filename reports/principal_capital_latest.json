@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T10:54:34.317348+08:00",
+  "now": "2026-08-28T11:01:00.572405+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4214
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 5196
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 76990
+        "latency_ms": 48535
       }
     ],
     "is_stale": false,
@@ -32,76 +32,44 @@
     "verify_result": null
   },
   "scanned": 2868,
-  "buy_candidates": 21,
-  "sell_candidates": 15,
+  "buy_candidates": 19,
+  "sell_candidates": 13,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 4,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000883",
-      "name": "湖北能源",
-      "price": 4.54,
-      "change_pct": -1.5184,
-      "total_amount": 39825608.0,
-      "main_net_inflow": -17595933.0,
-      "main_inflow_ratio": -44.1825,
-      "super_net": -15227662.0,
-      "big_net": -2368271.0,
-      "mid_net": -1458219.0,
-      "small_net": -2387506.0,
+      "code": "000828",
+      "name": "东莞控股",
+      "price": 10.21,
+      "change_pct": -1.1617,
+      "total_amount": 56786001.0,
+      "main_net_inflow": -17754340.64,
+      "main_inflow_ratio": -31.2653,
+      "super_net": -15505305.0,
+      "big_net": -2249035.64,
+      "mid_net": -3511929.64,
+      "small_net": -1188338.0,
       "source": "sina",
-      "flow_time": "2026-08-28T10:54:34.317348+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600933",
-      "name": "爱柯迪",
-      "price": 13.65,
-      "change_pct": -1.6571,
-      "total_amount": 80288490.02,
-      "main_net_inflow": -32070544.0,
-      "main_inflow_ratio": -39.9441,
-      "super_net": -10401589.0,
-      "big_net": -21668955.0,
-      "mid_net": -6729463.48,
-      "small_net": -2503544.54,
-      "source": "sina",
-      "flow_time": "2026-08-28T10:54:34.317348+08:00",
+      "flow_time": "2026-08-28T11:01:00.572405+08:00",
       "severity": "warn"
     },
     {
-      "code": "002848",
-      "name": "高斯贝尔",
-      "price": 13.69,
-      "change_pct": -1.5108,
-      "total_amount": 45200402.0,
-      "main_net_inflow": -15689788.0,
-      "main_inflow_ratio": -34.7116,
-      "super_net": -8039032.0,
-      "big_net": -7650756.0,
-      "mid_net": -1731235.0,
-      "small_net": 930277.0,
+      "code": "002169",
+      "name": "智光电气",
+      "price": 12.1,
+      "change_pct": -1.546,
+      "total_amount": 88899391.12,
+      "main_net_inflow": -27186097.88,
+      "main_inflow_ratio": -30.5807,
+      "super_net": -11919999.0,
+      "big_net": -15266098.88,
+      "mid_net": 1275914.0,
+      "small_net": 2770287.0,
       "source": "sina",
-      "flow_time": "2026-08-28T10:54:34.317348+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "605198",
-      "name": "安德利",
-      "price": 66.54,
-      "change_pct": -2.8897,
-      "total_amount": 118115801.16,
-      "main_net_inflow": -35782809.0,
-      "main_inflow_ratio": -30.2947,
-      "super_net": -19409338.0,
-      "big_net": -16373471.0,
-      "mid_net": -218691.16,
-      "small_net": 55317.0,
-      "source": "sina",
-      "flow_time": "2026-08-28T10:54:34.317348+08:00",
+      "flow_time": "2026-08-28T11:01:00.572405+08:00",
       "severity": "warn"
     }
   ]
