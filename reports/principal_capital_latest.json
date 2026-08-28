@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T10:19:05.860041+08:00",
+  "now": "2026-08-28T10:25:00.492228+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 6212
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1550
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 44512
+        "latency_ms": 44661
       }
     ],
     "is_stale": false,
@@ -32,28 +32,74 @@
     "verify_result": null
   },
   "scanned": 2868,
-  "buy_candidates": 17,
-  "sell_candidates": 28,
-  "buy_fresh_count": 0,
+  "buy_candidates": 19,
+  "sell_candidates": 20,
+  "buy_fresh_count": 3,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "002349",
+      "name": "精华制药",
+      "price": 7.89,
+      "change_pct": 10.0418,
+      "total_amount": 185467696.07,
+      "main_net_inflow": 128551441.0,
+      "main_inflow_ratio": 69.312,
+      "super_net": 95342001.0,
+      "big_net": 33209440.0,
+      "mid_net": 7731160.01,
+      "small_net": -500384.0,
+      "source": "sina",
+      "flow_time": "2026-08-28T10:25:00.492228+08:00"
+    },
+    {
+      "code": "000011",
+      "name": "深物业A",
+      "price": 9.15,
+      "change_pct": 9.976,
+      "total_amount": 57708287.8,
+      "main_net_inflow": 30804303.8,
+      "main_inflow_ratio": 53.3793,
+      "super_net": 20835026.0,
+      "big_net": 9969277.8,
+      "mid_net": 3714643.0,
+      "small_net": 958429.0,
+      "source": "sina",
+      "flow_time": "2026-08-28T10:25:00.492228+08:00"
+    },
+    {
+      "code": "605006",
+      "name": "山东玻纤",
+      "price": 15.54,
+      "change_pct": 9.9788,
+      "total_amount": 464327273.18,
+      "main_net_inflow": 235030613.94,
+      "main_inflow_ratio": 50.6174,
+      "super_net": 163880302.48,
+      "big_net": 71150311.46,
+      "mid_net": 20176549.64,
+      "small_net": 1782936.0,
+      "source": "sina",
+      "flow_time": "2026-08-28T10:25:00.492228+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "600720",
-      "name": "中交设计",
-      "price": 5.18,
-      "change_pct": -1.5209,
-      "total_amount": 19265696.0,
-      "main_net_inflow": -5970578.0,
-      "main_inflow_ratio": -30.9907,
-      "super_net": -3011525.0,
-      "big_net": -2959053.0,
-      "mid_net": -1527291.0,
-      "small_net": -326139.0,
+      "code": "002011",
+      "name": "盾安环境",
+      "price": 10.14,
+      "change_pct": -1.4577,
+      "total_amount": 41352498.0,
+      "main_net_inflow": -12947579.0,
+      "main_inflow_ratio": -31.3103,
+      "super_net": -2417828.0,
+      "big_net": -10529751.0,
+      "mid_net": -1173838.0,
+      "small_net": -323093.0,
       "source": "sina",
-      "flow_time": "2026-08-28T10:19:05.860041+08:00",
+      "flow_time": "2026-08-28T10:25:00.492228+08:00",
       "severity": "warn"
     }
   ]
