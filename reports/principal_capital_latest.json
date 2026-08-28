@@ -1,60 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-08-28T14:59:28.997745+08:00",
+  "status": "skipped",
+  "reason": "休市中",
+  "now": "2026-08-29T00:57:30.662261+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3302
-      },
-      {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1332
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 56291
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 2868,
-  "buy_candidates": 18,
-  "sell_candidates": 4,
-  "buy_fresh_count": 1,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002855",
-      "name": "捷荣技术",
-      "price": 14.64,
-      "change_pct": 9.9925,
-      "total_amount": 74580552.0,
-      "main_net_inflow": 37796088.0,
-      "main_inflow_ratio": 50.6782,
-      "super_net": 30647376.0,
-      "big_net": 7148712.0,
-      "mid_net": 9766344.0,
-      "small_net": 11909640.0,
-      "source": "sina",
-      "flow_time": "2026-08-28T14:59:28.997745+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
