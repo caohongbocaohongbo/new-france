@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-28T13:54:54.834268+08:00",
+  "now": "2026-08-28T14:00:42.924112+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 2939
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1262
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 44528
+        "latency_ms": 45647
       }
     ],
     "is_stale": false,
@@ -33,26 +35,10 @@
   "scanned": 2868,
   "buy_candidates": 19,
   "sell_candidates": 5,
-  "buy_fresh_count": 1,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603418",
-      "name": "友升股份",
-      "price": 44.02,
-      "change_pct": 0.2505,
-      "total_amount": 34229586.96,
-      "main_net_inflow": 18623742.04,
-      "main_inflow_ratio": 54.4083,
-      "super_net": 1029132.0,
-      "big_net": 17594610.04,
-      "mid_net": 709109.0,
-      "small_net": 229160.0,
-      "source": "sina",
-      "flow_time": "2026-08-28T13:54:54.834268+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
