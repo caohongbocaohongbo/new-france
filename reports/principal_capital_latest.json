@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T10:25:37.391089+08:00",
+  "now": "2026-08-31T10:31:20.490648+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4056
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1492
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40328
+        "latency_ms": 44197
       }
     ],
     "is_stale": false,
@@ -31,12 +33,189 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 8,
-  "sell_candidates": 94,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "buy_candidates": 9,
+  "sell_candidates": 87,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 10,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "603178",
+      "name": "圣龙股份",
+      "price": 17.85,
+      "change_pct": 9.9815,
+      "total_amount": 256089479.82,
+      "main_net_inflow": 180790805.09,
+      "main_inflow_ratio": 70.5967,
+      "super_net": 126258573.03,
+      "big_net": 54532232.06,
+      "mid_net": 5332157.0,
+      "small_net": 513696.33,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "600613",
+      "name": "神奇制药",
+      "price": 11.16,
+      "change_pct": -10.0,
+      "total_amount": 78213744.0,
+      "main_net_inflow": -57102372.0,
+      "main_inflow_ratio": -73.0081,
+      "super_net": -47768148.0,
+      "big_net": -9334224.0,
+      "mid_net": -10358712.0,
+      "small_net": -10752660.0,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "danger"
+    },
+    {
+      "code": "600010",
+      "name": "包钢股份",
+      "price": 2.24,
+      "change_pct": -1.7544,
+      "total_amount": 399225487.82,
+      "main_net_inflow": -203712958.54,
+      "main_inflow_ratio": -51.027,
+      "super_net": -186679111.14,
+      "big_net": -17033847.4,
+      "mid_net": -5771434.28,
+      "small_net": -3668334.4,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "danger"
+    },
+    {
+      "code": "601933",
+      "name": "永辉超市",
+      "price": 3.09,
+      "change_pct": -1.9048,
+      "total_amount": 165205627.83,
+      "main_net_inflow": -65921701.95,
+      "main_inflow_ratio": -39.9028,
+      "super_net": -54419086.0,
+      "big_net": -11502615.95,
+      "mid_net": -4668006.0,
+      "small_net": -3090036.0,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600363",
+      "name": "联创光电",
+      "price": 16.37,
+      "change_pct": -10.0055,
+      "total_amount": 312643030.17,
+      "main_net_inflow": -120565406.17,
+      "main_inflow_ratio": -38.5633,
+      "super_net": -106983403.17,
+      "big_net": -13582003.0,
+      "mid_net": -21043635.0,
+      "small_net": -11267471.0,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600499",
+      "name": "科达制造",
+      "price": 13.93,
+      "change_pct": -2.1082,
+      "total_amount": 168971652.77,
+      "main_net_inflow": -61473797.17,
+      "main_inflow_ratio": -36.3811,
+      "super_net": -37891395.93,
+      "big_net": -23582401.24,
+      "mid_net": -6958135.08,
+      "small_net": -194481.32,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603659",
+      "name": "璞泰来",
+      "price": 23.06,
+      "change_pct": -3.1906,
+      "total_amount": 294710460.84,
+      "main_net_inflow": -94922601.64,
+      "main_inflow_ratio": -32.2088,
+      "super_net": -78664868.19,
+      "big_net": -16257733.45,
+      "mid_net": 8241579.2,
+      "small_net": 1700484.0,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002588",
+      "name": "史丹利",
+      "price": 8.08,
+      "change_pct": -0.9804,
+      "total_amount": 79370009.03,
+      "main_net_inflow": -24406319.03,
+      "main_inflow_ratio": -30.7501,
+      "super_net": -20099077.0,
+      "big_net": -4307242.03,
+      "mid_net": 2536811.0,
+      "small_net": -746743.0,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600521",
+      "name": "华海药业",
+      "price": 15.96,
+      "change_pct": -3.0377,
+      "total_amount": 220735978.15,
+      "main_net_inflow": -66937001.51,
+      "main_inflow_ratio": -30.3245,
+      "super_net": -41720263.0,
+      "big_net": -25216738.51,
+      "mid_net": -1050837.4,
+      "small_net": 170250.06,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600064",
+      "name": "南京高科",
+      "price": 7.69,
+      "change_pct": -0.2594,
+      "total_amount": 90695680.72,
+      "main_net_inflow": -27466058.72,
+      "main_inflow_ratio": -30.2838,
+      "super_net": -17277636.0,
+      "big_net": -10188422.72,
+      "mid_net": 1219348.0,
+      "small_net": 1901508.2,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601021",
+      "name": "春秋航空",
+      "price": 43.46,
+      "change_pct": -1.4065,
+      "total_amount": 104094182.72,
+      "main_net_inflow": -31264466.12,
+      "main_inflow_ratio": -30.0348,
+      "super_net": -14659763.24,
+      "big_net": -16604702.88,
+      "mid_net": -3888846.64,
+      "small_net": 479207.0,
+      "source": "sina",
+      "flow_time": "2026-08-31T10:31:20.490648+08:00",
+      "severity": "warn"
+    }
+  ]
 }
