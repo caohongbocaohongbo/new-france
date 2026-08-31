@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T13:53:28.884048+08:00",
+  "now": "2026-08-31T13:59:21.831300+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4807
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 4051
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 49450
+        "latency_ms": 43270
       }
     ],
     "is_stale": false,
@@ -32,11 +34,28 @@
   },
   "scanned": 2524,
   "buy_candidates": 11,
-  "sell_candidates": 33,
+  "sell_candidates": 34,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "600308",
+      "name": "华泰股份",
+      "price": 3.32,
+      "change_pct": -0.5988,
+      "total_amount": 17824379.72,
+      "main_net_inflow": -6273678.92,
+      "main_inflow_ratio": -35.1972,
+      "super_net": -1456816.0,
+      "big_net": -4816862.92,
+      "mid_net": -797928.0,
+      "small_net": -1976133.2,
+      "source": "sina",
+      "flow_time": "2026-08-31T13:59:21.831300+08:00",
+      "severity": "warn"
+    }
+  ]
 }
