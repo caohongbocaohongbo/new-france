@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T14:34:34.457070+08:00",
+  "now": "2026-08-31T14:40:22.869616+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2974
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1281
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38534
+        "latency_ms": 41871
       }
     ],
     "is_stale": false,
@@ -34,59 +32,27 @@
   },
   "scanned": 2524,
   "buy_candidates": 13,
-  "sell_candidates": 26,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
+  "sell_candidates": 23,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603139",
-      "name": "康惠股份",
-      "price": 38.09,
-      "change_pct": 9.9913,
-      "total_amount": 192373091.86,
-      "main_net_inflow": 110785198.34,
-      "main_inflow_ratio": 57.5887,
-      "super_net": 77783682.0,
-      "big_net": 33001516.34,
-      "mid_net": 9596008.0,
-      "small_net": 5155492.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T14:34:34.457070+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601212",
-      "name": "白银有色",
-      "price": 6.88,
-      "change_pct": -9.8296,
-      "total_amount": 2415790941.72,
-      "main_net_inflow": -842898520.0,
-      "main_inflow_ratio": -34.8912,
-      "super_net": -653717800.51,
-      "big_net": -189180719.49,
-      "mid_net": -125740502.0,
-      "small_net": -34227714.0,
+      "code": "600790",
+      "name": "轻纺城",
+      "price": 3.4,
+      "change_pct": -0.8746,
+      "total_amount": 48487314.0,
+      "main_net_inflow": -15310931.0,
+      "main_inflow_ratio": -31.5772,
+      "super_net": -8107867.0,
+      "big_net": -7203064.0,
+      "mid_net": 73493.8,
+      "small_net": -2332050.8,
       "source": "sina",
-      "flow_time": "2026-08-31T14:34:34.457070+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600009",
-      "name": "上海机场",
-      "price": 23.29,
-      "change_pct": -1.5222,
-      "total_amount": 194841642.72,
-      "main_net_inflow": -63394249.0,
-      "main_inflow_ratio": -32.5363,
-      "super_net": -43605787.0,
-      "big_net": -19788462.0,
-      "mid_net": 2636916.02,
-      "small_net": 5538991.9,
-      "source": "sina",
-      "flow_time": "2026-08-31T14:34:34.457070+08:00",
+      "flow_time": "2026-08-31T14:40:22.869616+08:00",
       "severity": "warn"
     }
   ]
