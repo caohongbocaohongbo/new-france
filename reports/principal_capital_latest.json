@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T13:06:43.306434+08:00",
+  "now": "2026-08-31T13:12:29.739027+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5582
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1221
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 41157
+        "latency_ms": 40960
       }
     ],
     "is_stale": false,
@@ -32,75 +34,27 @@
   },
   "scanned": 2524,
   "buy_candidates": 10,
-  "sell_candidates": 56,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
+  "sell_candidates": 51,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603216",
-      "name": "梦天家居",
-      "price": 22.65,
-      "change_pct": 10.0049,
-      "total_amount": 155046889.0,
-      "main_net_inflow": 78096987.0,
-      "main_inflow_ratio": 50.3699,
-      "super_net": 56218194.0,
-      "big_net": 21878793.0,
-      "mid_net": 8799208.0,
-      "small_net": 5743600.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T13:06:43.306434+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002374",
-      "name": "中锐股份",
-      "price": 3.11,
-      "change_pct": -0.9554,
-      "total_amount": 20004497.8,
-      "main_net_inflow": -6356876.16,
-      "main_inflow_ratio": -31.7772,
-      "super_net": -4374281.4,
-      "big_net": -1982594.76,
-      "mid_net": -243239.48,
-      "small_net": -8387.92,
+      "code": "603218",
+      "name": "日月股份",
+      "price": 9.33,
+      "change_pct": -2.5078,
+      "total_amount": 55929606.63,
+      "main_net_inflow": -16910657.64,
+      "main_inflow_ratio": -30.2356,
+      "super_net": -3191145.0,
+      "big_net": -13719512.64,
+      "mid_net": -6017650.53,
+      "small_net": -5601697.64,
       "source": "sina",
-      "flow_time": "2026-08-31T13:06:43.306434+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600020",
-      "name": "中原高速",
-      "price": 3.9,
-      "change_pct": -1.2658,
-      "total_amount": 30029785.43,
-      "main_net_inflow": -9059430.9,
-      "main_inflow_ratio": -30.1682,
-      "super_net": -4235739.96,
-      "big_net": -4823690.94,
-      "mid_net": -2309237.66,
-      "small_net": 792647.55,
-      "source": "sina",
-      "flow_time": "2026-08-31T13:06:43.306434+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002108",
-      "name": "沧州明珠",
-      "price": 4.39,
-      "change_pct": -1.5695,
-      "total_amount": 63762754.17,
-      "main_net_inflow": -19194136.91,
-      "main_inflow_ratio": -30.1024,
-      "super_net": -16904913.91,
-      "big_net": -2289223.0,
-      "mid_net": 1275176.74,
-      "small_net": 165588.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T13:06:43.306434+08:00",
+      "flow_time": "2026-08-31T13:12:29.739027+08:00",
       "severity": "warn"
     }
   ]
