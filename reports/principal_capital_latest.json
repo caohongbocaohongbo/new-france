@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T11:12:08.546411+08:00",
+  "now": "2026-08-31T11:17:50.799733+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 15482
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 9951
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38327
+        "latency_ms": 44624
       }
     ],
     "is_stale": false,
@@ -32,92 +34,28 @@
   },
   "scanned": 2524,
   "buy_candidates": 9,
-  "sell_candidates": 69,
+  "sell_candidates": 59,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 5,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000557",
-      "name": "西部创业",
-      "price": 3.73,
-      "change_pct": -0.7979,
-      "total_amount": 15484557.71,
-      "main_net_inflow": -5887294.0,
-      "main_inflow_ratio": -38.0204,
-      "super_net": 0.0,
-      "big_net": -5887294.0,
-      "mid_net": -1427259.0,
-      "small_net": 90149.29,
+      "code": "600731",
+      "name": "湖南海利",
+      "price": 5.88,
+      "change_pct": -1.0101,
+      "total_amount": 19422690.0,
+      "main_net_inflow": -9040804.4,
+      "main_inflow_ratio": -46.5476,
+      "super_net": -5781233.0,
+      "big_net": -3259571.4,
+      "mid_net": -1426641.0,
+      "small_net": -269763.8,
       "source": "sina",
-      "flow_time": "2026-08-31T11:12:08.546411+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601717",
-      "name": "中创智领",
-      "price": 14.26,
-      "change_pct": -5.2492,
-      "total_amount": 343216269.58,
-      "main_net_inflow": -113760284.42,
-      "main_inflow_ratio": -33.1454,
-      "super_net": -77633102.42,
-      "big_net": -36127182.0,
-      "mid_net": -14111267.0,
-      "small_net": -2020435.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T11:12:08.546411+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000686",
-      "name": "东北证券",
-      "price": 8.04,
-      "change_pct": -1.2285,
-      "total_amount": 75769469.75,
-      "main_net_inflow": -24418881.75,
-      "main_inflow_ratio": -32.2279,
-      "super_net": -12424527.0,
-      "big_net": -11994354.75,
-      "mid_net": -501971.6,
-      "small_net": -656027.6,
-      "source": "sina",
-      "flow_time": "2026-08-31T11:12:08.546411+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000631",
-      "name": "顺发恒能",
-      "price": 2.95,
-      "change_pct": -1.0067,
-      "total_amount": 22260602.56,
-      "main_net_inflow": -7173090.0,
-      "main_inflow_ratio": -32.2233,
-      "super_net": -1435472.0,
-      "big_net": -5737618.0,
-      "mid_net": 1068266.44,
-      "small_net": 758265.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T11:12:08.546411+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000795",
-      "name": "英洛华",
-      "price": 8.56,
-      "change_pct": -2.2831,
-      "total_amount": 87904677.66,
-      "main_net_inflow": -26572551.2,
-      "main_inflow_ratio": -30.2288,
-      "super_net": -16398660.4,
-      "big_net": -10173890.8,
-      "mid_net": -6617690.0,
-      "small_net": -2991445.26,
-      "source": "sina",
-      "flow_time": "2026-08-31T11:12:08.546411+08:00",
-      "severity": "warn"
+      "flow_time": "2026-08-31T11:17:50.799733+08:00",
+      "severity": "alert"
     }
   ]
 }
