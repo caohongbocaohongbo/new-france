@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T10:19:32.822470+08:00",
+  "now": "2026-08-31T10:25:37.391089+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 9746
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 9607
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 41363
+        "latency_ms": 40328
       }
     ],
     "is_stale": false,
@@ -33,29 +31,12 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 9,
-  "sell_candidates": 103,
+  "buy_candidates": 8,
+  "sell_candidates": 94,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "002117",
-      "name": "东港股份",
-      "price": 8.02,
-      "change_pct": -0.9877,
-      "total_amount": 17326184.0,
-      "main_net_inflow": -5220357.0,
-      "main_inflow_ratio": -30.1299,
-      "super_net": -1773414.0,
-      "big_net": -3446943.0,
-      "mid_net": -1209586.0,
-      "small_net": 394457.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T10:19:32.822470+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
