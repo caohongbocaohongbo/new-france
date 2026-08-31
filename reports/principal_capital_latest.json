@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T11:17:50.799733+08:00",
+  "now": "2026-08-31T11:24:04.936396+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 15482
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 9951
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 44624
+        "latency_ms": 41856
       }
     ],
     "is_stale": false,
@@ -34,28 +32,44 @@
   },
   "scanned": 2524,
   "buy_candidates": 9,
-  "sell_candidates": 59,
+  "sell_candidates": 54,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600731",
-      "name": "湖南海利",
-      "price": 5.88,
-      "change_pct": -1.0101,
-      "total_amount": 19422690.0,
-      "main_net_inflow": -9040804.4,
-      "main_inflow_ratio": -46.5476,
-      "super_net": -5781233.0,
-      "big_net": -3259571.4,
-      "mid_net": -1426641.0,
-      "small_net": -269763.8,
+      "code": "600020",
+      "name": "中原高速",
+      "price": 3.91,
+      "change_pct": -1.0127,
+      "total_amount": 26714689.43,
+      "main_net_inflow": -8419913.9,
+      "main_inflow_ratio": -31.5179,
+      "super_net": -4235739.96,
+      "big_net": -4184173.94,
+      "mid_net": -1972097.66,
+      "small_net": 547552.55,
       "source": "sina",
-      "flow_time": "2026-08-31T11:17:50.799733+08:00",
-      "severity": "alert"
+      "flow_time": "2026-08-31T11:24:04.936396+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600008",
+      "name": "首创环保",
+      "price": 2.8,
+      "change_pct": -1.4084,
+      "total_amount": 203394633.09,
+      "main_net_inflow": -61084577.81,
+      "main_inflow_ratio": -30.0325,
+      "super_net": -47724698.01,
+      "big_net": -13359879.8,
+      "mid_net": -7383653.08,
+      "small_net": -7810649.8,
+      "source": "sina",
+      "flow_time": "2026-08-31T11:24:04.936396+08:00",
+      "severity": "warn"
     }
   ]
 }
