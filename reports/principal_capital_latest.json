@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-08-31T10:13:48.364719+08:00",
+  "now": "2026-08-31T10:19:32.822470+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 9746
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 9607
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40469
+        "latency_ms": 41363
       }
     ],
     "is_stale": false,
@@ -31,76 +33,28 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 11,
-  "sell_candidates": 120,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
+  "buy_candidates": 9,
+  "sell_candidates": 103,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002285",
-      "name": "世联行",
-      "price": 2.56,
-      "change_pct": 9.8712,
-      "total_amount": 153411155.6,
-      "main_net_inflow": 81557946.0,
-      "main_inflow_ratio": 53.163,
-      "super_net": 50274746.0,
-      "big_net": 31283200.0,
-      "mid_net": 12228352.0,
-      "small_net": 4761600.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T10:13:48.364719+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000521",
-      "name": "长虹美菱",
-      "price": 4.81,
-      "change_pct": -0.8247,
-      "total_amount": 11042064.0,
-      "main_net_inflow": -4461958.0,
-      "main_inflow_ratio": -40.4087,
-      "super_net": -1460316.0,
-      "big_net": -3001642.0,
-      "mid_net": -795296.0,
-      "small_net": -810886.0,
+      "code": "002117",
+      "name": "东港股份",
+      "price": 8.02,
+      "change_pct": -0.9877,
+      "total_amount": 17326184.0,
+      "main_net_inflow": -5220357.0,
+      "main_inflow_ratio": -30.1299,
+      "super_net": -1773414.0,
+      "big_net": -3446943.0,
+      "mid_net": -1209586.0,
+      "small_net": 394457.0,
       "source": "sina",
-      "flow_time": "2026-08-31T10:13:48.364719+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600731",
-      "name": "湖南海利",
-      "price": 5.91,
-      "change_pct": -0.5051,
-      "total_amount": 11540717.0,
-      "main_net_inflow": -4296356.4,
-      "main_inflow_ratio": -37.2278,
-      "super_net": -1643013.0,
-      "big_net": -2653343.4,
-      "mid_net": -273325.0,
-      "small_net": -447252.8,
-      "source": "sina",
-      "flow_time": "2026-08-31T10:13:48.364719+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600085",
-      "name": "同仁堂",
-      "price": 23.94,
-      "change_pct": -2.2059,
-      "total_amount": 83922544.0,
-      "main_net_inflow": -26312958.0,
-      "main_inflow_ratio": -31.3539,
-      "super_net": -14246895.0,
-      "big_net": -12066063.0,
-      "mid_net": -1707217.0,
-      "small_net": 1340181.0,
-      "source": "sina",
-      "flow_time": "2026-08-31T10:13:48.364719+08:00",
+      "flow_time": "2026-08-31T10:19:32.822470+08:00",
       "severity": "warn"
     }
   ]
