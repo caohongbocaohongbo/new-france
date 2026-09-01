@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T10:46:20.820889+08:00",
+  "now": "2026-09-01T10:52:03.114535+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 7504
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 6130
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 36450
+        "latency_ms": 47566
       }
     ],
     "is_stale": false,
@@ -34,73 +36,25 @@
   "buy_candidates": 20,
   "sell_candidates": 22,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 4,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002654",
-      "name": "万润科技",
-      "price": 13.67,
-      "change_pct": -2.9119,
-      "total_amount": 298991837.55,
-      "main_net_inflow": -126306965.75,
-      "main_inflow_ratio": -42.2443,
-      "super_net": -84670221.75,
-      "big_net": -41636744.0,
-      "mid_net": -4234926.8,
-      "small_net": -538129.0,
+      "code": "603867",
+      "name": "新化股份",
+      "price": 29.46,
+      "change_pct": -3.4098,
+      "total_amount": 135191960.31,
+      "main_net_inflow": -49167402.37,
+      "main_inflow_ratio": -36.3686,
+      "super_net": -21105588.0,
+      "big_net": -28061814.37,
+      "mid_net": 1538252.0,
+      "small_net": 6091.94,
       "source": "sina",
-      "flow_time": "2026-09-01T10:46:20.820889+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600366",
-      "name": "宁波韵升",
-      "price": 11.46,
-      "change_pct": -1.7995,
-      "total_amount": 155575239.7,
-      "main_net_inflow": -56957398.81,
-      "main_inflow_ratio": -36.6108,
-      "super_net": -31320004.0,
-      "big_net": -25637394.81,
-      "mid_net": -2852101.89,
-      "small_net": -817239.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:46:20.820889+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002350",
-      "name": "北京科锐",
-      "price": 14.72,
-      "change_pct": -1.8012,
-      "total_amount": 58940499.42,
-      "main_net_inflow": -20785286.42,
-      "main_inflow_ratio": -35.2649,
-      "super_net": -6561954.0,
-      "big_net": -14223332.42,
-      "mid_net": -1622576.0,
-      "small_net": -1191397.48,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:46:20.820889+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603005",
-      "name": "晶方科技",
-      "price": 30.14,
-      "change_pct": -2.5226,
-      "total_amount": 338968928.47,
-      "main_net_inflow": -108207756.0,
-      "main_inflow_ratio": -31.9226,
-      "super_net": -63476671.0,
-      "big_net": -44731085.0,
-      "mid_net": -4153479.35,
-      "small_net": -918018.62,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:46:20.820889+08:00",
+      "flow_time": "2026-09-01T10:52:03.114535+08:00",
       "severity": "warn"
     }
   ]
