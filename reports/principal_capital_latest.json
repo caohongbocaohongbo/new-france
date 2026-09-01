@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T10:17:31.270736+08:00",
+  "now": "2026-09-01T10:23:19.019966+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3685
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1387
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 37755
+        "latency_ms": 35184
       }
     ],
     "is_stale": false,
@@ -33,59 +31,59 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 20,
-  "sell_candidates": 24,
+  "buy_candidates": 23,
+  "sell_candidates": 22,
   "buy_fresh_count": 2,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "002721",
-      "name": "金一文化",
-      "price": 3.18,
-      "change_pct": 10.0346,
-      "total_amount": 586120653.09,
-      "main_net_inflow": 341240445.09,
-      "main_inflow_ratio": 58.2202,
-      "super_net": 292878177.09,
-      "big_net": 48362268.0,
-      "mid_net": 5488218.0,
-      "small_net": 70688.0,
+      "code": "000596",
+      "name": "古井贡酒",
+      "price": 100.88,
+      "change_pct": 9.9989,
+      "total_amount": 440444995.43,
+      "main_net_inflow": 229642025.43,
+      "main_inflow_ratio": 52.1386,
+      "super_net": 191489571.88,
+      "big_net": 38152453.55,
+      "mid_net": 1005195.0,
+      "small_net": -353363.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:17:31.270736+08:00"
+      "flow_time": "2026-09-01T10:23:19.019966+08:00"
     },
     {
-      "code": "603293",
-      "name": "埃泰克",
-      "price": 39.45,
-      "change_pct": 10.0112,
-      "total_amount": 143152128.41,
-      "main_net_inflow": 72360874.67,
-      "main_inflow_ratio": 50.5482,
-      "super_net": 40375489.63,
-      "big_net": 31985385.04,
-      "mid_net": 3724270.02,
-      "small_net": -349664.0,
+      "code": "601566",
+      "name": "九牧王",
+      "price": 9.42,
+      "change_pct": 10.0467,
+      "total_amount": 110773353.88,
+      "main_net_inflow": 57181540.88,
+      "main_inflow_ratio": 51.6203,
+      "super_net": 40385373.88,
+      "big_net": 16796167.0,
+      "mid_net": 838304.0,
+      "small_net": -546433.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:17:31.270736+08:00"
+      "flow_time": "2026-09-01T10:23:19.019966+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "002645",
-      "name": "华宏科技",
-      "price": 18.83,
-      "change_pct": -3.0381,
-      "total_amount": 187278897.72,
-      "main_net_inflow": -56582600.72,
-      "main_inflow_ratio": -30.213,
-      "super_net": -40940047.2,
-      "big_net": -15642553.52,
-      "mid_net": 203437.8,
-      "small_net": 124094.0,
+      "code": "603663",
+      "name": "三祥新材",
+      "price": 42.21,
+      "change_pct": -3.6741,
+      "total_amount": 384327358.38,
+      "main_net_inflow": -117065256.96,
+      "main_inflow_ratio": -30.4598,
+      "super_net": -93340493.45,
+      "big_net": -23724763.51,
+      "mid_net": 1999847.68,
+      "small_net": 824353.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:17:31.270736+08:00",
+      "flow_time": "2026-09-01T10:23:19.019966+08:00",
       "severity": "warn"
     }
   ]
