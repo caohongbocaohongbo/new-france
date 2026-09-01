@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T10:52:03.114535+08:00",
+  "now": "2026-09-01T10:58:09.177830+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 7504
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 6130
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47566
+        "latency_ms": 34937
       }
     ],
     "is_stale": false,
@@ -33,29 +31,12 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 20,
-  "sell_candidates": 22,
+  "buy_candidates": 21,
+  "sell_candidates": 21,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "603867",
-      "name": "新化股份",
-      "price": 29.46,
-      "change_pct": -3.4098,
-      "total_amount": 135191960.31,
-      "main_net_inflow": -49167402.37,
-      "main_inflow_ratio": -36.3686,
-      "super_net": -21105588.0,
-      "big_net": -28061814.37,
-      "mid_net": 1538252.0,
-      "small_net": 6091.94,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:52:03.114535+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
