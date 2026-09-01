@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T10:00:06.189187+08:00",
+  "now": "2026-09-01T10:05:58.266764+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 7848
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1389
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47290
+        "latency_ms": 37895
       }
     ],
     "is_stale": false,
@@ -32,27 +34,90 @@
   },
   "scanned": 2524,
   "buy_candidates": 18,
-  "sell_candidates": 37,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_candidates": 34,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "002084",
+      "name": "海鸥住工",
+      "price": 7.02,
+      "change_pct": 10.0313,
+      "total_amount": 573500584.8,
+      "main_net_inflow": 339346189.26,
+      "main_inflow_ratio": 59.171,
+      "super_net": 284208806.7,
+      "big_net": 55137382.56,
+      "mid_net": 15406885.26,
+      "small_net": 3511291.68,
+      "source": "sina",
+      "flow_time": "2026-09-01T10:05:58.266764+08:00"
+    },
+    {
+      "code": "000721",
+      "name": "西安饮食",
+      "price": 7.59,
+      "change_pct": 10.0,
+      "total_amount": 225713999.0,
+      "main_net_inflow": 133177195.0,
+      "main_inflow_ratio": 59.0026,
+      "super_net": 113209444.0,
+      "big_net": 19967751.0,
+      "mid_net": 3230833.0,
+      "small_net": -443407.0,
+      "source": "sina",
+      "flow_time": "2026-09-01T10:05:58.266764+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "002643",
-      "name": "万润股份",
-      "price": 13.07,
-      "change_pct": -1.8769,
-      "total_amount": 60839743.98,
-      "main_net_inflow": -19266680.0,
-      "main_inflow_ratio": -31.6679,
-      "super_net": -4160198.0,
-      "big_net": -15106482.0,
-      "mid_net": -5151490.62,
-      "small_net": 37629.0,
+      "code": "000636",
+      "name": "风华高科",
+      "price": 52.5,
+      "change_pct": -6.0487,
+      "total_amount": 2045930059.24,
+      "main_net_inflow": -662352409.14,
+      "main_inflow_ratio": -32.3741,
+      "super_net": -669769344.14,
+      "big_net": 7416935.0,
+      "mid_net": 0.0,
+      "small_net": 0.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:00:06.189187+08:00",
+      "flow_time": "2026-09-01T10:05:58.266764+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603290",
+      "name": "斯达半导",
+      "price": 88.65,
+      "change_pct": -2.7961,
+      "total_amount": 189800506.28,
+      "main_net_inflow": -59986579.58,
+      "main_inflow_ratio": -31.6051,
+      "super_net": -35657157.98,
+      "big_net": -24329421.6,
+      "mid_net": -2283194.4,
+      "small_net": 285228.0,
+      "source": "sina",
+      "flow_time": "2026-09-01T10:05:58.266764+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002378",
+      "name": "章源钨业",
+      "price": 24.95,
+      "change_pct": -2.6151,
+      "total_amount": 181395216.2,
+      "main_net_inflow": -56805400.2,
+      "main_inflow_ratio": -31.3158,
+      "super_net": -44796476.8,
+      "big_net": -12008923.4,
+      "mid_net": 4578645.2,
+      "small_net": -330196.0,
+      "source": "sina",
+      "flow_time": "2026-09-01T10:05:58.266764+08:00",
       "severity": "warn"
     }
   ]
