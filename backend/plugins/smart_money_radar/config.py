@@ -106,6 +106,15 @@ CONFIG = {
         "volume": _env_float("WEIGHT_LAUNCH_VOLUME", 20),
         "vwap": _env_float("WEIGHT_LAUNCH_VWAP", 15),
     },
+    # 07 盘口委托失衡
+    "orderbook_withdraw_drop": _env_float("ORDERBOOK_WITHDRAW_DROP", 0.4),
+    "orderbook_bid_rise": _env_float("ORDERBOOK_BID_RISE", 0.5),
+    # 08 逐笔成交行为
+    "orderflow_large_threshold": _env_float("ORDERFLOW_LARGE_THRESHOLD", 1_000_000),
+    # 13 集合竞价
+    "auction_poll_interval_s": _env_int("AUCTION_POLL_INTERVAL_S", 5),
+    "auction_start": _env("AUCTION_START", "09:15"),
+    "auction_end": _env("AUCTION_END", "09:25"),
     "alert_cooldown_minutes": _env_int("ALERT_COOLDOWN_MINUTES", 30),
     "history_keep_days": _env_int("HISTORY_KEEP_DAYS", 7),
     "radar_source": RADAR_SOURCE,

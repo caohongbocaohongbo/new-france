@@ -183,7 +183,13 @@ def _compute_history_days(watchlist: List[Dict], target_date: date) -> int:
             earliest = d
     if earliest is None:
         return MIN_HISTORY_DAYS
-    span = (target_date - earliest).days + 10  # +10 自然日缓冲，抵消停牌/节假日
+    # 用交易日历精确计算区间交易日数（替代自然日+缓冲硬凑），仍受上下限约束。
+    try:
+        from .trading_calendar import trading_days_between
+
+        span = trading_days_between(earliest, target_date) + 5  # +5 交易日缓冲，抵消停牌
+    except Exception:  # noqa: BLE001 日历不可用回退自然日
+        span = (target_date - earliest).days + 10
     return max(MIN_HISTORY_DAYS, min(span, MAX_HISTORY_DAYS))
 
 

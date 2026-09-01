@@ -105,3 +105,34 @@ async def principal_capital_source_health():
         return _json_safe(read_source_health_resilient())
     except Exception as exc:
         return {"status": "error", "error": str(exc)}
+
+
+# ---- 09 大单分层资金流（扩展，不动核心筛选） ----
+@router.get("/tier-flow/latest")
+async def tier_flow_latest():
+    try:
+        from .tier_flow import read_latest
+
+        return read_latest()
+    except Exception as exc:
+        return {"status": "error", "error": str(exc)}
+
+
+@router.post("/tier-flow/trigger")
+async def tier_flow_trigger(force: bool = Query(False)):
+    try:
+        from .tier_flow import run_tier_flow_once
+
+        return run_tier_flow_once(force=force)
+    except Exception as exc:
+        return {"status": "error", "error": str(exc)}
+
+
+@router.get("/tier-flow/{code}")
+async def tier_flow_code(code: str, date: str = Query(None)):
+    try:
+        from .tier_flow import read_code_history
+
+        return {"status": "ok", "code": code, "records": read_code_history(code, date)}
+    except Exception as exc:
+        return {"status": "error", "error": str(exc)}

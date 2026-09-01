@@ -208,6 +208,69 @@ def sell_pressure_decay(quotes: list, minute_buckets: dict, now: datetime,
     }
 
 
+# ==== 07 盘口委托失衡与五档动态雷达（纯函数） ====
+
+def bid_ask_imbalance(quote: dict) -> Optional[float]:
+    """盘口失衡 = (买五档总额 - 卖五档总额) / (买+卖总额)，范围 [-1, 1]。"""
+    book = order_book_strength(quote)
+    total = (_float(book.get("bid_amt"), 0) or 0) + (_float(book.get("ask_amt"), 0) or 0)
+    if total <= 0:
+        return None
+    return _round(((_float(book.get("bid_amt"), 0) or 0) - (_float(book.get("ask_amt"), 0) or 0)) / total, 4)
+
+
+def top_concentration(quote: dict) -> Optional[float]:
+    """档位集中度 = max(vol_i) / Σ vol_i（买卖十档）。"""
+    vols = [_float(quote.get(f"bid_vol{i}"), 0) or 0 for i in range(1, 6)] + [_float(quote.get(f"ask_vol{i}"), 0) or 0 for i in range(1, 6)]
+    total = sum(vols)
+    if total <= 0:
+        return None
+    return _round(max(vols) / total, 4)
+
+
+def _normalized_slope(values: list) -> float:
+    if not values or len(values) < 2:
+        return 0.0
+    values = [_float(v, 0) or 0 for v in values]
+    slope = _slope(values)
+    mean = sum(values) / len(values)
+    return slope / mean if mean else 0.0
+
+
+def ask_pressure_decay(series: list) -> float:
+    """卖压衰减 = 卖一量最近 K 帧斜率（负 = 撤压/消化），归一化。"""
+    return _round(_normalized_slope(series), 4)
+
+
+def bid_buildup(series: list) -> float:
+    """买盘堆积 = 买一量最近 K 帧斜率（正 = 垫单抢筹），归一化。"""
+    return _round(_normalized_slope(series), 4)
+
+
+def withdraw_pressure_signal(vol_series: list, price_series: list = None,
+                             drop_pct: float = 0.4) -> bool:
+    """卖一量窗口内下降超过 drop_pct 且价格未跌 → 疑似撤压。"""
+    if len(vol_series) < 2:
+        return False
+    first = _float(vol_series[0])
+    if first is None or first <= 0:
+        return False
+    dropped = (first - (_float(vol_series[-1], first) or first)) / first >= drop_pct
+    if dropped and price_series and len(price_series) >= 2 and _float(price_series[0]):
+        dropped = (_float(price_series[-1], 0) or 0) >= (_float(price_series[0], 0) or 0)
+    return dropped
+
+
+def bid_buildup_signal(vol_series: list, rise_pct: float = 0.5) -> bool:
+    """买一量窗口内上升超过 rise_pct → 疑似垫单抢筹。"""
+    if len(vol_series) < 2:
+        return False
+    first = _float(vol_series[0])
+    if first is None or first <= 0:
+        return False
+    return ((_float(vol_series[-1], first) or first) - first) / first >= rise_pct
+
+
 def fund_persistence_minutes(series: list) -> float:
     """指标5：主力净流入保持非递减的持续分钟数。"""
     points = []
