@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T10:11:50.756029+08:00",
+  "now": "2026-09-01T10:17:31.270736+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3685
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1387
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 35834
+        "latency_ms": 37755
       }
     ],
     "is_stale": false,
@@ -31,74 +33,59 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 18,
-  "sell_candidates": 26,
-  "buy_fresh_count": 3,
+  "buy_candidates": 20,
+  "sell_candidates": 24,
+  "buy_fresh_count": 2,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "603376",
-      "name": "大明电子",
-      "price": 28.48,
-      "change_pct": 10.0039,
-      "total_amount": 106437332.89,
-      "main_net_inflow": 59777052.11,
-      "main_inflow_ratio": 56.1617,
-      "super_net": 30104690.23,
-      "big_net": 29672361.88,
-      "mid_net": 4813144.98,
-      "small_net": 923765.0,
+      "code": "002721",
+      "name": "金一文化",
+      "price": 3.18,
+      "change_pct": 10.0346,
+      "total_amount": 586120653.09,
+      "main_net_inflow": 341240445.09,
+      "main_inflow_ratio": 58.2202,
+      "super_net": 292878177.09,
+      "big_net": 48362268.0,
+      "mid_net": 5488218.0,
+      "small_net": 70688.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:11:50.756029+08:00"
+      "flow_time": "2026-09-01T10:17:31.270736+08:00"
     },
     {
-      "code": "002586",
-      "name": "围海股份",
-      "price": 4.28,
-      "change_pct": 2.148,
-      "total_amount": 31622947.0,
-      "main_net_inflow": 17413567.0,
-      "main_inflow_ratio": 55.0662,
-      "super_net": 13188652.0,
-      "big_net": 4224915.0,
-      "mid_net": 971057.0,
-      "small_net": 6439.0,
+      "code": "603293",
+      "name": "埃泰克",
+      "price": 39.45,
+      "change_pct": 10.0112,
+      "total_amount": 143152128.41,
+      "main_net_inflow": 72360874.67,
+      "main_inflow_ratio": 50.5482,
+      "super_net": 40375489.63,
+      "big_net": 31985385.04,
+      "mid_net": 3724270.02,
+      "small_net": -349664.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:11:50.756029+08:00"
-    },
-    {
-      "code": "600168",
-      "name": "武汉控股",
-      "price": 4.5,
-      "change_pct": 1.1236,
-      "total_amount": 10633295.75,
-      "main_net_inflow": 5834867.35,
-      "main_inflow_ratio": 54.8736,
-      "super_net": 2313378.0,
-      "big_net": 3521489.35,
-      "mid_net": 406748.8,
-      "small_net": 216222.4,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:11:50.756029+08:00"
+      "flow_time": "2026-09-01T10:17:31.270736+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "603181",
-      "name": "皇马科技",
-      "price": 13.11,
-      "change_pct": 0.1528,
-      "total_amount": 21076682.0,
-      "main_net_inflow": -6648736.0,
-      "main_inflow_ratio": -31.5455,
-      "super_net": -6404202.0,
-      "big_net": -244534.0,
-      "mid_net": 1296467.0,
-      "small_net": -1032193.0,
+      "code": "002645",
+      "name": "华宏科技",
+      "price": 18.83,
+      "change_pct": -3.0381,
+      "total_amount": 187278897.72,
+      "main_net_inflow": -56582600.72,
+      "main_inflow_ratio": -30.213,
+      "super_net": -40940047.2,
+      "big_net": -15642553.52,
+      "mid_net": 203437.8,
+      "small_net": 124094.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:11:50.756029+08:00",
+      "flow_time": "2026-09-01T10:17:31.270736+08:00",
       "severity": "warn"
     }
   ]
