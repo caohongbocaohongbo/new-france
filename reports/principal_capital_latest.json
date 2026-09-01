@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T11:09:37.201729+08:00",
+  "now": "2026-09-01T11:15:28.857372+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3577
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1334
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 46761
+        "latency_ms": 36079
       }
     ],
     "is_stale": false,
@@ -31,44 +33,60 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 20,
-  "sell_candidates": 19,
-  "buy_fresh_count": 0,
+  "buy_candidates": 21,
+  "sell_candidates": 18,
+  "buy_fresh_count": 1,
   "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "600318",
+      "name": "新力金融",
+      "price": 7.49,
+      "change_pct": 9.9853,
+      "total_amount": 156045577.69,
+      "main_net_inflow": 83437469.29,
+      "main_inflow_ratio": 53.4699,
+      "super_net": 62930065.0,
+      "big_net": 20507404.29,
+      "mid_net": -1047310.0,
+      "small_net": -921850.0,
+      "source": "sina",
+      "flow_time": "2026-09-01T11:15:28.857372+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "002378",
-      "name": "章源钨业",
-      "price": 24.86,
-      "change_pct": -2.9664,
-      "total_amount": 345752947.37,
-      "main_net_inflow": -108743781.94,
-      "main_inflow_ratio": -31.4513,
-      "super_net": -81582315.8,
-      "big_net": -27161466.14,
-      "mid_net": 5067706.17,
-      "small_net": 1102734.0,
+      "code": "603181",
+      "name": "皇马科技",
+      "price": 13.09,
+      "change_pct": 0.0,
+      "total_amount": 28642912.46,
+      "main_net_inflow": -8667392.0,
+      "main_inflow_ratio": -30.2602,
+      "super_net": -6404202.0,
+      "big_net": -2263190.0,
+      "mid_net": 903269.8,
+      "small_net": -1238844.66,
       "source": "sina",
-      "flow_time": "2026-09-01T11:09:37.201729+08:00",
+      "flow_time": "2026-09-01T11:15:28.857372+08:00",
       "severity": "warn"
     },
     {
-      "code": "001359",
-      "name": "平安电工",
-      "price": 85.93,
-      "change_pct": -4.6599,
-      "total_amount": 176897943.82,
-      "main_net_inflow": -53175807.32,
-      "main_inflow_ratio": -30.0602,
-      "super_net": -18431774.08,
-      "big_net": -34744033.24,
-      "mid_net": -4584946.3,
-      "small_net": -228403.8,
+      "code": "000988",
+      "name": "华工科技",
+      "price": 100.81,
+      "change_pct": -3.7613,
+      "total_amount": 2215042358.85,
+      "main_net_inflow": -668016966.73,
+      "main_inflow_ratio": -30.1582,
+      "super_net": -714033952.73,
+      "big_net": 46016986.0,
+      "mid_net": 9528748.52,
+      "small_net": 131642.0,
       "source": "sina",
-      "flow_time": "2026-09-01T11:09:37.201729+08:00",
+      "flow_time": "2026-09-01T11:15:28.857372+08:00",
       "severity": "warn"
     }
   ]
