@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T11:21:15.946461+08:00",
+  "now": "2026-09-01T11:26:55.553568+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5239
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 4093
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 34715
+        "latency_ms": 35174
       }
     ],
     "is_stale": false,
@@ -40,19 +42,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002645",
-      "name": "华宏科技",
-      "price": 18.84,
-      "change_pct": -2.9866,
-      "total_amount": 268765110.12,
-      "main_net_inflow": -85977177.76,
-      "main_inflow_ratio": -31.9897,
-      "super_net": -54494773.6,
-      "big_net": -31482404.16,
-      "mid_net": -2723359.04,
-      "small_net": 876477.32,
+      "code": "605133",
+      "name": "嵘泰股份",
+      "price": 26.98,
+      "change_pct": -1.8552,
+      "total_amount": 74681847.8,
+      "main_net_inflow": -25024113.8,
+      "main_inflow_ratio": -33.5076,
+      "super_net": -9456664.8,
+      "big_net": -15567449.0,
+      "mid_net": -5912583.8,
+      "small_net": 406052.2,
       "source": "sina",
-      "flow_time": "2026-09-01T11:21:15.946461+08:00",
+      "flow_time": "2026-09-01T11:26:55.553568+08:00",
       "severity": "warn"
     }
   ]
