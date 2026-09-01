@@ -182,7 +182,11 @@ function navigateTo(route, pushState = true, force = false) {
         dashboard:'Dashboard 市场总览',watchlist:'监控列表',
         recommendations:'推荐结果',screening:'手动筛选',
         'national-team':'国家队动向','principal-capital':'主力资金双向监控',
-        'overnight-arbitrage':'尾盘隔夜套利',settings:'策略配置'
+        'overnight-arbitrage':'尾盘隔夜套利',settings:'策略配置',
+        emotion:'情绪周期',lhb:'龙虎榜席位','tier-flow':'大单分层资金流',
+        'tail-raid':'尾盘抢筹',board:'板块轮动','zt-seal':'涨停封单',
+        'volume-profile':'分价成本带','factor-lab':'因子实验室',l2:'真实L2升级',
+        'low-position':'低位涨停选股',resonance:'四维共振信号'
     }[page] || page;
     setTopbarMeta(page);
     if (page === 'dashboard') loadDashboard();
@@ -197,6 +201,10 @@ function navigateTo(route, pushState = true, force = false) {
     }
     if (page === 'overnight-arbitrage' && typeof setupOvernightArbitragePage === 'function') {
         setupOvernightArbitragePage();
+    }
+    // 14 方案新功能页面（通用渲染）
+    if (typeof setupResearchPage === 'function' && window.RESEARCH_PAGES && window.RESEARCH_PAGES.includes(page)) {
+        setupResearchPage(page);
     }
 }
 

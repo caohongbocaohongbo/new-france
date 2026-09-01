@@ -149,6 +149,28 @@ def get_app():
         import logging
         logging.getLogger(__name__).info("盘中雷达插件未加载: %s", exc)
 
+    # ---- 新功能插件（14 个方案，独立目录，可选加载）----
+    import importlib as _importlib
+    _new_plugins = [
+        ("emotion_cycle", "register_router", "/api/v1/emotion", "情绪周期"),
+        ("lhb_seat", "register_router", "/api/v1/lhb", "龙虎榜席位"),
+        ("tail_raid", "register_router", "/api/v1/tail-raid", "尾盘抢筹"),
+        ("zt_seal", "register_router", "/api/v1/zt-seal", "涨停封单"),
+        ("board_rotation", "register_router", "/api/v1/board", "板块轮动"),
+        ("volume_profile", "register_router", "/api/v1/volume-profile", "分价成本带"),
+        ("factor_lab", "register_router", "/api/v1/factor-lab", "因子实验室"),
+        ("l2_feed", "register_router", "/api/v1/l2", "真实L2"),
+        ("low_position_scanner", "register_router", "/api/v1/low-position", "低位涨停选股"),
+        ("resonance", "register_router", "/api/v1/resonance", "四维共振"),
+    ]
+    for _mod, _fn, _prefix, _tag in _new_plugins:
+        try:
+            _plugin = _importlib.import_module(f"backend.plugins.{_mod}")
+            _app.include_router(getattr(_plugin, _fn)(), prefix=_prefix, tags=[_tag])
+        except ImportError as exc:
+            import logging
+            logging.getLogger(__name__).info("%s 插件未加载: %s", _tag, exc)
+
     # 托管前端静态文件
     frontend_dir = PROJECT_DIR / "frontend"
     if frontend_dir.is_dir():
@@ -211,6 +233,33 @@ def main():
                         help="[插件] 全量计时验证(全主板清单+资金流, 测真实耗时/成功率)")
     parser.add_argument("--sina-workers", type=int, default=20,
                         help="[插件] 新浪全量验证的并发线程数(默认20)")
+    # ---- 14 个方案新增 CLI ----
+    parser.add_argument("--run-tier-flow-once", action="store_true",
+                        help="[插件09] 大单分层资金流与吸筹/出货/拉升")
+    parser.add_argument("--run-emotion-once", action="store_true",
+                        help="[插件01] 情绪周期与连板梯队")
+    parser.add_argument("--run-lhb-once", action="store_true",
+                        help="[插件02] 龙虎榜与席位画像")
+    parser.add_argument("--run-oa-calibration", action="store_true",
+                        help="[插件03] T+1 溢价样本校准")
+    parser.add_argument("--run-tail-raid-once", action="store_true",
+                        help="[插件04] 全A尾盘抢筹雷达")
+    parser.add_argument("--run-board-once", action="store_true",
+                        help="[插件05] 板块轮动与题材热度")
+    parser.add_argument("--run-factor-lab", action="store_true",
+                        help="[插件06] 因子实验室")
+    parser.add_argument("--run-zt-seal-once", action="store_true",
+                        help="[插件10] 涨停封单强度")
+    parser.add_argument("--run-volume-profile-once", action="store_true",
+                        help="[插件11] 分价成交与主力成本带")
+    parser.add_argument("--run-l2-daemon", action="store_true",
+                        help="[插件12] 真实L2升级路径(M1调研)")
+    parser.add_argument("--run-low-position-once", action="store_true",
+                        help="[插件16] 低位涨停选股器")
+    parser.add_argument("--run-resonance-once", action="store_true",
+                        help="[插件15] 四维共振信号")
+    parser.add_argument("--max-kline-workers", type=int, default=None,
+                        help="[插件15/16] K线批量并发线程数(默认: 15=20, 16=30)")
     args = parser.parse_args()
 
     if args.init_db:
@@ -272,8 +321,41 @@ def main():
         _run_refresh_data_assets(args, logger)
         return
 
+    # ---- 14 个方案新增 CLI 分发 ----
+    _new_cli_map = [
+        (args.run_tier_flow_once, "backend.plugins.principal_capital.tier_flow", "run_tier_flow_cli", "大单分层资金流"),
+        (args.run_emotion_once, "backend.plugins.emotion_cycle", "run_emotion_cli", "情绪周期"),
+        (args.run_lhb_once, "backend.plugins.lhb_seat", "run_lhb_cli", "龙虎榜"),
+        (args.run_oa_calibration, "backend.plugins.overnight_arbitrage.calibration", "run_calibration_cli", "溢价校准"),
+        (args.run_tail_raid_once, "backend.plugins.tail_raid", "run_tail_raid_cli", "尾盘抢筹"),
+        (args.run_board_once, "backend.plugins.board_rotation", "run_board_cli", "板块轮动"),
+        (args.run_factor_lab, "backend.plugins.factor_lab", "run_factor_lab_cli", "因子实验室"),
+        (args.run_zt_seal_once, "backend.plugins.zt_seal", "run_zt_seal_cli", "涨停封单"),
+        (args.run_volume_profile_once, "backend.plugins.volume_profile", "run_volume_profile_cli", "分价成本带"),
+        (args.run_l2_daemon, "backend.plugins.l2_feed", "run_l2_cli", "真实L2"),
+        (args.run_low_position_once, "backend.plugins.low_position_scanner", "run_low_position_cli", "低位涨停选股"),
+        (args.run_resonance_once, "backend.plugins.resonance", "run_resonance_cli", "四维共振"),
+    ]
+    for _flag, _mod_path, _cli_name, _label in _new_cli_map:
+        if _flag:
+            _run_plugin_cli(_mod_path, _cli_name, args, logger, _label)
+            return
+
     # 默认：执行每日完整流程
     asyncio.run(_run_daily_pipeline(args, logger))
+
+
+def _run_plugin_cli(mod_path, cli_name, args, logger, label):
+    """[插件] 通用 CLI 分发（动态导入，失败只记录不阻断）。"""
+    import importlib
+    try:
+        module = importlib.import_module(mod_path)
+        result = getattr(module, cli_name)(args)
+        logger.info("%s 完成: status=%s", label, result.get("status"))
+    except ImportError as exc:
+        logger.error("%s 插件未安装: %s", label, exc)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("%s 执行异常: %s", label, exc)
 
 
 def _run_principal_capital_cli(args, logger):

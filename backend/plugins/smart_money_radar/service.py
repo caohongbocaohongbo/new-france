@@ -19,7 +19,7 @@ from backend.plugins.principal_capital.service import (
     _fetch_snapshot_json,
 )
 
-from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, LATEST_FILE, NOTIFIED_DIR, REPLAY_DB_FILE, STATE_DIR
+from .config import BEIJING_TZ, CONFIG, HISTORY_FILE, LATEST_FILE, NOTIFIED_DIR, REPORT_DIR, REPLAY_DB_FILE, STATE_DIR
 from .indicators import (
     active_buy_ratio,
     distance_from_high,
@@ -33,6 +33,9 @@ from .indicators import (
     volume_ratio,
     vwap_deviation,
 )
+from . import auction as _auction
+from . import orderbook as _orderbook
+from . import orderflow as _orderflow
 from .notifier import build_and_send
 from .replay import RadarReplay
 from .scoring import launch_score, smart_money_score
@@ -269,6 +272,58 @@ def read_latest() -> dict:
         return {"status": "error", "reason": "latest 文件读取失败", "hits": []}
 
 
+def _write_extension_snapshots(store: RadarStore, now: datetime, watch_pool: list) -> None:
+    """07/08/13：由内存滑动窗口物化盘口/逐笔/竞价快照（只落本地 JSON）。"""
+    try:
+        ob_items = _orderbook.evaluate_pool(store, now, CONFIG)
+        _orderbook.write_orderbook_events(ob_items, now)
+        _orderbook.write_orderbook_latest({
+            "status": "completed" if ob_items else "no_data",
+            "now": now.isoformat(), "count": len(ob_items), "items": ob_items,
+        })
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("盘口快照物化失败: %s", exc)
+    try:
+        of_items = []
+        for code, buckets in (store.minute_buckets or {}).items():
+            of_items.append({
+                "code": code,
+                "name": next((i.get("name", "") for i in watch_pool if i.get("code") == code), ""),
+                "minutes": _orderflow.summarize_minute(buckets),
+                "wash_trade": _orderflow.wash_trade_flag(buckets),
+            })
+        ORDERFLOW_LATEST = REPORT_DIR / "orderflow_latest.json"
+        ORDERFLOW_LATEST.write_text(json.dumps({
+            "status": "completed" if of_items else "no_data",
+            "now": now.isoformat(), "count": len(of_items), "items": of_items,
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("逐笔快照物化失败: %s", exc)
+    try:
+        AUCTION_LATEST = REPORT_DIR / "auction_latest.json"
+        AUCTION_LATEST.write_text(json.dumps(_json_safe(_auction.build_auction_snapshot(store, now, _auction.load_prev_zt_codes(now))), ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("竞价快照物化失败: %s", exc)
+
+
+async def run_auction_poll_once(pool, store: RadarStore, now: datetime, watch_pool: list) -> dict:
+    """13：竞价时窗内采集一轮虚拟开盘价/匹配量并写入 auction_frames。"""
+    from .sources.tdx_source import poll_pool_once
+
+    payloads = poll_pool_once(pool, watch_pool, CONFIG)
+    payloads = await payloads if inspect.isawaitable(payloads) else payloads
+    for payload in payloads:
+        if isinstance(payload, Exception) or payload.get("error"):
+            continue
+        quote = dict(payload.get("quote") or {})
+        quote["name"] = payload.get("name") or quote.get("name") or ""
+        store.add_auction_frame(payload.get("code"), quote, now)
+    snapshot = _auction.build_auction_snapshot(store, now, _auction.load_prev_zt_codes(now))
+    AUCTION_LATEST = REPORT_DIR / "auction_latest.json"
+    AUCTION_LATEST.write_text(json.dumps(_json_safe(snapshot), ensure_ascii=False, indent=2), encoding="utf-8")
+    return snapshot
+
+
 def _build_result(status: str, now: datetime, watch_pool: list, hits: list, errors: list = None, email=None) -> dict:
     return {
         "status": status,
@@ -502,4 +557,5 @@ async def run_radar_once(
             errors.append(f"SQLite 回放写入失败: {exc}")
     result = _build_result("completed", now, watch_pool, hits, errors=errors, email=email)
     _write_latest(result)
+    _write_extension_snapshots(store, now, watch_pool)
     return result

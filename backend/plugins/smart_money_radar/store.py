@@ -16,6 +16,7 @@ class RadarStore:
         self.bar_cache = {}
         self.finance_cache = {}
         self.fund_series = defaultdict(lambda: deque(maxlen=self.max_fund_points))
+        self.auction_frames = defaultdict(lambda: deque(maxlen=max_quotes))
         self.state_date = None
 
     def ensure_date(self, now: datetime) -> None:
@@ -98,6 +99,10 @@ class RadarStore:
     def add_fund_point(self, code: str, point: dict) -> None:
         self.fund_series[str(code).zfill(6)].append(dict(point or {}))
 
+    def add_auction_frame(self, code: str, quote: dict, now: datetime) -> None:
+        """13 集合竞价采样帧（收盘 reset）。"""
+        self.auction_frames[str(code).zfill(6)].append({"ts": now.isoformat(), "quote": dict(quote or {})})
+
     def gc(self, now: datetime, ttl_seconds: float = 45) -> None:
         """午休清理过期分钟线缓存，保留盘口和资金日内窗口。"""
         expired = [
@@ -115,6 +120,7 @@ class RadarStore:
         self.bar_cache.clear()
         self.finance_cache.clear()
         self.fund_series.clear()
+        self.auction_frames.clear()
         self.state_date = None
 
 

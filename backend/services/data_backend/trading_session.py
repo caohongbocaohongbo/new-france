@@ -15,8 +15,10 @@ def current_trading_session(now: Optional[datetime] = None) -> str:
     else:
         current = current.astimezone(BEIJING_TZ)
 
-    # TODO: 后续接入交易日历，精确识别法定节假日。
-    if current.weekday() >= 5:
+    # 接入交易日历，精确识别法定节假日（非交易日一律 closed）。
+    from ..trading_calendar import is_trading_day
+
+    if not is_trading_day(current.date()):
         return "closed"
 
     minutes = current.hour * 60 + current.minute

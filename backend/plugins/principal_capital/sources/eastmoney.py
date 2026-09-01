@@ -19,7 +19,7 @@ DEFAULT_HEADERS = {
     "Referer": "https://data.eastmoney.com/zjlx/list.html",
 }
 DEFAULT_UT = "bd1d9ddb04089700cf9c27f6f7426281"
-DEFAULT_FIELDS = "f12,f14,f2,f3,f6,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87"
+DEFAULT_FIELDS = "f12,f14,f2,f3,f6,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87,f21"
 DEFAULT_FS_GROUPS = [
     "m:1+t:2,m:1+t:23",
     "m:0+t:6,m:0+t:80",
@@ -81,6 +81,7 @@ def _parse_diff(items: list[dict]) -> list[dict]:
             "big_net": big_net,
             "mid_net": _to_float(item.get("f78")),
             "small_net": _to_float(item.get("f84")),
+            "float_mcap": _to_float(item.get("f21")),
             "source": "eastmoney",
         })
     return rows
@@ -150,7 +151,7 @@ def fetch_market_fund_flow(
         return pd.DataFrame(columns=[
             "code", "name", "price", "change_pct", "total_amount",
             "main_net_inflow", "main_inflow_ratio", "super_net", "big_net",
-            "mid_net", "small_net", "source",
+            "mid_net", "small_net", "float_mcap", "source",
         ])
     df = df.drop_duplicates(subset=["code"], keep="first").reset_index(drop=True)
     return df

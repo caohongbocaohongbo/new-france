@@ -23,7 +23,10 @@ def _json_safe(value):
 
 def trading_session_status(now: datetime) -> dict:
     """A 股交易时段：上午 09:30-11:30，下午 13:00-15:00。"""
-    is_trading_day = now.weekday() < 5
+    # 交易日判断委托给交易日历基础设施（含节假日/调休），签名与返回结构不变。
+    from ..services.trading_calendar import is_trading_day as _calendar_is_trading_day
+
+    is_trading_day = _calendar_is_trading_day(now.date())
     minutes = now.hour * 60 + now.minute
     morning_open = 9 * 60 + 30
     morning_close = 11 * 60 + 30

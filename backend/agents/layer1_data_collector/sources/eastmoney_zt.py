@@ -97,6 +97,8 @@ def _fetch_zt_pool_akshare(date_str: str) -> Optional[pd.DataFrame]:
             "连板数": _safe_int(item.get("连板数")),
             "涨停统计": str(item.get("涨停统计", "")).strip(),
             "所属行业": str(item.get("所属行业", "")).strip(),
+            "封板资金": _safe_float(item.get("封板资金")),
+            "最后封板时间": _parse_time_value(item.get("最后封板时间")),
         })
 
     df = pd.DataFrame(rows)
@@ -190,6 +192,8 @@ def fetch_zt_pool(target_date: Optional[datetime] = None) -> Optional[pd.DataFra
                     "炸板次数": zbc_val,
                     "连板数": _safe_int(item.get("lbc", 0)),
                     "涨停统计": str(item.get("zttj", "")).strip(),
+                    "封板资金": _safe_float(item.get("fund", 0)),
+                    "最后封板时间": _parse_time_value(item.get("lbt", 0)),
                 })
             df = pd.DataFrame(rows)
             meta = {

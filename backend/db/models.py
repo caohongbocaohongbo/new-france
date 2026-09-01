@@ -243,3 +243,9 @@ class NationalTeamSnapshot(Base):
 def register_models():
     """确保所有模型已导入（供 init_db 使用）"""
     pass
+
+
+# 新功能插件表集中注册（14 个方案的 SQLite 存储）。
+# 注意：init_db 仅 import 本模块（不调用 register_models），故必须在模块级导入
+# plugin_models，其 ORM 类才会注册到 Base.metadata 被 create_all 建表。
+from . import plugin_models  # noqa: E402,F401

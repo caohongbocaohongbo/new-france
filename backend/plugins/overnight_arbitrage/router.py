@@ -121,3 +121,24 @@ async def get_latest_overnight():
 async def get_overnight_history():
     """读取尾盘隔夜套利跨日推荐统计。"""
     return read_overnight_history_resilient()
+
+
+# ---- 03 T+1 溢价校准（扩展，不改核心决策） ----
+@router.get("/calibration/latest")
+async def get_calibration_latest():
+    try:
+        from .calibration import read_latest
+
+        return read_latest()
+    except Exception as exc:
+        return {"status": "error", "message": str(exc)}
+
+
+@router.get("/calibration/samples")
+async def get_calibration_samples(score_bucket: str = Query(None)):
+    try:
+        from .calibration import read_samples
+
+        return {"status": "ok", "records": read_samples(score_bucket)}
+    except Exception as exc:
+        return {"status": "error", "message": str(exc)}
