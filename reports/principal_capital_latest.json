@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T10:23:19.019966+08:00",
+  "now": "2026-09-01T10:29:00.034444+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3032
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1506
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 35184
+        "latency_ms": 41415
       }
     ],
     "is_stale": false,
@@ -31,59 +33,44 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 23,
-  "sell_candidates": 22,
-  "buy_fresh_count": 2,
-  "sell_fresh_count": 1,
+  "buy_candidates": 21,
+  "sell_candidates": 23,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "000596",
-      "name": "古井贡酒",
-      "price": 100.88,
-      "change_pct": 9.9989,
-      "total_amount": 440444995.43,
-      "main_net_inflow": 229642025.43,
-      "main_inflow_ratio": 52.1386,
-      "super_net": 191489571.88,
-      "big_net": 38152453.55,
-      "mid_net": 1005195.0,
-      "small_net": -353363.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:23:19.019966+08:00"
-    },
-    {
-      "code": "601566",
-      "name": "九牧王",
-      "price": 9.42,
-      "change_pct": 10.0467,
-      "total_amount": 110773353.88,
-      "main_net_inflow": 57181540.88,
-      "main_inflow_ratio": 51.6203,
-      "super_net": 40385373.88,
-      "big_net": 16796167.0,
-      "mid_net": 838304.0,
-      "small_net": -546433.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T10:23:19.019966+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603663",
-      "name": "三祥新材",
-      "price": 42.21,
-      "change_pct": -3.6741,
-      "total_amount": 384327358.38,
-      "main_net_inflow": -117065256.96,
-      "main_inflow_ratio": -30.4598,
-      "super_net": -93340493.45,
-      "big_net": -23724763.51,
-      "mid_net": 1999847.68,
-      "small_net": 824353.0,
+      "code": "002057",
+      "name": "中钢天源",
+      "price": 8.92,
+      "change_pct": -0.6682,
+      "total_amount": 42205301.0,
+      "main_net_inflow": -13428850.35,
+      "main_inflow_ratio": -31.8179,
+      "super_net": -5801682.0,
+      "big_net": -7627168.35,
+      "mid_net": -2317178.65,
+      "small_net": -67632.0,
       "source": "sina",
-      "flow_time": "2026-09-01T10:23:19.019966+08:00",
+      "flow_time": "2026-09-01T10:29:00.034444+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "003004",
+      "name": "声迅股份",
+      "price": 72.3,
+      "change_pct": -1.7263,
+      "total_amount": 33042777.0,
+      "main_net_inflow": -10097458.0,
+      "main_inflow_ratio": -30.5587,
+      "super_net": -633458.0,
+      "big_net": -9464000.0,
+      "mid_net": -2027140.0,
+      "small_net": -62213.0,
+      "source": "sina",
+      "flow_time": "2026-09-01T10:29:00.034444+08:00",
       "severity": "warn"
     }
   ]
