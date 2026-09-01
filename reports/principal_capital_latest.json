@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-01T09:54:17.150245+08:00",
+  "now": "2026-09-01T10:00:06.189187+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3156
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1317
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 39789
+        "latency_ms": 47290
       }
     ],
     "is_stale": false,
@@ -33,120 +31,28 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 23,
-  "sell_candidates": 45,
-  "buy_fresh_count": 5,
-  "sell_fresh_count": 2,
+  "buy_candidates": 18,
+  "sell_candidates": 37,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "605300",
-      "name": "佳禾食品",
-      "price": 10.73,
-      "change_pct": 10.0513,
-      "total_amount": 59970139.84,
-      "main_net_inflow": 39779336.82,
-      "main_inflow_ratio": 66.3319,
-      "super_net": 24532549.15,
-      "big_net": 15246787.67,
-      "mid_net": 3722333.78,
-      "small_net": 205014.9,
-      "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00"
-    },
-    {
-      "code": "002470",
-      "name": "金正大",
-      "price": 2.32,
-      "change_pct": 9.9526,
-      "total_amount": 315413481.3,
-      "main_net_inflow": 190160171.3,
-      "main_inflow_ratio": 60.2892,
-      "super_net": 145984424.3,
-      "big_net": 44175747.0,
-      "mid_net": 6116208.0,
-      "small_net": 478724.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00"
-    },
-    {
-      "code": "002945",
-      "name": "华林证券",
-      "price": 15.53,
-      "change_pct": 6.5158,
-      "total_amount": 438168503.22,
-      "main_net_inflow": 232644772.02,
-      "main_inflow_ratio": 53.0948,
-      "super_net": 233939713.62,
-      "big_net": -1294941.6,
-      "mid_net": -1953951.0,
-      "small_net": -597608.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00"
-    },
-    {
-      "code": "600008",
-      "name": "首创环保",
-      "price": 2.81,
-      "change_pct": 1.0791,
-      "total_amount": 79840293.4,
-      "main_net_inflow": 40147859.42,
-      "main_inflow_ratio": 50.2852,
-      "super_net": 42289531.41,
-      "big_net": -2141671.99,
-      "mid_net": -2224524.0,
-      "small_net": -1513566.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00"
-    },
-    {
-      "code": "600475",
-      "name": "华光环能",
-      "price": 15.38,
-      "change_pct": 2.8763,
-      "total_amount": 41418403.32,
-      "main_net_inflow": 20822775.18,
-      "main_inflow_ratio": 50.2742,
-      "super_net": 11985010.32,
-      "big_net": 8837764.86,
-      "mid_net": 379176.14,
-      "small_net": -581854.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002938",
-      "name": "鹏鼎控股",
-      "price": 88.52,
-      "change_pct": -5.1233,
-      "total_amount": 659675670.35,
-      "main_net_inflow": -225490321.65,
-      "main_inflow_ratio": -34.182,
-      "super_net": -218086864.65,
-      "big_net": -7403457.0,
-      "mid_net": 474926.0,
-      "small_net": 36.0,
+      "code": "002643",
+      "name": "万润股份",
+      "price": 13.07,
+      "change_pct": -1.8769,
+      "total_amount": 60839743.98,
+      "main_net_inflow": -19266680.0,
+      "main_inflow_ratio": -31.6679,
+      "super_net": -4160198.0,
+      "big_net": -15106482.0,
+      "mid_net": -5151490.62,
+      "small_net": 37629.0,
       "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603929",
-      "name": "亚翔集成",
-      "price": 158.71,
-      "change_pct": -3.9925,
-      "total_amount": 222075047.5,
-      "main_net_inflow": -67677245.5,
-      "main_inflow_ratio": -30.4749,
-      "super_net": -58201648.5,
-      "big_net": -9475597.0,
-      "mid_net": 361632.0,
-      "small_net": -193720.0,
-      "source": "sina",
-      "flow_time": "2026-09-01T09:54:17.150245+08:00",
+      "flow_time": "2026-09-01T10:00:06.189187+08:00",
       "severity": "warn"
     }
   ]
