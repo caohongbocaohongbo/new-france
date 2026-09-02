@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-02T13:06:49.548777+08:00",
+  "now": "2026-09-02T13:12:35.844690+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 6915
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1299
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 39251
+        "latency_ms": 38681
       }
     ],
     "is_stale": false,
@@ -32,43 +34,107 @@
   },
   "scanned": 2524,
   "buy_candidates": 11,
-  "sell_candidates": 69,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
+  "sell_candidates": 65,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 6,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "000985",
-      "name": "大庆华科",
-      "price": 18.71,
-      "change_pct": 9.9941,
-      "total_amount": 42873070.0,
-      "main_net_inflow": 22178457.0,
-      "main_inflow_ratio": 51.7305,
-      "super_net": 16420748.0,
-      "big_net": 5757709.0,
-      "mid_net": -842260.0,
-      "small_net": -294345.0,
-      "source": "sina",
-      "flow_time": "2026-09-02T13:06:49.548777+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600257",
-      "name": "大湖股份",
-      "price": 5.79,
-      "change_pct": -2.8523,
-      "total_amount": 80734836.86,
-      "main_net_inflow": -24386577.67,
-      "main_inflow_ratio": -30.2058,
-      "super_net": -9379054.0,
-      "big_net": -15007523.67,
-      "mid_net": -3425487.29,
-      "small_net": -1487583.0,
+      "code": "605298",
+      "name": "必得科技",
+      "price": 47.51,
+      "change_pct": -2.6634,
+      "total_amount": 31285543.0,
+      "main_net_inflow": -11690987.0,
+      "main_inflow_ratio": -37.3687,
+      "super_net": -2334215.0,
+      "big_net": -9356772.0,
+      "mid_net": -1925990.0,
+      "small_net": -1067112.0,
       "source": "sina",
-      "flow_time": "2026-09-02T13:06:49.548777+08:00",
+      "flow_time": "2026-09-02T13:12:35.844690+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002572",
+      "name": "索菲亚",
+      "price": 7.8,
+      "change_pct": -3.7037,
+      "total_amount": 78083586.74,
+      "main_net_inflow": -24488371.0,
+      "main_inflow_ratio": -31.3617,
+      "super_net": -15510430.0,
+      "big_net": -8977941.0,
+      "mid_net": -4472796.0,
+      "small_net": -387092.26,
+      "source": "sina",
+      "flow_time": "2026-09-02T13:12:35.844690+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002607",
+      "name": "中公教育",
+      "price": 2.08,
+      "change_pct": -2.3474,
+      "total_amount": 181221269.0,
+      "main_net_inflow": -56143498.0,
+      "main_inflow_ratio": -30.9806,
+      "super_net": -52643131.88,
+      "big_net": -3500366.12,
+      "mid_net": 1942585.0,
+      "small_net": -985990.0,
+      "source": "sina",
+      "flow_time": "2026-09-02T13:12:35.844690+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "001286",
+      "name": "陕西能源",
+      "price": 9.49,
+      "change_pct": -1.7598,
+      "total_amount": 131905047.66,
+      "main_net_inflow": -40216560.65,
+      "main_inflow_ratio": -30.489,
+      "super_net": -24358098.0,
+      "big_net": -15858462.65,
+      "mid_net": 5360005.81,
+      "small_net": -1011020.0,
+      "source": "sina",
+      "flow_time": "2026-09-02T13:12:35.844690+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002219",
+      "name": "新里程",
+      "price": 2.17,
+      "change_pct": -2.6906,
+      "total_amount": 132476721.0,
+      "main_net_inflow": -40228662.0,
+      "main_inflow_ratio": -30.3666,
+      "super_net": -35162859.0,
+      "big_net": -5065803.0,
+      "mid_net": -2959071.0,
+      "small_net": -1692052.0,
+      "source": "sina",
+      "flow_time": "2026-09-02T13:12:35.844690+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600469",
+      "name": "风神股份",
+      "price": 5.25,
+      "change_pct": -1.5009,
+      "total_amount": 34659082.5,
+      "main_net_inflow": -10397988.0,
+      "main_inflow_ratio": -30.0008,
+      "super_net": -3068158.0,
+      "big_net": -7329830.0,
+      "mid_net": -999110.5,
+      "small_net": -205816.0,
+      "source": "sina",
+      "flow_time": "2026-09-02T13:12:35.844690+08:00",
       "severity": "warn"
     }
   ]
