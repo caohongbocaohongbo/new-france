@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-02T10:17:07.278642+08:00",
+  "now": "2026-09-02T10:23:09.306625+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 9499
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 4170
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42948
+        "latency_ms": 40071
       }
     ],
     "is_stale": false,
@@ -33,93 +31,29 @@
     "verify_result": null
   },
   "scanned": 2524,
-  "buy_candidates": 11,
-  "sell_candidates": 163,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 4,
+  "buy_candidates": 10,
+  "sell_candidates": 144,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002201",
-      "name": "九鼎新材",
-      "price": 9.22,
-      "change_pct": 10.0239,
-      "total_amount": 326345962.08,
-      "main_net_inflow": 164123925.26,
-      "main_inflow_ratio": 50.2914,
-      "super_net": 121649099.34,
-      "big_net": 42474825.92,
-      "mid_net": 24700618.0,
-      "small_net": 4564807.66,
-      "source": "sina",
-      "flow_time": "2026-09-02T10:17:07.278642+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000541",
-      "name": "佛山照明",
-      "price": 4.95,
-      "change_pct": -0.8016,
-      "total_amount": 10974921.86,
-      "main_net_inflow": -3860481.0,
-      "main_inflow_ratio": -35.1755,
-      "super_net": -1639718.0,
-      "big_net": -2220763.0,
-      "mid_net": -500053.0,
-      "small_net": -281449.86,
+      "code": "603355",
+      "name": "莱克电气",
+      "price": 27.06,
+      "change_pct": -3.5294,
+      "total_amount": 47548777.0,
+      "main_net_inflow": -19559472.0,
+      "main_inflow_ratio": -41.1356,
+      "super_net": -6733529.0,
+      "big_net": -12825943.0,
+      "mid_net": -6147623.0,
+      "small_net": -2108094.0,
       "source": "sina",
-      "flow_time": "2026-09-02T10:17:07.278642+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000631",
-      "name": "顺发恒能",
-      "price": 2.97,
-      "change_pct": -1.3289,
-      "total_amount": 10493970.0,
-      "main_net_inflow": -3442588.0,
-      "main_inflow_ratio": -32.8054,
-      "super_net": 0.0,
-      "big_net": -3442588.0,
-      "mid_net": -121068.0,
-      "small_net": -138896.0,
-      "source": "sina",
-      "flow_time": "2026-09-02T10:17:07.278642+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002692",
-      "name": "远程股份",
-      "price": 4.27,
-      "change_pct": -0.6977,
-      "total_amount": 18982138.5,
-      "main_net_inflow": -5831593.0,
-      "main_inflow_ratio": -30.7215,
-      "super_net": -3474882.0,
-      "big_net": -2356711.0,
-      "mid_net": 411137.5,
-      "small_net": 486121.0,
-      "source": "sina",
-      "flow_time": "2026-09-02T10:17:07.278642+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000516",
-      "name": "国际医学",
-      "price": 4.09,
-      "change_pct": -1.4458,
-      "total_amount": 27626011.0,
-      "main_net_inflow": -8302500.0,
-      "main_inflow_ratio": -30.0532,
-      "super_net": -6072280.0,
-      "big_net": -2230220.0,
-      "mid_net": -1348851.0,
-      "small_net": -505300.0,
-      "source": "sina",
-      "flow_time": "2026-09-02T10:17:07.278642+08:00",
-      "severity": "warn"
+      "flow_time": "2026-09-02T10:23:09.306625+08:00",
+      "severity": "alert"
     }
   ]
 }
