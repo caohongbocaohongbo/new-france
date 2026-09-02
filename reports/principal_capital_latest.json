@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-02T11:16:34.805697+08:00",
+  "now": "2026-09-02T11:22:25.746716+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5059
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1513
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40519
+        "latency_ms": 38910
       }
     ],
     "is_stale": false,
@@ -33,7 +33,7 @@
   },
   "scanned": 2524,
   "buy_candidates": 10,
-  "sell_candidates": 81,
+  "sell_candidates": 82,
   "buy_fresh_count": 0,
   "sell_fresh_count": 2,
   "email_sent": true,
@@ -41,35 +41,35 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000726",
-      "name": "鲁 泰Ａ",
-      "price": 5.94,
-      "change_pct": -1.6556,
-      "total_amount": 16881106.0,
-      "main_net_inflow": -6392473.0,
-      "main_inflow_ratio": -37.8676,
-      "super_net": -1417875.0,
-      "big_net": -4974598.0,
-      "mid_net": -347214.0,
-      "small_net": -454041.0,
+      "code": "000885",
+      "name": "城发环境",
+      "price": 12.09,
+      "change_pct": -1.2255,
+      "total_amount": 28116276.54,
+      "main_net_inflow": -8694638.24,
+      "main_inflow_ratio": -30.9239,
+      "super_net": -1620190.0,
+      "big_net": -7074448.24,
+      "mid_net": -3039793.3,
+      "small_net": -3184743.92,
       "source": "sina",
-      "flow_time": "2026-09-02T11:16:34.805697+08:00",
+      "flow_time": "2026-09-02T11:22:25.746716+08:00",
       "severity": "warn"
     },
     {
-      "code": "600425",
-      "name": "青松建化",
-      "price": 3.74,
-      "change_pct": -1.3193,
-      "total_amount": 38880044.95,
-      "main_net_inflow": -11936314.95,
-      "main_inflow_ratio": -30.7004,
-      "super_net": -5336363.0,
-      "big_net": -6599951.95,
-      "mid_net": 488341.0,
-      "small_net": 184235.0,
+      "code": "000521",
+      "name": "长虹美菱",
+      "price": 4.83,
+      "change_pct": -1.227,
+      "total_amount": 14527745.97,
+      "main_net_inflow": -4406796.0,
+      "main_inflow_ratio": -30.3337,
+      "super_net": 0.0,
+      "big_net": -4406796.0,
+      "mid_net": -529066.97,
+      "small_net": -446201.0,
       "source": "sina",
-      "flow_time": "2026-09-02T11:16:34.805697+08:00",
+      "flow_time": "2026-09-02T11:22:25.746716+08:00",
       "severity": "warn"
     }
   ]
