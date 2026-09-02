@@ -271,6 +271,9 @@ class ResonanceSnapshot(Base):
     d4_score = Column(Float)
     active_source = Column(String(30))
     degraded = Column(Integer, default=0)
+    # 17 盘中实时化：1=用了实时价计算 D2，0=日线；1=已推送盘中通知
+    d2_realtime = Column(Integer, default=0)
+    notified = Column(Integer, default=0)
     __table_args__ = (Index("idx_resonance", "date", "signal"), Index("idx_resonance_code", "code", "date"))
 
 

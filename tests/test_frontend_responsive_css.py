@@ -97,7 +97,6 @@ class FrontendResponsiveCssTest(unittest.TestCase):
 
     def test_screening_result_tools_table_note_has_no_extra_line(self):
         css = (ROOT / "frontend/css/styles.css").read_text(encoding="utf-8")
-        docs_css = (ROOT / "docs/css/styles.css").read_text(encoding="utf-8")
         match = re.search(r"\.result-tools \.table-note\s*\{([\s\S]*?)\n\}", css)
 
         self.assertIsNotNone(match)
@@ -105,7 +104,6 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         self.assertIn("margin: 0", block)
         self.assertIn("padding-top: 0", block)
         self.assertIn("border-top: 0", block)
-        self.assertIn(match.group(0), docs_css)
 
     def test_dashboard_limit_panels_have_matched_height_and_clean_trend_colors(self):
         js = (ROOT / "frontend/js/app.js").read_text(encoding="utf-8")
@@ -189,40 +187,34 @@ class FrontendResponsiveCssTest(unittest.TestCase):
         若以后有人把 fallback 删掉、直接硬依赖主项目全局 apiFetch / escapeHtml 等，
         此测试会失败，提醒迁移性已经被打破。
         """
-        frontend_plugin = (ROOT / "frontend/js/plugins/overnight_arbitrage.js").read_text(encoding="utf-8")
-        docs_plugin = (ROOT / "docs/js/plugins/overnight_arbitrage.js").read_text(encoding="utf-8")
-        for plugin_js in (frontend_plugin, docs_plugin):
-            # 命名空间
-            self.assertIn("window.OvernightArbitrage", plugin_js)
-            # 必须有 fallback 检测（typeof xxx === 'function'）
-            self.assertIn("typeof apiFetch === 'function'", plugin_js)
-            self.assertIn("typeof escapeHtml === 'function'", plugin_js)
-            self.assertIn("typeof formatNumber === 'function'", plugin_js)
-            self.assertIn("typeof formatMaybePct === 'function'", plugin_js)
-            self.assertIn("typeof setInlineStatus === 'function'", plugin_js)
-            # 必须有内部命名变量 _oaXxx
-            self.assertIn("_oaApiFetch", plugin_js)
-            self.assertIn("_oaEscapeHtml", plugin_js)
-            self.assertIn("_oaSetInlineStatus", plugin_js)
-        # frontend 与 docs 镜像保持一致
-        self.assertEqual(frontend_plugin, docs_plugin)
+        plugin_js = (ROOT / "frontend/js/plugins/overnight_arbitrage.js").read_text(encoding="utf-8")
+        # 命名空间
+        self.assertIn("window.OvernightArbitrage", plugin_js)
+        # 必须有 fallback 检测（typeof xxx === 'function'）
+        self.assertIn("typeof apiFetch === 'function'", plugin_js)
+        self.assertIn("typeof escapeHtml === 'function'", plugin_js)
+        self.assertIn("typeof formatNumber === 'function'", plugin_js)
+        self.assertIn("typeof formatMaybePct === 'function'", plugin_js)
+        self.assertIn("typeof setInlineStatus === 'function'", plugin_js)
+        # 必须有内部命名变量 _oaXxx
+        self.assertIn("_oaApiFetch", plugin_js)
+        self.assertIn("_oaEscapeHtml", plugin_js)
+        self.assertIn("_oaSetInlineStatus", plugin_js)
 
-    def test_principal_capital_status_copy_is_complete_and_synced_to_docs(self):
+    def test_principal_capital_status_copy_is_complete(self):
         frontend_plugin = (ROOT / "frontend/js/plugins/principal_capital.js").read_text(encoding="utf-8")
-        docs_plugin = (ROOT / "docs/js/plugins/principal_capital.js").read_text(encoding="utf-8")
 
-        self.assertEqual(frontend_plugin, docs_plugin)
         self.assertIn("数据源失败/无数据", frontend_plugin)
         self.assertIn("非交易时段", frontend_plugin)
         self.assertIn("已扫描·暂无信号", frontend_plugin)
         self.assertIn("主力资金监控尚未产生快照", frontend_plugin)
         self.assertIn("const sources = ['eastmoney', 'akshare', 'sina']", frontend_plugin)
 
-    def test_docs_publish_directory_matches_frontend_for_national_team(self):
-        for rel in ["index.html", "js/app.js", "css/styles.css"]:
-            frontend_text = (ROOT / "frontend" / rel).read_text(encoding="utf-8")
-            docs_text = (ROOT / "docs" / rel).read_text(encoding="utf-8")
-            self.assertEqual(frontend_text, docs_text)
+    def test_docs_directory_contains_only_dev_docs_not_frontend_mirror(self):
+        """前端唯一发布源是 frontend/（Render + GitHub Pages 均直接引用），docs/ 仅放开发文档。"""
+        self.assertFalse((ROOT / "docs/index.html").exists())
+        self.assertFalse((ROOT / "docs/css").exists())
+        self.assertFalse((ROOT / "docs/js").exists())
 
 
 if __name__ == "__main__":

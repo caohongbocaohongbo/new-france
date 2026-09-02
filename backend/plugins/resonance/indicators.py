@@ -101,6 +101,59 @@ def d4_score(vols: list) -> Tuple[float, float]:
     return round(ratio_score * 0.6 + slope_norm * 0.4, 2), round(vol_ratio, 4)
 
 
+# ==== 17 盘中实时化（路径 B1）====
+
+def _intraday_progress(now=None) -> float:
+    """当天交易时间进度 0.0-1.0（北京时间 09:30-11:30 + 13:00-15:00 共 4 小时）。"""
+    from datetime import datetime, timedelta, timezone
+
+    BEIJING_TZ = timezone(timedelta(hours=8))
+    dt = now or datetime.now(BEIJING_TZ)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=BEIJING_TZ)
+    minutes = dt.hour * 60 + dt.minute
+    morning_open, morning_close = 9 * 60 + 30, 11 * 60 + 30
+    afternoon_open, afternoon_close = 13 * 60, 15 * 60
+    if minutes < morning_open:
+        return 0.0
+    if minutes <= morning_close:
+        return (minutes - morning_open) / (morning_close - morning_open) / 2.0
+    if minutes < afternoon_open:
+        return 0.5  # 午休视为半天进度
+    if minutes <= afternoon_close:
+        return 0.5 + (minutes - afternoon_open) / (afternoon_close - afternoon_open) / 2.0
+    return 1.0
+
+
+def d2_score_intraday(closes: list, highs: list, realtime_price) -> Optional[float]:
+    """盘中 D2：把 realtime_price 追加到收盘序列末尾重算动量分（等价于 d2_score(closes+[rt], highs)）。"""
+    rt = _float(realtime_price)
+    if rt is None or rt <= 0:
+        return None  # 盘前/无实时价 → 调用方降级到日线 d2_score
+    c = _closes(closes)
+    return d2_score(c + [rt], highs if highs is not None else c)
+
+
+def d4_score_intraday(vols: list, intraday_vol, prev_avg_vol, time_progress=None) -> Tuple[float, float]:
+    """盘中 D4：日内量比 = intraday_vol / (prev_avg_vol * time_progress)。返回 (score, vol_ratio)。"""
+    iv = _float(intraday_vol)
+    pav = _float(prev_avg_vol)
+    tp = _float(time_progress)
+    if tp is None:
+        tp = _intraday_progress()
+    # 开盘初期至少按 15% 进度计，避免 09:30 附近 time_progress≈0 导致日内量比虚高
+    tp = max(0.15, min(1.0, tp if tp is not None else 0.15))
+    if iv is None or pav is None or pav <= 0:
+        return 50.0, 1.0
+    vol_ratio = iv / (pav * tp) if pav * tp > 0 else 1.0
+    v = _closes(vols)
+    slope = _linear_slope(v[-5:]) if len(v) >= 5 else 0.0
+    avg = sum(v[-5:]) / len(v[-5:]) if len(v) >= 5 and sum(v[-5:]) > 0 else 1.0
+    slope_norm = _clip((slope / avg + 1.0) / 2.0 * 100)
+    ratio_score = (_clip(vol_ratio, 0.5, 2.5) - 0.5) / 2.0 * 100
+    return round(ratio_score * 0.6 + slope_norm * 0.4, 2), round(vol_ratio, 4)
+
+
 def compute_resonance(d1: float, d1_state: str, d2: Optional[float],
                       d3_result: tuple, d4_result: tuple,
                       red_threshold: float = 75.0, green_threshold: float = 30.0) -> dict:

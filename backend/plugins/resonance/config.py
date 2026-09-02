@@ -30,4 +30,7 @@ CONFIG = {
     # 展示层过滤（默认仅主板）
     "show_gem": _env_bool("RESONANCE_SHOW_GEM", False),
     "show_star": _env_bool("RESONANCE_SHOW_STAR", False),
+    # 17 盘中推送
+    "notify_cooldown_minutes": int(_env_float("RESONANCE_NOTIFY_COOLDOWN_MINUTES", 30)),
+    "upgrade_hint_days": int(_env_float("RESONANCE_UPGRADE_HINT_DAYS", 20)),
 }

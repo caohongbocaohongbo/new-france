@@ -19,8 +19,7 @@
             cols: [['code','代码'],['name','名称'],['super_net','超大单净'],['big_net','大单净'],['smart_ratio','聪明钱占比'],['state','状态']] },
         'low-position': { path: '/low-position/latest', title: '低位涨停选股', kind: 'table', key: 'items',
             cols: [['code','代码'],['name','名称'],['price','价格'],['pullback_pct','回撤'],['price_percentile','百分位'],['zt_count_250d','涨停次数'],['low_score','低位分']] },
-        'resonance': { path: '/resonance/latest', title: '四维共振', kind: 'table', key: 'items',
-            cols: [['code','代码'],['name','名称'],['resonance_score','共振分'],['signal','信号'],['d1_state','D1状态'],['d1_score','D1'],['d2_score','D2'],['d3_score','D3'],['d4_score','D4']] },
+        'resonance': { path: '/resonance/latest', title: '四维共振', kind: 'resonance' },
     };
 
     function fmt(v) {
@@ -108,6 +107,131 @@
         return '<div class="metric-card"><div class="metric-label">' + escapeHtml(label) + '</div><div class="metric-value">' + escapeHtml(String(value == null ? '--' : value)) + '</div></div>';
     }
 
+    // ==== 17 四维共振：upgrade_hint banner + 可点击表格 + 详情图表（K线副图 + 共振分副图） ====
+    function renderResonance(d) {
+        if (!d || d.status !== 'completed') return renderEmpty(d);
+        var banner = '';
+        if (d.upgrade_hint) {
+            banner = '<div class="upgrade-hint-banner">' + escapeHtml(d.upgrade_hint) + '</div>';
+        }
+        var stats = '';
+        if (d.signal_counts) {
+            stats = '<div class="metric-cards">' +
+                card('红灯', d.signal_counts.RED) + card('黄灯', d.signal_counts.YELLOW) +
+                card('绿灯', d.signal_counts.GREEN) + card('盘中实时', d.is_intraday ? '是' : '否') +
+                '</div>';
+        }
+        var items = d.items || [];
+        var body = items.map(function (it) {
+            return '<tr class="resonance-row" data-code="' + escapeHtml(String(it.code || '')) + '" data-name="' + escapeHtml(String(it.name || '')) + '" style="cursor:pointer">' +
+                '<td>' + escapeHtml(String(it.code || '')) + '</td>' +
+                '<td>' + escapeHtml(String(it.name || '')) + '</td>' +
+                '<td>' + fmt(it.resonance_score) + '</td>' +
+                '<td>' + signalBadge(it.signal) + '</td>' +
+                '<td><span class="badge">' + escapeHtml(String(it.d1_state || '--')) + '</span></td>' +
+                '<td>' + fmt(it.d1_score) + '</td>' +
+                '<td>' + fmt(it.d2_score) + '</td>' +
+                '<td>' + fmt(it.d3_score) + '</td>' +
+                '<td>' + fmt(it.d4_score) + '</td>' +
+                '</tr>';
+        }).join('');
+        return banner + stats +
+            '<table class="data-table"><thead><tr><th>代码</th><th>名称</th><th>共振分</th><th>信号</th><th>D1状态</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th></tr></thead><tbody>' +
+            (body || '<tr><td colspan="9">暂无数据</td></tr>') + '</tbody></table>' +
+            '<div id="resonance-detail"></div>';
+    }
+
+    function bindResonanceRows() {
+        document.querySelectorAll('.resonance-row').forEach(function (tr) {
+            tr.addEventListener('click', function () {
+                openResonanceDetail(tr.getAttribute('data-code'), tr.getAttribute('data-name'));
+            });
+        });
+    }
+
+    window.closeResonanceDetail = function () {
+        var el = document.getElementById('resonance-detail');
+        if (el) el.innerHTML = '';
+    };
+
+    async function openResonanceDetail(code, name) {
+        var el = document.getElementById('resonance-detail');
+        if (!el) return;
+        el.innerHTML = '<div class="loading">加载 ' + escapeHtml(code) + ' 历史...</div>';
+        try {
+            var p1 = apiFetch('/resonance/' + encodeURIComponent(code), { timeout: 20000, retries: 0 });
+            var p2 = apiFetch('/resonance/' + encodeURIComponent(code) + '/kline?days=60', { timeout: 20000, retries: 0 });
+            var results = await Promise.all([p1, p2]);
+            var hData = await results[0].json();
+            var kData = await results[1].json();
+            el.innerHTML = renderResonanceDetail(code, name, hData.records || [], kData.records || []);
+            drawResonanceKline(code, kData.records || []);
+            drawResonanceScore(code, hData.records || []);
+        } catch (e) {
+            el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
+        }
+    }
+
+    function renderResonanceDetail(code, name, history, kline) {
+        var back = '<button class="btn" style="margin-bottom:10px" onclick="closeResonanceDetail()">← 返回</button>';
+        if (!history.length) {
+            return back + '<div class="empty-state">暂无历史数据（新上线第一天，积累数据后显示折线）</div>';
+        }
+        var klineNote = kline.length ? '' : '<div class="hint">无K线数据（或 K线源不可用），仅显示共振分副图。</div>';
+        return back +
+            '<h3 class="section-title">' + escapeHtml(code) + ' ' + escapeHtml(name) + ' · 四维共振 + K线副图</h3>' +
+            klineNote +
+            '<div id="res-chart-kline" style="width:100%;height:280px"></div>' +
+            '<div id="res-chart-score" style="width:100%;height:320px"></div>' +
+            '<div class="hint">提示：信号仅为辅助参考，不构成投资建议。</div>';
+    }
+
+    function drawResonanceKline(code, kline) {
+        var el = document.getElementById('res-chart-kline');
+        if (!el || typeof echarts === 'undefined') return;
+        if (!kline || !kline.length) { el.innerHTML = ''; return; }
+        var chart = echarts.init(el);
+        var dates = kline.map(function (k) { return (k.date || '').slice(5); });
+        var ohlc = kline.map(function (k) { return [k.open, k.close, k.low, k.high]; });
+        chart.setOption({
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'category', data: dates },
+            yAxis: { scale: true },
+            grid: { left: 55, right: 16, top: 16, bottom: 24 },
+            series: [{
+                type: 'candlestick', data: ohlc,
+                itemStyle: { color: '#ef4444', color0: '#16a34a', borderColor: '#ef4444', borderColor0: '#16a34a' },
+            }],
+        });
+        window.addEventListener('resize', function () { chart.resize(); });
+    }
+
+    function drawResonanceScore(code, history) {
+        var el = document.getElementById('res-chart-score');
+        if (!el || typeof echarts === 'undefined') return;
+        var chart = echarts.init(el);
+        var dates = history.map(function (h) { return (h.date || '').slice(5); });
+        var colors = history.map(function (h) {
+            return { RED: '#fca5a5', GREEN: '#86efac', YELLOW: '#fde68a' }[h.signal] || '#f1f5f9';
+        });
+        chart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['共振分', 'D1', 'D2', 'D3', 'D4'] },
+            xAxis: { type: 'category', data: dates },
+            yAxis: { type: 'value', min: 0, max: 100 },
+            grid: { left: 40, right: 16, top: 40, bottom: 24 },
+            series: [
+                { name: '共振分', type: 'bar', data: history.map(function (h) { return h.resonance_score; }),
+                  itemStyle: { color: function (p) { return colors[p.dataIndex]; } } },
+                { name: 'D1', type: 'line', smooth: true, data: history.map(function (h) { return h.d1_score; }) },
+                { name: 'D2', type: 'line', smooth: true, data: history.map(function (h) { return h.d2_score; }) },
+                { name: 'D3', type: 'line', smooth: true, data: history.map(function (h) { return h.d3_score; }) },
+                { name: 'D4', type: 'line', smooth: true, data: history.map(function (h) { return h.d4_score; }) },
+            ],
+        });
+        window.addEventListener('resize', function () { chart.resize(); });
+    }
+
     async function setupResearchPage(pageId) {
         const cfg = PAGES[pageId];
         const el = document.getElementById('page-' + pageId);
@@ -119,6 +243,7 @@
             if (cfg.kind === 'emotion') el.innerHTML = renderEmotion(data);
             else if (cfg.kind === 'l2') el.innerHTML = renderL2(data);
             else if (cfg.kind === 'lhb') el.innerHTML = renderLhb(data);
+            else if (cfg.kind === 'resonance') { el.innerHTML = renderResonance(data); bindResonanceRows(); }
             else el.innerHTML = renderTable(data[cfg.key], cfg.cols);
         } catch (e) {
             el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
