@@ -113,6 +113,35 @@ def get_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # 数据回显 ETag（Phase 2）：对 JSON 响应加 ETag，支持 If-None-Match → 304
+    import hashlib as _hashlib
+    from starlette.concurrency import iterate_in_threadpool as _iterate_in_threadpool
+    from starlette.middleware.base import BaseHTTPMiddleware as _BaseHTTPMiddleware
+
+    class _ETagMiddleware(_BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            response = await call_next(request)
+            if request.method == "GET" and response.status_code == 200:
+                content_type = response.headers.get("content-type", "")
+                if "application/json" in content_type:
+                    try:
+                        chunks = [section async for section in response.body_iterator]
+                        response.body_iterator = _iterate_in_threadpool(iter(chunks))
+                        body = b"".join(chunks)
+                    except Exception:  # noqa: BLE001 非可缓冲响应跳过
+                        return response
+                    if body:
+                        etag = _hashlib.md5(body).hexdigest()
+                        if request.headers.get("if-none-match") == f'"{etag}"':
+                            from fastapi import Response as _FR
+
+                            return _FR(status_code=304)
+                        response.headers["ETag"] = f'"{etag}"'
+                        response.headers["Cache-Control"] = "no-cache"
+            return response
+
+    _app.add_middleware(_ETagMiddleware)
     _app.include_router(screening_router, prefix="/api/v1/screening", tags=["筛选"])
     _app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["监控列表"])
     _app.include_router(events_router, prefix="/api/v1/events", tags=["事件"])
@@ -176,6 +205,38 @@ def get_app():
     if frontend_dir.is_dir():
         _app.mount("/css", StaticFiles(directory=frontend_dir / "css"), name="css")
         _app.mount("/js", StaticFiles(directory=frontend_dir / "js"), name="js")
+
+    # Phase 3：SSE 实时推送端点（本地单进程有效；Render cron 与 web 分离时降级为前端轮询）
+    import asyncio as _asyncio
+    from fastapi import Request as _Request
+    from fastapi.responses import StreamingResponse as _StreamingResponse
+    from .plugins.common import subscribe_sse as _subscribe_sse, unsubscribe_sse as _unsubscribe_sse
+
+    @_app.get("/api/v1/stream")
+    async def stream_updates(request: _Request):
+        async def event_generator():
+            import queue as _q
+
+            queue = _subscribe_sse()
+            loop = _asyncio.get_running_loop()
+            try:
+                yield ": connected\n\n"
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    try:
+                        name = await loop.run_in_executor(None, lambda: queue.get(timeout=15))
+                        yield f"data: {name}\n\n"
+                    except _q.Empty:
+                        yield ": keepalive\n\n"
+            finally:
+                _unsubscribe_sse(queue)
+
+        return _StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
 
     @_app.get("/")
     def root():

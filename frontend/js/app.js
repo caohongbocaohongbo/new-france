@@ -3,6 +3,9 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
     ? 'http://localhost:8000/api/v1'
     : 'https://new-france-api.onrender.com/api/v1';
 
+// ETag 缓存（Phase 2）：路径 -> {etag, text}，用于 304 缓存回放，避免重复渲染
+window.__etagCache = window.__etagCache || {};
+
 // 带超时和重试的 fetch（Render 免费层冷启动需要 30-60s）
 async function apiFetch(path, opts = {}) {
     const ms = opts.timeout || 30000;  // 默认30s，覆盖Render冷启动
@@ -19,7 +22,25 @@ async function apiFetch(path, opts = {}) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), ms);
         try {
-            const resp = await fetch(`${API_BASE}${path}`, { ...opts, signal: controller.signal });
+            const cached = window.__etagCache[path];
+            const headers = { ...(opts.headers || {}) };
+            if (cached && cached.etag && !opts.method) {
+                headers['If-None-Match'] = cached.etag;
+            }
+            const resp = await fetch(`${API_BASE}${path}`, { ...opts, headers, signal: controller.signal });
+            // 304：数据未变，回放缓存 body（对调用方透明，resp.json() 仍正常）
+            if (resp.status === 304 && cached && cached.text) {
+                return new Response(cached.text, { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
+            if (resp.status === 200) {
+                const etag = resp.headers.get('ETag');
+                if (etag) {
+                    try {
+                        const text = await resp.clone().text();
+                        window.__etagCache[path] = { etag, text };
+                    } catch (e) { /* 忽略缓存失败 */ }
+                }
+            }
             return resp;
         } catch (e) {
             lastError = e;
@@ -147,9 +168,68 @@ document.addEventListener('DOMContentLoaded', () => {
     initRecommendationControls();
     updateDateTime();
     checkSystemStatus();
+    startAutoRefresh();
+    initSSE();
     // loadDashboard() 由 initNavigation() → navigateTo('dashboard') 触发, 避免重复调用
     setInterval(updateDateTime, 60000);
 });
+
+// ---- Phase 3：SSE 实时推送监听（不可用时自动回退到 Phase 1 轮询）----
+function initSSE() {
+    if (typeof EventSource === 'undefined') return;  // 不支持 SSE 时靠轮询兜底
+    try {
+        const es = new EventSource(API_BASE + '/stream');
+        es.onmessage = function (e) {
+            // 收到快照更新事件 → 立即刷新当前页（重置倒计时）
+            if (e.data && e.data !== 'connected' && _currentPage) {
+                resetAutoRefreshCountdown();
+                navigateTo(_currentPage, false, true);
+            }
+        };
+        es.onerror = function () {
+            // SSE 断开/失败：不做处理，Phase 1 轮询仍在跑，自动兜底
+        };
+    } catch (e) { /* 忽略 SSE 初始化失败 */ }
+}
+
+// ---- 数据自动刷新（Phase 1：全局轮询 + 状态条）----
+let _autoRefreshTimer = null;
+let _autoRefreshCountdown = 60;
+let _lastAutoRefreshAt = null;
+const AUTO_REFRESH_INTERVAL = 60;
+
+function startAutoRefresh() {
+    if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
+    _autoRefreshCountdown = AUTO_REFRESH_INTERVAL;
+    updateAutoRefreshStatus();
+    _autoRefreshTimer = setInterval(function () {
+        _autoRefreshCountdown -= 1;
+        if (_autoRefreshCountdown <= 0) {
+            _autoRefreshCountdown = AUTO_REFRESH_INTERVAL;
+            // 页面隐藏时不刷新，切回时再补；只刷新当前页（复用 navigateTo force=true 的重载逻辑）
+            if (_currentPage && !document.hidden) {
+                _lastAutoRefreshAt = new Date();
+                navigateTo(_currentPage, false, true);
+            }
+        }
+        updateAutoRefreshStatus();
+    }, 1000);
+}
+
+function resetAutoRefreshCountdown() {
+    _autoRefreshCountdown = AUTO_REFRESH_INTERVAL;
+    updateAutoRefreshStatus();
+}
+
+function updateAutoRefreshStatus() {
+    const el = document.getElementById('autoRefreshStatus');
+    if (!el) return;
+    let txt = '自动刷新 ' + _autoRefreshCountdown + 's';
+    if (_lastAutoRefreshAt) {
+        txt += ' · 上次 ' + _lastAutoRefreshAt.getHours().toString().padStart(2, '0') + ':' + _lastAutoRefreshAt.getMinutes().toString().padStart(2, '0') + ':' + _lastAutoRefreshAt.getSeconds().toString().padStart(2, '0');
+    }
+    el.textContent = txt;
+}
 
 // ---- Navigation ----
 function initNavigation() {
@@ -2807,7 +2887,7 @@ function renderPagination(cid, total, page, size, cb) {
 }
 
 // ---- Global ----
-function refreshData() { navigateTo(location.hash.replace('#','')||'dashboard', false, true); }
+function refreshData() { resetAutoRefreshCountdown(); navigateTo(location.hash.replace('#','')||'dashboard', false, true); }
 function setupScreeningPage() {
     setScreeningMode(screeningMode);
     if (!screeningLastResults.length) {

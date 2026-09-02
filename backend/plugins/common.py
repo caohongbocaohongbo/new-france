@@ -12,6 +12,7 @@ import json
 import logging
 import math
 import os
+import queue as _queue
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
@@ -61,13 +62,51 @@ def data_backend_path(name: str) -> Path:
     return DATA_BACKEND_DIR / f"{name}_latest.json"
 
 
+def _atomic_write(path: Path, text: str) -> None:
+    """原子写：先写临时文件再 rename，避免读者读到半截 JSON。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    tmp.replace(path)
+
+
+# ==== SSE 推送（Phase 3）：快照写入后广播给订阅者 ====
+
+# 用线程安全的标准队列，避免 asyncio.Queue 跨事件循环绑定问题（测试 ASGI 与 uvicorn 均可用）
+_sse_subscribers: list = []  # list[_queue.Queue]
+
+
+def subscribe_sse():
+    """返回一个订阅队列，SSE 端点消费它。"""
+    q = _queue.Queue(maxsize=100)
+    _sse_subscribers.append(q)
+    return q
+
+
+def unsubscribe_sse(q) -> None:
+    try:
+        _sse_subscribers.remove(q)
+    except ValueError:
+        pass
+
+
+def publish_snapshot_update(name: str) -> None:
+    """快照写入后广播快照名（非阻塞，无订阅者或队列满时忽略）。"""
+    for q in list(_sse_subscribers):
+        try:
+            q.put_nowait(name)
+        except Exception:  # noqa: BLE001 队列满等情况忽略
+            pass
+
+
 def write_snapshot(name: str, payload: dict) -> Path:
-    """双写快照：reports/<name>_latest.json + reports/data_backend/<name>_latest.json。"""
+    """双写快照：reports/<name>_latest.json + reports/data_backend/<name>_latest.json（原子）。"""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     DATA_BACKEND_DIR.mkdir(parents=True, exist_ok=True)
     text = json.dumps(json_safe(payload), ensure_ascii=False, indent=2, default=str)
-    latest_path(name).write_text(text, encoding="utf-8")
-    data_backend_path(name).write_text(text, encoding="utf-8")
+    _atomic_write(latest_path(name), text)
+    _atomic_write(data_backend_path(name), text)
+    publish_snapshot_update(name)
     return latest_path(name)
 
 
