@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-02T11:22:25.746716+08:00",
+  "now": "2026-09-02T11:28:11.408951+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5493
+      },
+      {
+        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1513
-      },
-      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38910
+        "latency_ms": 38016
       }
     ],
     "is_stale": false,
@@ -33,43 +33,27 @@
   },
   "scanned": 2524,
   "buy_candidates": 10,
-  "sell_candidates": 82,
+  "sell_candidates": 75,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000885",
-      "name": "城发环境",
-      "price": 12.09,
-      "change_pct": -1.2255,
-      "total_amount": 28116276.54,
-      "main_net_inflow": -8694638.24,
-      "main_inflow_ratio": -30.9239,
-      "super_net": -1620190.0,
-      "big_net": -7074448.24,
-      "mid_net": -3039793.3,
-      "small_net": -3184743.92,
+      "code": "603355",
+      "name": "莱克电气",
+      "price": 27.16,
+      "change_pct": -3.1729,
+      "total_amount": 54275919.0,
+      "main_net_inflow": -19020253.0,
+      "main_inflow_ratio": -35.0436,
+      "super_net": -6733529.0,
+      "big_net": -12286724.0,
+      "mid_net": -6221792.0,
+      "small_net": -1978844.0,
       "source": "sina",
-      "flow_time": "2026-09-02T11:22:25.746716+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000521",
-      "name": "长虹美菱",
-      "price": 4.83,
-      "change_pct": -1.227,
-      "total_amount": 14527745.97,
-      "main_net_inflow": -4406796.0,
-      "main_inflow_ratio": -30.3337,
-      "super_net": 0.0,
-      "big_net": -4406796.0,
-      "mid_net": -529066.97,
-      "small_net": -446201.0,
-      "source": "sina",
-      "flow_time": "2026-09-02T11:22:25.746716+08:00",
+      "flow_time": "2026-09-02T11:28:11.408951+08:00",
       "severity": "warn"
     }
   ]
