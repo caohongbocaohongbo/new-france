@@ -146,8 +146,9 @@ New France 是面向交易日复盘与筛选的后台工具，视觉基调应接
 
 ## 发布同步
 
-前端代码源在 `frontend/`。静态发布镜像在 `docs/`。任何 UI、JS 行为、CSS 规范变化都必须同步：
+前端代码源在 `frontend/`，由两个部署目标直接引用（无需在 `docs/` 维护第二份镜像）：
 
-- `frontend/index.html` 到 `docs/index.html`
-- `frontend/css/styles.css` 到 `docs/css/styles.css`
-- `frontend/js/app.js` 到 `docs/js/app.js`
+- Render Static Site：`render.yaml` 的 `staticSites[].publishPath: frontend`
+- GitHub Pages：`.github/workflows/pages.yml` 的 `upload-pages-artifact` `path: frontend`
+
+`docs/` 目录仅存放开发文档（产品方案 / 施工文档），不再包含前端资源文件。

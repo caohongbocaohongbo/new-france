@@ -34,7 +34,7 @@ new-france/
 │   ├── index.html
 │   ├── css/styles.css
 │   └── js/app.js
-├── docs/                       # GitHub Pages 镜像（需与 frontend/ 同步）
+├── docs/                       # 开发文档（产品/施工方案；非前端镜像）
 ├── config/settings.py          # Pydantic Settings 配置中心
 ├── data/                       # 运行时数据（france.md + SQLite DB）
 ├── reports/                    # 每日报告输出
@@ -91,9 +91,8 @@ python -m backend.main --dry-run     # 筛选不发通知
 1. **一律使用 `apiFetch(path, opts)`** 发起 API 请求，不要直接用 `fetch()`
    - `apiFetch` 自带 10s 超时和 AbortController
    - 长耗时操作传 `{ timeout: 120000 }`
-2. **修改 JS/CSS 后必须同步 `docs/` 目录**
-3. **导航用 `navigateTo(page)`，内部用 `history.replaceState`**（不是 `location.hash =`）
-4. **init 时只让 `navigateTo` 触发数据加载**，不要在 `DOMContentLoaded` 里直接调 load 函数
+2. **导航用 `navigateTo(page)`，内部用 `history.replaceState`**（不是 `location.hash =`）
+3. **init 时只让 `navigateTo` 触发数据加载**，不要在 `DOMContentLoaded` 里直接调 load 函数
 
 ### 后端开发注意事项
 
