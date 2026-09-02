@@ -233,10 +233,19 @@ function updateAutoRefreshStatus() {
 
 // ---- Navigation ----
 function initNavigation() {
-    document.querySelectorAll('.nav-item').forEach(item => {
+    // 仅绑定带 data-page 的导航项（一级/二级）；无 data-page 的分组标题走 toggle
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             navigateTo(item.dataset.page);
+        });
+    });
+    // 智能选股器 一级菜单：展开/收起二级子菜单
+    document.querySelectorAll('.nav-group-toggle').forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            const group = toggle.closest('.nav-group');
+            if (group) group.classList.toggle('open');
         });
     });
     window.addEventListener('hashchange', () => {
@@ -255,6 +264,10 @@ function navigateTo(route, pushState = true, force = false) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const nav = document.querySelector(`[data-page="${page}"]`);
     if (nav) nav.classList.add('active');
+    // 若激活项在二级子菜单内，自动展开其所属一级分组，保证激活项可见
+    if (nav && nav.closest('.nav-group')) {
+        nav.closest('.nav-group').classList.add('open');
+    }
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
     if (pushState) history.replaceState(null, '', '#' + route);

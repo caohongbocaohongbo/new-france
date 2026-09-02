@@ -4990,4 +4990,25 @@ body {
 .loading { padding: 40px; text-align: center; color: #667085; }
 .upgrade-hint-banner { background: #e8f4fd; border-left: 4px solid #2196f3; padding: 12px 16px; margin-bottom: 16px; border-radius: 4px; color: #0b5394; font-size: 13px; line-height: 1.6; }
 .auto-refresh { font-size: 12px; color: #667085; margin-right: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* ==== 智能选股器 子菜单 ==== */
+.nav-group .nav-submenu {
+    display: none;
+}
+.nav-group.open .nav-submenu {
+    display: block;
+}
+.nav-group-toggle .nav-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+.nav-group.open .nav-group-toggle .nav-arrow {
+    transform: rotate(90deg);
+}
+.nav-icon-placeholder {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
 
