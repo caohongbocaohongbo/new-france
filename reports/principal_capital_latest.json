@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T13:54:27.031334+08:00",
+  "now": "2026-09-03T14:00:21.356867+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 8655
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 3414
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 50820
+        "latency_ms": 50738
       }
     ],
     "is_stale": false,
@@ -31,28 +33,12 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 11,
-  "sell_candidates": 46,
-  "buy_fresh_count": 1,
+  "buy_candidates": 10,
+  "sell_candidates": 35,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002708",
-      "name": "光洋股份",
-      "price": 15.58,
-      "change_pct": 10.0282,
-      "total_amount": 1122891954.74,
-      "main_net_inflow": 587340740.02,
-      "main_inflow_ratio": 52.3061,
-      "super_net": 447844925.58,
-      "big_net": 139495814.44,
-      "mid_net": 52995763.2,
-      "small_net": 17399128.6,
-      "source": "sina",
-      "flow_time": "2026-09-03T13:54:27.031334+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
