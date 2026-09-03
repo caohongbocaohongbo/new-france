@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T11:10:16.438337+08:00",
+  "now": "2026-09-03T11:16:04.734210+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 9197
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1354
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42927
+        "latency_ms": 40801
       }
     ],
     "is_stale": false,
@@ -31,60 +33,60 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 18,
-  "sell_candidates": 46,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
+  "buy_candidates": 15,
+  "sell_candidates": 42,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "605577",
-      "name": "龙版传媒",
-      "price": 14.14,
-      "change_pct": 10.0389,
-      "total_amount": 245329055.72,
-      "main_net_inflow": 125983722.28,
-      "main_inflow_ratio": 51.353,
-      "super_net": 103082403.28,
-      "big_net": 22901319.0,
-      "mid_net": 19329380.0,
-      "small_net": 9185344.0,
-      "source": "sina",
-      "flow_time": "2026-09-03T11:10:16.438337+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002662",
-      "name": "峰璟股份",
-      "price": 3.35,
-      "change_pct": -0.2976,
-      "total_amount": 21248687.0,
-      "main_net_inflow": -6965177.0,
-      "main_inflow_ratio": -32.7793,
-      "super_net": -2333859.0,
-      "big_net": -4631318.0,
-      "mid_net": -1018630.0,
-      "small_net": -357220.0,
+      "code": "002124",
+      "name": "天邦食品",
+      "price": 2.19,
+      "change_pct": -3.5242,
+      "total_amount": 120761692.2,
+      "main_net_inflow": -48708424.4,
+      "main_inflow_ratio": -40.3343,
+      "super_net": -44201191.0,
+      "big_net": -4507233.4,
+      "mid_net": -1401569.4,
+      "small_net": 4203708.0,
       "source": "sina",
-      "flow_time": "2026-09-03T11:10:16.438337+08:00",
+      "flow_time": "2026-09-03T11:16:04.734210+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "002685",
+      "name": "华东重机",
+      "price": 5.5,
+      "change_pct": -0.9009,
+      "total_amount": 65988715.0,
+      "main_net_inflow": -25803091.0,
+      "main_inflow_ratio": -39.1023,
+      "super_net": -17656085.38,
+      "big_net": -8147005.62,
+      "mid_net": -2278403.0,
+      "small_net": -146305.0,
+      "source": "sina",
+      "flow_time": "2026-09-03T11:16:04.734210+08:00",
       "severity": "warn"
     },
     {
-      "code": "000652",
-      "name": "泰达股份",
-      "price": 3.51,
-      "change_pct": -0.2841,
-      "total_amount": 15593583.02,
-      "main_net_inflow": -4882609.2,
-      "main_inflow_ratio": -31.3117,
-      "super_net": -1681393.0,
-      "big_net": -3201216.2,
-      "mid_net": -210018.0,
-      "small_net": -158954.8,
+      "code": "603350",
+      "name": "安乃达",
+      "price": 28.58,
+      "change_pct": -0.2095,
+      "total_amount": 10738759.0,
+      "main_net_inflow": -4035600.0,
+      "main_inflow_ratio": -37.5798,
+      "super_net": 0.0,
+      "big_net": -4035600.0,
+      "mid_net": -545290.0,
+      "small_net": -957893.0,
       "source": "sina",
-      "flow_time": "2026-09-03T11:10:16.438337+08:00",
+      "flow_time": "2026-09-03T11:16:04.734210+08:00",
       "severity": "warn"
     }
   ]
