@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T14:30:25.499569+08:00",
+  "now": "2026-09-03T14:36:22.810238+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 7030
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 3475
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 51862
+        "latency_ms": 47857
       }
     ],
     "is_stale": false,
@@ -40,19 +42,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600433",
-      "name": "冠豪高新",
-      "price": 3.37,
-      "change_pct": -1.462,
-      "total_amount": 66098063.02,
-      "main_net_inflow": -20509328.57,
-      "main_inflow_ratio": -31.0286,
-      "super_net": -9540417.0,
-      "big_net": -10968911.57,
-      "mid_net": -1853599.0,
-      "small_net": -2066932.59,
+      "code": "600976",
+      "name": "健民集团",
+      "price": 28.0,
+      "change_pct": -1.9951,
+      "total_amount": 73802516.47,
+      "main_net_inflow": -23221849.59,
+      "main_inflow_ratio": -31.4648,
+      "super_net": -21478133.0,
+      "big_net": -1743716.59,
+      "mid_net": -2908228.92,
+      "small_net": 1686337.62,
       "source": "sina",
-      "flow_time": "2026-09-03T14:30:25.499569+08:00",
+      "flow_time": "2026-09-03T14:36:22.810238+08:00",
       "severity": "warn"
     }
   ]
