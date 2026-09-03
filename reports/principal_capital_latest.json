@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T13:30:47.885566+08:00",
+  "now": "2026-09-03T13:36:36.803803+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3215
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1234
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42545
+        "latency_ms": 46708
       }
     ],
     "is_stale": false,
@@ -31,77 +33,12 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 14,
-  "sell_candidates": 56,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "buy_candidates": 12,
+  "sell_candidates": 53,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603067",
-      "name": "振华股份",
-      "price": 35.97,
-      "change_pct": 10.0,
-      "total_amount": 1102812411.89,
-      "main_net_inflow": 552201082.35,
-      "main_inflow_ratio": 50.0721,
-      "super_net": 498826573.49,
-      "big_net": 53374508.86,
-      "mid_net": -3651972.85,
-      "small_net": -2513739.11,
-      "source": "sina",
-      "flow_time": "2026-09-03T13:30:47.885566+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600976",
-      "name": "健民集团",
-      "price": 27.82,
-      "change_pct": -2.6251,
-      "total_amount": 65457331.41,
-      "main_net_inflow": -23155070.59,
-      "main_inflow_ratio": -35.3743,
-      "super_net": -21478133.0,
-      "big_net": -1676937.59,
-      "mid_net": -2985500.92,
-      "small_net": 246461.56,
-      "source": "sina",
-      "flow_time": "2026-09-03T13:30:47.885566+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600518",
-      "name": "康美药业",
-      "price": 1.37,
-      "change_pct": -1.4388,
-      "total_amount": 149993836.67,
-      "main_net_inflow": -47719122.31,
-      "main_inflow_ratio": -31.8141,
-      "super_net": -48788227.51,
-      "big_net": 1069105.2,
-      "mid_net": 563226.0,
-      "small_net": -1817310.04,
-      "source": "sina",
-      "flow_time": "2026-09-03T13:30:47.885566+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002662",
-      "name": "峰璟股份",
-      "price": 3.32,
-      "change_pct": -1.1905,
-      "total_amount": 27174686.84,
-      "main_net_inflow": -8521773.84,
-      "main_inflow_ratio": -31.3592,
-      "super_net": -2333859.0,
-      "big_net": -6187914.84,
-      "mid_net": -863324.0,
-      "small_net": -1128985.32,
-      "source": "sina",
-      "flow_time": "2026-09-03T13:30:47.885566+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
