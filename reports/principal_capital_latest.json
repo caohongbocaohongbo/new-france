@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T10:11:51.684597+08:00",
+  "now": "2026-09-03T10:17:36.123384+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 6222
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1323
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40073
+        "latency_ms": 42686
       }
     ],
     "is_stale": false,
@@ -31,75 +33,105 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 16,
-  "sell_candidates": 51,
-  "buy_fresh_count": 2,
+  "buy_candidates": 20,
+  "sell_candidates": 50,
+  "buy_fresh_count": 4,
   "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600610",
-      "name": "中毅达",
-      "price": 9.49,
-      "change_pct": 9.9652,
-      "total_amount": 515220545.68,
-      "main_net_inflow": 280961479.93,
-      "main_inflow_ratio": 54.5323,
-      "super_net": 218887465.29,
-      "big_net": 62074014.64,
-      "mid_net": 3333505.73,
-      "small_net": -183321.0,
+      "code": "002403",
+      "name": "爱仕达",
+      "price": 10.25,
+      "change_pct": 9.9785,
+      "total_amount": 47176387.0,
+      "main_net_inflow": 27998273.0,
+      "main_inflow_ratio": 59.3481,
+      "super_net": 17920902.0,
+      "big_net": 10077371.0,
+      "mid_net": 4636244.0,
+      "small_net": -218186.0,
       "source": "sina",
-      "flow_time": "2026-09-03T10:11:51.684597+08:00"
+      "flow_time": "2026-09-03T10:17:36.123384+08:00"
     },
     {
-      "code": "600865",
-      "name": "百大集团",
-      "price": 10.32,
-      "change_pct": 10.0213,
-      "total_amount": 156034186.4,
-      "main_net_inflow": 82258150.4,
-      "main_inflow_ratio": 52.718,
-      "super_net": 65933999.4,
-      "big_net": 16324151.0,
-      "mid_net": 4809682.0,
-      "small_net": 73974.0,
+      "code": "000520",
+      "name": "凤凰航运",
+      "price": 4.61,
+      "change_pct": 10.0239,
+      "total_amount": 316822029.44,
+      "main_net_inflow": 182601694.96,
+      "main_inflow_ratio": 57.6354,
+      "super_net": 143109509.67,
+      "big_net": 39492185.29,
+      "mid_net": 3871701.0,
+      "small_net": -520959.0,
       "source": "sina",
-      "flow_time": "2026-09-03T10:11:51.684597+08:00"
+      "flow_time": "2026-09-03T10:17:36.123384+08:00"
+    },
+    {
+      "code": "000900",
+      "name": "现代投资",
+      "price": 3.69,
+      "change_pct": 1.3736,
+      "total_amount": 23297459.0,
+      "main_net_inflow": 13277669.0,
+      "main_inflow_ratio": 56.9919,
+      "super_net": 11242417.0,
+      "big_net": 2035252.0,
+      "mid_net": 1347376.0,
+      "small_net": 259656.0,
+      "source": "sina",
+      "flow_time": "2026-09-03T10:17:36.123384+08:00"
+    },
+    {
+      "code": "001330",
+      "name": "博纳影业",
+      "price": 6.34,
+      "change_pct": 10.0694,
+      "total_amount": 565746981.54,
+      "main_net_inflow": 305987773.54,
+      "main_inflow_ratio": 54.0856,
+      "super_net": 216886681.54,
+      "big_net": 89101092.0,
+      "mid_net": 34618936.0,
+      "small_net": 7038668.0,
+      "source": "sina",
+      "flow_time": "2026-09-03T10:17:36.123384+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "002124",
-      "name": "天邦食品",
-      "price": 2.21,
-      "change_pct": -2.6432,
-      "total_amount": 72177524.0,
-      "main_net_inflow": -29407895.0,
-      "main_inflow_ratio": -40.7438,
-      "super_net": -26455649.0,
-      "big_net": -2952246.0,
-      "mid_net": -2516266.0,
-      "small_net": 881179.0,
+      "code": "002446",
+      "name": "盛路通信",
+      "price": 8.3,
+      "change_pct": -1.4252,
+      "total_amount": 63297891.06,
+      "main_net_inflow": -20590162.9,
+      "main_inflow_ratio": -32.529,
+      "super_net": -14700395.72,
+      "big_net": -5889767.18,
+      "mid_net": -2679036.36,
+      "small_net": -1223474.52,
       "source": "sina",
-      "flow_time": "2026-09-03T10:11:51.684597+08:00",
-      "severity": "alert"
+      "flow_time": "2026-09-03T10:17:36.123384+08:00",
+      "severity": "warn"
     },
     {
-      "code": "002685",
-      "name": "华东重机",
-      "price": 5.52,
-      "change_pct": -0.5405,
-      "total_amount": 28368732.0,
-      "main_net_inflow": -9200725.0,
-      "main_inflow_ratio": -32.4326,
-      "super_net": -5443595.0,
-      "big_net": -3757130.0,
-      "mid_net": -354811.0,
-      "small_net": 23810.0,
+      "code": "002628",
+      "name": "成都路桥",
+      "price": 5.25,
+      "change_pct": -3.8462,
+      "total_amount": 93268750.95,
+      "main_net_inflow": -28492790.35,
+      "main_inflow_ratio": -30.5491,
+      "super_net": -15905682.05,
+      "big_net": -12587108.3,
+      "mid_net": 1994425.0,
+      "small_net": 109104.0,
       "source": "sina",
-      "flow_time": "2026-09-03T10:11:51.684597+08:00",
+      "flow_time": "2026-09-03T10:17:36.123384+08:00",
       "severity": "warn"
     }
   ]
