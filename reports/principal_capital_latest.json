@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T10:06:02.022354+08:00",
+  "now": "2026-09-03T10:11:51.684597+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3803
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1370
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40322
+        "latency_ms": 40073
       }
     ],
     "is_stale": false,
@@ -33,74 +31,75 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 15,
-  "sell_candidates": 50,
-  "buy_fresh_count": 3,
-  "sell_fresh_count": 1,
+  "buy_candidates": 16,
+  "sell_candidates": 51,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600269",
-      "name": "赣粤高速",
-      "price": 3.89,
-      "change_pct": 0.5168,
-      "total_amount": 25647266.26,
-      "main_net_inflow": 15164243.26,
-      "main_inflow_ratio": 59.1262,
-      "super_net": 11500459.26,
-      "big_net": 3663784.0,
-      "mid_net": 73442.0,
-      "small_net": 358779.0,
+      "code": "600610",
+      "name": "中毅达",
+      "price": 9.49,
+      "change_pct": 9.9652,
+      "total_amount": 515220545.68,
+      "main_net_inflow": 280961479.93,
+      "main_inflow_ratio": 54.5323,
+      "super_net": 218887465.29,
+      "big_net": 62074014.64,
+      "mid_net": 3333505.73,
+      "small_net": -183321.0,
       "source": "sina",
-      "flow_time": "2026-09-03T10:06:02.022354+08:00"
+      "flow_time": "2026-09-03T10:11:51.684597+08:00"
     },
     {
-      "code": "002909",
-      "name": "集泰股份",
-      "price": 8.01,
-      "change_pct": 10.0275,
-      "total_amount": 254049799.26,
-      "main_net_inflow": 145782634.26,
-      "main_inflow_ratio": 57.3835,
-      "super_net": 130803934.26,
-      "big_net": 14978700.0,
-      "mid_net": 10545165.0,
-      "small_net": 5224122.0,
+      "code": "600865",
+      "name": "百大集团",
+      "price": 10.32,
+      "change_pct": 10.0213,
+      "total_amount": 156034186.4,
+      "main_net_inflow": 82258150.4,
+      "main_inflow_ratio": 52.718,
+      "super_net": 65933999.4,
+      "big_net": 16324151.0,
+      "mid_net": 4809682.0,
+      "small_net": 73974.0,
       "source": "sina",
-      "flow_time": "2026-09-03T10:06:02.022354+08:00"
-    },
-    {
-      "code": "000498",
-      "name": "山东路桥",
-      "price": 4.96,
-      "change_pct": 0.4049,
-      "total_amount": 10025473.96,
-      "main_net_inflow": 5448558.96,
-      "main_inflow_ratio": 54.3471,
-      "super_net": 3477509.0,
-      "big_net": 1971049.96,
-      "mid_net": 157614.0,
-      "small_net": 104039.0,
-      "source": "sina",
-      "flow_time": "2026-09-03T10:06:02.022354+08:00"
+      "flow_time": "2026-09-03T10:11:51.684597+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "000897",
-      "name": "津滨发展",
-      "price": 1.87,
-      "change_pct": -0.5319,
-      "total_amount": 12177258.0,
-      "main_net_inflow": -3664475.0,
-      "main_inflow_ratio": -30.0928,
-      "super_net": -2620989.0,
-      "big_net": -1043486.0,
-      "mid_net": -66776.0,
-      "small_net": -248785.0,
+      "code": "002124",
+      "name": "天邦食品",
+      "price": 2.21,
+      "change_pct": -2.6432,
+      "total_amount": 72177524.0,
+      "main_net_inflow": -29407895.0,
+      "main_inflow_ratio": -40.7438,
+      "super_net": -26455649.0,
+      "big_net": -2952246.0,
+      "mid_net": -2516266.0,
+      "small_net": 881179.0,
       "source": "sina",
-      "flow_time": "2026-09-03T10:06:02.022354+08:00",
+      "flow_time": "2026-09-03T10:11:51.684597+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "002685",
+      "name": "华东重机",
+      "price": 5.52,
+      "change_pct": -0.5405,
+      "total_amount": 28368732.0,
+      "main_net_inflow": -9200725.0,
+      "main_inflow_ratio": -32.4326,
+      "super_net": -5443595.0,
+      "big_net": -3757130.0,
+      "mid_net": -354811.0,
+      "small_net": 23810.0,
+      "source": "sina",
+      "flow_time": "2026-09-03T10:11:51.684597+08:00",
       "severity": "warn"
     }
   ]
