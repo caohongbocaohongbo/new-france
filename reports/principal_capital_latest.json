@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T14:36:22.810238+08:00",
+  "now": "2026-09-03T14:42:27.430407+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 7030
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 3475
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47857
+        "latency_ms": 49081
       }
     ],
     "is_stale": false,
@@ -34,28 +32,11 @@
   },
   "scanned": 2838,
   "buy_candidates": 10,
-  "sell_candidates": 20,
+  "sell_candidates": 21,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "600976",
-      "name": "健民集团",
-      "price": 28.0,
-      "change_pct": -1.9951,
-      "total_amount": 73802516.47,
-      "main_net_inflow": -23221849.59,
-      "main_inflow_ratio": -31.4648,
-      "super_net": -21478133.0,
-      "big_net": -1743716.59,
-      "mid_net": -2908228.92,
-      "small_net": 1686337.62,
-      "source": "sina",
-      "flow_time": "2026-09-03T14:36:22.810238+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
