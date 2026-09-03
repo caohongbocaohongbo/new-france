@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T14:12:24.188742+08:00",
+  "now": "2026-09-03T14:18:22.036619+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3929
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1252
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47536
+        "latency_ms": 51615
       }
     ],
     "is_stale": false,
@@ -34,27 +32,43 @@
   },
   "scanned": 2838,
   "buy_candidates": 10,
-  "sell_candidates": 25,
+  "sell_candidates": 23,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "603677",
-      "name": "奇精机械",
-      "price": 13.74,
-      "change_pct": -1.2931,
-      "total_amount": 12750654.0,
-      "main_net_inflow": -4356891.0,
-      "main_inflow_ratio": -34.1699,
-      "super_net": -2746568.0,
-      "big_net": -1610323.0,
-      "mid_net": -141129.0,
-      "small_net": -1648948.0,
+      "code": "601515",
+      "name": "衢州东峰",
+      "price": 3.4,
+      "change_pct": -0.5848,
+      "total_amount": 35982770.76,
+      "main_net_inflow": -10854007.0,
+      "main_inflow_ratio": -30.1645,
+      "super_net": -7561773.0,
+      "big_net": -3292234.0,
+      "mid_net": -3247527.0,
+      "small_net": -1181579.24,
       "source": "sina",
-      "flow_time": "2026-09-03T14:12:24.188742+08:00",
+      "flow_time": "2026-09-03T14:18:22.036619+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603356",
+      "name": "华菱精工",
+      "price": 17.12,
+      "change_pct": -1.7785,
+      "total_amount": 67606284.0,
+      "main_net_inflow": -20282515.0,
+      "main_inflow_ratio": -30.0009,
+      "super_net": -24445214.0,
+      "big_net": 4162699.0,
+      "mid_net": -2772387.0,
+      "small_net": -2447920.0,
+      "source": "sina",
+      "flow_time": "2026-09-03T14:18:22.036619+08:00",
       "severity": "warn"
     }
   ]
