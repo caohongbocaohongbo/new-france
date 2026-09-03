@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T14:18:22.036619+08:00",
+  "now": "2026-09-03T14:24:18.755186+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 8220
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1284
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 51615
+        "latency_ms": 51924
       }
     ],
     "is_stale": false,
@@ -34,41 +36,57 @@
   "buy_candidates": 10,
   "sell_candidates": 23,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601515",
-      "name": "衢州东峰",
-      "price": 3.4,
-      "change_pct": -0.5848,
-      "total_amount": 35982770.76,
-      "main_net_inflow": -10854007.0,
-      "main_inflow_ratio": -30.1645,
-      "super_net": -7561773.0,
-      "big_net": -3292234.0,
-      "mid_net": -3247527.0,
-      "small_net": -1181579.24,
+      "code": "600567",
+      "name": "山鹰国际",
+      "price": 1.35,
+      "change_pct": -0.7353,
+      "total_amount": 54223302.0,
+      "main_net_inflow": -26636879.0,
+      "main_inflow_ratio": -49.1244,
+      "super_net": -23347433.0,
+      "big_net": -3289446.0,
+      "mid_net": -3913214.0,
+      "small_net": -4397709.0,
       "source": "sina",
-      "flow_time": "2026-09-03T14:18:22.036619+08:00",
+      "flow_time": "2026-09-03T14:24:18.755186+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "002019",
+      "name": "亿帆医药",
+      "price": 9.67,
+      "change_pct": -1.3265,
+      "total_amount": 70694681.32,
+      "main_net_inflow": -23848149.76,
+      "main_inflow_ratio": -33.734,
+      "super_net": -13775552.76,
+      "big_net": -10072597.0,
+      "mid_net": -1801843.06,
+      "small_net": 1171559.86,
+      "source": "sina",
+      "flow_time": "2026-09-03T14:24:18.755186+08:00",
       "severity": "warn"
     },
     {
-      "code": "603356",
-      "name": "华菱精工",
-      "price": 17.12,
-      "change_pct": -1.7785,
-      "total_amount": 67606284.0,
-      "main_net_inflow": -20282515.0,
-      "main_inflow_ratio": -30.0009,
-      "super_net": -24445214.0,
-      "big_net": 4162699.0,
-      "mid_net": -2772387.0,
-      "small_net": -2447920.0,
+      "code": "605116",
+      "name": "奥锐特",
+      "price": 19.79,
+      "change_pct": -0.4527,
+      "total_amount": 50747874.0,
+      "main_net_inflow": -15307938.0,
+      "main_inflow_ratio": -30.1647,
+      "super_net": -17266974.0,
+      "big_net": 1959036.0,
+      "mid_net": -3111962.0,
+      "small_net": -87608.0,
       "source": "sina",
-      "flow_time": "2026-09-03T14:18:22.036619+08:00",
+      "flow_time": "2026-09-03T14:24:18.755186+08:00",
       "severity": "warn"
     }
   ]
