@@ -297,3 +297,52 @@ class LowPositionHit(Base):
     zt_source = Column(String(30))
     __table_args__ = (Index("idx_low_pos", "date"), Index("idx_low_pos_code", "code", "date"))
 
+
+class TechIndicatorHit(Base):
+    """18 经典技术指标选股命中。"""
+    __tablename__ = "tech_indicator_hits"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    price = Column(Float)
+    macd_golden = Column(Integer, default=0)
+    kdj_golden = Column(Integer, default=0)
+    rsi_oversold = Column(Integer, default=0)
+    boll_rebound = Column(Integer, default=0)
+    hit_count = Column(Integer)
+    tech_score = Column(Float)
+    multi_hit = Column(Integer, default=0)
+    macd_dif = Column(Float)
+    macd_dea = Column(Float)
+    kdj_k = Column(Float)
+    kdj_d = Column(Float)
+    kdj_j = Column(Float)
+    rsi = Column(Float)
+    boll_mb = Column(Float)
+    boll_ub = Column(Float)
+    boll_lb = Column(Float)
+    __table_args__ = (Index("idx_ti_date", "date"), Index("idx_ti_code", "code", "date"), Index("idx_ti_multi", "date", "multi_hit"))
+
+
+class TrendStrengthHit(Base):
+    """19 趋势强度选股命中。"""
+    __tablename__ = "trend_strength_hits"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    price = Column(Float)
+    ma5 = Column(Float)
+    ma10 = Column(Float)
+    ma20 = Column(Float)
+    ma60 = Column(Float)
+    ma_aligned = Column(Integer, default=0)
+    prev_high_60 = Column(Float)
+    new_high = Column(Integer, default=0)
+    high_break_pct = Column(Float)
+    volume_ratio = Column(Float)
+    trend_leader = Column(Integer, default=0)
+    trend_score = Column(Float)
+    __table_args__ = (Index("idx_ts_date", "date"), Index("idx_ts_code", "code", "date"), Index("idx_ts_leader", "date", "trend_leader"))
+

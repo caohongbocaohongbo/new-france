@@ -191,6 +191,8 @@ def get_app():
         ("l2_feed", "register_router", "/api/v1/l2", "真实L2"),
         ("low_position_scanner", "register_router", "/api/v1/low-position", "低位涨停选股"),
         ("resonance", "register_router", "/api/v1/resonance", "四维共振"),
+        ("tech_indicators", "register_router", "/api/v1/tech-indicators", "经典技术指标"),
+        ("trend_strength", "register_router", "/api/v1/trend-strength", "趋势强度"),
     ]
     for _mod, _fn, _prefix, _tag in _new_plugins:
         try:
@@ -319,8 +321,12 @@ def main():
                         help="[插件16] 低位涨停选股器")
     parser.add_argument("--run-resonance-once", action="store_true",
                         help="[插件15] 四维共振信号")
+    parser.add_argument("--run-tech-indicators-once", action="store_true",
+                        help="[插件18] 经典技术指标选股")
+    parser.add_argument("--run-trend-strength-once", action="store_true",
+                        help="[插件19] 趋势强度选股")
     parser.add_argument("--max-kline-workers", type=int, default=None,
-                        help="[插件15/16] K线批量并发线程数(默认: 15=20, 16=30)")
+                        help="[插件15/16/18/19] K线批量并发线程数")
     args = parser.parse_args()
 
     if args.init_db:
@@ -396,6 +402,8 @@ def main():
         (args.run_l2_daemon, "backend.plugins.l2_feed", "run_l2_cli", "真实L2"),
         (args.run_low_position_once, "backend.plugins.low_position_scanner", "run_low_position_cli", "低位涨停选股"),
         (args.run_resonance_once, "backend.plugins.resonance", "run_resonance_cli", "四维共振"),
+        (args.run_tech_indicators_once, "backend.plugins.tech_indicators", "run_tech_indicators_cli", "经典技术指标"),
+        (args.run_trend_strength_once, "backend.plugins.trend_strength", "run_trend_strength_cli", "趋势强度"),
     ]
     for _flag, _mod_path, _cli_name, _label in _new_cli_map:
         if _flag:

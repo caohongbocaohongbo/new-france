@@ -20,6 +20,7 @@
         'low-position': { path: '/low-position/latest', title: '低位涨停选股', kind: 'table', key: 'items',
             cols: [['code','代码'],['name','名称'],['price','价格'],['pullback_pct','回撤'],['price_percentile','百分位'],['zt_count_250d','涨停次数'],['low_score','低位分']] },
         'resonance': { path: '/resonance/latest', title: '四维共振', kind: 'resonance' },
+        'smart-picker': { title: '智能选股器', kind: 'smart-picker' },
     };
 
     function fmt(v) {
@@ -232,10 +233,94 @@
         window.addEventListener('resize', function () { chart.resize(); });
     }
 
+    // ==== 智能选股器（18 经典技术指标 + 19 趋势强度，tab 切换） ====
+    let _spTab = "tech";  // 当前激活 tab
+
+    async function setupSmartPicker(el) {
+        el.innerHTML = '<div class="loading">加载中...</div>';
+        try {
+            const [techResp, trendResp] = await Promise.all([
+                apiFetch('/tech-indicators/latest', { timeout: 15000, retries: 0 }),
+                apiFetch('/trend-strength/latest', { timeout: 15000, retries: 0 }),
+            ]);
+            const techData = await techResp.json();
+            const trendData = await trendResp.json();
+            el.innerHTML = renderSmartPicker(techData, trendData);
+            bindSmartPickerTabs();
+        } catch (e) {
+            el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
+        }
+    }
+
+    function _spTabHtml(active) {
+        return '<div class="smart-picker-tabs">' +
+            '<button class="tab-btn' + (active === "tech" ? " active" : "") + '" data-tab="tech">经典技术指标</button>' +
+            '<button class="tab-btn' + (active === "trend" ? " active" : "") + '" data-tab="trend">趋势强度</button>' +
+            "</div>";
+    }
+
+    function _spTable(items, cols, flagKey, flagLabel) {
+        if (!items || !items.length) return '<div class="empty-state">暂无数据，请先运行对应任务</div>';
+        let head = cols.map(function (c) { return "<th>" + escapeHtml(c[1]) + "</th>"; }).join("");
+        let body = items.slice(0, 80).map(function (it) {
+            let isFlag = it[flagKey] === 1;
+            let tds = cols.map(function (c) {
+                let v = it[c[0]];
+                if (c[0] === "code") return '<td class="sp-code">' + (isFlag ? '🔥 ' : '') + escapeHtml(String(v || "")) + "</td>";
+                return "<td>" + fmt(v) + "</td>";
+            }).join("");
+            return '<tr class="' + (isFlag ? "sp-flag-row" : "") + '">' + tds + "</tr>";
+        }).join("");
+        return '<table class="data-table"><thead><tr>' + head + "</tr></thead><tbody>" + body + "</tbody></table>";
+    }
+
+    function renderSmartPicker(techData, trendData) {
+        let techItems = (techData && techData.items) || [];
+        let trendItems = (trendData && trendData.items) || [];
+        let techCounts = (techData && techData.signal_counts) || {};
+        let trendCounts = (trendData && trendData.signal_counts) || {};
+        let techHtml =
+            '<div class="metric-cards">' + card('金叉池', techCounts.golden || 0) + card('超卖池', techCounts.oversold || 0) + card('🔥 多指标共振', techCounts.multi || 0) + '</div>' +
+            _spTable(techItems, [
+                ["code", "代码"], ["name", "名称"], ["price", "价格"],
+                ["macd_golden", "MACD金叉"], ["kdj_golden", "KDJ金叉"],
+                ["rsi_oversold", "RSI超卖"], ["boll_rebound", "BOLL反弹"],
+                ["hit_count", "命中数"], ["tech_score", "综合分"],
+            ], "multi_hit", "多指标共振");
+        let trendHtml =
+            '<div class="metric-cards">' + card('强趋势榜', (trendData && trendData.count) || 0) + card('🔥 趋势龙头', trendCounts.leader || 0) + '</div>' +
+            _spTable(trendItems, [
+                ["code", "代码"], ["name", "名称"], ["price", "价格"],
+                ["ma5", "MA5"], ["ma20", "MA20"], ["ma60", "MA60"],
+                ["new_high", "创新高"], ["high_break_pct", "突破幅度"], ["volume_ratio", "量比"],
+                ["trend_score", "趋势分"],
+            ], "trend_leader", "趋势龙头");
+        return _spTabHtml(_spTab) +
+            '<div id="sp-tech-content" style="' + (_spTab === "tech" ? "" : "display:none") + '">' + techHtml + "</div>" +
+            '<div id="sp-trend-content" style="' + (_spTab === "trend" ? "" : "display:none") + '">' + trendHtml + "</div>" +
+            '<div class="hint">' + escapeHtml((techData && techData.disclaimer) || "仅为辅助参考，不构成投资建议") + '</div>';
+    }
+
+    function bindSmartPickerTabs() {
+        document.querySelectorAll(".smart-picker-tabs .tab-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                _spTab = btn.getAttribute("data-tab");
+                document.querySelectorAll(".smart-picker-tabs .tab-btn").forEach(function (b) {
+                    b.classList.toggle("active", b.getAttribute("data-tab") === _spTab);
+                });
+                document.getElementById("sp-tech-content").style.display = _spTab === "tech" ? "" : "none";
+                document.getElementById("sp-trend-content").style.display = _spTab === "trend" ? "" : "none";
+            });
+        });
+    }
+
     async function setupResearchPage(pageId) {
+
         const cfg = PAGES[pageId];
         const el = document.getElementById('page-' + pageId);
         if (!el || !cfg) return;
+        // smart-picker 自己加载 tech-indicators + trend-strength 两个源，不走通用单 path
+        if (cfg.kind === 'smart-picker') { await setupSmartPicker(el); return; }
         el.innerHTML = '<div class="loading">加载中...</div>';
         try {
             const resp = await apiFetch(cfg.path, { timeout: 15000, retries: 0 });
