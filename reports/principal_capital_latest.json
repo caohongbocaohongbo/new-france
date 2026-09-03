@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-03T13:48:26.387385+08:00",
+  "now": "2026-09-03T13:54:27.031334+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2664
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1165
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 51748
+        "latency_ms": 50820
       }
     ],
     "is_stale": false,
@@ -34,28 +32,27 @@
   },
   "scanned": 2838,
   "buy_candidates": 11,
-  "sell_candidates": 54,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_candidates": 46,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": [
+  "buy_triggered": [
     {
-      "code": "600526",
-      "name": "菲达环保",
-      "price": 4.65,
-      "change_pct": -1.6913,
-      "total_amount": 29389830.0,
-      "main_net_inflow": -8896667.0,
-      "main_inflow_ratio": -30.2712,
-      "super_net": -3241788.0,
-      "big_net": -5654879.0,
-      "mid_net": -2476098.0,
-      "small_net": -1852469.0,
+      "code": "002708",
+      "name": "光洋股份",
+      "price": 15.58,
+      "change_pct": 10.0282,
+      "total_amount": 1122891954.74,
+      "main_net_inflow": 587340740.02,
+      "main_inflow_ratio": 52.3061,
+      "super_net": 447844925.58,
+      "big_net": 139495814.44,
+      "mid_net": 52995763.2,
+      "small_net": 17399128.6,
       "source": "sina",
-      "flow_time": "2026-09-03T13:48:26.387385+08:00",
-      "severity": "warn"
+      "flow_time": "2026-09-03T13:54:27.031334+08:00"
     }
-  ]
+  ],
+  "sell_triggered": []
 }
