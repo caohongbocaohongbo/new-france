@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T10:54:41.281131+08:00",
+  "now": "2026-09-04T11:00:35.815132+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 8978
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1236
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 41952
+        "latency_ms": 41354
       }
     ],
     "is_stale": false,
@@ -32,8 +32,8 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 29,
-  "sell_candidates": 6,
+  "buy_candidates": 27,
+  "sell_candidates": 5,
   "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
