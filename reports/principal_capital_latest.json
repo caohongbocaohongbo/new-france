@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T13:50:12.542685+08:00",
+  "now": "2026-09-04T13:56:15.127773+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 6126
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1244
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 51715
+        "latency_ms": 44338
       }
     ],
     "is_stale": false,
@@ -33,12 +31,29 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 19,
-  "sell_candidates": 6,
+  "buy_candidates": 18,
+  "sell_candidates": 7,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "600400",
+      "name": "红豆股份",
+      "price": 2.87,
+      "change_pct": -1.0345,
+      "total_amount": 93578752.86,
+      "main_net_inflow": -29133469.2,
+      "main_inflow_ratio": -31.1326,
+      "super_net": -20410465.0,
+      "big_net": -8723004.2,
+      "mid_net": -6932346.0,
+      "small_net": -2451985.94,
+      "source": "sina",
+      "flow_time": "2026-09-04T13:56:15.127773+08:00",
+      "severity": "warn"
+    }
+  ]
 }
