@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T10:01:05.703026+08:00",
+  "now": "2026-09-04T10:07:48.945881+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 2971
+      },
+      {
+        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
-        "source": "akshare",
-        "status": "error",
-        "error": "HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?fid=f62&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A0%2Bt%3A6%2Bf%3A%212%2Cm%3A0%2Bt%3A13%2Bf%3A%212%2Cm%3A0%2Bt%3A80%2Bf%3A%212%2Cm%3A1%2Bt%3A2%2Bf%3A%212%2Cm%3A1%2Bt%3A23%2Bf%3A%212%2Cm%3A0%2Bt%3A7%2Bf%3A%212%2Cm%3A1%2Bt%3A3%2Bf%3A%212&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)')))",
-        "latency_ms": 60982
-      },
-      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38440
+        "latency_ms": 40397
       }
     ],
     "is_stale": false,
@@ -32,102 +32,27 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 33,
-  "sell_candidates": 14,
-  "buy_fresh_count": 6,
+  "buy_candidates": 28,
+  "sell_candidates": 12,
+  "buy_fresh_count": 1,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "603613",
-      "name": "国联股份",
-      "price": 20.8,
-      "change_pct": 9.9947,
-      "total_amount": 372897050.74,
-      "main_net_inflow": 232392181.62,
-      "main_inflow_ratio": 62.3207,
-      "super_net": 194238971.84,
-      "big_net": 38153209.78,
-      "mid_net": 5402673.0,
-      "small_net": 1002176.0,
+      "code": "001391",
+      "name": "国货航",
+      "price": 4.08,
+      "change_pct": 0.7407,
+      "total_amount": 20525124.18,
+      "main_net_inflow": 11283267.18,
+      "main_inflow_ratio": 54.973,
+      "super_net": 10650188.0,
+      "big_net": 633079.18,
+      "mid_net": 24050.0,
+      "small_net": -409881.0,
       "source": "sina",
-      "flow_time": "2026-09-04T10:01:05.703026+08:00"
-    },
-    {
-      "code": "600698",
-      "name": "湖南天雁",
-      "price": 7.91,
-      "change_pct": 10.0139,
-      "total_amount": 217348893.01,
-      "main_net_inflow": 128435363.01,
-      "main_inflow_ratio": 59.0918,
-      "super_net": 119664999.01,
-      "big_net": 8770364.0,
-      "mid_net": -3087727.0,
-      "small_net": -813627.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:01:05.703026+08:00"
-    },
-    {
-      "code": "600548",
-      "name": "深高速",
-      "price": 8.23,
-      "change_pct": 0.6112,
-      "total_amount": 11365800.0,
-      "main_net_inflow": 6224261.0,
-      "main_inflow_ratio": 54.7631,
-      "super_net": 4972731.0,
-      "big_net": 1251530.0,
-      "mid_net": -89216.0,
-      "small_net": 418363.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:01:05.703026+08:00"
-    },
-    {
-      "code": "600059",
-      "name": "古越龙山",
-      "price": 9.19,
-      "change_pct": 10.0599,
-      "total_amount": 349651431.62,
-      "main_net_inflow": 182740155.46,
-      "main_inflow_ratio": 52.2635,
-      "super_net": 132906546.48,
-      "big_net": 49833608.98,
-      "mid_net": 8722169.0,
-      "small_net": 1117669.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:01:05.703026+08:00"
-    },
-    {
-      "code": "600616",
-      "name": "金枫酒业",
-      "price": 4.73,
-      "change_pct": 8.238,
-      "total_amount": 110934386.24,
-      "main_net_inflow": 56511430.34,
-      "main_inflow_ratio": 50.9413,
-      "super_net": 30956023.92,
-      "big_net": 25555406.42,
-      "mid_net": 6450241.3,
-      "small_net": 1267295.8,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:01:05.703026+08:00"
-    },
-    {
-      "code": "603609",
-      "name": "禾丰股份",
-      "price": 6.56,
-      "change_pct": 2.1807,
-      "total_amount": 13231433.0,
-      "main_net_inflow": 6658713.0,
-      "main_inflow_ratio": 50.325,
-      "super_net": 4110770.0,
-      "big_net": 2547943.0,
-      "mid_net": 813213.0,
-      "small_net": 356995.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:01:05.703026+08:00"
+      "flow_time": "2026-09-04T10:07:48.945881+08:00"
     }
   ],
   "sell_triggered": []
