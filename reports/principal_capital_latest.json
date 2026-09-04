@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T13:38:01.763318+08:00",
+  "now": "2026-09-04T13:44:17.446719+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3112
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 18787
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 48051
+        "latency_ms": 51651
       }
     ],
     "is_stale": false,
@@ -33,29 +31,12 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 22,
+  "buy_candidates": 20,
   "sell_candidates": 6,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "600020",
-      "name": "中原高速",
-      "price": 3.91,
-      "change_pct": 0.0,
-      "total_amount": 43276511.8,
-      "main_net_inflow": -13524545.1,
-      "main_inflow_ratio": -31.2515,
-      "super_net": -12944298.1,
-      "big_net": -580247.0,
-      "mid_net": -966808.0,
-      "small_net": 248887.48,
-      "source": "sina",
-      "flow_time": "2026-09-04T13:38:01.763318+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
