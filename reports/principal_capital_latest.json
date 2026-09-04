@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T13:13:08.661609+08:00",
+  "now": "2026-09-04T13:19:11.008577+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4899
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1292
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 52575
+        "latency_ms": 51425
       }
     ],
     "is_stale": false,
@@ -33,43 +31,12 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 24,
+  "buy_candidates": 23,
   "sell_candidates": 5,
-  "buy_fresh_count": 2,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "000767",
-      "name": "晋控电力",
-      "price": 3.44,
-      "change_pct": 2.0771,
-      "total_amount": 182892260.22,
-      "main_net_inflow": 94500319.23,
-      "main_inflow_ratio": 51.6699,
-      "super_net": 90272248.43,
-      "big_net": 4228070.8,
-      "mid_net": -1959498.11,
-      "small_net": 601228.3,
-      "source": "sina",
-      "flow_time": "2026-09-04T13:13:08.661609+08:00"
-    },
-    {
-      "code": "603696",
-      "name": "安记食品",
-      "price": 15.13,
-      "change_pct": 10.0364,
-      "total_amount": 417477551.27,
-      "main_net_inflow": 210654295.27,
-      "main_inflow_ratio": 50.4588,
-      "super_net": 139898935.29,
-      "big_net": 70755359.98,
-      "mid_net": 20925640.0,
-      "small_net": 6432914.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T13:13:08.661609+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
