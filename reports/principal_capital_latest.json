@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T10:19:40.116217+08:00",
+  "now": "2026-09-04T10:25:36.386451+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 8288
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1379
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42195
+        "latency_ms": 42003
       }
     ],
     "is_stale": false,
@@ -32,45 +32,12 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 28,
+  "buy_candidates": 24,
   "sell_candidates": 6,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600212",
-      "name": "绿能慧充",
-      "price": 6.49,
-      "change_pct": 4.5089,
-      "total_amount": 46191998.39,
-      "main_net_inflow": 23130581.39,
-      "main_inflow_ratio": 50.0749,
-      "super_net": 15733687.39,
-      "big_net": 7396894.0,
-      "mid_net": 969049.0,
-      "small_net": -137562.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:19:40.116217+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "601228",
-      "name": "广州港",
-      "price": 3.11,
-      "change_pct": -0.639,
-      "total_amount": 29821208.0,
-      "main_net_inflow": -9524275.0,
-      "main_inflow_ratio": -31.9379,
-      "super_net": -4382367.0,
-      "big_net": -5141908.0,
-      "mid_net": -887598.0,
-      "small_net": 1558883.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:19:40.116217+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
