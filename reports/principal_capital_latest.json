@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T14:08:09.876878+08:00",
+  "now": "2026-09-04T14:13:58.977139+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 9848
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 7758
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 45542
+        "latency_ms": 47931
       }
     ],
     "is_stale": false,
@@ -33,26 +35,10 @@
   "scanned": 2838,
   "buy_candidates": 19,
   "sell_candidates": 7,
-  "buy_fresh_count": 1,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603257",
-      "name": "中国瑞林",
-      "price": 72.11,
-      "change_pct": 10.0076,
-      "total_amount": 312150558.32,
-      "main_net_inflow": 156386275.03,
-      "main_inflow_ratio": 50.0996,
-      "super_net": 92443890.06,
-      "big_net": 63942384.97,
-      "mid_net": 13560920.34,
-      "small_net": 3764012.71,
-      "source": "sina",
-      "flow_time": "2026-09-04T14:08:09.876878+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
