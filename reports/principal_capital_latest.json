@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T14:02:05.324050+08:00",
+  "now": "2026-09-04T14:08:09.876878+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3135
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1233
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 53580
+        "latency_ms": 45542
       }
     ],
     "is_stale": false,
@@ -33,109 +31,28 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 18,
-  "sell_candidates": 8,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 6,
-  "email_sent": true,
+  "buy_candidates": 19,
+  "sell_candidates": 7,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": [
+  "buy_triggered": [
     {
-      "code": "000017",
-      "name": "深中华A",
-      "price": 9.52,
-      "change_pct": -10.0189,
-      "total_amount": 986999069.69,
-      "main_net_inflow": -453949020.29,
-      "main_inflow_ratio": -45.9929,
-      "super_net": -393551050.4,
-      "big_net": -60397969.89,
-      "mid_net": -2215965.0,
-      "small_net": -5496586.98,
+      "code": "603257",
+      "name": "中国瑞林",
+      "price": 72.11,
+      "change_pct": 10.0076,
+      "total_amount": 312150558.32,
+      "main_net_inflow": 156386275.03,
+      "main_inflow_ratio": 50.0996,
+      "super_net": 92443890.06,
+      "big_net": 63942384.97,
+      "mid_net": 13560920.34,
+      "small_net": 3764012.71,
       "source": "sina",
-      "flow_time": "2026-09-04T14:02:05.324050+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "002718",
-      "name": "友邦吊顶",
-      "price": 83.7,
-      "change_pct": -2.7423,
-      "total_amount": 46586976.0,
-      "main_net_inflow": -19739282.0,
-      "main_inflow_ratio": -42.3708,
-      "super_net": -7638122.0,
-      "big_net": -12101160.0,
-      "mid_net": -399843.0,
-      "small_net": 1187811.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T14:02:05.324050+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "605068",
-      "name": "明新旭腾",
-      "price": 21.15,
-      "change_pct": -10.0,
-      "total_amount": 211238089.08,
-      "main_net_inflow": -79295501.08,
-      "main_inflow_ratio": -37.5384,
-      "super_net": -45381340.0,
-      "big_net": -33914161.08,
-      "mid_net": -23027418.0,
-      "small_net": -16953890.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T14:02:05.324050+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603667",
-      "name": "五洲新春",
-      "price": 49.07,
-      "change_pct": -4.1414,
-      "total_amount": 554728034.72,
-      "main_net_inflow": -190310627.91,
-      "main_inflow_ratio": -34.307,
-      "super_net": -102940666.0,
-      "big_net": -87369961.91,
-      "mid_net": 10540782.24,
-      "small_net": 8297269.55,
-      "source": "sina",
-      "flow_time": "2026-09-04T14:02:05.324050+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "003005",
-      "name": "竞业达",
-      "price": 18.73,
-      "change_pct": -8.7677,
-      "total_amount": 769023792.32,
-      "main_net_inflow": -260479804.01,
-      "main_inflow_ratio": -33.8715,
-      "super_net": -247267217.27,
-      "big_net": -13212586.74,
-      "mid_net": -21315024.3,
-      "small_net": -4629719.81,
-      "source": "sina",
-      "flow_time": "2026-09-04T14:02:05.324050+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000751",
-      "name": "锌业股份",
-      "price": 5.0,
-      "change_pct": -2.1526,
-      "total_amount": 220682582.6,
-      "main_net_inflow": -69461508.7,
-      "main_inflow_ratio": -31.4758,
-      "super_net": -69160014.7,
-      "big_net": -301494.0,
-      "mid_net": -6541753.6,
-      "small_net": 773388.3,
-      "source": "sina",
-      "flow_time": "2026-09-04T14:02:05.324050+08:00",
-      "severity": "warn"
+      "flow_time": "2026-09-04T14:08:09.876878+08:00"
     }
-  ]
+  ],
+  "sell_triggered": []
 }
