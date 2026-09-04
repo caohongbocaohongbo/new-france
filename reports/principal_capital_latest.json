@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T14:51:36.046860+08:00",
+  "now": "2026-09-04T14:57:34.973748+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 7491
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1227
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47957
+        "latency_ms": 47973
       }
     ],
     "is_stale": false,
@@ -32,12 +32,61 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 19,
-  "sell_candidates": 9,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "buy_candidates": 20,
+  "sell_candidates": 8,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "000702",
+      "name": "正虹科技",
+      "price": 6.26,
+      "change_pct": 10.0176,
+      "total_amount": 108124938.84,
+      "main_net_inflow": 56175877.88,
+      "main_inflow_ratio": 51.9546,
+      "super_net": 33053030.0,
+      "big_net": 23122847.88,
+      "mid_net": 12815855.0,
+      "small_net": 9173205.96,
+      "source": "sina",
+      "flow_time": "2026-09-04T14:57:34.973748+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "603505",
+      "name": "金石资源",
+      "price": 15.33,
+      "change_pct": -1.9821,
+      "total_amount": 129849720.96,
+      "main_net_inflow": -39683949.04,
+      "main_inflow_ratio": -30.5614,
+      "super_net": -20886928.0,
+      "big_net": -18797021.04,
+      "mid_net": -3623533.56,
+      "small_net": 3268910.52,
+      "source": "sina",
+      "flow_time": "2026-09-04T14:57:34.973748+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600400",
+      "name": "红豆股份",
+      "price": 2.87,
+      "change_pct": -1.0345,
+      "total_amount": 111514973.86,
+      "main_net_inflow": -33752376.2,
+      "main_inflow_ratio": -30.2671,
+      "super_net": -22920745.0,
+      "big_net": -10831631.2,
+      "mid_net": -6605266.0,
+      "small_net": -3755581.94,
+      "source": "sina",
+      "flow_time": "2026-09-04T14:57:34.973748+08:00",
+      "severity": "warn"
+    }
+  ]
 }
