@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T10:07:48.945881+08:00",
+  "now": "2026-09-04T10:13:35.938873+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2971
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=15)",
+        "latency_ms": 18415
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40397
+        "latency_ms": 39718
       }
     ],
     "is_stale": false,
@@ -32,28 +32,120 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 28,
-  "sell_candidates": 12,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "buy_candidates": 31,
+  "sell_candidates": 9,
+  "buy_fresh_count": 6,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "001391",
-      "name": "国货航",
-      "price": 4.08,
-      "change_pct": 0.7407,
-      "total_amount": 20525124.18,
-      "main_net_inflow": 11283267.18,
-      "main_inflow_ratio": 54.973,
-      "super_net": 10650188.0,
-      "big_net": 633079.18,
-      "mid_net": 24050.0,
-      "small_net": -409881.0,
+      "code": "601158",
+      "name": "重庆水务",
+      "price": 4.12,
+      "change_pct": 0.2433,
+      "total_amount": 17342422.16,
+      "main_net_inflow": 11469288.0,
+      "main_inflow_ratio": 66.1343,
+      "super_net": 0.0,
+      "big_net": 11469288.0,
+      "mid_net": -39853.0,
+      "small_net": 514265.16,
       "source": "sina",
-      "flow_time": "2026-09-04T10:07:48.945881+08:00"
+      "flow_time": "2026-09-04T10:13:35.938873+08:00"
+    },
+    {
+      "code": "600170",
+      "name": "上海建工",
+      "price": 2.28,
+      "change_pct": 1.3333,
+      "total_amount": 107560159.84,
+      "main_net_inflow": 64048755.4,
+      "main_inflow_ratio": 59.5469,
+      "super_net": 62223312.4,
+      "big_net": 1825443.0,
+      "mid_net": 7470065.72,
+      "small_net": 2699330.72,
+      "source": "sina",
+      "flow_time": "2026-09-04T10:13:35.938873+08:00"
+    },
+    {
+      "code": "601016",
+      "name": "节能风电",
+      "price": 3.37,
+      "change_pct": 1.8127,
+      "total_amount": 115843906.98,
+      "main_net_inflow": 62906794.02,
+      "main_inflow_ratio": 54.3031,
+      "super_net": 59832998.0,
+      "big_net": 3073796.02,
+      "mid_net": 7305129.0,
+      "small_net": 2990680.0,
+      "source": "sina",
+      "flow_time": "2026-09-04T10:13:35.938873+08:00"
+    },
+    {
+      "code": "002663",
+      "name": "普邦股份",
+      "price": 1.75,
+      "change_pct": 2.3392,
+      "total_amount": 15910367.0,
+      "main_net_inflow": 8407962.0,
+      "main_inflow_ratio": 52.8458,
+      "super_net": 7350537.0,
+      "big_net": 1057425.0,
+      "mid_net": 1114068.0,
+      "small_net": -549637.0,
+      "source": "sina",
+      "flow_time": "2026-09-04T10:13:35.938873+08:00"
+    },
+    {
+      "code": "600930",
+      "name": "华电新能",
+      "price": 3.92,
+      "change_pct": 0.7712,
+      "total_amount": 128041855.28,
+      "main_net_inflow": 66293855.28,
+      "main_inflow_ratio": 51.7751,
+      "super_net": 59373640.28,
+      "big_net": 6920215.0,
+      "mid_net": 7445082.0,
+      "small_net": 1249438.0,
+      "source": "sina",
+      "flow_time": "2026-09-04T10:13:35.938873+08:00"
+    },
+    {
+      "code": "002285",
+      "name": "世联行",
+      "price": 2.43,
+      "change_pct": 7.0485,
+      "total_amount": 260883911.1,
+      "main_net_inflow": 133492166.5,
+      "main_inflow_ratio": 51.1692,
+      "super_net": 105108261.4,
+      "big_net": 28383905.1,
+      "mid_net": 2432442.68,
+      "small_net": -365868.0,
+      "source": "sina",
+      "flow_time": "2026-09-04T10:13:35.938873+08:00"
     }
   ],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603818",
+      "name": "曲美家居",
+      "price": 3.89,
+      "change_pct": -0.5115,
+      "total_amount": 21327970.0,
+      "main_net_inflow": -6778652.0,
+      "main_inflow_ratio": -31.7829,
+      "super_net": -4609048.0,
+      "big_net": -2169604.0,
+      "mid_net": -52869.0,
+      "small_net": -636433.0,
+      "source": "sina",
+      "flow_time": "2026-09-04T10:13:35.938873+08:00",
+      "severity": "warn"
+    }
+  ]
 }
