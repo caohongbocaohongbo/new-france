@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-04T10:48:51.339576+08:00",
+  "now": "2026-09-04T10:54:41.281131+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 8978
+      },
+      {
+        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 3546
-      },
-      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42642
+        "latency_ms": 41952
       }
     ],
     "is_stale": false,
@@ -32,28 +32,12 @@
     "verify_result": null
   },
   "scanned": 2838,
-  "buy_candidates": 28,
+  "buy_candidates": 29,
   "sell_candidates": 6,
-  "buy_fresh_count": 1,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002344",
-      "name": "海宁皮城",
-      "price": 4.1,
-      "change_pct": 1.4851,
-      "total_amount": 13127130.4,
-      "main_net_inflow": 6816444.0,
-      "main_inflow_ratio": 51.9264,
-      "super_net": 5798765.0,
-      "big_net": 1017679.0,
-      "mid_net": -1151860.4,
-      "small_net": -122926.0,
-      "source": "sina",
-      "flow_time": "2026-09-04T10:48:51.339576+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
