@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-07T11:11:39.296359+08:00",
+  "now": "2026-09-07T11:17:32.434204+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5297
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1261
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47841
+        "latency_ms": 45458
       }
     ],
     "is_stale": false,
@@ -40,35 +42,35 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002223",
-      "name": "鱼跃医疗",
-      "price": 25.5,
-      "change_pct": -1.1245,
-      "total_amount": 93396035.0,
-      "main_net_inflow": -29056325.0,
-      "main_inflow_ratio": -31.1109,
-      "super_net": -12039019.0,
-      "big_net": -17017306.0,
-      "mid_net": 6124581.0,
-      "small_net": 6779055.0,
+      "code": "002206",
+      "name": "海 利 得",
+      "price": 5.23,
+      "change_pct": -0.759,
+      "total_amount": 27941752.0,
+      "main_net_inflow": -12950630.0,
+      "main_inflow_ratio": -46.3487,
+      "super_net": -6720192.0,
+      "big_net": -6230438.0,
+      "mid_net": -1036723.0,
+      "small_net": -983935.0,
       "source": "sina",
-      "flow_time": "2026-09-07T11:11:39.296359+08:00",
-      "severity": "warn"
+      "flow_time": "2026-09-07T11:17:32.434204+08:00",
+      "severity": "alert"
     },
     {
-      "code": "600570",
-      "name": "恒生电子",
-      "price": 21.52,
-      "change_pct": -2.315,
-      "total_amount": 462465217.96,
-      "main_net_inflow": -141556879.74,
-      "main_inflow_ratio": -30.6092,
-      "super_net": -118145583.2,
-      "big_net": -23411296.54,
-      "mid_net": 6842899.0,
-      "small_net": 3598481.66,
+      "code": "000987",
+      "name": "越秀资本",
+      "price": 7.54,
+      "change_pct": -1.9506,
+      "total_amount": 187689105.82,
+      "main_net_inflow": -60280461.0,
+      "main_inflow_ratio": -32.1172,
+      "super_net": -52202956.26,
+      "big_net": -8077504.74,
+      "mid_net": 11245552.06,
+      "small_net": 9293533.74,
       "source": "sina",
-      "flow_time": "2026-09-07T11:11:39.296359+08:00",
+      "flow_time": "2026-09-07T11:17:32.434204+08:00",
       "severity": "warn"
     }
   ]
