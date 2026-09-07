@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-07T10:54:04.249648+08:00",
+  "now": "2026-09-07T10:59:58.262562+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2837
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1230
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 44696
+        "latency_ms": 43649
       }
     ],
     "is_stale": false,
@@ -34,75 +32,27 @@
   },
   "scanned": 2706,
   "buy_candidates": 21,
-  "sell_candidates": 17,
+  "sell_candidates": 13,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 4,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000507",
-      "name": "珠海港",
-      "price": 5.05,
-      "change_pct": -0.3945,
-      "total_amount": 18583954.0,
-      "main_net_inflow": -6752011.0,
-      "main_inflow_ratio": -36.3325,
-      "super_net": -2459016.0,
-      "big_net": -4292995.0,
-      "mid_net": -1099761.0,
-      "small_net": -73168.0,
+      "code": "001227",
+      "name": "兰州银行",
+      "price": 2.14,
+      "change_pct": -0.9259,
+      "total_amount": 75085926.34,
+      "main_net_inflow": -27852481.26,
+      "main_inflow_ratio": -37.0941,
+      "super_net": -23172531.26,
+      "big_net": -4679950.0,
+      "mid_net": -3813814.0,
+      "small_net": 356916.0,
       "source": "sina",
-      "flow_time": "2026-09-07T10:54:04.249648+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600236",
-      "name": "桂冠电力",
-      "price": 9.6,
-      "change_pct": -2.834,
-      "total_amount": 92313479.99,
-      "main_net_inflow": -28404243.23,
-      "main_inflow_ratio": -30.7693,
-      "super_net": -21269431.0,
-      "big_net": -7134812.23,
-      "mid_net": -5809961.3,
-      "small_net": -1237341.2,
-      "source": "sina",
-      "flow_time": "2026-09-07T10:54:04.249648+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601375",
-      "name": "中原证券",
-      "price": 4.08,
-      "change_pct": -1.4493,
-      "total_amount": 97161289.66,
-      "main_net_inflow": -29368000.34,
-      "main_inflow_ratio": -30.226,
-      "super_net": -25045215.0,
-      "big_net": -4322785.34,
-      "mid_net": 3707274.66,
-      "small_net": 2886643.34,
-      "source": "sina",
-      "flow_time": "2026-09-07T10:54:04.249648+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600076",
-      "name": "康欣新材",
-      "price": 2.85,
-      "change_pct": -10.0946,
-      "total_amount": 10118925.0,
-      "main_net_inflow": -3048645.0,
-      "main_inflow_ratio": -30.1282,
-      "super_net": -2010675.0,
-      "big_net": -1037970.0,
-      "mid_net": -2804115.0,
-      "small_net": -4266165.0,
-      "source": "sina",
-      "flow_time": "2026-09-07T10:54:04.249648+08:00",
+      "flow_time": "2026-09-07T10:59:58.262562+08:00",
       "severity": "warn"
     }
   ]
