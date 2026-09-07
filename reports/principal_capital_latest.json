@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-07T10:18:42.223195+08:00",
+  "now": "2026-09-07T10:24:39.366188+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3316
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1160
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 47470
+        "latency_ms": 46228
       }
     ],
     "is_stale": false,
@@ -33,60 +31,91 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 19,
-  "sell_candidates": 37,
-  "buy_fresh_count": 0,
+  "buy_candidates": 21,
+  "sell_candidates": 39,
+  "buy_fresh_count": 2,
   "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "002011",
+      "name": "盾安环境",
+      "price": 11.83,
+      "change_pct": 9.0323,
+      "total_amount": 563741718.49,
+      "main_net_inflow": 301806086.49,
+      "main_inflow_ratio": 53.5362,
+      "super_net": 270618511.54,
+      "big_net": 31187574.95,
+      "mid_net": 2240481.2,
+      "small_net": -678620.52,
+      "source": "sina",
+      "flow_time": "2026-09-07T10:24:39.366188+08:00"
+    },
+    {
+      "code": "603395",
+      "name": "红四方",
+      "price": 29.77,
+      "change_pct": 10.0148,
+      "total_amount": 477508968.12,
+      "main_net_inflow": 252820365.92,
+      "main_inflow_ratio": 52.9457,
+      "super_net": 190710681.68,
+      "big_net": 62109684.24,
+      "mid_net": 9999774.93,
+      "small_net": 1844234.47,
+      "source": "sina",
+      "flow_time": "2026-09-07T10:24:39.366188+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "002304",
-      "name": "洋河股份",
-      "price": 39.2,
-      "change_pct": -0.9851,
-      "total_amount": 72946347.03,
-      "main_net_inflow": -26277844.3,
-      "main_inflow_ratio": -36.0235,
-      "super_net": -14090425.0,
-      "big_net": -12187419.3,
-      "mid_net": 1058650.83,
-      "small_net": 4217088.0,
+      "code": "601788",
+      "name": "光大证券",
+      "price": 14.5,
+      "change_pct": -1.0239,
+      "total_amount": 138952956.49,
+      "main_net_inflow": -43649603.5,
+      "main_inflow_ratio": -31.4132,
+      "super_net": -29046463.75,
+      "big_net": -14603139.75,
+      "mid_net": 4336206.99,
+      "small_net": 4178285.0,
       "source": "sina",
-      "flow_time": "2026-09-07T10:18:42.223195+08:00",
+      "flow_time": "2026-09-07T10:24:39.366188+08:00",
       "severity": "warn"
     },
     {
-      "code": "600765",
-      "name": "中航重机",
-      "price": 13.45,
-      "change_pct": -1.8964,
-      "total_amount": 109438663.0,
-      "main_net_inflow": -33740410.4,
-      "main_inflow_ratio": -30.8304,
-      "super_net": -18457961.0,
-      "big_net": -15282449.4,
-      "mid_net": 1948854.4,
-      "small_net": 2241455.8,
+      "code": "600433",
+      "name": "冠豪高新",
+      "price": 3.37,
+      "change_pct": 0.2976,
+      "total_amount": 27586632.84,
+      "main_net_inflow": -8652687.0,
+      "main_inflow_ratio": -31.3655,
+      "super_net": -3685095.0,
+      "big_net": -4967592.0,
+      "mid_net": -1121889.0,
+      "small_net": -552908.84,
       "source": "sina",
-      "flow_time": "2026-09-07T10:18:42.223195+08:00",
+      "flow_time": "2026-09-07T10:24:39.366188+08:00",
       "severity": "warn"
     },
     {
-      "code": "600081",
-      "name": "东风科技",
-      "price": 10.41,
-      "change_pct": -1.9774,
-      "total_amount": 13731359.0,
-      "main_net_inflow": -4207021.0,
-      "main_inflow_ratio": -30.6381,
-      "super_net": -2093000.0,
-      "big_net": -2114021.0,
-      "mid_net": -1698557.0,
-      "small_net": -558299.0,
+      "code": "002054",
+      "name": "德美化工",
+      "price": 7.24,
+      "change_pct": -0.6859,
+      "total_amount": 28257544.4,
+      "main_net_inflow": -8736936.4,
+      "main_inflow_ratio": -30.919,
+      "super_net": -7238772.0,
+      "big_net": -1498164.4,
+      "mid_net": -586406.5,
+      "small_net": 800861.5,
       "source": "sina",
-      "flow_time": "2026-09-07T10:18:42.223195+08:00",
+      "flow_time": "2026-09-07T10:24:39.366188+08:00",
       "severity": "warn"
     }
   ]
