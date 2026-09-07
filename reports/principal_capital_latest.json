@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-07T10:30:31.140264+08:00",
+  "now": "2026-09-07T10:36:25.691596+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 6746
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1238
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 42967
+        "latency_ms": 47562
       }
     ],
     "is_stale": false,
@@ -34,27 +32,60 @@
   },
   "scanned": 2706,
   "buy_candidates": 22,
-  "sell_candidates": 30,
+  "sell_candidates": 23,
   "buy_fresh_count": 1,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "603926",
-      "name": "铁流股份",
-      "price": 18.6,
-      "change_pct": 9.9941,
-      "total_amount": 156522078.3,
-      "main_net_inflow": 78277583.2,
-      "main_inflow_ratio": 50.0106,
-      "super_net": 54167722.3,
-      "big_net": 24109860.9,
-      "mid_net": 8468519.9,
-      "small_net": 2932911.0,
+      "code": "603042",
+      "name": "华脉科技",
+      "price": 15.43,
+      "change_pct": 9.9786,
+      "total_amount": 99221007.3,
+      "main_net_inflow": 56966650.9,
+      "main_inflow_ratio": 57.4139,
+      "super_net": 44273509.5,
+      "big_net": 12693141.4,
+      "mid_net": -573247.0,
+      "small_net": 234274.2,
       "source": "sina",
-      "flow_time": "2026-09-07T10:30:31.140264+08:00"
+      "flow_time": "2026-09-07T10:36:25.691596+08:00"
     }
   ],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "601995",
+      "name": "中金公司",
+      "price": 33.47,
+      "change_pct": -1.2684,
+      "total_amount": 331885560.32,
+      "main_net_inflow": -144558776.32,
+      "main_inflow_ratio": -43.5568,
+      "super_net": -120396490.32,
+      "big_net": -24162286.0,
+      "mid_net": 11430346.0,
+      "small_net": 1740818.0,
+      "source": "sina",
+      "flow_time": "2026-09-07T10:36:25.691596+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "601336",
+      "name": "新华保险",
+      "price": 61.15,
+      "change_pct": -1.7671,
+      "total_amount": 685715162.17,
+      "main_net_inflow": -231975011.12,
+      "main_inflow_ratio": -33.8296,
+      "super_net": -200623637.44,
+      "big_net": -31351373.68,
+      "mid_net": 5248981.71,
+      "small_net": 630631.0,
+      "source": "sina",
+      "flow_time": "2026-09-07T10:36:25.691596+08:00",
+      "severity": "warn"
+    }
+  ]
 }
