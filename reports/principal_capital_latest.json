@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T11:00:04.698042+08:00",
+  "now": "2026-09-08T11:05:51.799795+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3794
+      },
+      {
+        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1507
-      },
-      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 41005
+        "latency_ms": 40637
       }
     ],
     "is_stale": false,
@@ -32,122 +32,59 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 17,
-  "sell_candidates": 11,
-  "buy_fresh_count": 3,
-  "sell_fresh_count": 4,
+  "buy_candidates": 19,
+  "sell_candidates": 12,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600157",
-      "name": "永泰能源",
-      "price": 1.56,
-      "change_pct": 0.6452,
-      "total_amount": 329354785.05,
-      "main_net_inflow": 181432320.95,
-      "main_inflow_ratio": 55.0872,
-      "super_net": 173590675.0,
-      "big_net": 7841645.95,
-      "mid_net": 9669997.0,
-      "small_net": 2836213.0,
+      "code": "002790",
+      "name": "瑞尔特",
+      "price": 6.99,
+      "change_pct": 10.0787,
+      "total_amount": 68427448.24,
+      "main_net_inflow": 50758809.24,
+      "main_inflow_ratio": 74.179,
+      "super_net": 44555733.24,
+      "big_net": 6203076.0,
+      "mid_net": 1546095.0,
+      "small_net": 2344246.0,
       "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00"
+      "flow_time": "2026-09-08T11:05:51.799795+08:00"
     },
     {
-      "code": "003037",
-      "name": "三和管桩",
-      "price": 5.91,
-      "change_pct": 1.5464,
-      "total_amount": 22805506.2,
-      "main_net_inflow": 12404632.12,
-      "main_inflow_ratio": 54.3931,
-      "super_net": 2898333.12,
-      "big_net": 9506299.0,
-      "mid_net": 3199237.08,
-      "small_net": 806952.4,
+      "code": "000928",
+      "name": "中钢国际",
+      "price": 5.96,
+      "change_pct": 9.9631,
+      "total_amount": 129316802.59,
+      "main_net_inflow": 73741138.59,
+      "main_inflow_ratio": 57.0236,
+      "super_net": 58911291.84,
+      "big_net": 14829846.75,
+      "mid_net": 3140235.0,
+      "small_net": 751393.0,
       "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00"
-    },
-    {
-      "code": "000008",
-      "name": "神州高铁",
-      "price": 2.54,
-      "change_pct": 2.008,
-      "total_amount": 38403621.0,
-      "main_net_inflow": 19597379.0,
-      "main_inflow_ratio": 51.03,
-      "super_net": 18892243.0,
-      "big_net": 705136.0,
-      "mid_net": 1470482.0,
-      "small_net": 1251080.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00"
+      "flow_time": "2026-09-08T11:05:51.799795+08:00"
     }
   ],
   "sell_triggered": [
     {
-      "code": "002920",
-      "name": "德赛西威",
-      "price": 87.17,
-      "change_pct": -1.5696,
-      "total_amount": 238024798.25,
-      "main_net_inflow": -91452292.27,
-      "main_inflow_ratio": -38.4213,
-      "super_net": -73054962.76,
-      "big_net": -18397329.51,
-      "mid_net": -3554559.96,
-      "small_net": 1828284.0,
+      "code": "002294",
+      "name": "信立泰",
+      "price": 30.93,
+      "change_pct": -1.2452,
+      "total_amount": 145050760.0,
+      "main_net_inflow": -46902702.0,
+      "main_inflow_ratio": -32.3354,
+      "super_net": -29793554.0,
+      "big_net": -17109148.0,
+      "mid_net": -3267131.0,
+      "small_net": 1484203.0,
       "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603868",
-      "name": "飞科电器",
-      "price": 31.72,
-      "change_pct": -0.9369,
-      "total_amount": 21587534.0,
-      "main_net_inflow": -7694117.0,
-      "main_inflow_ratio": -35.6415,
-      "super_net": -1437822.0,
-      "big_net": -6256295.0,
-      "mid_net": -1132531.0,
-      "small_net": -1172036.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "605287",
-      "name": "德才股份",
-      "price": 37.68,
-      "change_pct": -1.9771,
-      "total_amount": 70841650.0,
-      "main_net_inflow": -21678596.0,
-      "main_inflow_ratio": -30.6015,
-      "super_net": -11349877.0,
-      "big_net": -10328719.0,
-      "mid_net": -3775531.0,
-      "small_net": -797177.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002283",
-      "name": "天润工业",
-      "price": 8.04,
-      "change_pct": -2.7811,
-      "total_amount": 94524725.04,
-      "main_net_inflow": -28533580.72,
-      "main_inflow_ratio": -30.1864,
-      "super_net": -11894366.0,
-      "big_net": -16639214.72,
-      "mid_net": -3280957.0,
-      "small_net": 495085.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T11:00:04.698042+08:00",
+      "flow_time": "2026-09-08T11:05:51.799795+08:00",
       "severity": "warn"
     }
   ]
