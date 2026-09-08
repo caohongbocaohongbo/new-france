@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T13:24:20.595501+08:00",
+  "now": "2026-09-08T13:30:10.191809+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3198
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1070
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38741
+        "latency_ms": 91505
       }
     ],
     "is_stale": false,
@@ -33,29 +31,28 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 16,
+  "buy_candidates": 18,
   "sell_candidates": 14,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": [
+  "buy_triggered": [
     {
-      "code": "000030",
-      "name": "富奥股份",
-      "price": 4.08,
-      "change_pct": 0.4926,
-      "total_amount": 40030870.0,
-      "main_net_inflow": -14868811.0,
-      "main_inflow_ratio": -37.1434,
-      "super_net": -17865737.0,
-      "big_net": 2996926.0,
-      "mid_net": 2348386.0,
-      "small_net": 1536515.0,
+      "code": "002383",
+      "name": "合众思壮",
+      "price": 7.81,
+      "change_pct": 10.0,
+      "total_amount": 157640352.82,
+      "main_net_inflow": 112719336.3,
+      "main_inflow_ratio": 71.5041,
+      "super_net": 85085865.0,
+      "big_net": 27633471.3,
+      "mid_net": 7524312.94,
+      "small_net": -905952.42,
       "source": "sina",
-      "flow_time": "2026-09-08T13:24:20.595501+08:00",
-      "severity": "warn"
+      "flow_time": "2026-09-08T13:30:10.191809+08:00"
     }
-  ]
+  ],
+  "sell_triggered": []
 }
