@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T14:17:27.000504+08:00",
+  "now": "2026-09-08T14:23:13.332496+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 9276
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1104
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40153
+        "latency_ms": 38375
       }
     ],
     "is_stale": false,
@@ -32,7 +34,7 @@
   },
   "scanned": 2706,
   "buy_candidates": 16,
-  "sell_candidates": 12,
+  "sell_candidates": 11,
   "buy_fresh_count": 0,
   "sell_fresh_count": 2,
   "email_sent": true,
@@ -40,35 +42,35 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002824",
-      "name": "和胜股份",
-      "price": 25.55,
-      "change_pct": -4.8771,
-      "total_amount": 443855524.33,
-      "main_net_inflow": -135813778.33,
-      "main_inflow_ratio": -30.5986,
-      "super_net": -59971966.78,
-      "big_net": -75841811.55,
-      "mid_net": 2848338.0,
-      "small_net": 4408309.26,
+      "code": "002335",
+      "name": "科华数据",
+      "price": 30.13,
+      "change_pct": -2.5235,
+      "total_amount": 418070924.94,
+      "main_net_inflow": -137398617.41,
+      "main_inflow_ratio": -32.8649,
+      "super_net": -70019582.96,
+      "big_net": -67379034.45,
+      "mid_net": -5912304.6,
+      "small_net": -60768.67,
       "source": "sina",
-      "flow_time": "2026-09-08T14:17:27.000504+08:00",
+      "flow_time": "2026-09-08T14:23:13.332496+08:00",
       "severity": "warn"
     },
     {
-      "code": "002283",
-      "name": "天润工业",
-      "price": 7.94,
-      "change_pct": -3.9903,
-      "total_amount": 199836364.46,
-      "main_net_inflow": -60632660.7,
-      "main_inflow_ratio": -30.3412,
-      "super_net": -28479760.0,
-      "big_net": -32152900.7,
-      "mid_net": -10912960.2,
-      "small_net": 618383.2,
+      "code": "603213",
+      "name": "镇洋发展",
+      "price": 13.74,
+      "change_pct": -0.4348,
+      "total_amount": 18847610.95,
+      "main_net_inflow": -5957351.25,
+      "main_inflow_ratio": -31.608,
+      "super_net": -1306016.25,
+      "big_net": -4651335.0,
+      "mid_net": -2762773.55,
+      "small_net": -800946.09,
       "source": "sina",
-      "flow_time": "2026-09-08T14:17:27.000504+08:00",
+      "flow_time": "2026-09-08T14:23:13.332496+08:00",
       "severity": "warn"
     }
   ]
