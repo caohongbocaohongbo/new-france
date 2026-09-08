@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T13:54:11.177611+08:00",
+  "now": "2026-09-08T13:59:53.748496+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 14569
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1262
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 39372
+        "latency_ms": 40467
       }
     ],
     "is_stale": false,
@@ -30,28 +32,28 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2706,
-  "buy_candidates": 19,
-  "sell_candidates": 9,
+  "scanned": 2705,
+  "buy_candidates": 18,
+  "sell_candidates": 8,
   "buy_fresh_count": 1,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "002370",
-      "name": "亚太药业",
-      "price": 5.94,
-      "change_pct": 10.0,
-      "total_amount": 142139969.65,
-      "main_net_inflow": 73117631.65,
-      "main_inflow_ratio": 51.4406,
-      "super_net": 40957319.65,
-      "big_net": 32160312.0,
-      "mid_net": 7345842.0,
-      "small_net": 2310992.0,
+      "code": "600023",
+      "name": "浙能电力",
+      "price": 4.92,
+      "change_pct": 1.4433,
+      "total_amount": 187425377.14,
+      "main_net_inflow": 96787149.14,
+      "main_inflow_ratio": 51.6404,
+      "super_net": 81564903.14,
+      "big_net": 15222246.0,
+      "mid_net": 6370784.0,
+      "small_net": -803006.0,
       "source": "sina",
-      "flow_time": "2026-09-08T13:54:11.177611+08:00"
+      "flow_time": "2026-09-08T13:59:53.748496+08:00"
     }
   ],
   "sell_triggered": []
