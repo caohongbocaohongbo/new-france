@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T13:30:10.191809+08:00",
+  "now": "2026-09-08T13:36:44.819541+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5888
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1243
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 91505
+        "latency_ms": 45390
       }
     ],
     "is_stale": false,
@@ -31,27 +33,27 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 18,
-  "sell_candidates": 14,
+  "buy_candidates": 17,
+  "sell_candidates": 13,
   "buy_fresh_count": 1,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "002383",
-      "name": "合众思壮",
-      "price": 7.81,
-      "change_pct": 10.0,
-      "total_amount": 157640352.82,
-      "main_net_inflow": 112719336.3,
-      "main_inflow_ratio": 71.5041,
-      "super_net": 85085865.0,
-      "big_net": 27633471.3,
-      "mid_net": 7524312.94,
-      "small_net": -905952.42,
+      "code": "601908",
+      "name": "京运通",
+      "price": 3.04,
+      "change_pct": 2.3569,
+      "total_amount": 86659290.1,
+      "main_net_inflow": 44474818.78,
+      "main_inflow_ratio": 51.3215,
+      "super_net": 32002762.9,
+      "big_net": 12472055.88,
+      "mid_net": 939528.0,
+      "small_net": 132262.96,
       "source": "sina",
-      "flow_time": "2026-09-08T13:30:10.191809+08:00"
+      "flow_time": "2026-09-08T13:36:44.819541+08:00"
     }
   ],
   "sell_triggered": []
