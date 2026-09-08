@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T13:59:53.748496+08:00",
+  "now": "2026-09-08T14:05:53.172707+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 14569
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1262
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40467
+        "latency_ms": 37108
       }
     ],
     "is_stale": false,
@@ -32,29 +30,142 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2705,
+  "scanned": 2706,
   "buy_candidates": 18,
-  "sell_candidates": 8,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_candidates": 10,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 8,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
+  "buy_triggered": [],
+  "sell_triggered": [
     {
-      "code": "600023",
-      "name": "浙能电力",
-      "price": 4.92,
-      "change_pct": 1.4433,
-      "total_amount": 187425377.14,
-      "main_net_inflow": 96787149.14,
-      "main_inflow_ratio": 51.6404,
-      "super_net": 81564903.14,
-      "big_net": 15222246.0,
-      "mid_net": 6370784.0,
-      "small_net": -803006.0,
+      "code": "600182",
+      "name": "S佳通",
+      "price": 13.03,
+      "change_pct": 0.0768,
+      "total_amount": 10868874.0,
+      "main_net_inflow": -4084145.0,
+      "main_inflow_ratio": -37.5765,
+      "super_net": 0.0,
+      "big_net": -4084145.0,
+      "mid_net": -373756.0,
+      "small_net": 243437.0,
       "source": "sina",
-      "flow_time": "2026-09-08T13:59:53.748496+08:00"
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002920",
+      "name": "德赛西威",
+      "price": 87.03,
+      "change_pct": -1.7276,
+      "total_amount": 302212283.35,
+      "main_net_inflow": -102886499.57,
+      "main_inflow_ratio": -34.0444,
+      "super_net": -76210719.81,
+      "big_net": -26675779.76,
+      "mid_net": -6843706.25,
+      "small_net": 1911293.71,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603085",
+      "name": "天成自控",
+      "price": 9.91,
+      "change_pct": -1.1964,
+      "total_amount": 30780127.0,
+      "main_net_inflow": -10356496.0,
+      "main_inflow_ratio": -33.6467,
+      "super_net": -5962244.0,
+      "big_net": -4394252.0,
+      "mid_net": -2303379.0,
+      "small_net": 210796.8,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603070",
+      "name": "万控智造",
+      "price": 11.88,
+      "change_pct": -0.0841,
+      "total_amount": 16913865.0,
+      "main_net_inflow": -5336818.0,
+      "main_inflow_ratio": -31.5529,
+      "super_net": 0.0,
+      "big_net": -5336818.0,
+      "mid_net": -1414208.0,
+      "small_net": 340923.0,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "605287",
+      "name": "德才股份",
+      "price": 37.27,
+      "change_pct": -3.0437,
+      "total_amount": 110379213.0,
+      "main_net_inflow": -34621120.0,
+      "main_inflow_ratio": -31.3656,
+      "super_net": -19148558.0,
+      "big_net": -15472562.0,
+      "mid_net": -8911792.0,
+      "small_net": -2962717.0,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002448",
+      "name": "中原内配",
+      "price": 11.66,
+      "change_pct": -2.5084,
+      "total_amount": 135384543.0,
+      "main_net_inflow": -42302315.0,
+      "main_inflow_ratio": -31.246,
+      "super_net": -21217154.0,
+      "big_net": -21085161.0,
+      "mid_net": 3034769.0,
+      "small_net": 2442863.0,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601021",
+      "name": "春秋航空",
+      "price": 43.59,
+      "change_pct": -1.4247,
+      "total_amount": 187612594.36,
+      "main_net_inflow": -57966172.46,
+      "main_inflow_ratio": -30.8967,
+      "super_net": -45380705.0,
+      "big_net": -12585467.46,
+      "mid_net": -1114451.56,
+      "small_net": -4029739.78,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600563",
+      "name": "法拉电子",
+      "price": 123.51,
+      "change_pct": -2.2323,
+      "total_amount": 290924736.09,
+      "main_net_inflow": -88232089.85,
+      "main_inflow_ratio": -30.3281,
+      "super_net": -54593257.44,
+      "big_net": -33638832.41,
+      "mid_net": -3103523.8,
+      "small_net": 2672270.0,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:05:53.172707+08:00",
+      "severity": "warn"
     }
-  ],
-  "sell_triggered": []
+  ]
 }
