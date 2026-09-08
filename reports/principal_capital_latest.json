@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T10:28:58.822063+08:00",
+  "now": "2026-09-08T10:34:46.909583+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3644
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1317
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38997
+        "latency_ms": 64270
       }
     ],
     "is_stale": false,
@@ -34,43 +32,27 @@
   },
   "scanned": 2706,
   "buy_candidates": 19,
-  "sell_candidates": 18,
-  "buy_fresh_count": 1,
+  "sell_candidates": 16,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "000620",
-      "name": "盈新发展",
-      "price": 3.32,
-      "change_pct": 9.9338,
-      "total_amount": 926531066.67,
-      "main_net_inflow": 520554690.51,
-      "main_inflow_ratio": 56.1832,
-      "super_net": 482822005.51,
-      "big_net": 37732685.0,
-      "mid_net": -3387862.16,
-      "small_net": -688674.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T10:28:58.822063+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601137",
-      "name": "博威合金",
-      "price": 20.4,
-      "change_pct": -1.4493,
-      "total_amount": 156282710.0,
-      "main_net_inflow": -52649608.0,
-      "main_inflow_ratio": -33.6887,
-      "super_net": -47444763.0,
-      "big_net": -5204845.0,
-      "mid_net": -2268203.0,
-      "small_net": 1555145.0,
+      "code": "000913",
+      "name": "钱江摩托",
+      "price": 11.11,
+      "change_pct": -0.448,
+      "total_amount": 15850343.0,
+      "main_net_inflow": -5804238.0,
+      "main_inflow_ratio": -36.619,
+      "super_net": -1212120.0,
+      "big_net": -4592118.0,
+      "mid_net": -1118071.0,
+      "small_net": 1030020.0,
       "source": "sina",
-      "flow_time": "2026-09-08T10:28:58.822063+08:00",
+      "flow_time": "2026-09-08T10:34:46.909583+08:00",
       "severity": "warn"
     }
   ]
