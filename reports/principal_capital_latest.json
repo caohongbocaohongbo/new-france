@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T11:05:51.799795+08:00",
+  "now": "2026-09-08T11:11:40.661506+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3794
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1294
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40637
+        "latency_ms": 41220
       }
     ],
     "is_stale": false,
@@ -34,57 +34,26 @@
   "scanned": 2706,
   "buy_candidates": 19,
   "sell_candidates": 12,
-  "buy_fresh_count": 2,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002790",
-      "name": "瑞尔特",
-      "price": 6.99,
-      "change_pct": 10.0787,
-      "total_amount": 68427448.24,
-      "main_net_inflow": 50758809.24,
-      "main_inflow_ratio": 74.179,
-      "super_net": 44555733.24,
-      "big_net": 6203076.0,
-      "mid_net": 1546095.0,
-      "small_net": 2344246.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T11:05:51.799795+08:00"
-    },
-    {
-      "code": "000928",
-      "name": "中钢国际",
-      "price": 5.96,
-      "change_pct": 9.9631,
-      "total_amount": 129316802.59,
-      "main_net_inflow": 73741138.59,
-      "main_inflow_ratio": 57.0236,
-      "super_net": 58911291.84,
-      "big_net": 14829846.75,
-      "mid_net": 3140235.0,
-      "small_net": 751393.0,
-      "source": "sina",
-      "flow_time": "2026-09-08T11:05:51.799795+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002294",
-      "name": "信立泰",
-      "price": 30.93,
-      "change_pct": -1.2452,
-      "total_amount": 145050760.0,
-      "main_net_inflow": -46902702.0,
-      "main_inflow_ratio": -32.3354,
-      "super_net": -29793554.0,
-      "big_net": -17109148.0,
-      "mid_net": -3267131.0,
-      "small_net": 1484203.0,
+      "code": "002960",
+      "name": "青鸟智控",
+      "price": 8.54,
+      "change_pct": -2.9545,
+      "total_amount": 50797807.23,
+      "main_net_inflow": -16094069.13,
+      "main_inflow_ratio": -31.6826,
+      "super_net": -8850268.32,
+      "big_net": -7243800.81,
+      "mid_net": 181738.95,
+      "small_net": 822140.91,
       "source": "sina",
-      "flow_time": "2026-09-08T11:05:51.799795+08:00",
+      "flow_time": "2026-09-08T11:11:40.661506+08:00",
       "severity": "warn"
     }
   ]
