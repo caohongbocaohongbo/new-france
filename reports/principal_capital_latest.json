@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T10:17:27.722473+08:00",
+  "now": "2026-09-08T10:23:15.378120+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3324
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1281
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 40068
+        "latency_ms": 39465
       }
     ],
     "is_stale": false,
@@ -33,28 +31,75 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 19,
+  "buy_candidates": 21,
   "sell_candidates": 19,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "buy_fresh_count": 3,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "000020",
-      "name": "深华发Ａ",
-      "price": 13.7,
-      "change_pct": 10.0402,
-      "total_amount": 120704818.2,
-      "main_net_inflow": 65911429.2,
-      "main_inflow_ratio": 54.6055,
-      "super_net": 42172356.0,
-      "big_net": 23739073.2,
-      "mid_net": 7597336.0,
-      "small_net": 1896383.0,
+      "code": "000789",
+      "name": "万年青",
+      "price": 4.54,
+      "change_pct": 9.9274,
+      "total_amount": 60930153.29,
+      "main_net_inflow": 44670904.39,
+      "main_inflow_ratio": 73.3149,
+      "super_net": 34520162.19,
+      "big_net": 10150742.2,
+      "mid_net": 4309772.9,
+      "small_net": 828856.0,
       "source": "sina",
-      "flow_time": "2026-09-08T10:17:27.722473+08:00"
+      "flow_time": "2026-09-08T10:23:15.378120+08:00"
+    },
+    {
+      "code": "001368",
+      "name": "通达创智",
+      "price": 25.78,
+      "change_pct": 7.0154,
+      "total_amount": 101265175.0,
+      "main_net_inflow": 51652144.02,
+      "main_inflow_ratio": 51.0068,
+      "super_net": 35572504.0,
+      "big_net": 16079640.02,
+      "mid_net": 3361862.09,
+      "small_net": -67083.07,
+      "source": "sina",
+      "flow_time": "2026-09-08T10:23:15.378120+08:00"
+    },
+    {
+      "code": "000877",
+      "name": "天山股份",
+      "price": 3.85,
+      "change_pct": 3.2172,
+      "total_amount": 47643979.24,
+      "main_net_inflow": 24145365.24,
+      "main_inflow_ratio": 50.6787,
+      "super_net": 15583960.72,
+      "big_net": 8561404.52,
+      "mid_net": 1214065.5,
+      "small_net": 1957214.5,
+      "source": "sina",
+      "flow_time": "2026-09-08T10:23:15.378120+08:00"
     }
   ],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603070",
+      "name": "万控智造",
+      "price": 11.82,
+      "change_pct": -0.5887,
+      "total_amount": 10480697.0,
+      "main_net_inflow": -4112866.0,
+      "main_inflow_ratio": -39.2423,
+      "super_net": 0.0,
+      "big_net": -4112866.0,
+      "mid_net": -1106803.0,
+      "small_net": -60030.0,
+      "source": "sina",
+      "flow_time": "2026-09-08T10:23:15.378120+08:00",
+      "severity": "warn"
+    }
+  ]
 }
