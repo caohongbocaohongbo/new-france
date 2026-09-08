@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T14:29:07.781075+08:00",
+  "now": "2026-09-08T14:34:48.646707+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5508
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1142
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 37906
+        "latency_ms": 40132
       }
     ],
     "is_stale": false,
@@ -31,28 +33,12 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 17,
-  "sell_candidates": 9,
-  "buy_fresh_count": 1,
+  "buy_candidates": 16,
+  "sell_candidates": 7,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603077",
-      "name": "和邦生物",
-      "price": 2.53,
-      "change_pct": 10.0,
-      "total_amount": 1401222987.97,
-      "main_net_inflow": 701572996.49,
-      "main_inflow_ratio": 50.0686,
-      "super_net": 621768045.39,
-      "big_net": 79804951.1,
-      "mid_net": 52078150.32,
-      "small_net": 22759547.8,
-      "source": "sina",
-      "flow_time": "2026-09-08T14:29:07.781075+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
