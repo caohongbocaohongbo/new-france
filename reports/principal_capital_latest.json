@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T14:23:13.332496+08:00",
+  "now": "2026-09-08T14:29:07.781075+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 9276
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1104
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38375
+        "latency_ms": 37906
       }
     ],
     "is_stale": false,
@@ -33,45 +31,28 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 16,
-  "sell_candidates": 11,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "buy_candidates": 17,
+  "sell_candidates": 9,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": [
+  "buy_triggered": [
     {
-      "code": "002335",
-      "name": "科华数据",
-      "price": 30.13,
-      "change_pct": -2.5235,
-      "total_amount": 418070924.94,
-      "main_net_inflow": -137398617.41,
-      "main_inflow_ratio": -32.8649,
-      "super_net": -70019582.96,
-      "big_net": -67379034.45,
-      "mid_net": -5912304.6,
-      "small_net": -60768.67,
+      "code": "603077",
+      "name": "和邦生物",
+      "price": 2.53,
+      "change_pct": 10.0,
+      "total_amount": 1401222987.97,
+      "main_net_inflow": 701572996.49,
+      "main_inflow_ratio": 50.0686,
+      "super_net": 621768045.39,
+      "big_net": 79804951.1,
+      "mid_net": 52078150.32,
+      "small_net": 22759547.8,
       "source": "sina",
-      "flow_time": "2026-09-08T14:23:13.332496+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603213",
-      "name": "镇洋发展",
-      "price": 13.74,
-      "change_pct": -0.4348,
-      "total_amount": 18847610.95,
-      "main_net_inflow": -5957351.25,
-      "main_inflow_ratio": -31.608,
-      "super_net": -1306016.25,
-      "big_net": -4651335.0,
-      "mid_net": -2762773.55,
-      "small_net": -800946.09,
-      "source": "sina",
-      "flow_time": "2026-09-08T14:23:13.332496+08:00",
-      "severity": "warn"
+      "flow_time": "2026-09-08T14:29:07.781075+08:00"
     }
-  ]
+  ],
+  "sell_triggered": []
 }
