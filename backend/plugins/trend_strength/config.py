@@ -34,4 +34,6 @@ CONFIG = {
     # 展示层过滤（默认仅主板，TREND_* env 可开创业板/科创板）
     "show_gem": _env_bool("TREND_SHOW_GEM", False),
     "show_star": _env_bool("TREND_SHOW_STAR", False),
+    # 趋势龙头🔥邮件推送冷却（分钟，仿 15 RED 信号推送）
+    "notify_cooldown_minutes": int(_env_float("TREND_NOTIFY_COOLDOWN_MINUTES", 30)),
 }

@@ -232,39 +232,9 @@ def read_code_history(code: str, date_str: str = None) -> list:
 
 
 def read_code_kline(code: str, days: int = 60) -> list:
-    """17 路径B：个股日线 OHLC（供 K 线副图），失败返回空列表。"""
-    try:
-        from backend.agents.layer1_data_collector.sources.historical_kline import fetch_historical
-
-        hist = fetch_historical(str(code).zfill(6), int(days))
-    except Exception:  # noqa: BLE001
-        return []
-    if hist is None or getattr(hist, "empty", True):
-        return []
-
-    def col(*names):
-        for n in names:
-            if n in hist.columns:
-                return hist[n].tolist()
-        return None
-
-    dates = col("日期", "date")
-    opens = col("开盘", "open")
-    closes = col("收盘", "close")
-    highs = col("最高", "high")
-    lows = col("最低", "low")
-    vols = col("成交量", "vol", "volume")
-    records = []
-    for i in range(len(hist)):
-        records.append({
-            "date": str(dates[i])[:10] if dates else None,
-            "open": float_or(opens[i]) if opens else None,
-            "close": float_or(closes[i]) if closes else None,
-            "high": float_or(highs[i]) if highs else None,
-            "low": float_or(lows[i]) if lows else None,
-            "vol": float_or(vols[i]) if vols else None,
-        })
-    return json_safe(records)
+    """17 路径B：个股日线 OHLC（供 K 线副图），复用 common.read_code_kline（18-21 同源）。"""
+    from backend.plugins.common import read_code_kline as _read_code_kline
+    return _read_code_kline(code, days)
 
 
 def _distinct_days_count() -> int:

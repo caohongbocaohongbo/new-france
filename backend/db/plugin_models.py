@@ -346,3 +346,46 @@ class TrendStrengthHit(Base):
     trend_score = Column(Float)
     __table_args__ = (Index("idx_ts_date", "date"), Index("idx_ts_code", "code", "date"), Index("idx_ts_leader", "date", "trend_leader"))
 
+
+class PatternHit(Base):
+    """20 形态突破选股命中。"""
+    __tablename__ = "pattern_hits"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    price = Column(Float)
+    platform_high = Column(Float)
+    break_pct = Column(Float)
+    platform_break = Column(Integer, default=0)
+    gap_hold = Column(Integer, default=0)
+    dual_hit = Column(Integer, default=0)
+    gap_pct = Column(Float)
+    gap_type = Column(String(20))
+    gap_low = Column(Float)
+    volume_ratio = Column(Float)
+    pattern_score = Column(Float)
+    __table_args__ = (Index("idx_pattern_date", "date"), Index("idx_pattern_code", "code", "date"), Index("idx_pattern_dual", "date", "dual_hit"))
+
+
+class ChipHit(Base):
+    """21 筹码集中度与获利盘选股命中。"""
+    __tablename__ = "chip_hits"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    price = Column(Float)
+    concentration_ratio = Column(Float)
+    p05 = Column(Float)
+    p50 = Column(Float)
+    p95 = Column(Float)
+    profit_ratio = Column(Float)
+    ma20_slope = Column(Float)
+    concentrated = Column(Integer, default=0)
+    high_profit = Column(Integer, default=0)
+    trend_up = Column(Integer, default=0)
+    tight_control = Column(Integer, default=0)
+    chip_score = Column(Float)
+    __table_args__ = (Index("idx_chip_date", "date"), Index("idx_chip_code", "code", "date"), Index("idx_chip_tight", "date", "tight_control"))
+

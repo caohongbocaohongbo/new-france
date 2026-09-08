@@ -235,18 +235,26 @@
 
     // ==== 智能选股器（18 经典技术指标 + 19 趋势强度，tab 切换） ====
     let _spTab = "tech";  // 当前激活 tab
+    let _spCache = { tech: [], trend: [], pattern: [], chip: [] };  // 各 tab 命中数据（详情副图用）
+    const _SP_PREFIX = { tech: "/tech-indicators", trend: "/trend-strength", pattern: "/pattern-scanner", chip: "/chip-scanner" };
+    const _SP_LABEL = { tech: "经典技术指标", trend: "趋势强度", pattern: "形态突破", chip: "筹码集中度" };
 
     async function setupSmartPicker(el) {
         el.innerHTML = '<div class="loading">加载中...</div>';
         try {
-            const [techResp, trendResp] = await Promise.all([
+            const [techResp, trendResp, patternResp, chipResp] = await Promise.all([
                 apiFetch('/tech-indicators/latest', { timeout: 15000, retries: 0 }),
                 apiFetch('/trend-strength/latest', { timeout: 15000, retries: 0 }),
+                apiFetch('/pattern-scanner/latest', { timeout: 15000, retries: 0 }),
+                apiFetch('/chip-scanner/latest', { timeout: 15000, retries: 0 }),
             ]);
             const techData = await techResp.json();
             const trendData = await trendResp.json();
-            el.innerHTML = renderSmartPicker(techData, trendData);
+            const patternData = await patternResp.json();
+            const chipData = await chipResp.json();
+            el.innerHTML = renderSmartPicker(techData, trendData, patternData, chipData);
             bindSmartPickerTabs();
+            bindSmartPickerRows();
         } catch (e) {
             el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
         }
@@ -256,10 +264,12 @@
         return '<div class="smart-picker-tabs">' +
             '<button class="tab-btn' + (active === "tech" ? " active" : "") + '" data-tab="tech">经典技术指标</button>' +
             '<button class="tab-btn' + (active === "trend" ? " active" : "") + '" data-tab="trend">趋势强度</button>' +
+            '<button class="tab-btn' + (active === "pattern" ? " active" : "") + '" data-tab="pattern">形态突破</button>' +
+            '<button class="tab-btn' + (active === "chip" ? " active" : "") + '" data-tab="chip">筹码集中度</button>' +
             "</div>";
     }
 
-    function _spTable(items, cols, flagKey, flagLabel) {
+    function _spTable(tab, items, cols, flagKey, flagLabel) {
         if (!items || !items.length) return '<div class="empty-state">暂无数据，请先运行对应任务</div>';
         let head = cols.map(function (c) { return "<th>" + escapeHtml(c[1]) + "</th>"; }).join("");
         let body = items.slice(0, 80).map(function (it) {
@@ -269,19 +279,24 @@
                 if (c[0] === "code") return '<td class="sp-code">' + (isFlag ? '🔥 ' : '') + escapeHtml(String(v || "")) + "</td>";
                 return "<td>" + fmt(v) + "</td>";
             }).join("");
-            return '<tr class="' + (isFlag ? "sp-flag-row" : "") + '">' + tds + "</tr>";
+            return '<tr class="sp-row ' + (isFlag ? "sp-flag-row" : "") + '" data-sp-tab="' + escapeHtml(tab) + '" data-sp-code="' + escapeHtml(String(it.code || "")) + '" data-sp-name="' + escapeHtml(String(it.name || "")) + '" style="cursor:pointer">' + tds + "</tr>";
         }).join("");
         return '<table class="data-table"><thead><tr>' + head + "</tr></thead><tbody>" + body + "</tbody></table>";
     }
 
-    function renderSmartPicker(techData, trendData) {
+    function renderSmartPicker(techData, trendData, patternData, chipData) {
         let techItems = (techData && techData.items) || [];
         let trendItems = (trendData && trendData.items) || [];
+        let patternItems = (patternData && patternData.items) || [];
+        let chipItems = (chipData && chipData.items) || [];
+        _spCache = { tech: techItems, trend: trendItems, pattern: patternItems, chip: chipItems };
         let techCounts = (techData && techData.signal_counts) || {};
         let trendCounts = (trendData && trendData.signal_counts) || {};
+        let patternCounts = (patternData && patternData.signal_counts) || {};
+        let chipCounts = (chipData && chipData.signal_counts) || {};
         let techHtml =
             '<div class="metric-cards">' + card('金叉池', techCounts.golden || 0) + card('超卖池', techCounts.oversold || 0) + card('🔥 多指标共振', techCounts.multi || 0) + '</div>' +
-            _spTable(techItems, [
+            _spTable("tech", techItems, [
                 ["code", "代码"], ["name", "名称"], ["price", "价格"],
                 ["macd_golden", "MACD金叉"], ["kdj_golden", "KDJ金叉"],
                 ["rsi_oversold", "RSI超卖"], ["boll_rebound", "BOLL反弹"],
@@ -289,15 +304,33 @@
             ], "multi_hit", "多指标共振");
         let trendHtml =
             '<div class="metric-cards">' + card('强趋势榜', (trendData && trendData.count) || 0) + card('🔥 趋势龙头', trendCounts.leader || 0) + '</div>' +
-            _spTable(trendItems, [
+            _spTable("trend", trendItems, [
                 ["code", "代码"], ["name", "名称"], ["price", "价格"],
                 ["ma5", "MA5"], ["ma20", "MA20"], ["ma60", "MA60"],
                 ["new_high", "创新高"], ["high_break_pct", "突破幅度"], ["volume_ratio", "量比"],
                 ["trend_score", "趋势分"],
             ], "trend_leader", "趋势龙头");
+        let patternHtml =
+            '<div class="metric-cards">' + card('平台突破池', patternCounts.platform || 0) + card('缺口不回补池', patternCounts.gap || 0) + card('🔥 双形态共振', patternCounts.dual || 0) + '</div>' +
+            _spTable("pattern", patternItems, [
+                ["code", "代码"], ["name", "名称"], ["price", "价格"],
+                ["platform_break", "平台突破"], ["gap_hold", "缺口不回补"],
+                ["gap_type", "缺口类型"], ["volume_ratio", "量比"], ["pattern_score", "形态分"],
+            ], "dual_hit", "双形态共振");
+        let chipHtml =
+            '<div class="metric-cards">' + card('强势筹码榜', chipCounts.strong || 0) + card('🔥 高度控盘', chipCounts.tight_control || 0) + '</div>' +
+            ((chipData && chipData.local_only) ? '<div class="hint">需本地运行（pytdx 分钟 K 近似分价），云端分价接口不可用。</div>' : '') +
+            _spTable("chip", chipItems, [
+                ["code", "代码"], ["name", "名称"], ["price", "价格"],
+                ["concentration_ratio", "集中度"], ["profit_ratio", "获利盘"],
+                ["ma20_slope", "MA20斜率"], ["tight_control", "高度控盘"], ["chip_score", "筹码分"],
+            ], "tight_control", "高度控盘");
         return _spTabHtml(_spTab) +
             '<div id="sp-tech-content" style="' + (_spTab === "tech" ? "" : "display:none") + '">' + techHtml + "</div>" +
             '<div id="sp-trend-content" style="' + (_spTab === "trend" ? "" : "display:none") + '">' + trendHtml + "</div>" +
+            '<div id="sp-pattern-content" style="' + (_spTab === "pattern" ? "" : "display:none") + '">' + patternHtml + "</div>" +
+            '<div id="sp-chip-content" style="' + (_spTab === "chip" ? "" : "display:none") + '">' + chipHtml + "</div>" +
+            '<div id="sp-detail"></div>' +
             '<div class="hint">' + escapeHtml((techData && techData.disclaimer) || "仅为辅助参考，不构成投资建议") + '</div>';
     }
 
@@ -310,9 +343,241 @@
                 });
                 document.getElementById("sp-tech-content").style.display = _spTab === "tech" ? "" : "none";
                 document.getElementById("sp-trend-content").style.display = _spTab === "trend" ? "" : "none";
+                document.getElementById("sp-pattern-content").style.display = _spTab === "pattern" ? "" : "none";
+                document.getElementById("sp-chip-content").style.display = _spTab === "chip" ? "" : "none";
             });
         });
     }
+    // ==== 智能选股器详情副图（MACD/KDJ/MA/平台缺口/筹码分布，复用 17 ECharts 模式） ====
+    function _spItem(tab, code) {
+        const items = _spCache[tab] || [];
+        for (let i = 0; i < items.length; i++) if (String(items[i].code) === String(code)) return items[i];
+        return null;
+    }
+
+    function _spDates(records) {
+        return (records || []).map(function (k) { return (k.date || "").slice(5); });
+    }
+
+    function _spKlineSeries(records) {
+        return {
+            dates: _spDates(records),
+            ohlc: (records || []).map(function (k) { return [k.open, k.close, k.low, k.high]; }),
+        };
+    }
+
+    window.closeSmartPickerDetail = function () {
+        var el = document.getElementById("sp-detail");
+        if (el) el.innerHTML = "";
+    };
+
+    function bindSmartPickerRows() {
+        document.querySelectorAll(".sp-row").forEach(function (tr) {
+            tr.addEventListener("click", function () {
+                openSmartPickerDetail(tr.getAttribute("data-sp-tab"), tr.getAttribute("data-sp-code"), tr.getAttribute("data-sp-name"));
+            });
+        });
+    }
+
+    function renderSmartPickerDetail(tab, code, name, item) {
+        var back = '<button class="btn" style="margin-bottom:10px" onclick="closeSmartPickerDetail()">← 返回</button>';
+        var meta = "";
+        if (tab === "tech" && item) {
+            meta = "命中 " + (item.hit_count || 0) + " 项（MACD金叉" + (item.macd_golden ? "✓" : "✗") + " / KDJ金叉" + (item.kdj_golden ? "✓" : "✗") + " / RSI超卖" + (item.rsi_oversold ? "✓" : "✗") + " / BOLL反弹" + (item.boll_rebound ? "✓" : "✗") + "）";
+        } else if (tab === "trend" && item) {
+            meta = "MA多头 " + (item.ma_aligned ? "✓" : "✗") + " / 创新高 " + (item.new_high ? "✓" : "✗") + " / 量比 " + fmt(item.volume_ratio);
+        } else if (tab === "pattern" && item) {
+            meta = "平台突破 " + (item.platform_break ? "✓" : "✗") + " / 缺口不回补 " + (item.gap_hold ? "✓" : "✗") + " / 缺口类型 " + escapeHtml(String(item.gap_type || "--"));
+        } else if (tab === "chip" && item) {
+            meta = "集中度 " + fmt(item.concentration_ratio) + " / 获利盘 " + fmtPct(item.profit_ratio) + " / 高度控盘 " + (item.tight_control ? "✓" : "✗");
+        }
+        var charts = "";
+        if (tab === "tech") {
+            charts = '<div id="sp-chart-1" style="width:100%;height:280px"></div>' +
+                '<div id="sp-chart-2" style="width:100%;height:220px"></div>' +
+                '<div id="sp-chart-3" style="width:100%;height:220px"></div>';
+        } else if (tab === "chip") {
+            charts = '<div id="sp-chart-1" style="width:100%;height:260px"></div>' +
+                '<div id="sp-chart-2" style="width:100%;height:240px"></div>';
+        } else {
+            charts = '<div id="sp-chart-1" style="width:100%;height:300px"></div>';
+        }
+        return back +
+            '<h3 class="section-title">' + escapeHtml(code) + ' ' + escapeHtml(name) + ' · ' + escapeHtml(_SP_LABEL[tab] || "") + ' 副图</h3>' +
+            (meta ? '<div class="hint">' + meta + '</div>' : "") +
+            charts +
+            '<div class="hint">提示：信号仅为辅助参考，不构成投资建议。</div>';
+    }
+
+    function _drawTechKline(records, series) {
+        var el = document.getElementById("sp-chart-1");
+        if (!el || typeof echarts === "undefined") return;
+        var chart = echarts.init(el);
+        var ma = (series && series.ma) || {};
+        var k = _spKlineSeries(records);
+        chart.setOption({
+            tooltip: { trigger: "axis" },
+            legend: { data: ["MA5", "MA20"] },
+            xAxis: { type: "category", data: k.dates },
+            yAxis: { scale: true },
+            grid: { left: 55, right: 16, top: 32, bottom: 24 },
+            series: [
+                { name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" } },
+                { name: "MA5", type: "line", data: ma.ma5 || [], showSymbol: false, smooth: true, lineStyle: { width: 1 } },
+                { name: "MA20", type: "line", data: ma.ma20 || [], showSymbol: false, smooth: true, lineStyle: { width: 1 } },
+            ],
+        });
+    }
+
+    function _drawTechMacd(records, series) {
+        var el = document.getElementById("sp-chart-2");
+        if (!el || typeof echarts === "undefined") return;
+        var chart = echarts.init(el);
+        var macd = (series && series.macd) || {};
+        var k = _spKlineSeries(records);
+        chart.setOption({
+            tooltip: { trigger: "axis" },
+            legend: { data: ["DIF", "DEA", "MACD"] },
+            xAxis: { type: "category", data: k.dates },
+            yAxis: { type: "value" },
+            grid: { left: 55, right: 16, top: 32, bottom: 24 },
+            series: [
+                { name: "MACD", type: "bar", data: macd.hist || [], itemStyle: { color: function (p) { return (p.value >= 0) ? "#ef4444" : "#16a34a"; } } },
+                { name: "DIF", type: "line", data: macd.dif || [], showSymbol: false, lineStyle: { width: 1 } },
+                { name: "DEA", type: "line", data: macd.dea || [], showSymbol: false, lineStyle: { width: 1 } },
+            ],
+        });
+    }
+
+    function _drawTechKdj(records, series) {
+        var el = document.getElementById("sp-chart-3");
+        if (!el || typeof echarts === "undefined") return;
+        var chart = echarts.init(el);
+        var kdj = (series && series.kdj) || {};
+        var k = _spKlineSeries(records);
+        chart.setOption({
+            tooltip: { trigger: "axis" },
+            legend: { data: ["K", "D", "J"] },
+            xAxis: { type: "category", data: k.dates },
+            yAxis: { type: "value" },
+            grid: { left: 55, right: 16, top: 32, bottom: 24 },
+            series: [
+                { name: "K", type: "line", data: kdj.k || [], showSymbol: false, lineStyle: { width: 1 } },
+                { name: "D", type: "line", data: kdj.d || [], showSymbol: false, lineStyle: { width: 1 } },
+                { name: "J", type: "line", data: kdj.j || [], showSymbol: false, lineStyle: { width: 1 } },
+            ],
+        });
+    }
+
+    function _drawTrend(records, series) {
+        var el = document.getElementById("sp-chart-1");
+        if (!el || typeof echarts === "undefined") return;
+        var chart = echarts.init(el);
+        var ma = (series && series.ma) || {};
+        var k = _spKlineSeries(records);
+        chart.setOption({
+            tooltip: { trigger: "axis" },
+            legend: { data: ["MA5", "MA10", "MA20", "MA60"] },
+            xAxis: { type: "category", data: k.dates },
+            yAxis: { scale: true },
+            grid: { left: 55, right: 16, top: 32, bottom: 24 },
+            series: [
+                { name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" } },
+                { name: "MA5", type: "line", data: ma.ma5 || [], showSymbol: false, lineStyle: { width: 1 } },
+                { name: "MA10", type: "line", data: ma.ma10 || [], showSymbol: false, lineStyle: { width: 1 } },
+                { name: "MA20", type: "line", data: ma.ma20 || [], showSymbol: false, lineStyle: { width: 1 } },
+                { name: "MA60", type: "line", data: ma.ma60 || [], showSymbol: false, lineStyle: { width: 1 } },
+            ],
+        });
+    }
+
+    function _drawPattern(records, item) {
+        var el = document.getElementById("sp-chart-1");
+        if (!el || typeof echarts === "undefined") return;
+        var chart = echarts.init(el);
+        var k = _spKlineSeries(records);
+        var markLines = [];
+        if (item && item.platform_high != null) markLines.push({ yAxis: item.platform_high, name: "平台上沿", lineStyle: { color: "#f59e0b" } });
+        if (item && item.gap_low != null) markLines.push({ yAxis: item.gap_low, name: "缺口下沿", lineStyle: { color: "#8b5cf6" } });
+        chart.setOption({
+            tooltip: { trigger: "axis" },
+            xAxis: { type: "category", data: k.dates },
+            yAxis: { scale: true },
+            grid: { left: 55, right: 16, top: 16, bottom: 24 },
+            series: [
+                { name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" }, markLine: { symbol: "none", data: markLines, label: { formatter: "{b}" } } },
+            ],
+        });
+    }
+
+    function _drawChip(records, distData) {
+        var d1 = document.getElementById("sp-chart-1");
+        var dist = (distData && distData.distribution) || [];
+        if (d1 && typeof echarts !== "undefined") {
+            if (dist.length) {
+                var c1 = echarts.init(d1);
+                c1.setOption({
+                    tooltip: { trigger: "axis" },
+                    xAxis: { type: "category", data: dist.map(function (d) { return d.price_level; }), name: "价格" },
+                    yAxis: { type: "value", name: "成交量" },
+                    grid: { left: 55, right: 16, top: 16, bottom: 24 },
+                    series: [{ name: "筹码分布", type: "bar", data: dist.map(function (d) { return d.volume; }), itemStyle: { color: "#3b82f6" }, barWidth: "70%" }],
+                });
+            } else {
+                d1.innerHTML = '<div class="empty-state">无筹码分布数据（需本地 pytdx 运行，云端分价接口不可用）</div>';
+            }
+        }
+        var d2 = document.getElementById("sp-chart-2");
+        if (d2 && typeof echarts !== "undefined" && records && records.length) {
+            var c2 = echarts.init(d2);
+            var k = _spKlineSeries(records);
+            c2.setOption({
+                tooltip: { trigger: "axis" },
+                xAxis: { type: "category", data: k.dates },
+                yAxis: { scale: true },
+                grid: { left: 55, right: 16, top: 16, bottom: 24 },
+                series: [{ name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" } }],
+            });
+        }
+    }
+
+    function drawSmartPickerDetail(tab, records, series, item, distData) {
+        if (tab === "tech") {
+            _drawTechKline(records, series);
+            _drawTechMacd(records, series);
+            _drawTechKdj(records, series);
+        } else if (tab === "trend") {
+            _drawTrend(records, series);
+        } else if (tab === "pattern") {
+            _drawPattern(records, item);
+        } else if (tab === "chip") {
+            _drawChip(records, distData);
+        }
+    }
+
+    async function openSmartPickerDetail(tab, code, name) {
+        var el = document.getElementById("sp-detail");
+        if (!el) return;
+        el.innerHTML = '<div class="loading">加载 ' + escapeHtml(code) + ' 副图...</div>';
+        try {
+            var item = _spItem(tab, code);
+            var prefix = _SP_PREFIX[tab] || "";
+            var kResp = await apiFetch(prefix + "/" + encodeURIComponent(code) + "/kline?days=80", { timeout: 20000, retries: 0 });
+            var kData = await kResp.json();
+            var records = (kData && kData.records) || [];
+            var series = (kData && kData.series) || {};
+            var distData = null;
+            if (tab === "chip") {
+                var dResp = await apiFetch(prefix + "/" + encodeURIComponent(code) + "/distribution", { timeout: 20000, retries: 0 });
+                distData = await dResp.json();
+            }
+            el.innerHTML = renderSmartPickerDetail(tab, code, name, item);
+            drawSmartPickerDetail(tab, records, series, item, distData);
+        } catch (e) {
+            el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
+        }
+    }
+
 
     async function setupResearchPage(pageId) {
 

@@ -193,6 +193,8 @@ def get_app():
         ("resonance", "register_router", "/api/v1/resonance", "四维共振"),
         ("tech_indicators", "register_router", "/api/v1/tech-indicators", "经典技术指标"),
         ("trend_strength", "register_router", "/api/v1/trend-strength", "趋势强度"),
+        ("pattern_scanner", "register_router", "/api/v1/pattern-scanner", "形态突破"),
+        ("chip_scanner", "register_router", "/api/v1/chip-scanner", "筹码集中度"),
     ]
     for _mod, _fn, _prefix, _tag in _new_plugins:
         try:
@@ -325,8 +327,12 @@ def main():
                         help="[插件18] 经典技术指标选股")
     parser.add_argument("--run-trend-strength-once", action="store_true",
                         help="[插件19] 趋势强度选股")
+    parser.add_argument("--run-pattern-scanner-once", action="store_true",
+                        help="[插件20] 形态突破选股")
+    parser.add_argument("--run-chip-scanner-once", action="store_true",
+                        help="[插件21] 筹码集中度选股(本地专属)")
     parser.add_argument("--max-kline-workers", type=int, default=None,
-                        help="[插件15/16/18/19] K线批量并发线程数")
+                        help="[插件15/16/18/19/20/21] K线批量并发线程数")
     args = parser.parse_args()
 
     if args.init_db:
@@ -404,6 +410,8 @@ def main():
         (args.run_resonance_once, "backend.plugins.resonance", "run_resonance_cli", "四维共振"),
         (args.run_tech_indicators_once, "backend.plugins.tech_indicators", "run_tech_indicators_cli", "经典技术指标"),
         (args.run_trend_strength_once, "backend.plugins.trend_strength", "run_trend_strength_cli", "趋势强度"),
+        (args.run_pattern_scanner_once, "backend.plugins.pattern_scanner", "run_pattern_scanner_cli", "形态突破"),
+        (args.run_chip_scanner_once, "backend.plugins.chip_scanner", "run_chip_scanner_cli", "筹码集中度"),
     ]
     for _flag, _mod_path, _cli_name, _label in _new_cli_map:
         if _flag:

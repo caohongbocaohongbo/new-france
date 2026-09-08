@@ -99,6 +99,53 @@ def publish_snapshot_update(name: str) -> None:
             pass
 
 
+# ==== K 线共享缓存（18/19/20/21 共用，第七波 G5）====
+# 当日 K 线内存缓存：同日内复用，避免四插件重复拉东财（东财请求量减半）
+_kline_cache: dict = {}
+_kline_cache_date: Optional[str] = None
+
+
+def get_kline_cached(code: str, days: int = 130, fetcher=None):
+    """当日 K 线内存缓存。同日内复用，18/19/20/21 共享，避免重复拉东财。"""
+    global _kline_cache, _kline_cache_date
+    today = datetime.now(BEIJING_TZ).date().isoformat()
+    if _kline_cache_date != today:
+        _kline_cache = {}
+        _kline_cache_date = today
+    code = str(code).zfill(6)
+    if code not in _kline_cache:
+        if fetcher is None:
+            from backend.agents.layer1_data_collector.sources.historical_kline import fetch_historical as fetcher
+        _kline_cache[code] = fetcher(code, days)
+    return _kline_cache[code]
+
+
+def kline_cache_clear() -> None:
+    """清空 K 线缓存（测试/跨日重置用）。"""
+    global _kline_cache, _kline_cache_date
+    _kline_cache = {}
+    _kline_cache_date = None
+
+
+# ==== 快照内存缓存（router 列表接口 <1ms，第七波 G6）====
+_snapshot_mem_cache: dict = {}
+
+
+def snapshot_mem_get(name: str):
+    """读快照内存缓存（<1ms）。"""
+    return _snapshot_mem_cache.get(name)
+
+
+def snapshot_mem_set(name: str, payload: dict) -> None:
+    """写快照内存缓存。"""
+    _snapshot_mem_cache[name] = payload
+
+
+def snapshot_mem_pop(name: str) -> None:
+    """快照内存缓存失效（SSE 写完后 pop）。"""
+    _snapshot_mem_cache.pop(name, None)
+
+
 def write_snapshot(name: str, payload: dict) -> Path:
     """双写快照：reports/<name>_latest.json + reports/data_backend/<name>_latest.json（原子）。"""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -106,6 +153,7 @@ def write_snapshot(name: str, payload: dict) -> Path:
     text = json.dumps(json_safe(payload), ensure_ascii=False, indent=2, default=str)
     _atomic_write(latest_path(name), text)
     _atomic_write(data_backend_path(name), text)
+    snapshot_mem_set(name, payload)  # 写完更新内存缓存，列表接口直接命中
     publish_snapshot_update(name)
     return latest_path(name)
 
@@ -223,4 +271,56 @@ def market_filter(df, show_gem: bool = False, show_star: bool = False, min_amoun
         df["total_amount"] = pd.to_numeric(df["total_amount"], errors="coerce")
         df = df[df["total_amount"].isna() | (df["total_amount"] >= float(min_amount))]
     return df.reset_index(drop=True)
+
+
+def read_code_kline(code: str, days: int = 60) -> list:
+    """个股日线 OHLC（供前端副图），复用历史 K 线源，失败返回空列表。
+
+    18/19/20/21 详情副图与 17 四维共振 K 线副图共用此入口，避免各插件重复拉源。
+    返回 [{date, open, close, high, low, vol}, ...]（JSON 安全）。
+    """
+    try:
+        from backend.agents.layer1_data_collector.sources.historical_kline import fetch_historical
+
+        hist = fetch_historical(str(code).zfill(6), int(days))
+    except Exception:  # noqa: BLE001
+        return []
+    if hist is None or getattr(hist, "empty", True):
+        return []
+
+    def col(*names):
+        for n in names:
+            if n in hist.columns:
+                return hist[n].tolist()
+        return None
+
+    dates = col("日期", "date")
+    opens = col("开盘", "open")
+    closes = col("收盘", "close")
+    highs = col("最高", "high")
+    lows = col("最低", "low")
+    vols = col("成交量", "vol", "volume")
+    records = []
+    for i in range(len(hist)):
+        records.append({
+            "date": str(dates[i])[:10] if dates else None,
+            "open": float_or(opens[i]) if opens else None,
+            "close": float_or(closes[i]) if closes else None,
+            "high": float_or(highs[i]) if highs else None,
+            "low": float_or(lows[i]) if lows else None,
+            "vol": float_or(vols[i]) if vols else None,
+        })
+    return json_safe(records)
+
+
+def intraday_append(values: list, realtime_value) -> list:
+    """盘中实时化：把当日实时值追加到序列末尾重算指标（realtime 无效则返回原序列）。
+
+    与 17 d2_score_intraday 同口径：实时价等价于「日线收盘序列 + 今日实时价」。
+    数据真实性：仅在调用方明确 is_intraday 且实时值有效时使用，序列不足/无实时值时透传，不伪造。
+    """
+    rt = float_or(realtime_value)
+    if rt is None or rt <= 0:
+        return values or []
+    return list(values or []) + [rt]
 

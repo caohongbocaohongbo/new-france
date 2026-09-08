@@ -36,14 +36,32 @@ def ma_values(closes: list) -> dict:
     }
 
 
-def is_ma_aligned(closes: list, tol: float = 0.005) -> bool:
-    """MA 多头排列：MA5 > MA10 > MA20 > MA60（含容差）。"""
+def ma_series_full(closes: list) -> dict:
+    """MA5/10/20/60 全序列（详情副图用，长度 = len(closes)，前 period-1 根为 None）。"""
+    vals = _closes(closes)
+    L = len(vals)
+    out = {"ma5": [None] * L, "ma10": [None] * L, "ma20": [None] * L, "ma60": [None] * L}
+    for period, key in ((5, "ma5"), (10, "ma10"), (20, "ma20"), (60, "ma60")):
+        if L < period:
+            continue
+        for i in range(period - 1, L):
+            out[key][i] = round(sum(vals[i - period + 1:i + 1]) / period, 4)
+    return out
+
+
+def is_ma_aligned(closes: list) -> bool:
+    """MA 多头排列（严格大于，去容差；加 ma5-ma60>0.02 排除横盘）。
+
+    G1 修正：原容差 `ma5 > ma10*(1-0.005)` 在横盘期把均线粘合票全部纳入；
+    现改严格大于 + (ma5-ma60)/ma60 > 0.02 排除横盘（均线粘合期命中数减少，提高精度）。
+    """
     ma = ma_values(closes)
     if None in (ma["ma5"], ma["ma10"], ma["ma20"], ma["ma60"]):
         return False
-    return (ma["ma5"] > ma["ma10"] * (1 - tol)
-            and ma["ma10"] > ma["ma20"] * (1 - tol)
-            and ma["ma20"] > ma["ma60"] * (1 - tol))
+    if not (ma["ma5"] > ma["ma10"] > ma["ma20"] > ma["ma60"]):
+        return False
+    # 排除横盘：ma5 与 ma60 差值 > 2%（均线粘合期不入选）
+    return (ma["ma5"] - ma["ma60"]) / ma["ma60"] > 0.02
 
 
 def is_new_high(closes: list, window: int = 60) -> Tuple[bool, Optional[float]]:
@@ -56,12 +74,19 @@ def is_new_high(closes: list, window: int = 60) -> Tuple[bool, Optional[float]]:
 
 
 def volume_ratio(vols: list, window: int = 5):
-    """量比 = 今日量 / 近 window 日均量。"""
-    vals = _closes(vols)
-    if len(vals) < window + 1:
+    """量比 = 今日量 / 近 window 日均量（G3：过滤停牌日 vol=0 再取均量）。
+
+    G3 修正：原实现分母含停牌日（vol=0），导致量比虚高；
+    现过滤 vol=0 的日期再取近 window 日均量。
+    """
+    raw = [_float(v) for v in vols or []]
+    today_vol = raw[-1] if raw else None
+    # 近 window 日量（过滤 vol=0 停牌日）
+    prev_vols = [v for v in raw[-(window + 1):-1] if v is not None and v > 0]
+    if today_vol is None or not prev_vols:
         return None
-    avg = sum(vals[-(window + 1):-1]) / window
-    return vals[-1] / avg if avg > 0 else 1.0
+    avg = sum(prev_vols) / len(prev_vols)
+    return today_vol / avg if avg > 0 else 1.0
 
 
 def compute_trend_score(closes: list, vols: list, prev_high: float, ma60: float, vr: float) -> float:

@@ -88,3 +88,29 @@ def main_cost_band(distribution: list, top_ratio: float = 0.2) -> dict:
     weighted = sum(r["price_level"] * r["volume"] for r in top) / total if total > 0 else None
     prices = sorted(r["price_level"] for r in top)
     return {"low": prices[0], "high": prices[-1], "weighted": round(weighted, 4) if weighted else None}
+
+
+def concentration_ratio(distribution: list):
+    """21 筹码集中度：90% 成本区间集中度 = (p95 - p05) / p50（越小越集中）。
+
+    返回 (concentration_ratio, p05, p50, p95)，数据不足返回 (None, None, None, None)。
+    """
+    if not distribution:
+        return None, None, None, None
+    sorted_dist = sorted(distribution, key=lambda r: r["price_level"])
+    total = sum(r["volume"] for r in sorted_dist)
+    if total <= 0:
+        return None, None, None, None
+    cum = 0.0
+    p05 = p50 = p95 = None
+    for r in sorted_dist:
+        cum += r["volume"]
+        if p05 is None and cum >= total * 0.05:
+            p05 = r["price_level"]
+        if p50 is None and cum >= total * 0.50:
+            p50 = r["price_level"]
+        if p95 is None and cum >= total * 0.95:
+            p95 = r["price_level"]
+    if p05 is None or p50 is None or p95 is None or p50 == 0:
+        return None, None, None, None
+    return round((p95 - p05) / p50, 4), p05, p50, p95

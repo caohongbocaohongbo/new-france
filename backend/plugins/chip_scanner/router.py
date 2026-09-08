@@ -1,4 +1,4 @@
-"""18 经典技术指标选股 API。"""
+"""21 筹码集中度与获利盘选股 API。"""
 import logging
 
 from fastapi import APIRouter, Query
@@ -6,14 +6,16 @@ from fastapi import APIRouter, Query
 from backend.plugins.common import snapshot_mem_get, snapshot_mem_set
 
 from .config import SNAPSHOT_NAME
-from .service import read_code_hits, read_code_kline_with_series, read_latest
+from .service import (
+    read_code_distribution, read_code_hits, read_code_kline_with_series, read_latest,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 def _latest_cached() -> dict:
-    """G6：先查快照内存缓存（<1ms），无则读文件+set。"""
+    """G3：先查快照内存缓存（<1ms），无则读文件+set。"""
     cached = snapshot_mem_get(SNAPSHOT_NAME)
     if cached is not None:
         return cached
@@ -23,7 +25,7 @@ def _latest_cached() -> dict:
 
 
 @router.get("/latest")
-async def tech_indicators_latest():
+async def chip_scanner_latest():
     try:
         return _latest_cached()
     except Exception as exc:
@@ -31,11 +33,11 @@ async def tech_indicators_latest():
 
 
 def _filter_code_from_snapshot(code: str) -> list:
-    """G10：从快照内存 filter code（当日，不走 SQLite）。"""
+    """G3：从快照内存 filter code（当日，不走 SQLite）。"""
     code = str(code).zfill(6)
     payload = _latest_cached()
     seen, out = set(), []
-    for key in ("items", "golden_pool", "oversold_pool", "multi_hit_pool"):
+    for key in ("items", "strong_pool", "tight_control_pool"):
         for item in payload.get(key) or []:
             c = str(item.get("code") or "").zfill(6)
             if c == code and c not in seen:
@@ -45,21 +47,28 @@ def _filter_code_from_snapshot(code: str) -> list:
 
 
 @router.get("/{code}/kline")
-async def tech_indicators_kline(code: str, days: int = Query(80, ge=20, le=250)):
-    """详情副图：日线 OHLC + MACD/KDJ/RSI/BOLL/MA 全序列（复用 17 ECharts 模式）。"""
+async def chip_scanner_kline(code: str, days: int = Query(80, ge=20, le=250)):
+    """详情副图：日线 OHLC（价格背景图）。"""
     try:
         return {"status": "ok", "code": code, **read_code_kline_with_series(code, days)}
     except Exception as exc:
         return {"status": "error", "message": str(exc)}
 
 
+@router.get("/{code}/distribution")
+async def chip_scanner_distribution(code: str):
+    """详情副图：筹码分布（本地 pytdx 分钟 K 近似分价，云端空 + local_only）。"""
+    try:
+        return {"status": "ok", "code": code, **read_code_distribution(code)}
+    except Exception as exc:
+        return {"status": "error", "message": str(exc)}
+
+
 @router.get("/{code}")
-async def tech_indicators_code(code: str, date: str = Query(None)):
+async def chip_scanner_code(code: str, date: str = Query(None)):
     try:
         if date is None:
-            # G10：无 date 参数时，从当日快照内存 filter（不走 SQLite）
             return {"status": "ok", "code": code, "records": _filter_code_from_snapshot(code)}
-        # 有 date 参数时，走 SQLite 历史时间线查询（本地历史）
         return {"status": "ok", "code": code, "records": read_code_hits(code, date)}
     except Exception as exc:
         return {"status": "error", "message": str(exc)}

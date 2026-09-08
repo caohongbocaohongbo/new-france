@@ -1,6 +1,6 @@
 """19 趋势强度选股单测（离线）。"""
 from backend.plugins.trend_strength.indicators import (
-    compute_trend_score, is_ma_aligned, is_new_high, ma_values, volume_ratio,
+    compute_trend_score, is_ma_aligned, is_new_high, ma_series_full, ma_values, volume_ratio,
 )
 
 
@@ -43,3 +43,14 @@ def test_compute_trend_score():
     vr = 2.0
     s = compute_trend_score(closes, [100] * 69, 100, 50, vr)
     assert 0 <= s <= 100
+
+
+def test_ma_series_full():
+    closes = list(range(1, 70))
+    ma = ma_series_full(closes)
+    assert set(ma) == {"ma5", "ma10", "ma20", "ma60"}
+    for k, v in ma.items():
+        assert len(v) == len(closes)
+    assert ma["ma5"][4] == 3.0  # (1+2+3+4+5)/5
+    assert ma["ma5"][3] is None
+    assert ma["ma60"][-1] == sum(closes[-60:]) / 60
