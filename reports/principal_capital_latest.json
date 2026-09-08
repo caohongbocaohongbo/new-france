@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-08T14:11:37.006410+08:00",
+  "now": "2026-09-08T14:17:27.000504+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3881
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1227
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 39230
+        "latency_ms": 40153
       }
     ],
     "is_stale": false,
@@ -33,28 +31,44 @@
     "verify_result": null
   },
   "scanned": 2706,
-  "buy_candidates": 18,
-  "sell_candidates": 10,
+  "buy_candidates": 16,
+  "sell_candidates": 12,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600312",
-      "name": "平高电气",
-      "price": 19.69,
-      "change_pct": -2.9571,
-      "total_amount": 285303429.04,
-      "main_net_inflow": -95020695.84,
-      "main_inflow_ratio": -33.3051,
-      "super_net": -64419914.45,
-      "big_net": -30600781.39,
-      "mid_net": 1183628.97,
-      "small_net": 2986449.03,
+      "code": "002824",
+      "name": "和胜股份",
+      "price": 25.55,
+      "change_pct": -4.8771,
+      "total_amount": 443855524.33,
+      "main_net_inflow": -135813778.33,
+      "main_inflow_ratio": -30.5986,
+      "super_net": -59971966.78,
+      "big_net": -75841811.55,
+      "mid_net": 2848338.0,
+      "small_net": 4408309.26,
       "source": "sina",
-      "flow_time": "2026-09-08T14:11:37.006410+08:00",
+      "flow_time": "2026-09-08T14:17:27.000504+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002283",
+      "name": "天润工业",
+      "price": 7.94,
+      "change_pct": -3.9903,
+      "total_amount": 199836364.46,
+      "main_net_inflow": -60632660.7,
+      "main_inflow_ratio": -30.3412,
+      "super_net": -28479760.0,
+      "big_net": -32152900.7,
+      "mid_net": -10912960.2,
+      "small_net": 618383.2,
+      "source": "sina",
+      "flow_time": "2026-09-08T14:17:27.000504+08:00",
       "severity": "warn"
     }
   ]
