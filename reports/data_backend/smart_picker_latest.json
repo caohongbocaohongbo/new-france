@@ -1,0 +1,4925 @@
+{
+  "status": "completed",
+  "run_at": "2026-09-09T10:54:19.318969+08:00",
+  "date": "2026-09-09",
+  "data_age_days": 0,
+  "source": "local",
+  "weights": {
+    "tech": 0.3,
+    "trend": 0.25,
+    "pattern": 0.2,
+    "chip": 0.25
+  },
+  "strategies": {
+    "tech": {
+      "available": true,
+      "degraded": false,
+      "count": 59,
+      "snapshot_date": "2026-09-09"
+    },
+    "trend": {
+      "available": true,
+      "degraded": false,
+      "count": 80,
+      "snapshot_date": "2026-09-09"
+    },
+    "pattern": {
+      "available": true,
+      "degraded": false,
+      "count": 5,
+      "snapshot_date": "2026-09-09"
+    },
+    "chip": {
+      "available": true,
+      "degraded": false,
+      "count": 80,
+      "snapshot_date": "2026-09-09"
+    }
+  },
+  "zt_gate_applied": true,
+  "zt_gate_reason": null,
+  "signal_counts": {
+    "total": 100,
+    "resonance": 4,
+    "by_strategy": {
+      "tech": 13,
+      "trend": 20,
+      "pattern": 2,
+      "chip": 69
+    },
+    "badges_missing": 0
+  },
+  "count": 100,
+  "items": [
+    {
+      "code": "000798",
+      "name": "中水渔业",
+      "price": 12.52,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 100.0
+      },
+      "hits": {
+        "trend": {
+          "code": "000798",
+          "name": "中水渔业",
+          "price": 12.52,
+          "is_intraday": 1,
+          "realtime_price": 12.52,
+          "ma5": 10.91,
+          "ma10": 10.288,
+          "ma20": 9.480000000000002,
+          "ma60": 8.238333333333332,
+          "ma_aligned": 1,
+          "prev_high_60": 11.52,
+          "new_high": 1,
+          "high_break_pct": 0.0868,
+          "volume_ratio": 3.1029610280879742,
+          "trend_leader": 1,
+          "trend_score": 96.04,
+          "trend_score_pct": 100.0,
+          "explain": "MA5/10/20/60多头排列(10.91>10.29>9.48>8.24) + 创60日新高(前高 11.52, 突破 8.68%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 100.0,
+      "hub_score_pct": 100.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002595",
+      "name": "豪迈科技",
+      "price": 41.22,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 100.0
+      },
+      "hits": {
+        "tech": {
+          "code": "002595",
+          "name": "豪迈科技",
+          "price": 41.22,
+          "is_intraday": 1,
+          "realtime_price": 41.22,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 1,
+          "boll_rebound": 0,
+          "hit_count": 2,
+          "tech_score": 53.81,
+          "multi_hit": 1,
+          "macd_dif": -2.4295,
+          "macd_dea": 0.5695,
+          "kdj_k": 8.11,
+          "kdj_d": 7.28,
+          "kdj_j": 9.79,
+          "rsi": 24.95,
+          "boll_mb": 46.6645,
+          "boll_ub": 54.6139,
+          "boll_lb": 38.7151,
+          "tech_score_pct": 100.0,
+          "explain": "KDJ低位金叉(K 8.11 上穿 D 7.28) + RSI超卖反弹(RSI 24.95<30 回升)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 100.0,
+      "hub_score_pct": 100.0,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "601975",
+      "name": "招商南油",
+      "price": 4.76,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 100.0
+      },
+      "hits": {
+        "chip": {
+          "code": "601975",
+          "name": "招商南油",
+          "price": 4.76,
+          "concentration_ratio": 0.0215,
+          "p05": 4.65,
+          "p50": 4.65,
+          "p95": 4.75,
+          "profit_ratio": 0.9905,
+          "ma20_slope": 0.0504,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.65,
+          "main_cost_band_high": 4.65,
+          "chip_score": 94.27,
+          "approx": true,
+          "chip_score_pct": 100.0,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 99.05% + MA20上行(斜率 0.050400)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 100.0,
+      "hub_score_pct": 100.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603123",
+      "name": "翠微股份",
+      "price": 11.27,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 1,
+        "chip": 0
+      },
+      "pct": {
+        "pattern": 100.0
+      },
+      "hits": {
+        "pattern": {
+          "code": "603123",
+          "name": "翠微股份",
+          "price": 11.27,
+          "is_intraday": 1,
+          "realtime_price": 11.27,
+          "platform_high": 12.56,
+          "break_pct": -0.0822,
+          "platform_break": 0,
+          "gap_hold": 1,
+          "dual_hit": 0,
+          "gap_pct": 0.0537,
+          "gap_type": "common",
+          "gap_low": 10.61,
+          "volume_ratio": 1.61,
+          "pattern_score": 60.0,
+          "pattern_score_pct": 100.0,
+          "explain": "普通缺口不回补(缺口 5.37%, 下沿 10.61)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 100.0,
+      "hub_score_pct": 100.0,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "605580",
+      "name": "恒盛能源",
+      "price": 24.29,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 1,
+        "chip": 0
+      },
+      "pct": {
+        "pattern": 100.0
+      },
+      "hits": {
+        "pattern": {
+          "code": "605580",
+          "name": "恒盛能源",
+          "price": 24.29,
+          "is_intraday": 1,
+          "realtime_price": 24.29,
+          "platform_high": 25.61,
+          "break_pct": -0.0303,
+          "platform_break": 0,
+          "gap_hold": 1,
+          "dual_hit": 0,
+          "gap_pct": 0.0999,
+          "gap_type": "common",
+          "gap_low": 20.43,
+          "volume_ratio": 2.86,
+          "pattern_score": 60.0,
+          "pattern_score_pct": 100.0,
+          "explain": "普通缺口不回补(缺口 9.99%, 下沿 20.43)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 100.0,
+      "hub_score_pct": 100.0,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600508",
+      "name": "上海能源",
+      "price": 11.66,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 99.7
+      },
+      "hits": {
+        "chip": {
+          "code": "600508",
+          "name": "上海能源",
+          "price": 11.66,
+          "concentration_ratio": 0.0217,
+          "p05": 11.4,
+          "p50": 11.5,
+          "p95": 11.65,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0868,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 11.5,
+          "main_cost_band_high": 11.5,
+          "chip_score": 94.21,
+          "approx": true,
+          "chip_score_pct": 99.7,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 100.00% + MA20上行(斜率 0.086800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 99.7,
+      "hub_score_pct": 97.3,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601886",
+      "name": "江河集团",
+      "price": 13.4,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 99.5
+      },
+      "hits": {
+        "chip": {
+          "code": "601886",
+          "name": "江河集团",
+          "price": 13.4,
+          "concentration_ratio": 0.0112,
+          "p05": 13.3,
+          "p50": 13.35,
+          "p95": 13.45,
+          "profit_ratio": 0.8852,
+          "ma20_slope": 0.1121,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 13.35,
+          "main_cost_band_high": 13.35,
+          "chip_score": 94.05,
+          "approx": true,
+          "chip_score_pct": 99.5,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 88.52% + MA20上行(斜率 0.112100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 99.5,
+      "hub_score_pct": 96.8,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000576",
+      "name": "甘化科工",
+      "price": 8.67,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 99.2
+      },
+      "hits": {
+        "chip": {
+          "code": "000576",
+          "name": "甘化科工",
+          "price": 8.67,
+          "concentration_ratio": 0.0233,
+          "p05": 8.5,
+          "p50": 8.6,
+          "p95": 8.7,
+          "profit_ratio": 0.9035,
+          "ma20_slope": 0.0519,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 8.6,
+          "main_cost_band_high": 8.6,
+          "chip_score": 93.79,
+          "approx": true,
+          "chip_score_pct": 99.2,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 90.35% + MA20上行(斜率 0.051900)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 99.2,
+      "hub_score_pct": 96.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601988",
+      "name": "中国银行",
+      "price": 6.4,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 98.9
+      },
+      "hits": {
+        "chip": {
+          "code": "601988",
+          "name": "中国银行",
+          "price": 6.4,
+          "concentration_ratio": 0.0078,
+          "p05": 6.35,
+          "p50": 6.4,
+          "p95": 6.4,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0374,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.4,
+          "main_cost_band_high": 6.4,
+          "chip_score": 92.88,
+          "approx": true,
+          "chip_score_pct": 98.9,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 100.00% + MA20上行(斜率 0.037400)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 98.9,
+      "hub_score_pct": 95.7,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002812",
+      "name": "恩捷股份",
+      "price": 49.0,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 98.3
+      },
+      "hits": {
+        "tech": {
+          "code": "002812",
+          "name": "恩捷股份",
+          "price": 49.0,
+          "is_intraday": 1,
+          "realtime_price": 49.0,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 27.01,
+          "multi_hit": 0,
+          "macd_dif": -1.9365,
+          "macd_dea": 1.7473,
+          "kdj_k": 11.95,
+          "kdj_d": 11.47,
+          "kdj_j": 12.9,
+          "rsi": 35.16,
+          "boll_mb": 53.467,
+          "boll_ub": 59.9652,
+          "boll_lb": 46.9688,
+          "tech_score_pct": 98.3,
+          "explain": "KDJ低位金叉(K 11.95 上穿 D 11.47)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 98.3,
+      "hub_score_pct": 95.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600359",
+      "name": "新农开发",
+      "price": 8.76,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 98.3
+      },
+      "hits": {
+        "trend": {
+          "code": "600359",
+          "name": "新农开发",
+          "price": 8.76,
+          "is_intraday": 1,
+          "realtime_price": 8.76,
+          "ma5": 7.843999999999999,
+          "ma10": 7.651000000000001,
+          "ma20": 7.093500000000001,
+          "ma60": 6.230333333333334,
+          "ma_aligned": 1,
+          "prev_high_60": 7.96,
+          "new_high": 1,
+          "high_break_pct": 0.1005,
+          "volume_ratio": 1.2919305550216358,
+          "trend_leader": 0,
+          "trend_score": 83.89,
+          "trend_score_pct": 98.3,
+          "explain": "MA5/10/20/60多头排列(7.84>7.65>7.09>6.23) + 创60日新高(前高 7.96, 突破 10.05%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 98.3,
+      "hub_score_pct": 95.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601665",
+      "name": "齐鲁银行",
+      "price": 7.17,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 98.1
+      },
+      "hits": {
+        "chip": {
+          "code": "601665",
+          "name": "齐鲁银行",
+          "price": 7.17,
+          "concentration_ratio": 0.0211,
+          "p05": 7.05,
+          "p50": 7.1,
+          "p95": 7.2,
+          "profit_ratio": 0.9467,
+          "ma20_slope": 0.0431,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 7.1,
+          "main_cost_band_high": 7.1,
+          "chip_score": 91.61,
+          "approx": true,
+          "chip_score_pct": 98.1,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 94.67% + MA20上行(斜率 0.043100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 98.1,
+      "hub_score_pct": 94.1,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "601319",
+      "name": "中国人保",
+      "price": 7.93,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 97.8
+      },
+      "hits": {
+        "chip": {
+          "code": "601319",
+          "name": "中国人保",
+          "price": 7.93,
+          "concentration_ratio": 0.0127,
+          "p05": 7.8,
+          "p50": 7.85,
+          "p95": 7.9,
+          "profit_ratio": 0.9675,
+          "ma20_slope": 0.0359,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 7.8,
+          "main_cost_band_high": 7.8,
+          "chip_score": 90.97,
+          "approx": true,
+          "chip_score_pct": 97.8,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 96.75% + MA20上行(斜率 0.035900)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 97.8,
+      "hub_score_pct": 93.5,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002100",
+      "name": "天康生物",
+      "price": 8.4,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 97.5
+      },
+      "hits": {
+        "chip": {
+          "code": "002100",
+          "name": "天康生物",
+          "price": 8.4,
+          "concentration_ratio": 0.018,
+          "p05": 8.3,
+          "p50": 8.35,
+          "p95": 8.45,
+          "profit_ratio": 0.8926,
+          "ma20_slope": 0.0431,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 8.3,
+          "main_cost_band_high": 8.3,
+          "chip_score": 90.96,
+          "approx": true,
+          "chip_score_pct": 97.5,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 89.26% + MA20上行(斜率 0.043100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 97.5,
+      "hub_score_pct": 93.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "003816",
+      "name": "中国广核",
+      "price": 4.3,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 97.3
+      },
+      "hits": {
+        "chip": {
+          "code": "003816",
+          "name": "中国广核",
+          "price": 4.3,
+          "concentration_ratio": 0.0,
+          "p05": 4.3,
+          "p50": 4.3,
+          "p95": 4.3,
+          "profit_ratio": 0.9898,
+          "ma20_slope": 0.0273,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.3,
+          "main_cost_band_high": 4.3,
+          "chip_score": 90.92,
+          "approx": true,
+          "chip_score_pct": 97.3,
+          "explain": "筹码集中(90%成本区间 0.00) + 获利盘 98.98% + MA20上行(斜率 0.027300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 97.3,
+      "hub_score_pct": 92.5,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "600562",
+      "name": "国睿科技",
+      "price": 29.73,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 97.0
+      },
+      "hits": {
+        "chip": {
+          "code": "600562",
+          "name": "国睿科技",
+          "price": 29.73,
+          "concentration_ratio": 0.0274,
+          "p05": 28.9,
+          "p50": 29.25,
+          "p95": 29.7,
+          "profit_ratio": 0.9629,
+          "ma20_slope": 0.0442,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 29.1,
+          "main_cost_band_high": 29.3,
+          "chip_score": 90.37,
+          "approx": true,
+          "chip_score_pct": 97.0,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 96.29% + MA20上行(斜率 0.044200)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 97.0,
+      "hub_score_pct": 91.9,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000973",
+      "name": "佛塑科技",
+      "price": 12.12,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 96.6
+      },
+      "hits": {
+        "tech": {
+          "code": "000973",
+          "name": "佛塑科技",
+          "price": 12.12,
+          "is_intraday": 1,
+          "realtime_price": 12.12,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 26.82,
+          "multi_hit": 0,
+          "macd_dif": -0.3185,
+          "macd_dea": 0.2235,
+          "kdj_k": 12.7,
+          "kdj_d": 12.47,
+          "kdj_j": 13.17,
+          "rsi": 36.99,
+          "boll_mb": 13.3095,
+          "boll_ub": 15.1289,
+          "boll_lb": 11.4901,
+          "tech_score_pct": 96.6,
+          "explain": "KDJ低位金叉(K 12.70 上穿 D 12.47)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 96.6,
+      "hub_score_pct": 91.4,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601169",
+      "name": "北京银行",
+      "price": 5.56,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 96.5
+      },
+      "hits": {
+        "chip": {
+          "code": "601169",
+          "name": "北京银行",
+          "price": 5.56,
+          "concentration_ratio": 0.009,
+          "p05": 5.5,
+          "p50": 5.55,
+          "p95": 5.55,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0294,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.55,
+          "main_cost_band_high": 5.55,
+          "chip_score": 89.36,
+          "approx": true,
+          "chip_score_pct": 96.5,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 100.00% + MA20上行(斜率 0.029400)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 96.5,
+      "hub_score_pct": 90.9,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000301",
+      "name": "东方盛虹",
+      "price": 14.24,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 95.9
+      },
+      "hits": {
+        "chip": {
+          "code": "000301",
+          "name": "东方盛虹",
+          "price": 14.24,
+          "concentration_ratio": 0.0177,
+          "p05": 13.95,
+          "p50": 14.1,
+          "p95": 14.2,
+          "profit_ratio": 0.9805,
+          "ma20_slope": 0.0317,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 14.1,
+          "main_cost_band_high": 14.1,
+          "chip_score": 87.96,
+          "approx": true,
+          "chip_score_pct": 95.9,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 98.05% + MA20上行(斜率 0.031700)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 95.9,
+      "hub_score_pct": 90.3,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "000735",
+      "name": "罗 牛 山",
+      "price": 7.05,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 95.7
+      },
+      "hits": {
+        "trend": {
+          "code": "000735",
+          "name": "罗 牛 山",
+          "price": 7.05,
+          "is_intraday": 1,
+          "realtime_price": 7.05,
+          "ma5": 6.459999999999999,
+          "ma10": 6.116000000000001,
+          "ma20": 5.846000000000001,
+          "ma60": 5.301166666666668,
+          "ma_aligned": 1,
+          "prev_high_60": 6.81,
+          "new_high": 1,
+          "high_break_pct": 0.0352,
+          "volume_ratio": 4.560469921812994,
+          "trend_leader": 1,
+          "trend_score": 80.57,
+          "trend_score_pct": 95.7,
+          "explain": "MA5/10/20/60多头排列(6.46>6.12>5.85>5.30) + 创60日新高(前高 6.81, 突破 3.52%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 95.7,
+      "hub_score_pct": 89.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "000768",
+      "name": "中航西飞",
+      "price": 24.03,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 95.6
+      },
+      "hits": {
+        "chip": {
+          "code": "000768",
+          "name": "中航西飞",
+          "price": 24.03,
+          "concentration_ratio": 0.0233,
+          "p05": 23.45,
+          "p50": 23.6,
+          "p95": 24.0,
+          "profit_ratio": 0.9558,
+          "ma20_slope": 0.0344,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 23.5,
+          "main_cost_band_high": 23.6,
+          "chip_score": 87.55,
+          "approx": true,
+          "chip_score_pct": 95.6,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 95.58% + MA20上行(斜率 0.034400)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 95.6,
+      "hub_score_pct": 89.2,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "601058",
+      "name": "赛轮轮胎",
+      "price": 14.7,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 95.4
+      },
+      "hits": {
+        "chip": {
+          "code": "601058",
+          "name": "赛轮轮胎",
+          "price": 14.7,
+          "concentration_ratio": 0.0206,
+          "p05": 14.35,
+          "p50": 14.55,
+          "p95": 14.65,
+          "profit_ratio": 0.9934,
+          "ma20_slope": 0.0314,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 14.4,
+          "main_cost_band_high": 14.6,
+          "chip_score": 87.07,
+          "approx": true,
+          "chip_score_pct": 95.4,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 99.34% + MA20上行(斜率 0.031400)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 95.4,
+      "hub_score_pct": 88.7,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "600506",
+      "name": "统一股份",
+      "price": 17.95,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 95.1
+      },
+      "hits": {
+        "chip": {
+          "code": "600506",
+          "name": "统一股份",
+          "price": 17.95,
+          "concentration_ratio": 0.0489,
+          "p05": 17.0,
+          "p50": 17.4,
+          "p95": 17.85,
+          "profit_ratio": 0.975,
+          "ma20_slope": 0.0541,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 17.3,
+          "main_cost_band_high": 17.55,
+          "chip_score": 86.96,
+          "approx": true,
+          "chip_score_pct": 95.1,
+          "explain": "筹码集中(90%成本区间 0.05) + 获利盘 97.50% + MA20上行(斜率 0.054100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 95.1,
+      "hub_score_pct": 88.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600540",
+      "name": "新赛股份",
+      "price": 7.21,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 94.9
+      },
+      "hits": {
+        "trend": {
+          "code": "600540",
+          "name": "新赛股份",
+          "price": 7.21,
+          "is_intraday": 1,
+          "realtime_price": 7.21,
+          "ma5": 6.529999999999999,
+          "ma10": 6.069999999999999,
+          "ma20": 5.060499999999999,
+          "ma60": 4.049833333333334,
+          "ma_aligned": 1,
+          "prev_high_60": 6.73,
+          "new_high": 1,
+          "high_break_pct": 0.0713,
+          "volume_ratio": 1.6386904403173614,
+          "trend_leader": 1,
+          "trend_score": 79.91,
+          "trend_score_pct": 94.9,
+          "explain": "MA5/10/20/60多头排列(6.53>6.07>5.06>4.05) + 创60日新高(前高 6.73, 突破 7.13%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 94.9,
+      "hub_score_pct": 87.6,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "603127",
+      "name": "昭衍新药",
+      "price": 43.85,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 94.9
+      },
+      "hits": {
+        "tech": {
+          "code": "603127",
+          "name": "昭衍新药",
+          "price": 43.85,
+          "is_intraday": 1,
+          "realtime_price": 43.85,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 26.74,
+          "multi_hit": 0,
+          "macd_dif": -0.9865,
+          "macd_dea": 1.0847,
+          "kdj_k": 13.04,
+          "kdj_d": 12.78,
+          "kdj_j": 13.58,
+          "rsi": 43.29,
+          "boll_mb": 47.6785,
+          "boll_ub": 54.6206,
+          "boll_lb": 40.7364,
+          "tech_score_pct": 94.9,
+          "explain": "KDJ低位金叉(K 13.04 上穿 D 12.78)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 94.9,
+      "hub_score_pct": 87.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600844",
+      "name": "金煤科技",
+      "price": 3.84,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 94.8
+      },
+      "hits": {
+        "chip": {
+          "code": "600844",
+          "name": "金煤科技",
+          "price": 3.84,
+          "concentration_ratio": 0.0132,
+          "p05": 3.75,
+          "p50": 3.8,
+          "p95": 3.8,
+          "profit_ratio": 0.9593,
+          "ma20_slope": 0.0258,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 3.8,
+          "main_cost_band_high": 3.8,
+          "chip_score": 86.8,
+          "approx": true,
+          "chip_score_pct": 94.8,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 95.93% + MA20上行(斜率 0.025800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 94.8,
+      "hub_score_pct": 86.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601398",
+      "name": "工商银行",
+      "price": 7.97,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 94.3
+      },
+      "hits": {
+        "chip": {
+          "code": "601398",
+          "name": "工商银行",
+          "price": 7.97,
+          "concentration_ratio": 0.0063,
+          "p05": 7.9,
+          "p50": 7.9,
+          "p95": 7.95,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0201,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 7.9,
+          "main_cost_band_high": 7.9,
+          "chip_score": 86.36,
+          "approx": true,
+          "chip_score_pct": 94.3,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 100.00% + MA20上行(斜率 0.020100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 94.3,
+      "hub_score_pct": 86.0,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "001368",
+      "name": "通达创智",
+      "price": 26.24,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 94.0
+      },
+      "hits": {
+        "chip": {
+          "code": "001368",
+          "name": "通达创智",
+          "price": 26.24,
+          "concentration_ratio": 0.035,
+          "p05": 25.35,
+          "p50": 25.7,
+          "p95": 26.25,
+          "profit_ratio": 0.9346,
+          "ma20_slope": 0.0388,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 25.6,
+          "main_cost_band_high": 26.0,
+          "chip_score": 86.19,
+          "approx": true,
+          "chip_score_pct": 94.0,
+          "explain": "筹码集中(90%成本区间 0.04) + 获利盘 93.46% + MA20上行(斜率 0.038800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 94.0,
+      "hub_score_pct": 85.5,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "601939",
+      "name": "建设银行",
+      "price": 10.74,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 93.7
+      },
+      "hits": {
+        "chip": {
+          "code": "601939",
+          "name": "建设银行",
+          "price": 10.74,
+          "concentration_ratio": 0.0141,
+          "p05": 10.6,
+          "p50": 10.65,
+          "p95": 10.75,
+          "profit_ratio": 0.9191,
+          "ma20_slope": 0.0238,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 10.65,
+          "main_cost_band_high": 10.65,
+          "chip_score": 85.76,
+          "approx": true,
+          "chip_score_pct": 93.7,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 91.91% + MA20上行(斜率 0.023800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 93.7,
+      "hub_score_pct": 84.9,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002149",
+      "name": "西部材料",
+      "price": 34.44,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 93.2
+      },
+      "hits": {
+        "tech": {
+          "code": "002149",
+          "name": "西部材料",
+          "price": 34.44,
+          "is_intraday": 1,
+          "realtime_price": 34.44,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 26.18,
+          "multi_hit": 0,
+          "macd_dif": -1.4001,
+          "macd_dea": 1.2587,
+          "kdj_k": 15.29,
+          "kdj_d": 13.28,
+          "kdj_j": 19.31,
+          "rsi": 39.21,
+          "boll_mb": 37.0085,
+          "boll_ub": 43.0507,
+          "boll_lb": 30.9663,
+          "tech_score_pct": 93.2,
+          "explain": "KDJ低位金叉(K 15.29 上穿 D 13.28)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 93.2,
+      "hub_score_pct": 84.4,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "600391",
+      "name": "航发科技",
+      "price": 44.6,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 93.2
+      },
+      "hits": {
+        "trend": {
+          "code": "600391",
+          "name": "航发科技",
+          "price": 44.6,
+          "is_intraday": 1,
+          "realtime_price": 44.6,
+          "ma5": 39.612,
+          "ma10": 36.958,
+          "ma20": 33.9685,
+          "ma60": 31.577000000000016,
+          "ma_aligned": 1,
+          "prev_high_60": 41.19,
+          "new_high": 1,
+          "high_break_pct": 0.0828,
+          "volume_ratio": 1.180112437742167,
+          "trend_leader": 0,
+          "trend_score": 77.24,
+          "trend_score_pct": 93.2,
+          "explain": "MA5/10/20/60多头排列(39.61>36.96>33.97>31.58) + 创60日新高(前高 41.19, 突破 8.28%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 93.2,
+      "hub_score_pct": 84.4,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "603980",
+      "name": "吉华集团",
+      "price": 7.9,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 92.9
+      },
+      "hits": {
+        "chip": {
+          "code": "603980",
+          "name": "吉华集团",
+          "price": 7.9,
+          "concentration_ratio": 0.039,
+          "p05": 7.6,
+          "p50": 7.7,
+          "p95": 7.9,
+          "profit_ratio": 0.9548,
+          "ma20_slope": 0.0396,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 7.65,
+          "main_cost_band_high": 7.7,
+          "chip_score": 85.44,
+          "approx": true,
+          "chip_score_pct": 92.9,
+          "explain": "筹码集中(90%成本区间 0.04) + 获利盘 95.48% + MA20上行(斜率 0.039600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 92.9,
+      "hub_score_pct": 83.3,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002493",
+      "name": "荣盛石化",
+      "price": 14.77,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 92.6
+      },
+      "hits": {
+        "chip": {
+          "code": "002493",
+          "name": "荣盛石化",
+          "price": 14.77,
+          "concentration_ratio": 0.0312,
+          "p05": 14.25,
+          "p50": 14.4,
+          "p95": 14.7,
+          "profit_ratio": 0.9769,
+          "ma20_slope": 0.0343,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 14.4,
+          "main_cost_band_high": 14.45,
+          "chip_score": 85.4,
+          "approx": true,
+          "chip_score_pct": 92.6,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 97.69% + MA20上行(斜率 0.034300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 92.6,
+      "hub_score_pct": 82.8,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "603819",
+      "name": "神力股份",
+      "price": 16.9,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 92.4
+      },
+      "hits": {
+        "chip": {
+          "code": "603819",
+          "name": "神力股份",
+          "price": 16.9,
+          "concentration_ratio": 0.033,
+          "p05": 16.45,
+          "p50": 16.65,
+          "p95": 17.0,
+          "profit_ratio": 0.8709,
+          "ma20_slope": 0.0556,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 16.55,
+          "main_cost_band_high": 16.65,
+          "chip_score": 85.38,
+          "approx": true,
+          "chip_score_pct": 92.4,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 87.09% + MA20上行(斜率 0.055600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 92.4,
+      "hub_score_pct": 82.3,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600179",
+      "name": "安通控股",
+      "price": 4.61,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 92.1
+      },
+      "hits": {
+        "chip": {
+          "code": "600179",
+          "name": "安通控股",
+          "price": 4.61,
+          "concentration_ratio": 0.011,
+          "p05": 4.55,
+          "p50": 4.55,
+          "p95": 4.6,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.02,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.55,
+          "main_cost_band_high": 4.55,
+          "chip_score": 85.07,
+          "approx": true,
+          "chip_score_pct": 92.1,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 100.00% + MA20上行(斜率 0.020000)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 92.1,
+      "hub_score_pct": 81.7,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600583",
+      "name": "海油工程",
+      "price": 6.29,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 91.8
+      },
+      "hits": {
+        "chip": {
+          "code": "600583",
+          "name": "海油工程",
+          "price": 6.29,
+          "concentration_ratio": 0.0242,
+          "p05": 6.15,
+          "p50": 6.2,
+          "p95": 6.3,
+          "profit_ratio": 0.9328,
+          "ma20_slope": 0.0287,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.2,
+          "main_cost_band_high": 6.2,
+          "chip_score": 85.03,
+          "approx": true,
+          "chip_score_pct": 91.8,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 93.28% + MA20上行(斜率 0.028700)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 91.8,
+      "hub_score_pct": 81.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601011",
+      "name": "宝泰隆",
+      "price": 3.08,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 91.6
+      },
+      "hits": {
+        "chip": {
+          "code": "601011",
+          "name": "宝泰隆",
+          "price": 3.08,
+          "concentration_ratio": 0.0328,
+          "p05": 3.0,
+          "p50": 3.05,
+          "p95": 3.1,
+          "profit_ratio": 0.9297,
+          "ma20_slope": 0.0343,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 3.05,
+          "main_cost_band_high": 3.05,
+          "chip_score": 84.97,
+          "approx": true,
+          "chip_score_pct": 91.6,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 92.97% + MA20上行(斜率 0.034300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 91.6,
+      "hub_score_pct": 80.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "605118",
+      "name": "力鼎光电",
+      "price": 34.62,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 91.6
+      },
+      "hits": {
+        "chip": {
+          "code": "605118",
+          "name": "力鼎光电",
+          "price": 34.62,
+          "concentration_ratio": 0.0337,
+          "p05": 33.6,
+          "p50": 34.15,
+          "p95": 34.75,
+          "profit_ratio": 0.8698,
+          "ma20_slope": 0.0538,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 33.65,
+          "main_cost_band_high": 34.7,
+          "chip_score": 84.97,
+          "approx": true,
+          "chip_score_pct": 91.6,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 86.98% + MA20上行(斜率 0.053800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 91.6,
+      "hub_score_pct": 80.6,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600206",
+      "name": "有研新材",
+      "price": 46.91,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 91.5
+      },
+      "hits": {
+        "tech": {
+          "code": "600206",
+          "name": "有研新材",
+          "price": 46.91,
+          "is_intraday": 1,
+          "realtime_price": 46.91,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 26.12,
+          "multi_hit": 0,
+          "macd_dif": -0.3318,
+          "macd_dea": 1.4419,
+          "kdj_k": 15.54,
+          "kdj_d": 15.12,
+          "kdj_j": 16.36,
+          "rsi": 45.73,
+          "boll_mb": 51.2705,
+          "boll_ub": 58.9652,
+          "boll_lb": 43.5758,
+          "tech_score_pct": 91.5,
+          "explain": "KDJ低位金叉(K 15.54 上穿 D 15.12)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 91.5,
+      "hub_score_pct": 79.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600795",
+      "name": "国电电力",
+      "price": 5.31,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 91.0
+      },
+      "hits": {
+        "chip": {
+          "code": "600795",
+          "name": "国电电力",
+          "price": 5.31,
+          "concentration_ratio": 0.0095,
+          "p05": 5.25,
+          "p50": 5.25,
+          "p95": 5.3,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0185,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.25,
+          "main_cost_band_high": 5.25,
+          "chip_score": 84.87,
+          "approx": true,
+          "chip_score_pct": 91.0,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 100.00% + MA20上行(斜率 0.018500)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 91.0,
+      "hub_score_pct": 79.0,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600256",
+      "name": "广汇能源",
+      "price": 7.4,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 2,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "trend": 82.9,
+        "chip": 98.6
+      },
+      "hits": {
+        "trend": {
+          "code": "600256",
+          "name": "广汇能源",
+          "price": 7.4,
+          "is_intraday": 1,
+          "realtime_price": 7.4,
+          "ma5": 6.934,
+          "ma10": 6.774000000000001,
+          "ma20": 6.422500000000001,
+          "ma60": 5.700666666666665,
+          "ma_aligned": 1,
+          "prev_high_60": 7.21,
+          "new_high": 1,
+          "high_break_pct": 0.0264,
+          "volume_ratio": 1.465618662741126,
+          "trend_leader": 0,
+          "trend_score": 63.8,
+          "trend_score_pct": 82.9,
+          "explain": "MA5/10/20/60多头排列(6.93>6.77>6.42>5.70) + 创60日新高(前高 7.21, 突破 2.64%)"
+        },
+        "chip": {
+          "code": "600256",
+          "name": "广汇能源",
+          "price": 7.4,
+          "concentration_ratio": 0.0278,
+          "p05": 7.15,
+          "p50": 7.2,
+          "p95": 7.35,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0579,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 7.2,
+          "main_cost_band_high": 7.2,
+          "chip_score": 92.59,
+          "approx": true,
+          "chip_score_pct": 98.6,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 100.00% + MA20上行(斜率 0.057900)"
+        }
+      },
+      "resonance": 1,
+      "hub_score": 90.75,
+      "hub_score_pct": 78.5,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600409",
+      "name": "三友化工",
+      "price": 7.01,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 90.7
+      },
+      "hits": {
+        "chip": {
+          "code": "600409",
+          "name": "三友化工",
+          "price": 7.01,
+          "concentration_ratio": 0.0072,
+          "p05": 6.95,
+          "p50": 6.95,
+          "p95": 7.0,
+          "profit_ratio": 0.9745,
+          "ma20_slope": 0.0169,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.95,
+          "main_cost_band_high": 6.95,
+          "chip_score": 84.84,
+          "approx": true,
+          "chip_score_pct": 90.7,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 97.45% + MA20上行(斜率 0.016900)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 90.7,
+      "hub_score_pct": 78.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600778",
+      "name": "友好集团",
+      "price": 6.64,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 90.6
+      },
+      "hits": {
+        "trend": {
+          "code": "600778",
+          "name": "友好集团",
+          "price": 6.64,
+          "is_intraday": 1,
+          "realtime_price": 6.64,
+          "ma5": 6.032,
+          "ma10": 5.8660000000000005,
+          "ma20": 5.711500000000001,
+          "ma60": 5.320333333333333,
+          "ma_aligned": 1,
+          "prev_high_60": 6.04,
+          "new_high": 1,
+          "high_break_pct": 0.0993,
+          "volume_ratio": 1.0468133264972033,
+          "trend_leader": 0,
+          "trend_score": 71.77,
+          "trend_score_pct": 90.6,
+          "explain": "MA5/10/20/60多头排列(6.03>5.87>5.71>5.32) + 创60日新高(前高 6.04, 突破 9.93%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 90.6,
+      "hub_score_pct": 77.4,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "601101",
+      "name": "昊华能源",
+      "price": 13.9,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 90.5
+      },
+      "hits": {
+        "chip": {
+          "code": "601101",
+          "name": "昊华能源",
+          "price": 13.9,
+          "concentration_ratio": 0.0294,
+          "p05": 13.55,
+          "p50": 13.6,
+          "p95": 13.95,
+          "profit_ratio": 0.9447,
+          "ma20_slope": 0.0316,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 13.55,
+          "main_cost_band_high": 13.6,
+          "chip_score": 84.8,
+          "approx": true,
+          "chip_score_pct": 90.5,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 94.47% + MA20上行(斜率 0.031600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 90.5,
+      "hub_score_pct": 76.9,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600603",
+      "name": "广汇物流",
+      "price": 5.06,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 90.2
+      },
+      "hits": {
+        "chip": {
+          "code": "600603",
+          "name": "广汇物流",
+          "price": 5.06,
+          "concentration_ratio": 0.02,
+          "p05": 4.95,
+          "p50": 5.0,
+          "p95": 5.05,
+          "profit_ratio": 0.998,
+          "ma20_slope": 0.0252,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.0,
+          "main_cost_band_high": 5.0,
+          "chip_score": 84.75,
+          "approx": true,
+          "chip_score_pct": 90.2,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 99.80% + MA20上行(斜率 0.025200)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 90.2,
+      "hub_score_pct": 76.3,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002567",
+      "name": "唐人神",
+      "price": 4.18,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 89.9
+      },
+      "hits": {
+        "chip": {
+          "code": "002567",
+          "name": "唐人神",
+          "price": 4.18,
+          "concentration_ratio": 0.0241,
+          "p05": 4.1,
+          "p50": 4.15,
+          "p95": 4.2,
+          "profit_ratio": 0.9352,
+          "ma20_slope": 0.0278,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.15,
+          "main_cost_band_high": 4.15,
+          "chip_score": 84.69,
+          "approx": true,
+          "chip_score_pct": 89.9,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 93.52% + MA20上行(斜率 0.027800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 89.9,
+      "hub_score_pct": 75.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603226",
+      "name": "菲林格尔",
+      "price": 35.1,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 89.8
+      },
+      "hits": {
+        "tech": {
+          "code": "603226",
+          "name": "菲林格尔",
+          "price": 35.1,
+          "is_intraday": 1,
+          "realtime_price": 35.1,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.89,
+          "multi_hit": 0,
+          "macd_dif": -3.2929,
+          "macd_dea": 0.5086,
+          "kdj_k": 16.42,
+          "kdj_d": 14.66,
+          "kdj_j": 19.95,
+          "rsi": 34.48,
+          "boll_mb": 40.316,
+          "boll_ub": 52.252,
+          "boll_lb": 28.38,
+          "tech_score_pct": 89.8,
+          "explain": "KDJ低位金叉(K 16.42 上穿 D 14.66)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 89.8,
+      "hub_score_pct": 75.3,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603162",
+      "name": "海通发展",
+      "price": 15.43,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 89.7
+      },
+      "hits": {
+        "trend": {
+          "code": "603162",
+          "name": "海通发展",
+          "price": 15.43,
+          "is_intraday": 1,
+          "realtime_price": 15.43,
+          "ma5": 14.308000000000002,
+          "ma10": 13.312000000000001,
+          "ma20": 12.596500000000002,
+          "ma60": 11.09283333333333,
+          "ma_aligned": 1,
+          "prev_high_60": 14.64,
+          "new_high": 1,
+          "high_break_pct": 0.054,
+          "volume_ratio": 1.381541128552845,
+          "trend_leader": 0,
+          "trend_score": 71.28,
+          "trend_score_pct": 89.7,
+          "explain": "MA5/10/20/60多头排列(14.31>13.31>12.60>11.09) + 创60日新高(前高 14.64, 突破 5.40%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 89.7,
+      "hub_score_pct": 74.7,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601318",
+      "name": "中国平安",
+      "price": 56.27,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 89.6
+      },
+      "hits": {
+        "chip": {
+          "code": "601318",
+          "name": "中国平安",
+          "price": 56.27,
+          "concentration_ratio": 0.0125,
+          "p05": 55.6,
+          "p50": 55.9,
+          "p95": 56.3,
+          "profit_ratio": 0.9231,
+          "ma20_slope": 0.02,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 55.7,
+          "main_cost_band_high": 55.85,
+          "chip_score": 84.67,
+          "approx": true,
+          "chip_score_pct": 89.6,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 92.31% + MA20上行(斜率 0.020000)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 89.6,
+      "hub_score_pct": 74.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "000019",
+      "name": "深粮控股",
+      "price": 8.46,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 88.9
+      },
+      "hits": {
+        "trend": {
+          "code": "000019",
+          "name": "深粮控股",
+          "price": 8.46,
+          "is_intraday": 1,
+          "realtime_price": 8.46,
+          "ma5": 7.530000000000001,
+          "ma10": 7.444,
+          "ma20": 6.9855,
+          "ma60": 6.330500000000001,
+          "ma_aligned": 1,
+          "prev_high_60": 7.92,
+          "new_high": 1,
+          "high_break_pct": 0.0682,
+          "volume_ratio": 0.9953062284288573,
+          "trend_leader": 0,
+          "trend_score": 70.45,
+          "trend_score_pct": 88.9,
+          "explain": "MA5/10/20/60多头排列(7.53>7.44>6.99>6.33) + 创60日新高(前高 7.92, 突破 6.82%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 88.9,
+      "hub_score_pct": 73.7,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600028",
+      "name": "中国石化",
+      "price": 5.62,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 88.8
+      },
+      "hits": {
+        "chip": {
+          "code": "600028",
+          "name": "中国石化",
+          "price": 5.62,
+          "concentration_ratio": 0.018,
+          "p05": 5.5,
+          "p50": 5.55,
+          "p95": 5.6,
+          "profit_ratio": 0.9869,
+          "ma20_slope": 0.0228,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.55,
+          "main_cost_band_high": 5.55,
+          "chip_score": 84.32,
+          "approx": true,
+          "chip_score_pct": 88.8,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 98.69% + MA20上行(斜率 0.022800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 88.8,
+      "hub_score_pct": 73.1,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002648",
+      "name": "卫星化学",
+      "price": 27.91,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 88.6
+      },
+      "hits": {
+        "chip": {
+          "code": "002648",
+          "name": "卫星化学",
+          "price": 27.91,
+          "concentration_ratio": 0.0181,
+          "p05": 27.4,
+          "p50": 27.6,
+          "p95": 27.9,
+          "profit_ratio": 0.9727,
+          "ma20_slope": 0.0227,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 27.45,
+          "main_cost_band_high": 27.6,
+          "chip_score": 84.25,
+          "approx": true,
+          "chip_score_pct": 88.6,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 97.27% + MA20上行(斜率 0.022700)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 88.6,
+      "hub_score_pct": 72.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002414",
+      "name": "高德红外",
+      "price": 12.52,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 88.1
+      },
+      "hits": {
+        "tech": {
+          "code": "002414",
+          "name": "高德红外",
+          "price": 12.52,
+          "is_intraday": 1,
+          "realtime_price": 12.52,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.82,
+          "multi_hit": 0,
+          "macd_dif": -0.2679,
+          "macd_dea": 0.0715,
+          "kdj_k": 16.71,
+          "kdj_d": 16.07,
+          "kdj_j": 17.98,
+          "rsi": 38.79,
+          "boll_mb": 13.1195,
+          "boll_ub": 14.1254,
+          "boll_lb": 12.1136,
+          "tech_score_pct": 88.1,
+          "explain": "KDJ低位金叉(K 16.71 上穿 D 16.07)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 88.1,
+      "hub_score_pct": 72.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002408",
+      "name": "齐翔腾达",
+      "price": 5.69,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 88.0
+      },
+      "hits": {
+        "chip": {
+          "code": "002408",
+          "name": "齐翔腾达",
+          "price": 5.69,
+          "concentration_ratio": 0.0179,
+          "p05": 5.6,
+          "p50": 5.6,
+          "p95": 5.7,
+          "profit_ratio": 0.925,
+          "ma20_slope": 0.0222,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.6,
+          "main_cost_band_high": 5.6,
+          "chip_score": 84.11,
+          "approx": true,
+          "chip_score_pct": 88.0,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 92.50% + MA20上行(斜率 0.022200)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 88.0,
+      "hub_score_pct": 71.5,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002092",
+      "name": "中泰化学",
+      "price": 5.0,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 87.5
+      },
+      "hits": {
+        "chip": {
+          "code": "002092",
+          "name": "中泰化学",
+          "price": 5.0,
+          "concentration_ratio": 0.0202,
+          "p05": 4.9,
+          "p50": 4.95,
+          "p95": 5.0,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0231,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.95,
+          "main_cost_band_high": 4.95,
+          "chip_score": 83.85,
+          "approx": true,
+          "chip_score_pct": 87.5,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 100.00% + MA20上行(斜率 0.023100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 87.5,
+      "hub_score_pct": 71.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "000923",
+      "name": "河钢资源",
+      "price": 18.77,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 87.2
+      },
+      "hits": {
+        "trend": {
+          "code": "000923",
+          "name": "河钢资源",
+          "price": 18.77,
+          "is_intraday": 1,
+          "realtime_price": 18.77,
+          "ma5": 17.532,
+          "ma10": 17.073,
+          "ma20": 16.2935,
+          "ma60": 14.574333333333335,
+          "ma_aligned": 1,
+          "prev_high_60": 18.72,
+          "new_high": 1,
+          "high_break_pct": 0.0027,
+          "volume_ratio": 2.665578785521001,
+          "trend_leader": 1,
+          "trend_score": 68.78,
+          "trend_score_pct": 87.2,
+          "explain": "MA5/10/20/60多头排列(17.53>17.07>16.29>14.57) + 创60日新高(前高 18.72, 突破 0.27%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 87.2,
+      "hub_score_pct": 70.4,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601083",
+      "name": "锦江航运",
+      "price": 13.1,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 87.2
+      },
+      "hits": {
+        "chip": {
+          "code": "601083",
+          "name": "锦江航运",
+          "price": 13.1,
+          "concentration_ratio": 0.0309,
+          "p05": 12.75,
+          "p50": 12.95,
+          "p95": 13.15,
+          "profit_ratio": 0.8741,
+          "ma20_slope": 0.0427,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 12.95,
+          "main_cost_band_high": 13.0,
+          "chip_score": 83.66,
+          "approx": true,
+          "chip_score_pct": 87.2,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 87.41% + MA20上行(斜率 0.042700)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 87.2,
+      "hub_score_pct": 70.4,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601288",
+      "name": "农业银行",
+      "price": 6.78,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 86.9
+      },
+      "hits": {
+        "chip": {
+          "code": "601288",
+          "name": "农业银行",
+          "price": 6.78,
+          "concentration_ratio": 0.0148,
+          "p05": 6.7,
+          "p50": 6.75,
+          "p95": 6.8,
+          "profit_ratio": 0.9198,
+          "ma20_slope": 0.019,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.75,
+          "main_cost_band_high": 6.75,
+          "chip_score": 83.65,
+          "approx": true,
+          "chip_score_pct": 86.9,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 91.98% + MA20上行(斜率 0.019000)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 86.9,
+      "hub_score_pct": 69.4,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603128",
+      "name": "华贸物流",
+      "price": 5.87,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 86.9
+      },
+      "hits": {
+        "chip": {
+          "code": "603128",
+          "name": "华贸物流",
+          "price": 5.87,
+          "concentration_ratio": 0.0172,
+          "p05": 5.75,
+          "p50": 5.8,
+          "p95": 5.85,
+          "profit_ratio": 0.9628,
+          "ma20_slope": 0.0206,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.75,
+          "main_cost_band_high": 5.75,
+          "chip_score": 83.65,
+          "approx": true,
+          "chip_score_pct": 86.9,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 96.28% + MA20上行(斜率 0.020600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 86.9,
+      "hub_score_pct": 69.4,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002730",
+      "name": "电光科技",
+      "price": 23.97,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 86.4
+      },
+      "hits": {
+        "chip": {
+          "code": "002730",
+          "name": "电光科技",
+          "price": 23.97,
+          "concentration_ratio": 0.0168,
+          "p05": 23.6,
+          "p50": 23.8,
+          "p95": 24.0,
+          "profit_ratio": 0.903,
+          "ma20_slope": 0.0203,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 23.65,
+          "main_cost_band_high": 23.7,
+          "chip_score": 83.64,
+          "approx": true,
+          "chip_score_pct": 86.4,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 90.30% + MA20上行(斜率 0.020300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 86.4,
+      "hub_score_pct": 68.3,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603228",
+      "name": "景旺电子",
+      "price": 111.44,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 86.3
+      },
+      "hits": {
+        "trend": {
+          "code": "603228",
+          "name": "景旺电子",
+          "price": 111.44,
+          "is_intraday": 1,
+          "realtime_price": 111.44,
+          "ma5": 101.828,
+          "ma10": 97.43800000000002,
+          "ma20": 95.4705,
+          "ma60": 81.78266666666667,
+          "ma_aligned": 1,
+          "prev_high_60": 106.97,
+          "new_high": 1,
+          "high_break_pct": 0.0418,
+          "volume_ratio": 1.4160308411617313,
+          "trend_leader": 0,
+          "trend_score": 68.08,
+          "trend_score_pct": 86.3,
+          "explain": "MA5/10/20/60多头排列(101.83>97.44>95.47>81.78) + 创60日新高(前高 106.97, 突破 4.18%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 86.3,
+      "hub_score_pct": 67.7,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "000937",
+      "name": "冀中能源",
+      "price": 4.86,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 86.1
+      },
+      "hits": {
+        "chip": {
+          "code": "000937",
+          "name": "冀中能源",
+          "price": 4.86,
+          "concentration_ratio": 0.0104,
+          "p05": 4.8,
+          "p50": 4.8,
+          "p95": 4.85,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0158,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.8,
+          "main_cost_band_high": 4.8,
+          "chip_score": 83.55,
+          "approx": true,
+          "chip_score_pct": 86.1,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 100.00% + MA20上行(斜率 0.015800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 86.1,
+      "hub_score_pct": 67.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601088",
+      "name": "中国神华",
+      "price": 46.7,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 85.8
+      },
+      "hits": {
+        "chip": {
+          "code": "601088",
+          "name": "中国神华",
+          "price": 46.7,
+          "concentration_ratio": 0.0195,
+          "p05": 46.0,
+          "p50": 46.2,
+          "p95": 46.9,
+          "profit_ratio": 0.8982,
+          "ma20_slope": 0.0227,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 46.05,
+          "main_cost_band_high": 46.3,
+          "chip_score": 83.52,
+          "approx": true,
+          "chip_score_pct": 85.8,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 89.82% + MA20上行(斜率 0.022700)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 85.8,
+      "hub_score_pct": 66.7,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600740",
+      "name": "山西焦化",
+      "price": 4.05,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 85.6
+      },
+      "hits": {
+        "chip": {
+          "code": "600740",
+          "name": "山西焦化",
+          "price": 4.05,
+          "concentration_ratio": 0.025,
+          "p05": 3.95,
+          "p50": 4.0,
+          "p95": 4.05,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0253,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 3.95,
+          "main_cost_band_high": 3.95,
+          "chip_score": 83.45,
+          "approx": true,
+          "chip_score_pct": 85.6,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 100.00% + MA20上行(斜率 0.025300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 85.6,
+      "hub_score_pct": 66.1,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603321",
+      "name": "梅轮电梯",
+      "price": 7.65,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 85.5
+      },
+      "hits": {
+        "trend": {
+          "code": "603321",
+          "name": "梅轮电梯",
+          "price": 7.65,
+          "is_intraday": 1,
+          "realtime_price": 7.65,
+          "ma5": 7.0200000000000005,
+          "ma10": 6.804,
+          "ma20": 6.5665000000000004,
+          "ma60": 6.141000000000001,
+          "ma_aligned": 1,
+          "prev_high_60": 7.48,
+          "new_high": 1,
+          "high_break_pct": 0.0227,
+          "volume_ratio": 6.245273062953153,
+          "trend_leader": 1,
+          "trend_score": 67.77,
+          "trend_score_pct": 85.5,
+          "explain": "MA5/10/20/60多头排列(7.02>6.80>6.57>6.14) + 创60日新高(前高 7.48, 突破 2.27%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 85.5,
+      "hub_score_pct": 65.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002478",
+      "name": "常宝股份",
+      "price": 6.87,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 85.3
+      },
+      "hits": {
+        "chip": {
+          "code": "002478",
+          "name": "常宝股份",
+          "price": 6.87,
+          "concentration_ratio": 0.0146,
+          "p05": 6.8,
+          "p50": 6.85,
+          "p95": 6.9,
+          "profit_ratio": 0.8774,
+          "ma20_slope": 0.0296,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.85,
+          "main_cost_band_high": 6.85,
+          "chip_score": 83.43,
+          "approx": true,
+          "chip_score_pct": 85.3,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 87.74% + MA20上行(斜率 0.029600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 85.3,
+      "hub_score_pct": 65.1,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002539",
+      "name": "云图控股",
+      "price": 13.48,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 85.0
+      },
+      "hits": {
+        "chip": {
+          "code": "002539",
+          "name": "云图控股",
+          "price": 13.48,
+          "concentration_ratio": 0.0226,
+          "p05": 13.15,
+          "p50": 13.3,
+          "p95": 13.45,
+          "profit_ratio": 0.9818,
+          "ma20_slope": 0.0236,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 13.2,
+          "main_cost_band_high": 13.2,
+          "chip_score": 83.41,
+          "approx": true,
+          "chip_score_pct": 85.0,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 98.18% + MA20上行(斜率 0.023600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 85.0,
+      "hub_score_pct": 64.5,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002651",
+      "name": "利君股份",
+      "price": 8.84,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 84.7
+      },
+      "hits": {
+        "chip": {
+          "code": "002651",
+          "name": "利君股份",
+          "price": 8.84,
+          "concentration_ratio": 0.023,
+          "p05": 8.65,
+          "p50": 8.7,
+          "p95": 8.85,
+          "profit_ratio": 0.8789,
+          "ma20_slope": 0.034,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 8.7,
+          "main_cost_band_high": 8.7,
+          "chip_score": 83.25,
+          "approx": true,
+          "chip_score_pct": 84.7,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 87.89% + MA20上行(斜率 0.034000)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 84.7,
+      "hub_score_pct": 64.0,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600118",
+      "name": "中国卫星",
+      "price": 58.23,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 84.7
+      },
+      "hits": {
+        "tech": {
+          "code": "600118",
+          "name": "中国卫星",
+          "price": 58.23,
+          "is_intraday": 1,
+          "realtime_price": 58.23,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.62,
+          "multi_hit": 0,
+          "macd_dif": -2.2634,
+          "macd_dea": 1.6359,
+          "kdj_k": 17.53,
+          "kdj_d": 15.08,
+          "kdj_j": 22.44,
+          "rsi": 39.58,
+          "boll_mb": 61.5675,
+          "boll_ub": 69.1248,
+          "boll_lb": 54.0102,
+          "tech_score_pct": 84.7,
+          "explain": "KDJ低位金叉(K 17.53 上穿 D 15.08)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 84.7,
+      "hub_score_pct": 64.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601766",
+      "name": "中国中车",
+      "price": 6.2,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 84.5
+      },
+      "hits": {
+        "chip": {
+          "code": "601766",
+          "name": "中国中车",
+          "price": 6.2,
+          "concentration_ratio": 0.0081,
+          "p05": 6.15,
+          "p50": 6.2,
+          "p95": 6.2,
+          "profit_ratio": 0.9667,
+          "ma20_slope": 0.0133,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.2,
+          "main_cost_band_high": 6.2,
+          "chip_score": 83.16,
+          "approx": true,
+          "chip_score_pct": 84.5,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 96.67% + MA20上行(斜率 0.013300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 84.5,
+      "hub_score_pct": 62.9,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "000567",
+      "name": "海德股份",
+      "price": 6.81,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 84.2
+      },
+      "hits": {
+        "chip": {
+          "code": "000567",
+          "name": "海德股份",
+          "price": 6.81,
+          "concentration_ratio": 0.0299,
+          "p05": 6.6,
+          "p50": 6.7,
+          "p95": 6.8,
+          "profit_ratio": 0.9754,
+          "ma20_slope": 0.0278,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.7,
+          "main_cost_band_high": 6.7,
+          "chip_score": 83.15,
+          "approx": true,
+          "chip_score_pct": 84.2,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 97.54% + MA20上行(斜率 0.027800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 84.2,
+      "hub_score_pct": 62.4,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "601860",
+      "name": "紫金银行",
+      "price": 2.66,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 83.9
+      },
+      "hits": {
+        "chip": {
+          "code": "601860",
+          "name": "紫金银行",
+          "price": 2.66,
+          "concentration_ratio": 0.0,
+          "p05": 2.65,
+          "p50": 2.65,
+          "p95": 2.65,
+          "profit_ratio": 0.9736,
+          "ma20_slope": 0.0078,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 2.65,
+          "main_cost_band_high": 2.65,
+          "chip_score": 83.12,
+          "approx": true,
+          "chip_score_pct": 83.9,
+          "explain": "筹码集中(90%成本区间 0.00) + 获利盘 97.36% + MA20上行(斜率 0.007800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 83.9,
+      "hub_score_pct": 61.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002746",
+      "name": "仙坛股份",
+      "price": 6.96,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 83.7
+      },
+      "hits": {
+        "chip": {
+          "code": "002746",
+          "name": "仙坛股份",
+          "price": 6.96,
+          "concentration_ratio": 0.0219,
+          "p05": 6.8,
+          "p50": 6.85,
+          "p95": 6.95,
+          "profit_ratio": 0.9532,
+          "ma20_slope": 0.0215,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.85,
+          "main_cost_band_high": 6.85,
+          "chip_score": 82.76,
+          "approx": true,
+          "chip_score_pct": 83.7,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 95.32% + MA20上行(斜率 0.021500)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 83.7,
+      "hub_score_pct": 61.3,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002128",
+      "name": "电投能源",
+      "price": 28.55,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 83.4
+      },
+      "hits": {
+        "chip": {
+          "code": "002128",
+          "name": "电投能源",
+          "price": 28.55,
+          "concentration_ratio": 0.0142,
+          "p05": 28.1,
+          "p50": 28.2,
+          "p95": 28.5,
+          "profit_ratio": 0.9964,
+          "ma20_slope": 0.0162,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 28.15,
+          "main_cost_band_high": 28.2,
+          "chip_score": 82.69,
+          "approx": true,
+          "chip_score_pct": 83.4,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 99.64% + MA20上行(斜率 0.016200)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 83.4,
+      "hub_score_pct": 60.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603322",
+      "name": "超讯科技",
+      "price": 30.5,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 83.1
+      },
+      "hits": {
+        "tech": {
+          "code": "603322",
+          "name": "超讯科技",
+          "price": 30.5,
+          "is_intraday": 1,
+          "realtime_price": 30.5,
+          "macd_golden": 1,
+          "kdj_golden": 0,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.59,
+          "multi_hit": 0,
+          "macd_dif": 0.507,
+          "macd_dea": 0.3593,
+          "kdj_k": 84.38,
+          "kdj_d": 68.68,
+          "kdj_j": 115.8,
+          "rsi": 70.02,
+          "boll_mb": 26.7225,
+          "boll_ub": 29.7723,
+          "boll_lb": 23.6727,
+          "tech_score_pct": 83.1,
+          "explain": "MACD金叉(DIF 0.51 上穿 DEA 0.36)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 83.1,
+      "hub_score_pct": 60.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603458",
+      "name": "勘设股份",
+      "price": 10.92,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 82.8
+      },
+      "hits": {
+        "chip": {
+          "code": "603458",
+          "name": "勘设股份",
+          "price": 10.92,
+          "concentration_ratio": 0.0234,
+          "p05": 10.6,
+          "p50": 10.7,
+          "p95": 10.85,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0213,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 10.7,
+          "main_cost_band_high": 10.7,
+          "chip_score": 82.28,
+          "approx": true,
+          "chip_score_pct": 82.8,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 100.00% + MA20上行(斜率 0.021300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 82.8,
+      "hub_score_pct": 59.7,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600121",
+      "name": "郑州煤电",
+      "price": 5.51,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 82.6
+      },
+      "hits": {
+        "chip": {
+          "code": "600121",
+          "name": "郑州煤电",
+          "price": 5.51,
+          "concentration_ratio": 0.0667,
+          "p05": 5.15,
+          "p50": 5.25,
+          "p95": 5.5,
+          "profit_ratio": 0.9724,
+          "ma20_slope": 0.0913,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.15,
+          "main_cost_band_high": 5.35,
+          "chip_score": 82.21,
+          "approx": true,
+          "chip_score_pct": 82.6,
+          "explain": "筹码集中(90%成本区间 0.07) + 获利盘 97.24% + MA20上行(斜率 0.091300)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 82.6,
+      "hub_score_pct": 59.1,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "600018",
+      "name": "上港集团",
+      "price": 5.5,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 82.3
+      },
+      "hits": {
+        "chip": {
+          "code": "600018",
+          "name": "上港集团",
+          "price": 5.5,
+          "concentration_ratio": 0.0183,
+          "p05": 5.4,
+          "p50": 5.45,
+          "p95": 5.5,
+          "profit_ratio": 0.9954,
+          "ma20_slope": 0.0176,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.45,
+          "main_cost_band_high": 5.45,
+          "chip_score": 82.16,
+          "approx": true,
+          "chip_score_pct": 82.3,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 99.54% + MA20上行(斜率 0.017600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 82.3,
+      "hub_score_pct": 58.6,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600316",
+      "name": "洪都航空",
+      "price": 34.77,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 2,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "trend": 81.2,
+        "chip": 83.1
+      },
+      "hits": {
+        "trend": {
+          "code": "600316",
+          "name": "洪都航空",
+          "price": 34.85,
+          "is_intraday": 1,
+          "realtime_price": 34.85,
+          "ma5": 32.688,
+          "ma10": 31.878999999999998,
+          "ma20": 30.297500000000003,
+          "ma60": 27.976499999999998,
+          "ma_aligned": 1,
+          "prev_high_60": 32.47,
+          "new_high": 1,
+          "high_break_pct": 0.0733,
+          "volume_ratio": 0.6312816470505647,
+          "trend_leader": 0,
+          "trend_score": 62.94,
+          "trend_score_pct": 81.2,
+          "explain": "MA5/10/20/60多头排列(32.69>31.88>30.30>27.98) + 创60日新高(前高 32.47, 突破 7.33%)"
+        },
+        "chip": {
+          "code": "600316",
+          "name": "洪都航空",
+          "price": 34.77,
+          "concentration_ratio": 0.0653,
+          "p05": 32.45,
+          "p50": 33.7,
+          "p95": 34.65,
+          "profit_ratio": 0.9715,
+          "ma20_slope": 0.0571,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 32.45,
+          "main_cost_band_high": 34.65,
+          "chip_score": 82.59,
+          "approx": true,
+          "chip_score_pct": 83.1,
+          "explain": "筹码集中(90%成本区间 0.07) + 获利盘 97.15% + MA20上行(斜率 0.057100)"
+        }
+      },
+      "resonance": 1,
+      "hub_score": 82.15,
+      "hub_score_pct": 58.1,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600919",
+      "name": "江苏银行",
+      "price": 12.36,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 82.0
+      },
+      "hits": {
+        "chip": {
+          "code": "600919",
+          "name": "江苏银行",
+          "price": 12.36,
+          "concentration_ratio": 0.0122,
+          "p05": 12.25,
+          "p50": 12.3,
+          "p95": 12.4,
+          "profit_ratio": 0.9424,
+          "ma20_slope": 0.0135,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 12.3,
+          "main_cost_band_high": 12.3,
+          "chip_score": 82.15,
+          "approx": true,
+          "chip_score_pct": 82.0,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 94.24% + MA20上行(斜率 0.013500)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 82.0,
+      "hub_score_pct": 57.5,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "600251",
+      "name": "冠农股份",
+      "price": 12.17,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 2,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "trend": 67.5,
+        "chip": 96.2
+      },
+      "hits": {
+        "trend": {
+          "code": "600251",
+          "name": "冠农股份",
+          "price": 12.12,
+          "is_intraday": 1,
+          "realtime_price": 12.12,
+          "ma5": 11.344,
+          "ma10": 11.283,
+          "ma20": 10.726000000000003,
+          "ma60": 9.632333333333333,
+          "ma_aligned": 1,
+          "prev_high_60": 11.86,
+          "new_high": 1,
+          "high_break_pct": 0.0219,
+          "volume_ratio": 1.5285969560004078,
+          "trend_leader": 1,
+          "trend_score": 56.67,
+          "trend_score_pct": 67.5,
+          "explain": "MA5/10/20/60多头排列(11.34>11.28>10.73>9.63) + 创60日新高(前高 11.86, 突破 2.19%)"
+        },
+        "chip": {
+          "code": "600251",
+          "name": "冠农股份",
+          "price": 12.17,
+          "concentration_ratio": 0.0375,
+          "p05": 11.75,
+          "p50": 12.0,
+          "p95": 12.2,
+          "profit_ratio": 0.9143,
+          "ma20_slope": 0.048,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 11.9,
+          "main_cost_band_high": 12.0,
+          "chip_score": 89.2,
+          "approx": true,
+          "chip_score_pct": 96.2,
+          "explain": "筹码集中(90%成本区间 0.04) + 获利盘 91.43% + MA20上行(斜率 0.048000)"
+        }
+      },
+      "resonance": 1,
+      "hub_score": 81.85,
+      "hub_score_pct": 57.0,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "600346",
+      "name": "恒力石化",
+      "price": 18.87,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 81.7
+      },
+      "hits": {
+        "chip": {
+          "code": "600346",
+          "name": "恒力石化",
+          "price": 18.87,
+          "concentration_ratio": 0.0214,
+          "p05": 18.45,
+          "p50": 18.65,
+          "p95": 18.85,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0196,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 18.75,
+          "main_cost_band_high": 18.8,
+          "chip_score": 82.13,
+          "approx": true,
+          "chip_score_pct": 81.7,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 100.00% + MA20上行(斜率 0.019600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 81.7,
+      "hub_score_pct": 56.5,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "601916",
+      "name": "浙商银行",
+      "price": 2.96,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 81.5
+      },
+      "hits": {
+        "chip": {
+          "code": "601916",
+          "name": "浙商银行",
+          "price": 2.96,
+          "concentration_ratio": 0.0,
+          "p05": 2.95,
+          "p50": 2.95,
+          "p95": 2.95,
+          "profit_ratio": 0.9597,
+          "ma20_slope": 0.0051,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 2.95,
+          "main_cost_band_high": 2.95,
+          "chip_score": 82.04,
+          "approx": true,
+          "chip_score_pct": 81.5,
+          "explain": "筹码集中(90%成本区间 0.00) + 获利盘 95.97% + MA20上行(斜率 0.005100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 81.5,
+      "hub_score_pct": 55.9,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002283",
+      "name": "天润工业",
+      "price": 8.07,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 81.4
+      },
+      "hits": {
+        "tech": {
+          "code": "002283",
+          "name": "天润工业",
+          "price": 8.07,
+          "is_intraday": 1,
+          "realtime_price": 8.07,
+          "macd_golden": 0,
+          "kdj_golden": 1,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.58,
+          "multi_hit": 0,
+          "macd_dif": -0.2133,
+          "macd_dea": 0.0864,
+          "kdj_k": 17.67,
+          "kdj_d": 17.37,
+          "kdj_j": 18.26,
+          "rsi": 39.99,
+          "boll_mb": 8.6365,
+          "boll_ub": 9.6182,
+          "boll_lb": 7.6548,
+          "tech_score_pct": 81.4,
+          "explain": "KDJ低位金叉(K 17.67 上穿 D 17.37)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 81.4,
+      "hub_score_pct": 55.4,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000061",
+      "name": "农 产 品",
+      "price": 6.88,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 80.9
+      },
+      "hits": {
+        "chip": {
+          "code": "000061",
+          "name": "农 产 品",
+          "price": 6.88,
+          "concentration_ratio": 0.0373,
+          "p05": 6.6,
+          "p50": 6.7,
+          "p95": 6.85,
+          "profit_ratio": 0.9698,
+          "ma20_slope": 0.0296,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.7,
+          "main_cost_band_high": 6.7,
+          "chip_score": 81.89,
+          "approx": true,
+          "chip_score_pct": 80.9,
+          "explain": "筹码集中(90%成本区间 0.04) + 获利盘 96.98% + MA20上行(斜率 0.029600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 80.9,
+      "hub_score_pct": 54.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002419",
+      "name": "天虹股份",
+      "price": 4.97,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 80.7
+      },
+      "hits": {
+        "chip": {
+          "code": "002419",
+          "name": "天虹股份",
+          "price": 4.97,
+          "concentration_ratio": 0.0202,
+          "p05": 4.85,
+          "p50": 4.95,
+          "p95": 4.95,
+          "profit_ratio": 0.9674,
+          "ma20_slope": 0.0181,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 4.95,
+          "main_cost_band_high": 4.95,
+          "chip_score": 81.85,
+          "approx": true,
+          "chip_score_pct": 80.7,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 96.74% + MA20上行(斜率 0.018100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 80.7,
+      "hub_score_pct": 54.3,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000882",
+      "name": "华联股份",
+      "price": 1.6,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 80.4
+      },
+      "hits": {
+        "chip": {
+          "code": "000882",
+          "name": "华联股份",
+          "price": 1.6,
+          "concentration_ratio": 0.0313,
+          "p05": 1.55,
+          "p50": 1.6,
+          "p95": 1.6,
+          "profit_ratio": 1.0,
+          "ma20_slope": 0.0254,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 1.6,
+          "main_cost_band_high": 1.6,
+          "chip_score": 81.81,
+          "approx": true,
+          "chip_score_pct": 80.4,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 100.00% + MA20上行(斜率 0.025400)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 80.4,
+      "hub_score_pct": 53.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002907",
+      "name": "华森制药",
+      "price": 14.69,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 80.1
+      },
+      "hits": {
+        "chip": {
+          "code": "002907",
+          "name": "华森制药",
+          "price": 14.69,
+          "concentration_ratio": 0.0309,
+          "p05": 14.25,
+          "p50": 14.55,
+          "p95": 14.7,
+          "profit_ratio": 0.9343,
+          "ma20_slope": 0.0251,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 14.55,
+          "main_cost_band_high": 14.65,
+          "chip_score": 81.8,
+          "approx": true,
+          "chip_score_pct": 80.1,
+          "explain": "筹码集中(90%成本区间 0.03) + 获利盘 93.43% + MA20上行(斜率 0.025100)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 80.1,
+      "hub_score_pct": 53.2,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000731",
+      "name": "四川美丰",
+      "price": 7.69,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 2,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "trend": 63.2,
+        "chip": 96.7
+      },
+      "hits": {
+        "trend": {
+          "code": "000731",
+          "name": "四川美丰",
+          "price": 7.68,
+          "is_intraday": 1,
+          "realtime_price": 7.68,
+          "ma5": 7.518000000000001,
+          "ma10": 7.133,
+          "ma20": 6.6049999999999995,
+          "ma60": 5.980166666666665,
+          "ma_aligned": 1,
+          "prev_high_60": 7.58,
+          "new_high": 1,
+          "high_break_pct": 0.0132,
+          "volume_ratio": 0.7595454172586943,
+          "trend_leader": 0,
+          "trend_score": 51.33,
+          "trend_score_pct": 63.2,
+          "explain": "MA5/10/20/60多头排列(7.52>7.13>6.60>5.98) + 创60日新高(前高 7.58, 突破 1.32%)"
+        },
+        "chip": {
+          "code": "000731",
+          "name": "四川美丰",
+          "price": 7.69,
+          "concentration_ratio": 0.0395,
+          "p05": 7.4,
+          "p50": 7.6,
+          "p95": 7.7,
+          "profit_ratio": 0.9378,
+          "ma20_slope": 0.0774,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 7.6,
+          "main_cost_band_high": 7.6,
+          "chip_score": 89.47,
+          "approx": true,
+          "chip_score_pct": 96.7,
+          "explain": "筹码集中(90%成本区间 0.04) + 获利盘 93.78% + MA20上行(斜率 0.077400)"
+        }
+      },
+      "resonance": 1,
+      "hub_score": 79.95,
+      "hub_score_pct": 52.7,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600938",
+      "name": "中国海油",
+      "price": 34.41,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 79.6
+      },
+      "hits": {
+        "chip": {
+          "code": "600938",
+          "name": "中国海油",
+          "price": 34.41,
+          "concentration_ratio": 0.0219,
+          "p05": 33.6,
+          "p50": 34.2,
+          "p95": 34.35,
+          "profit_ratio": 0.9987,
+          "ma20_slope": 0.0188,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 34.2,
+          "main_cost_band_high": 34.35,
+          "chip_score": 81.68,
+          "approx": true,
+          "chip_score_pct": 79.6,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 99.87% + MA20上行(斜率 0.018800)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 79.6,
+      "hub_score_pct": 52.2,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002637",
+      "name": "赞宇科技",
+      "price": 13.7,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 79.5
+      },
+      "hits": {
+        "trend": {
+          "code": "002637",
+          "name": "赞宇科技",
+          "price": 13.7,
+          "is_intraday": 1,
+          "realtime_price": 13.7,
+          "ma5": 12.922,
+          "ma10": 12.484,
+          "ma20": 11.855999999999998,
+          "ma60": 10.908666666666667,
+          "ma_aligned": 1,
+          "prev_high_60": 13.55,
+          "new_high": 1,
+          "high_break_pct": 0.0111,
+          "volume_ratio": 2.2291299798601423,
+          "trend_leader": 1,
+          "trend_score": 62.36,
+          "trend_score_pct": 79.5,
+          "explain": "MA5/10/20/60多头排列(12.92>12.48>11.86>10.91) + 创60日新高(前高 13.55, 突破 1.11%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 79.5,
+      "hub_score_pct": 51.6,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000683",
+      "name": "博源化工",
+      "price": 6.26,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 79.3
+      },
+      "hits": {
+        "chip": {
+          "code": "000683",
+          "name": "博源化工",
+          "price": 6.26,
+          "concentration_ratio": 0.008,
+          "p05": 6.2,
+          "p50": 6.25,
+          "p95": 6.25,
+          "profit_ratio": 0.957,
+          "ma20_slope": 0.0095,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 6.25,
+          "main_cost_band_high": 6.25,
+          "chip_score": 81.67,
+          "approx": true,
+          "chip_score_pct": 79.3,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 95.70% + MA20上行(斜率 0.009500)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 79.3,
+      "hub_score_pct": 51.1,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603883",
+      "name": "老百姓",
+      "price": 13.62,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 79.0
+      },
+      "hits": {
+        "chip": {
+          "code": "603883",
+          "name": "老百姓",
+          "price": 13.62,
+          "concentration_ratio": 0.0111,
+          "p05": 13.5,
+          "p50": 13.55,
+          "p95": 13.65,
+          "profit_ratio": 0.9387,
+          "ma20_slope": 0.0115,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 13.55,
+          "main_cost_band_high": 13.55,
+          "chip_score": 81.64,
+          "approx": true,
+          "chip_score_pct": 79.0,
+          "explain": "筹码集中(90%成本区间 0.01) + 获利盘 93.87% + MA20上行(斜率 0.011500)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 79.0,
+      "hub_score_pct": 50.5,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002988",
+      "name": "豪美新材",
+      "price": 30.57,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 78.6
+      },
+      "hits": {
+        "trend": {
+          "code": "002988",
+          "name": "豪美新材",
+          "price": 30.57,
+          "is_intraday": 1,
+          "realtime_price": 30.57,
+          "ma5": 28.002,
+          "ma10": 26.072000000000003,
+          "ma20": 24.622999999999998,
+          "ma60": 22.491333333333333,
+          "ma_aligned": 1,
+          "prev_high_60": 30.17,
+          "new_high": 1,
+          "high_break_pct": 0.0133,
+          "volume_ratio": 1.5952498214568438,
+          "trend_leader": 1,
+          "trend_score": 61.91,
+          "trend_score_pct": 78.6,
+          "explain": "MA5/10/20/60多头排列(28.00>26.07>24.62>22.49) + 创60日新高(前高 30.17, 突破 1.33%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 78.6,
+      "hub_score_pct": 50.0,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "000753",
+      "name": "漳州发展",
+      "price": 5.17,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 0,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 1
+      },
+      "pct": {
+        "chip": 78.5
+      },
+      "hits": {
+        "chip": {
+          "code": "000753",
+          "name": "漳州发展",
+          "price": 5.17,
+          "concentration_ratio": 0.0194,
+          "p05": 5.1,
+          "p50": 5.15,
+          "p95": 5.2,
+          "profit_ratio": 0.9387,
+          "ma20_slope": 0.0166,
+          "concentrated": 1,
+          "high_profit": 1,
+          "trend_up": 1,
+          "tight_control": 1,
+          "main_cost_band_low": 5.15,
+          "main_cost_band_high": 5.15,
+          "chip_score": 81.47,
+          "approx": true,
+          "chip_score_pct": 78.5,
+          "explain": "筹码集中(90%成本区间 0.02) + 获利盘 93.87% + MA20上行(斜率 0.016600)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 78.5,
+      "hub_score_pct": 49.5,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002463",
+      "name": "沪电股份",
+      "price": 128.65,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 78.0
+      },
+      "hits": {
+        "tech": {
+          "code": "002463",
+          "name": "沪电股份",
+          "price": 128.65,
+          "is_intraday": 1,
+          "realtime_price": 128.65,
+          "macd_golden": 1,
+          "kdj_golden": 0,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.47,
+          "multi_hit": 0,
+          "macd_dif": 0.8155,
+          "macd_dea": 0.6981,
+          "kdj_k": 69.09,
+          "kdj_d": 54.95,
+          "kdj_j": 97.37,
+          "rsi": 57.6,
+          "boll_mb": 120.0245,
+          "boll_ub": 128.9232,
+          "boll_lb": 111.1258,
+          "tech_score_pct": 78.0,
+          "explain": "MACD金叉(DIF 0.82 上穿 DEA 0.70)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 78.0,
+      "hub_score_pct": 48.9,
+      "badges": {
+        "tier_state": "吸筹"
+      }
+    },
+    {
+      "code": "002040",
+      "name": "南 京 港",
+      "price": 9.98,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 77.8
+      },
+      "hits": {
+        "trend": {
+          "code": "002040",
+          "name": "南 京 港",
+          "price": 9.98,
+          "is_intraday": 1,
+          "realtime_price": 9.98,
+          "ma5": 9.224,
+          "ma10": 9.008,
+          "ma20": 8.807499999999997,
+          "ma60": 8.247,
+          "ma_aligned": 1,
+          "prev_high_60": 9.17,
+          "new_high": 1,
+          "high_break_pct": 0.0883,
+          "volume_ratio": 0.6716661550519829,
+          "trend_leader": 0,
+          "trend_score": 61.52,
+          "trend_score_pct": 77.8,
+          "explain": "MA5/10/20/60多头排列(9.22>9.01>8.81>8.25) + 创60日新高(前高 9.17, 突破 8.83%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 77.8,
+      "hub_score_pct": 48.4,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "002696",
+      "name": "百洋股份",
+      "price": 7.72,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 76.9
+      },
+      "hits": {
+        "trend": {
+          "code": "002696",
+          "name": "百洋股份",
+          "price": 7.72,
+          "is_intraday": 1,
+          "realtime_price": 7.72,
+          "ma5": 7.072,
+          "ma10": 6.867999999999999,
+          "ma20": 6.519000000000001,
+          "ma60": 5.684833333333333,
+          "ma_aligned": 1,
+          "prev_high_60": 7.55,
+          "new_high": 1,
+          "high_break_pct": 0.0225,
+          "volume_ratio": 1.3504647619514818,
+          "trend_leader": 0,
+          "trend_score": 61.43,
+          "trend_score_pct": 76.9,
+          "explain": "MA5/10/20/60多头排列(7.07>6.87>6.52>5.68) + 创60日新高(前高 7.55, 突破 2.25%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 76.9,
+      "hub_score_pct": 47.8,
+      "badges": {
+        "tier_state": "出货"
+      }
+    },
+    {
+      "code": "603400",
+      "name": "华之杰",
+      "price": 52.61,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 1,
+        "trend": 0,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "tech": 76.3
+      },
+      "hits": {
+        "tech": {
+          "code": "603400",
+          "name": "华之杰",
+          "price": 52.61,
+          "is_intraday": 1,
+          "realtime_price": 52.61,
+          "macd_golden": 1,
+          "kdj_golden": 0,
+          "rsi_oversold": 0,
+          "boll_rebound": 0,
+          "hit_count": 1,
+          "tech_score": 25.46,
+          "multi_hit": 0,
+          "macd_dif": 1.6184,
+          "macd_dea": 1.5023,
+          "kdj_k": 78.64,
+          "kdj_d": 72.27,
+          "kdj_j": 91.39,
+          "rsi": 60.24,
+          "boll_mb": 47.7945,
+          "boll_ub": 54.5495,
+          "boll_lb": 41.0395,
+          "tech_score_pct": 76.3,
+          "explain": "MACD金叉(DIF 1.62 上穿 DEA 1.50)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 76.3,
+      "hub_score_pct": 47.3,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    },
+    {
+      "code": "600967",
+      "name": "内蒙一机",
+      "price": 14.44,
+      "change_pct": null,
+      "total_amount": null,
+      "is_intraday": 1,
+      "hit_strategies": 1,
+      "hit_flags": {
+        "tech": 0,
+        "trend": 1,
+        "pattern": 0,
+        "chip": 0
+      },
+      "pct": {
+        "trend": 76.1
+      },
+      "hits": {
+        "trend": {
+          "code": "600967",
+          "name": "内蒙一机",
+          "price": 14.44,
+          "is_intraday": 1,
+          "realtime_price": 14.44,
+          "ma5": 13.774000000000001,
+          "ma10": 12.788,
+          "ma20": 11.9585,
+          "ma60": 11.413666666666666,
+          "ma_aligned": 1,
+          "prev_high_60": 13.87,
+          "new_high": 1,
+          "high_break_pct": 0.0411,
+          "volume_ratio": 1.2145554777213587,
+          "trend_leader": 0,
+          "trend_score": 59.38,
+          "trend_score_pct": 76.1,
+          "explain": "MA5/10/20/60多头排列(13.77>12.79>11.96>11.41) + 创60日新高(前高 13.87, 突破 4.11%)"
+        }
+      },
+      "resonance": 0,
+      "hub_score": 76.1,
+      "hub_score_pct": 46.8,
+      "badges": {
+        "tier_state": "拉升"
+      }
+    }
+  ],
+  "charts_precomputed": {
+    "count": 40,
+    "n": 40,
+    "codes": [
+      "000798",
+      "002595",
+      "601975",
+      "603123",
+      "605580",
+      "600508",
+      "601886",
+      "000576",
+      "601988",
+      "002812",
+      "600359",
+      "601665",
+      "601319",
+      "002100",
+      "003816",
+      "600562",
+      "000973",
+      "601169",
+      "000301",
+      "000735",
+      "000768",
+      "601058",
+      "600506",
+      "600540",
+      "603127",
+      "600844",
+      "601398",
+      "001368",
+      "601939",
+      "002149",
+      "600391",
+      "603980",
+      "002493",
+      "603819",
+      "600179",
+      "600583",
+      "601011",
+      "605118",
+      "600206",
+      "600795"
+    ]
+  },
+  "perf": {
+    "tracked": 60,
+    "filled": 24,
+    "missing": 496
+  },
+  "email_sent": false,
+  "email_error": "NetworkError: [Errno 61] Connection refused",
+  "disclaimer": "信号仅为辅助参考，不构成投资建议"
+}
