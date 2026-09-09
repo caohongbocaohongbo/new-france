@@ -566,7 +566,7 @@
         const cfg = PAGES[pageId];
         const el = document.getElementById('page-' + pageId);
         if (!el || !cfg) return;
-        // smart-picker 自己加载 tech-indicators + trend-strength 两个源，不走通用单 path
+        // smart-picker 走 22 聚合中枢单源（/smart-picker/latest），不走通用单 path
         if (cfg.kind === 'smart-picker') { await setupSmartPicker(el); return; }
         el.innerHTML = '<div class="loading">加载中...</div>';
         try {
