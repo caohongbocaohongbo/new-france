@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-09T14:38:25.297312+08:00",
+  "now": "2026-09-09T14:44:36.111022+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3552
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1197
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 60583
+        "latency_ms": 61227
       }
     ],
     "is_stale": false,
@@ -33,44 +31,28 @@
     "verify_result": null
   },
   "scanned": 3195,
-  "buy_candidates": 14,
+  "buy_candidates": 13,
   "sell_candidates": 26,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002737",
-      "name": "葵花药业",
-      "price": 11.69,
-      "change_pct": -1.1834,
-      "total_amount": 37244975.0,
-      "main_net_inflow": -11719280.32,
-      "main_inflow_ratio": -31.4654,
-      "super_net": -6838668.0,
-      "big_net": -4880612.32,
-      "mid_net": -2263397.0,
-      "small_net": -1090417.68,
+      "code": "002034",
+      "name": "旺能环境",
+      "price": 14.54,
+      "change_pct": -1.1557,
+      "total_amount": 78853614.02,
+      "main_net_inflow": -23855953.86,
+      "main_inflow_ratio": -30.2535,
+      "super_net": -17444059.02,
+      "big_net": -6411894.84,
+      "mid_net": -95436.84,
+      "small_net": 3822041.16,
       "source": "sina",
-      "flow_time": "2026-09-09T14:38:25.297312+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000404",
-      "name": "长虹华意",
-      "price": 7.1,
-      "change_pct": -0.6993,
-      "total_amount": 29975992.33,
-      "main_net_inflow": -9417200.1,
-      "main_inflow_ratio": -31.4158,
-      "super_net": -8121041.1,
-      "big_net": -1296159.0,
-      "mid_net": -598385.97,
-      "small_net": -541266.2,
-      "source": "sina",
-      "flow_time": "2026-09-09T14:38:25.297312+08:00",
+      "flow_time": "2026-09-09T14:44:36.111022+08:00",
       "severity": "warn"
     }
   ]
