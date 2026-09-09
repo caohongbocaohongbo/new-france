@@ -389,3 +389,49 @@ class ChipHit(Base):
     chip_score = Column(Float)
     __table_args__ = (Index("idx_chip_date", "date"), Index("idx_chip_code", "code", "date"), Index("idx_chip_tight", "date", "tight_control"))
 
+
+class SmartPickerHit(Base):
+    """22 智能选股聚合中枢：每日聚合命中（快照为主读，SQLite 供本地历史）。"""
+    __tablename__ = "smart_picker_hits"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    price = Column(Float)
+    change_pct = Column(Float)
+    total_amount = Column(Float)
+    hub_score = Column(Float)
+    hub_score_pct = Column(Float)
+    hit_strategies = Column(Integer)
+    resonance = Column(Integer, default=0)
+    tech_hit = Column(Integer, default=0)
+    trend_hit = Column(Integer, default=0)
+    pattern_hit = Column(Integer, default=0)
+    chip_hit = Column(Integer, default=0)
+    badges_json = Column(Text)
+    raw_json = Column(Text)
+    __table_args__ = (Index("idx_sp_date", "date"), Index("idx_sp_code", "code", "date"), Index("idx_sp_reso", "date", "resonance"))
+
+
+class PickerPerfDaily(Base):
+    """22 信号质量追踪：每日信号 T+1/T+3/T+5 收益（无前视回填）。"""
+    __tablename__ = "picker_perf_daily"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    signal_date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    strategies = Column(String(50))
+    hub_score = Column(Float)
+    close_entry = Column(Float)
+    t1_close = Column(Float)
+    t1_ret = Column(Float)
+    t1_filled = Column(Integer, default=0)
+    t3_close = Column(Float)
+    t3_ret = Column(Float)
+    t3_filled = Column(Integer, default=0)
+    t5_close = Column(Float)
+    t5_ret = Column(Float)
+    t5_filled = Column(Integer, default=0)
+    data_missing = Column(Integer, default=0)
+    updated_at = Column(String(30))
+    __table_args__ = (Index("idx_ppd_date", "signal_date"), Index("idx_ppd_code", "code", "signal_date"))
+

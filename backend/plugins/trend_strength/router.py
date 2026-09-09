@@ -3,21 +3,21 @@ import logging
 
 from fastapi import APIRouter, Query
 
-from backend.plugins.common import snapshot_mem_get, snapshot_mem_set
+from backend.plugins.common import read_snapshot_resilient, snapshot_mem_get, snapshot_mem_set
 
 from .config import SNAPSHOT_NAME
-from .service import read_code_hits, read_code_kline_with_series, read_latest
+from .service import read_code_hits, read_code_kline_with_series
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 def _latest_cached() -> dict:
-    """G6：先查快照内存缓存（<1ms），无则读文件+set。"""
+    """G6：先查快照内存缓存（<1ms），无则本地文件优先、data-snapshots raw 兜底（22 方案读入口）。"""
     cached = snapshot_mem_get(SNAPSHOT_NAME)
     if cached is not None:
         return cached
-    payload = read_latest()
+    payload = read_snapshot_resilient(SNAPSHOT_NAME)
     snapshot_mem_set(SNAPSHOT_NAME, payload)
     return payload
 

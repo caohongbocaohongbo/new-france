@@ -233,128 +233,202 @@
         window.addEventListener('resize', function () { chart.resize(); });
     }
 
-    // ==== 智能选股器（18 经典技术指标 + 19 趋势强度，tab 切换） ====
-    let _spTab = "tech";  // 当前激活 tab
-    let _spCache = { tech: [], trend: [], pattern: [], chip: [] };  // 各 tab 命中数据（详情副图用）
-    const _SP_PREFIX = { tech: "/tech-indicators", trend: "/trend-strength", pattern: "/pattern-scanner", chip: "/chip-scanner" };
-    const _SP_LABEL = { tech: "经典技术指标", trend: "趋势强度", pattern: "形态突破", chip: "筹码集中度" };
+    // ==== 智能选股器（22 聚合中枢：单端点总榜 + 共振 + 质量卡 + 详情图表） ====
+    let _spItems = [];
+    let _spItemMap = {};
+    let _spState = { q: "", pool: "all", min_hit: 1, sort: "hub_score", order: "desc", market: "main", limit: 50, offset: 0 };
+    const _SP_POOLS = [
+        { k: "all", label: "总榜" },
+        { k: "resonance", label: "🔥 共振池" },
+        { k: "tech", label: "经典技术指标" },
+        { k: "trend", label: "趋势强度" },
+        { k: "pattern", label: "形态突破" },
+        { k: "chip", label: "筹码集中度" },
+    ];
+    const _SP_STRAT_LABEL = { tech: "经典技术指标", trend: "趋势强度", pattern: "形态突破", chip: "筹码集中度" };
+
+    function _spQstr() {
+        var s = _spState;
+        var parts = ["limit=" + s.limit, "offset=" + s.offset, "pool=" + s.pool,
+                     "min_hit=" + s.min_hit, "sort=" + s.sort, "order=" + s.order, "market=" + s.market];
+        if (s.q) parts.push("q=" + encodeURIComponent(s.q));
+        return parts.join("&");
+    }
+
+    async function _spFetch() {
+        var resp = await apiFetch("/smart-picker/latest?" + _spQstr(), { timeout: 15000, retries: 0 });
+        return await resp.json();
+    }
 
     async function setupSmartPicker(el) {
         el.innerHTML = '<div class="loading">加载中...</div>';
         try {
-            const [techResp, trendResp, patternResp, chipResp] = await Promise.all([
-                apiFetch('/tech-indicators/latest', { timeout: 15000, retries: 0 }),
-                apiFetch('/trend-strength/latest', { timeout: 15000, retries: 0 }),
-                apiFetch('/pattern-scanner/latest', { timeout: 15000, retries: 0 }),
-                apiFetch('/chip-scanner/latest', { timeout: 15000, retries: 0 }),
-            ]);
-            const techData = await techResp.json();
-            const trendData = await trendResp.json();
-            const patternData = await patternResp.json();
-            const chipData = await chipResp.json();
-            el.innerHTML = renderSmartPicker(techData, trendData, patternData, chipData);
-            bindSmartPickerTabs();
+            var data = await _spFetch();
+            _spItems = data.items || [];
+            _spItemMap = {};
+            _spItems.forEach(function (it) { _spItemMap[String(it.code)] = it; });
+            el.innerHTML = _spRenderAll(data);
+            bindSmartPickerControls();
             bindSmartPickerRows();
+            loadSmartPickerPerf();
         } catch (e) {
             el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
         }
     }
 
-    function _spTabHtml(active) {
-        return '<div class="smart-picker-tabs">' +
-            '<button class="tab-btn' + (active === "tech" ? " active" : "") + '" data-tab="tech">经典技术指标</button>' +
-            '<button class="tab-btn' + (active === "trend" ? " active" : "") + '" data-tab="trend">趋势强度</button>' +
-            '<button class="tab-btn' + (active === "pattern" ? " active" : "") + '" data-tab="pattern">形态突破</button>' +
-            '<button class="tab-btn' + (active === "chip" ? " active" : "") + '" data-tab="chip">筹码集中度</button>' +
-            "</div>";
+    async function _spReload() {
+        var box = document.getElementById("sp-table-wrap");
+        if (box) box.innerHTML = '<div class="loading">加载中...</div>';
+        try {
+            var data = await _spFetch();
+            _spItems = data.items || [];
+            _spItemMap = {};
+            _spItems.forEach(function (it) { _spItemMap[String(it.code)] = it; });
+            if (box) box.innerHTML = _spRenderTable(data);
+            bindSmartPickerRows();
+        } catch (e) {
+            if (box) box.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
+        }
     }
 
-    function _spTable(tab, items, cols, flagKey, flagLabel) {
-        if (!items || !items.length) return '<div class="empty-state">暂无数据，请先运行对应任务</div>';
-        let head = cols.map(function (c) { return "<th>" + escapeHtml(c[1]) + "</th>"; }).join("");
-        let body = items.slice(0, 80).map(function (it) {
-            let isFlag = it[flagKey] === 1;
-            let tds = cols.map(function (c) {
-                let v = it[c[0]];
-                if (c[0] === "code") return '<td class="sp-code">' + (isFlag ? '🔥 ' : '') + escapeHtml(String(v || "")) + "</td>";
-                return "<td>" + fmt(v) + "</td>";
-            }).join("");
-            return '<tr class="sp-row ' + (isFlag ? "sp-flag-row" : "") + '" data-sp-tab="' + escapeHtml(tab) + '" data-sp-code="' + escapeHtml(String(it.code || "")) + '" data-sp-name="' + escapeHtml(String(it.name || "")) + '" style="cursor:pointer">' + tds + "</tr>";
+    function _spPct(v) {
+        return (v == null) ? "--" : Number(v).toFixed(1) + "%";
+    }
+
+    function _spHintHtml(data) {
+        var hints = [];
+        if (data.status === "degraded") {
+            hints.push("部分策略不可用（已按权重自动重分配）：" + Object.keys(data.strategies || {})
+                .filter(function (k) { return !(data.strategies[k] || {}).available; })
+                .map(function (k) { return _SP_STRAT_LABEL[k] || k; }).join("、"));
+        }
+        if (!data.zt_gate_applied && data.status === "completed") hints.push("涨停门控未生效（zt_pool 不可用），结果可能含当日涨停票");
+        if (data.data_age_days != null) hints.push("数据 " + (data.data_age_days === 0 ? "当日" : data.data_age_days + " 个交易日前"));
+        if (data.source === "snapshot") hints.push("来源：data-snapshots 兜底快照");
+        return hints.length ? '<div class="hint">' + hints.map(escapeHtml).join(" · ") + "</div>" : "";
+    }
+
+    function _spBadgesHtml(it) {
+        var b = it.badges || {};
+        var parts = [];
+        if (b.tier_state) parts.push('<span class="badge">' + escapeHtml(b.tier_state) + "</span>");
+        if (b.fund_flow && b.fund_flow.main_net_inflow != null) {
+            var amt = Number(b.fund_flow.main_net_inflow);
+            parts.push('<span class="badge">净流入 ' + (Math.abs(amt) >= 1e8 ? (amt / 1e8).toFixed(2) + "亿" : (amt / 1e4).toFixed(0) + "万") + "</span>");
+        }
+        if (b.radar && b.radar.strength != null) parts.push('<span class="badge">雷达 ' + Number(b.radar.strength).toFixed(0) + "</span>");
+        return parts.join(" ");
+    }
+
+    function _spRenderTable(data) {
+        if (!data || data.status !== "completed") {
+            return '<div class="empty-state">' + escapeHtml((data && data.reason) || "暂无数据，请先运行任务") + "</div>";
+        }
+        if (!data.items || !data.items.length) return '<div class="empty-state">当前筛选条件无命中</div>';
+        var body = data.items.map(function (it) {
+            var fire = it.resonance ? "🔥 " : "";
+            return '<tr class="sp-row' + (it.resonance ? " sp-flag-row" : "") + '" data-sp-code="' + escapeHtml(String(it.code)) +
+                '" data-sp-name="' + escapeHtml(String(it.name || "")) + '" style="cursor:pointer">' +
+                "<td>" + escapeHtml(fire + String(it.code || "")) + "</td>" +
+                "<td>" + escapeHtml(String(it.name || "")) + "</td>" +
+                "<td>" + fmt(it.price) + "</td>" +
+                "<td>" + fmtPct(it.change_pct) + "</td>" +
+                "<td>" + (it.hit_strategies || 0) + "</td>" +
+                "<td>" + fmt(it.hub_score) + " <span class='muted'>" + _spPct(it.hub_score_pct) + "</span></td>" +
+                "<td>" + _spBadgesHtml(it) + "</td>" +
+                "</tr>";
         }).join("");
-        return '<table class="data-table"><thead><tr>' + head + "</tr></thead><tbody>" + body + "</tbody></table>";
+        return '<table class="data-table"><thead><tr>' +
+            "<th>代码</th><th>名称</th><th>价格</th><th>涨跌幅</th><th>命中策略</th><th>综合分(排名)</th><th>交叉信号</th>" +
+            "</tr></thead><tbody>" + body + "</tbody></table>";
     }
 
-    function renderSmartPicker(techData, trendData, patternData, chipData) {
-        let techItems = (techData && techData.items) || [];
-        let trendItems = (trendData && trendData.items) || [];
-        let patternItems = (patternData && patternData.items) || [];
-        let chipItems = (chipData && chipData.items) || [];
-        _spCache = { tech: techItems, trend: trendItems, pattern: patternItems, chip: chipItems };
-        let techCounts = (techData && techData.signal_counts) || {};
-        let trendCounts = (trendData && trendData.signal_counts) || {};
-        let patternCounts = (patternData && patternData.signal_counts) || {};
-        let chipCounts = (chipData && chipData.signal_counts) || {};
-        let techHtml =
-            '<div class="metric-cards">' + card('金叉池', techCounts.golden || 0) + card('超卖池', techCounts.oversold || 0) + card('🔥 多指标共振', techCounts.multi || 0) + '</div>' +
-            _spTable("tech", techItems, [
-                ["code", "代码"], ["name", "名称"], ["price", "价格"],
-                ["macd_golden", "MACD金叉"], ["kdj_golden", "KDJ金叉"],
-                ["rsi_oversold", "RSI超卖"], ["boll_rebound", "BOLL反弹"],
-                ["hit_count", "命中数"], ["tech_score", "综合分"],
-            ], "multi_hit", "多指标共振");
-        let trendHtml =
-            '<div class="metric-cards">' + card('强趋势榜', (trendData && trendData.count) || 0) + card('🔥 趋势龙头', trendCounts.leader || 0) + '</div>' +
-            _spTable("trend", trendItems, [
-                ["code", "代码"], ["name", "名称"], ["price", "价格"],
-                ["ma5", "MA5"], ["ma20", "MA20"], ["ma60", "MA60"],
-                ["new_high", "创新高"], ["high_break_pct", "突破幅度"], ["volume_ratio", "量比"],
-                ["trend_score", "趋势分"],
-            ], "trend_leader", "趋势龙头");
-        let patternHtml =
-            '<div class="metric-cards">' + card('平台突破池', patternCounts.platform || 0) + card('缺口不回补池', patternCounts.gap || 0) + card('🔥 双形态共振', patternCounts.dual || 0) + '</div>' +
-            _spTable("pattern", patternItems, [
-                ["code", "代码"], ["name", "名称"], ["price", "价格"],
-                ["platform_break", "平台突破"], ["gap_hold", "缺口不回补"],
-                ["gap_type", "缺口类型"], ["volume_ratio", "量比"], ["pattern_score", "形态分"],
-            ], "dual_hit", "双形态共振");
-        let chipHtml =
-            '<div class="metric-cards">' + card('强势筹码榜', chipCounts.strong || 0) + card('🔥 高度控盘', chipCounts.tight_control || 0) + '</div>' +
-            ((chipData && chipData.local_only) ? '<div class="hint">需本地运行（pytdx 分钟 K 近似分价），云端分价接口不可用。</div>' : '') +
-            _spTable("chip", chipItems, [
-                ["code", "代码"], ["name", "名称"], ["price", "价格"],
-                ["concentration_ratio", "集中度"], ["profit_ratio", "获利盘"],
-                ["ma20_slope", "MA20斜率"], ["tight_control", "高度控盘"], ["chip_score", "筹码分"],
-            ], "tight_control", "高度控盘");
-        return _spTabHtml(_spTab) +
-            '<div id="sp-tech-content" style="' + (_spTab === "tech" ? "" : "display:none") + '">' + techHtml + "</div>" +
-            '<div id="sp-trend-content" style="' + (_spTab === "trend" ? "" : "display:none") + '">' + trendHtml + "</div>" +
-            '<div id="sp-pattern-content" style="' + (_spTab === "pattern" ? "" : "display:none") + '">' + patternHtml + "</div>" +
-            '<div id="sp-chip-content" style="' + (_spTab === "chip" ? "" : "display:none") + '">' + chipHtml + "</div>" +
+    function _spRenderAll(data) {
+        var counts = data.signal_counts || {};
+        var by = counts.by_strategy || {};
+        var cards = '<div class="metric-cards">' +
+            card("总命中", (data.count != null ? data.count : counts.total) || 0) +
+            card("🔥 共振池", counts.resonance || 0) +
+            card("tech", by.tech || 0) + card("trend", by.trend || 0) +
+            card("pattern", by.pattern || 0) + card("chip", by.chip || 0) + "</div>";
+        var pools = _SP_POOLS.map(function (p) {
+            return '<button class="tab-btn' + (_spState.pool === p.k ? " active" : "") + '" data-sp-pool="' + p.k + '">' + p.label + "</button>";
+        }).join("");
+        var sortOpts = ["hub_score:综合分", "hit_strategies:命中策略数", "price:价格", "change_pct:涨跌幅",
+                        "total_amount:成交额", "code:代码"].map(function (kv) {
+            var parts = kv.split(":");
+            return '<option value="' + parts[0] + '"' + (_spState.sort === parts[0] ? " selected" : "") + ">" + parts[1] + "</option>";
+        }).join("");
+        var marketOpts = ["main:主板", "gem:主板+创业板", "star:主板+科创板"].map(function (kv) {
+            var parts = kv.split(":");
+            return '<option value="' + parts[0] + '"' + (_spState.market === parts[0] ? " selected" : "") + ">" + parts[1] + "</option>";
+        }).join("");
+        return '<div class="smart-picker-tabs">' + pools + "</div>" +
+            '<div class="sp-filters">' +
+            '<input id="sp-q" type="text" placeholder="搜索代码/名称" value="' + escapeHtml(_spState.q) + '">' +
+            '<select id="sp-min-hit">' + [1, 2, 3, 4].map(function (n) {
+                return '<option value="' + n + '"' + (_spState.min_hit === n ? " selected" : "") + ">≥" + n + " 策略</option>";
+            }).join("") + "</select>" +
+            '<select id="sp-sort">' + sortOpts + "</select>" +
+            '<select id="sp-order"><option value="desc" selected>降序</option><option value="asc">升序</option></select>' +
+            '<select id="sp-market">' + marketOpts + "</select>" +
+            '<button id="sp-prev" class="btn">上一页</button><button id="sp-next" class="btn">下一页</button>' +
+            "</div>" +
+            _spHintHtml(data) + cards +
+            '<div id="sp-perf" class="sp-perf"></div>' +
+            '<div id="sp-table-wrap">' + _spRenderTable(data) + "</div>" +
             '<div id="sp-detail"></div>' +
-            '<div class="hint">' + escapeHtml((techData && techData.disclaimer) || "仅为辅助参考，不构成投资建议") + '</div>';
+            '<div class="hint">' + escapeHtml(data.disclaimer || "仅为辅助参考，不构成投资建议") + "</div>";
     }
 
-    function bindSmartPickerTabs() {
+    function bindSmartPickerControls() {
         document.querySelectorAll(".smart-picker-tabs .tab-btn").forEach(function (btn) {
             btn.addEventListener("click", function () {
-                _spTab = btn.getAttribute("data-tab");
+                _spState.pool = btn.getAttribute("data-sp-pool");
+                _spState.offset = 0;
                 document.querySelectorAll(".smart-picker-tabs .tab-btn").forEach(function (b) {
-                    b.classList.toggle("active", b.getAttribute("data-tab") === _spTab);
+                    b.classList.toggle("active", b.getAttribute("data-sp-pool") === _spState.pool);
                 });
-                document.getElementById("sp-tech-content").style.display = _spTab === "tech" ? "" : "none";
-                document.getElementById("sp-trend-content").style.display = _spTab === "trend" ? "" : "none";
-                document.getElementById("sp-pattern-content").style.display = _spTab === "pattern" ? "" : "none";
-                document.getElementById("sp-chip-content").style.display = _spTab === "chip" ? "" : "none";
+                _spReload();
             });
         });
-    }
-    // ==== 智能选股器详情副图（MACD/KDJ/MA/平台缺口/筹码分布，复用 17 ECharts 模式） ====
-    function _spItem(tab, code) {
-        const items = _spCache[tab] || [];
-        for (let i = 0; i < items.length; i++) if (String(items[i].code) === String(code)) return items[i];
-        return null;
+        var q = document.getElementById("sp-q");
+        if (q) q.addEventListener("change", function () { _spState.q = q.value.trim(); _spState.offset = 0; _spReload(); });
+        var mh = document.getElementById("sp-min-hit");
+        if (mh) mh.addEventListener("change", function () { _spState.min_hit = parseInt(mh.value, 10); _spState.offset = 0; _spReload(); });
+        var st = document.getElementById("sp-sort");
+        if (st) st.addEventListener("change", function () { _spState.sort = st.value; _spState.offset = 0; _spReload(); });
+        var od = document.getElementById("sp-order");
+        if (od) od.addEventListener("change", function () { _spState.order = od.value; _spState.offset = 0; _spReload(); });
+        var mk = document.getElementById("sp-market");
+        if (mk) mk.addEventListener("change", function () { _spState.market = mk.value; _spState.offset = 0; _spReload(); });
+        var prev = document.getElementById("sp-prev");
+        if (prev) prev.addEventListener("click", function () { _spState.offset = Math.max(0, _spState.offset - _spState.limit); _spReload(); });
+        var next = document.getElementById("sp-next");
+        if (next) next.addEventListener("click", function () { _spState.offset += _spState.limit; _spReload(); });
     }
 
+    async function loadSmartPickerPerf() {
+        var box = document.getElementById("sp-perf");
+        if (!box) return;
+        try {
+            var resp = await apiFetch("/smart-picker/perf?days=20&window=t1", { timeout: 15000, retries: 0 });
+            var data = await resp.json();
+            var rows = ["tech", "trend", "pattern", "chip", "resonance"].map(function (k) {
+                var s = (data.summary || {})[k];
+                if (!s) return "<tr><td>" + escapeHtml(k) + "</td><td>--</td><td>--</td><td>--</td></tr>";
+                var ret = s.insufficient ? "样本偏少(" + s.n + "/" + (data.sample_min || 20) + ")" : _spPct(s.avg_ret * 100);
+                var win = s.insufficient ? "--" : _spPct(s.win_rate * 100);
+                return "<tr><td>" + escapeHtml(k) + "</td><td>" + s.n + "</td><td>" + ret + "</td><td>" + win + "</td></tr>";
+            }).join("");
+            box.innerHTML = '<h4 class="section-title">信号质量卡（近 ' + (data.days || 20) + ' 交易日 T+1）</h4>' +
+                '<table class="data-table"><thead><tr><th>策略</th><th>样本数</th><th>平均收益</th><th>胜率</th></tr></thead><tbody>' +
+                rows + "</tbody></table>";
+        } catch (e) {
+            box.innerHTML = "";
+        }
+    }
+    // ==== 智能选股器详情（22 聚合中枢：命中解释 + 预计算图表，复用 17 ECharts 模式） ====
     function _spDates(records) {
         return (records || []).map(function (k) { return (k.date || "").slice(5); });
     }
@@ -374,39 +448,21 @@
     function bindSmartPickerRows() {
         document.querySelectorAll(".sp-row").forEach(function (tr) {
             tr.addEventListener("click", function () {
-                openSmartPickerDetail(tr.getAttribute("data-sp-tab"), tr.getAttribute("data-sp-code"), tr.getAttribute("data-sp-name"));
+                openSmartPickerDetail(tr.getAttribute("data-sp-code"), tr.getAttribute("data-sp-name"));
             });
         });
     }
 
-    function renderSmartPickerDetail(tab, code, name, item) {
-        var back = '<button class="btn" style="margin-bottom:10px" onclick="closeSmartPickerDetail()">← 返回</button>';
-        var meta = "";
-        if (tab === "tech" && item) {
-            meta = "命中 " + (item.hit_count || 0) + " 项（MACD金叉" + (item.macd_golden ? "✓" : "✗") + " / KDJ金叉" + (item.kdj_golden ? "✓" : "✗") + " / RSI超卖" + (item.rsi_oversold ? "✓" : "✗") + " / BOLL反弹" + (item.boll_rebound ? "✓" : "✗") + "）";
-        } else if (tab === "trend" && item) {
-            meta = "MA多头 " + (item.ma_aligned ? "✓" : "✗") + " / 创新高 " + (item.new_high ? "✓" : "✗") + " / 量比 " + fmt(item.volume_ratio);
-        } else if (tab === "pattern" && item) {
-            meta = "平台突破 " + (item.platform_break ? "✓" : "✗") + " / 缺口不回补 " + (item.gap_hold ? "✓" : "✗") + " / 缺口类型 " + escapeHtml(String(item.gap_type || "--"));
-        } else if (tab === "chip" && item) {
-            meta = "集中度 " + fmt(item.concentration_ratio) + " / 获利盘 " + fmtPct(item.profit_ratio) + " / 高度控盘 " + (item.tight_control ? "✓" : "✗");
-        }
-        var charts = "";
-        if (tab === "tech") {
-            charts = '<div id="sp-chart-1" style="width:100%;height:280px"></div>' +
-                '<div id="sp-chart-2" style="width:100%;height:220px"></div>' +
-                '<div id="sp-chart-3" style="width:100%;height:220px"></div>';
-        } else if (tab === "chip") {
-            charts = '<div id="sp-chart-1" style="width:100%;height:260px"></div>' +
-                '<div id="sp-chart-2" style="width:100%;height:240px"></div>';
-        } else {
-            charts = '<div id="sp-chart-1" style="width:100%;height:300px"></div>';
-        }
-        return back +
-            '<h3 class="section-title">' + escapeHtml(code) + ' ' + escapeHtml(name) + ' · ' + escapeHtml(_SP_LABEL[tab] || "") + ' 副图</h3>' +
-            (meta ? '<div class="hint">' + meta + '</div>' : "") +
-            charts +
-            '<div class="hint">提示：信号仅为辅助参考，不构成投资建议。</div>';
+    function _spMetaHtml(item) {
+        if (!item) return "";
+        var lines = [];
+        Object.keys(_SP_STRAT_LABEL).forEach(function (k) {
+            var hit = (item.hits || {})[k];
+            if (!hit) return;
+            lines.push("<li><b>" + _SP_STRAT_LABEL[k] + "</b>：" + escapeHtml(hit.explain || "") + "</li>");
+        });
+        return '<div class="hint">命中 ' + (item.hit_strategies || 0) + " 个策略（综合分 " + fmt(item.hub_score) +
+            "，当日排名前 " + _spPct(Math.max(0, 100 - (item.hub_score_pct || 0))) + "）</div><ul>" + lines.join("") + "</ul>";
     }
 
     function _drawTechKline(records, series) {
@@ -469,112 +525,38 @@
         });
     }
 
-    function _drawTrend(records, series) {
-        var el = document.getElementById("sp-chart-1");
-        if (!el || typeof echarts === "undefined") return;
-        var chart = echarts.init(el);
-        var ma = (series && series.ma) || {};
-        var k = _spKlineSeries(records);
-        chart.setOption({
-            tooltip: { trigger: "axis" },
-            legend: { data: ["MA5", "MA10", "MA20", "MA60"] },
-            xAxis: { type: "category", data: k.dates },
-            yAxis: { scale: true },
-            grid: { left: 55, right: 16, top: 32, bottom: 24 },
-            series: [
-                { name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" } },
-                { name: "MA5", type: "line", data: ma.ma5 || [], showSymbol: false, lineStyle: { width: 1 } },
-                { name: "MA10", type: "line", data: ma.ma10 || [], showSymbol: false, lineStyle: { width: 1 } },
-                { name: "MA20", type: "line", data: ma.ma20 || [], showSymbol: false, lineStyle: { width: 1 } },
-                { name: "MA60", type: "line", data: ma.ma60 || [], showSymbol: false, lineStyle: { width: 1 } },
-            ],
-        });
-    }
-
-    function _drawPattern(records, item) {
-        var el = document.getElementById("sp-chart-1");
-        if (!el || typeof echarts === "undefined") return;
-        var chart = echarts.init(el);
-        var k = _spKlineSeries(records);
-        var markLines = [];
-        if (item && item.platform_high != null) markLines.push({ yAxis: item.platform_high, name: "平台上沿", lineStyle: { color: "#f59e0b" } });
-        if (item && item.gap_low != null) markLines.push({ yAxis: item.gap_low, name: "缺口下沿", lineStyle: { color: "#8b5cf6" } });
-        chart.setOption({
-            tooltip: { trigger: "axis" },
-            xAxis: { type: "category", data: k.dates },
-            yAxis: { scale: true },
-            grid: { left: 55, right: 16, top: 16, bottom: 24 },
-            series: [
-                { name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" }, markLine: { symbol: "none", data: markLines, label: { formatter: "{b}" } } },
-            ],
-        });
-    }
-
-    function _drawChip(records, distData) {
-        var d1 = document.getElementById("sp-chart-1");
-        var dist = (distData && distData.distribution) || [];
-        if (d1 && typeof echarts !== "undefined") {
-            if (dist.length) {
-                var c1 = echarts.init(d1);
-                c1.setOption({
-                    tooltip: { trigger: "axis" },
-                    xAxis: { type: "category", data: dist.map(function (d) { return d.price_level; }), name: "价格" },
-                    yAxis: { type: "value", name: "成交量" },
-                    grid: { left: 55, right: 16, top: 16, bottom: 24 },
-                    series: [{ name: "筹码分布", type: "bar", data: dist.map(function (d) { return d.volume; }), itemStyle: { color: "#3b82f6" }, barWidth: "70%" }],
-                });
-            } else {
-                d1.innerHTML = '<div class="empty-state">无筹码分布数据（需本地 pytdx 运行，云端分价接口不可用）</div>';
-            }
-        }
-        var d2 = document.getElementById("sp-chart-2");
-        if (d2 && typeof echarts !== "undefined" && records && records.length) {
-            var c2 = echarts.init(d2);
-            var k = _spKlineSeries(records);
-            c2.setOption({
-                tooltip: { trigger: "axis" },
-                xAxis: { type: "category", data: k.dates },
-                yAxis: { scale: true },
-                grid: { left: 55, right: 16, top: 16, bottom: 24 },
-                series: [{ name: "K线", type: "candlestick", data: k.ohlc, itemStyle: { color: "#ef4444", color0: "#16a34a", borderColor: "#ef4444", borderColor0: "#16a34a" } }],
-            });
-        }
-    }
-
-    function drawSmartPickerDetail(tab, records, series, item, distData) {
-        if (tab === "tech") {
-            _drawTechKline(records, series);
-            _drawTechMacd(records, series);
-            _drawTechKdj(records, series);
-        } else if (tab === "trend") {
-            _drawTrend(records, series);
-        } else if (tab === "pattern") {
-            _drawPattern(records, item);
-        } else if (tab === "chip") {
-            _drawChip(records, distData);
-        }
-    }
-
-    async function openSmartPickerDetail(tab, code, name) {
+    async function openSmartPickerDetail(code, name) {
         var el = document.getElementById("sp-detail");
         if (!el) return;
-        el.innerHTML = '<div class="loading">加载 ' + escapeHtml(code) + ' 副图...</div>';
+        code = String(code || "");
+        el.innerHTML = '<div class="loading">加载 ' + escapeHtml(code) + ' 详情...</div>';
         try {
-            var item = _spItem(tab, code);
-            var prefix = _SP_PREFIX[tab] || "";
-            var kResp = await apiFetch(prefix + "/" + encodeURIComponent(code) + "/kline?days=80", { timeout: 20000, retries: 0 });
-            var kData = await kResp.json();
-            var records = (kData && kData.records) || [];
-            var series = (kData && kData.series) || {};
-            var distData = null;
-            if (tab === "chip") {
-                var dResp = await apiFetch(prefix + "/" + encodeURIComponent(code) + "/distribution", { timeout: 20000, retries: 0 });
-                distData = await dResp.json();
+            var itemResp = await apiFetch("/smart-picker/" + encodeURIComponent(code), { timeout: 15000, retries: 0 });
+            var itemData = await itemResp.json();
+            var item = itemData.item || _spItemMap[code] || null;
+            var chartResp = await apiFetch("/smart-picker/" + encodeURIComponent(code) + "/chart?days=80", { timeout: 20000, retries: 0 });
+            var chartData = await chartResp.json();
+            var records = (chartData && chartData.records) || [];
+            var series = (chartData && chartData.series) || {};
+            el.innerHTML =
+                '<button class="btn" style="margin-bottom:10px" onclick="closeSmartPickerDetail()">← 返回</button>' +
+                '<h3 class="section-title">' + escapeHtml(code) + " " + escapeHtml(name || "") + " · 智能选股详情</h3>" +
+                _spMetaHtml(item) +
+                (chartData.cached ? '<div class="hint">图表已预计算（cached）</div>' : "") +
+                '<div id="sp-chart-1" style="width:100%;height:280px"></div>' +
+                '<div id="sp-chart-2" style="width:100%;height:220px"></div>' +
+                '<div id="sp-chart-3" style="width:100%;height:220px"></div>' +
+                '<div class="hint">提示：信号仅为辅助参考，不构成投资建议。</div>';
+            if (records && records.length) {
+                _drawTechKline(records, series);
+                _drawTechMacd(records, series);
+                _drawTechKdj(records, series);
+            } else {
+                document.getElementById("sp-chart-1").innerHTML =
+                    '<div class="empty-state">无 K 线数据（' + escapeHtml((chartData && chartData.reason) || "kline_unavailable") + "）</div>";
             }
-            el.innerHTML = renderSmartPickerDetail(tab, code, name, item);
-            drawSmartPickerDetail(tab, records, series, item, distData);
         } catch (e) {
-            el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
+            el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + "</div>";
         }
     }
 

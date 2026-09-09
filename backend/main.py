@@ -195,6 +195,7 @@ def get_app():
         ("trend_strength", "register_router", "/api/v1/trend-strength", "趋势强度"),
         ("pattern_scanner", "register_router", "/api/v1/pattern-scanner", "形态突破"),
         ("chip_scanner", "register_router", "/api/v1/chip-scanner", "筹码集中度"),
+        ("smart_picker_hub", "register_router", "/api/v1/smart-picker", "智能选股聚合中枢"),
     ]
     for _mod, _fn, _prefix, _tag in _new_plugins:
         try:
@@ -331,6 +332,10 @@ def main():
                         help="[插件20] 形态突破选股")
     parser.add_argument("--run-chip-scanner-once", action="store_true",
                         help="[插件21] 筹码集中度选股(本地专属)")
+    parser.add_argument("--run-smart-picker-hub", action="store_true",
+                        help="[插件22] 仅执行智能选股聚合中枢(要求四份策略快照已存在)")
+    parser.add_argument("--run-smart-picker-all", action="store_true",
+                        help="[插件22] 18/19/20/21+聚合中枢同进程连跑(共享K线缓存)")
     parser.add_argument("--max-kline-workers", type=int, default=None,
                         help="[插件15/16/18/19/20/21] K线批量并发线程数")
     args = parser.parse_args()
@@ -392,6 +397,17 @@ def main():
 
     if args.refresh_data_assets:
         _run_refresh_data_assets(args, logger)
+        return
+
+    # ---- 22 聚合中枢组合 CLI（先于单插件 map，因该 map 命中即 return）----
+    if args.run_smart_picker_all:
+        from backend.plugins.smart_picker_hub import run_smart_picker_all_cli
+
+        result = run_smart_picker_all_cli(args)
+        logger.info("智能选股聚合中枢链路完成: %s", {k: v.get("status") for k, v in result.items()})
+        return
+    if args.run_smart_picker_hub:
+        _run_plugin_cli("backend.plugins.smart_picker_hub", "run_smart_picker_hub_cli", args, logger, "智能选股聚合中枢")
         return
 
     # ---- 14 个方案新增 CLI 分发 ----
