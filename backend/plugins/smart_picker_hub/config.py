@@ -85,6 +85,6 @@ CONFIG = {
     "perf_track_top_n": _env_int("HUB_PERF_TRACK_TOP_N", 60),
     # 共振池🔥邮件推送冷却（分钟）
     "notify_cooldown_minutes": _env_int("HUB_NOTIFY_COOLDOWN_MINUTES", 30),
-    # web 远端 raw 兜底 TTL（秒，可选 common 增强，本期保留配置位）
+    # web 远端 raw 兜底磁盘 TTL（秒；§2.4 common.read_snapshot_resilient 已实现）
     "remote_ttl_seconds": _env_int("HUB_REMOTE_TTL_SECONDS", 600),
 }

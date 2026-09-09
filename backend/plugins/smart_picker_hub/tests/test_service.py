@@ -33,10 +33,11 @@ SNAPS = {
 
 
 @pytest.fixture
-def mocked(monkeypatch):
-    def fake_resilient(name):
+def mocked(monkeypatch, tmp_path):
+    def fake_resilient(name, **kwargs):
         return dict(SNAPS.get(name) or {"status": "empty", "items": []})
 
+    monkeypatch.setattr(service, "REPORT_DIR", tmp_path)  # .hub.lock 写入临时目录
     monkeypatch.setattr(service, "read_snapshot_resilient", fake_resilient)
     monkeypatch.setattr(service, "read_snapshot", lambda name: {})
     monkeypatch.setattr(service, "write_snapshot", lambda name, payload: payload)
@@ -87,8 +88,9 @@ def test_hub_run_full(mocked):
     assert payload["charts_precomputed"]["n"] == 40
 
 
-def test_hub_run_all_unavailable(monkeypatch):
-    monkeypatch.setattr(service, "read_snapshot_resilient", lambda name: {"status": "empty", "items": []})
+def test_hub_run_all_unavailable(monkeypatch, tmp_path):
+    monkeypatch.setattr(service, "REPORT_DIR", tmp_path)
+    monkeypatch.setattr(service, "read_snapshot_resilient", lambda name, **k: {"status": "empty", "items": []})
     monkeypatch.setattr(service, "write_snapshot", lambda name, payload: payload)
     monkeypatch.setattr(service, "is_trading_day", lambda d: True)
     payload = asyncio.run(service.run_smart_picker_hub_once(force=True, target_date="2026-09-08"))
@@ -125,3 +127,22 @@ def test_refresh_perf_no_lookahead(monkeypatch):
     assert row["t5_filled"] == 0  # t+5=09-10 未到期 → 即便 bar 存在也不填（无前视）
     assert row.get("t5_ret") is None
     assert deleted == [{"signal_date": "2026-09-03", "code": "600001"}]
+
+
+def test_hub_lock_held_skips(monkeypatch, tmp_path):
+    """DIFF-4：另一进程持有 .hub.lock → 本轮跳过，不写快照。"""
+    monkeypatch.setattr(service, "REPORT_DIR", tmp_path)
+    written = []
+    monkeypatch.setattr(service, "write_snapshot", lambda name, payload: written.append(name) or payload)
+    monkeypatch.setattr(service, "is_trading_day", lambda d: True)
+    monkeypatch.setattr(service, "load_strategy_rows", lambda: ({}, {k: [] for k in service.STRATEGY_KEYS}))
+    (tmp_path / ".hub.lock").write_text("2026-09-08T15:00:00+08:00")
+    payload = asyncio.run(service.run_smart_picker_hub_once(force=True, target_date="2026-09-08"))
+    assert payload["status"] == "skipped" and payload["reason"] == "hub_lock_held"
+    assert not written  # 不覆盖现有快照
+
+
+def test_hub_lock_released_after_run(mocked, tmp_path):
+    """正常跑完后 .hub.lock 必须被清理。"""
+    asyncio.run(service.run_smart_picker_hub_once(force=True, target_date="2026-09-08"))
+    assert not (tmp_path / ".hub.lock").exists()

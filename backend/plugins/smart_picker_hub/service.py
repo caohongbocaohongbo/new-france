@@ -9,15 +9,15 @@ from backend.plugins.common import (
     read_snapshot, read_snapshot_resilient, snapshot_mem_get, snapshot_mem_set, write_snapshot,
 )
 from backend.plugins.multi_hit_notifier import push_multi_hit
-from backend.services.trading_calendar import is_trading_day, next_trading_day, prev_trading_day, trading_days_between_dates
+from backend.services.trading_calendar import is_trading_day, prev_trading_day, trading_days_between_dates
 
 from .config import (
-    BADGE_SOURCES, CHARTS_SNAPSHOT_NAME, CONFIG, SNAPSHOT_MAP, SNAPSHOT_NAME, STRATEGY_KEYS,
+    BADGE_SOURCES, CHARTS_SNAPSHOT_NAME, CONFIG, REPORT_DIR, SNAPSHOT_MAP, SNAPSHOT_NAME, STRATEGY_KEYS,
 )
 from .indicators import (
     apply_gates, build_chart_series, compute_hub_score, explain_chip, explain_pattern, explain_tech,
     explain_trend, extract_rows, fill_strategy_pct, filter_items, normalize_weights, percentiles,
-    union_table, zcode,
+    trading_days_after, union_table, zcode,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def _latest_cached() -> dict:
     cached = snapshot_mem_get(SNAPSHOT_NAME)
     if cached is not None:
         return cached
-    payload = read_snapshot_resilient(SNAPSHOT_NAME)
+    payload = read_snapshot_resilient(SNAPSHOT_NAME, ttl_seconds=int(CONFIG["remote_ttl_seconds"]))
     snapshot_mem_set(SNAPSHOT_NAME, payload)
     return payload
 
@@ -58,7 +58,7 @@ def _charts_cached() -> dict:
     cached = snapshot_mem_get(CHARTS_SNAPSHOT_NAME)
     if cached is not None:
         return cached
-    payload = read_snapshot_resilient(CHARTS_SNAPSHOT_NAME)
+    payload = read_snapshot_resilient(CHARTS_SNAPSHOT_NAME, ttl_seconds=int(CONFIG["remote_ttl_seconds"]))
     snapshot_mem_set(CHARTS_SNAPSHOT_NAME, payload)
     return payload
 
@@ -67,7 +67,7 @@ def load_strategy_rows() -> tuple:
     """读四份策略快照 → 每策略去重行 + pct 兜底。返回 (snaps, rows)。"""
     snaps, rows = {}, {}
     for k in STRATEGY_KEYS:
-        snap = read_snapshot_resilient(SNAPSHOT_MAP[k])
+        snap = read_snapshot_resilient(SNAPSHOT_MAP[k], ttl_seconds=int(CONFIG["remote_ttl_seconds"]))
         snaps[k] = snap
         r = extract_rows(snap)
         fill_strategy_pct(r, k)
@@ -86,7 +86,7 @@ def _strategy_status(snapshot: dict, rows: list) -> dict:
         }
     return {
         "available": False, "degraded": False, "count": 0,
-        "reason": str(status or "snapshot_unavailable"), "snapshot_date": None,
+        "reason": str((snapshot or {}).get("reason") or status or "snapshot_unavailable"), "snapshot_date": None,
     }
 
 
@@ -110,7 +110,7 @@ def load_badge_sources() -> dict:
     """交叉 badge 源（缺失即空 dict，绝不编造）。"""
     out = {"fund_flow": {}, "tier_state": {}, "radar": {}}
     try:
-        snap = read_snapshot_resilient(BADGE_SOURCES["fund_flow"])
+        snap = read_snapshot_resilient(BADGE_SOURCES["fund_flow"], ttl_seconds=int(CONFIG["remote_ttl_seconds"]))
         for key in ("buy_candidates", "sell_candidates"):
             for it in snap.get(key) or []:
                 if not isinstance(it, dict) or not it.get("code"):
@@ -123,14 +123,14 @@ def load_badge_sources() -> dict:
     except Exception as exc:  # noqa: BLE001
         logger.debug("资金流 badge 源不可用: %s", exc)
     try:
-        snap = read_snapshot_resilient(BADGE_SOURCES["tier_state"])
+        snap = read_snapshot_resilient(BADGE_SOURCES["tier_state"], ttl_seconds=int(CONFIG["remote_ttl_seconds"]))
         for it in snap.get("items") or []:
             if isinstance(it, dict) and it.get("code") and it.get("state"):
                 out["tier_state"][zcode(it["code"])] = it.get("state")
     except Exception as exc:  # noqa: BLE001
         logger.debug("分层资金流 badge 源不可用: %s", exc)
     try:
-        snap = read_snapshot_resilient(BADGE_SOURCES["radar"])
+        snap = read_snapshot_resilient(BADGE_SOURCES["radar"], ttl_seconds=int(CONFIG["remote_ttl_seconds"]))
         for it in snap.get("hits") or []:
             if not isinstance(it, dict) or not it.get("code"):
                 continue
@@ -245,11 +245,13 @@ def refresh_perf(items: list, target: date, cfg: dict, kline_fetcher=None) -> di
         updates = {}
         try:
             hist = get_kline_cached(zcode(row.get("code")), 130, kline_fetcher)
+            bar_dates = []
             closes_by_date = {}
             date_col = next((c for c in hist.columns if c in ("日期", "date")), None)
             close_col = next((c for c in hist.columns if c in ("收盘", "close")), None)
             if date_col and close_col:
-                closes_by_date = {str(d)[:10]: float_or(v) for d, v in zip(hist[date_col].tolist(), hist[close_col].tolist())}
+                bar_dates = [str(d)[:10] for d in hist[date_col].tolist()]
+                closes_by_date = dict(zip(bar_dates, [float_or(v) for v in hist[close_col].tolist()]))
         except Exception as exc:  # noqa: BLE001
             logger.debug("绩效回填 K 线拉取失败 %s: %s", row.get("code"), exc)
             continue
@@ -257,10 +259,16 @@ def refresh_perf(items: list, target: date, cfg: dict, kline_fetcher=None) -> di
         for k in windows:
             if int(row.get(f"t{k}_filled") or 0):
                 continue
-            nd = next_trading_day(signal_date, k)
-            if nd is None or nd > target:  # 未到期/未来数据不可见
+            # DIFF-6：交易日序列直接从 bar 日期推导，不依赖外部日历
+            nd_str = trading_days_after(bar_dates, signal_date.isoformat(), k)
+            if nd_str is None:  # bars 不足 k 条 / 锚点缺失 → 停牌类缺口
+                updates["data_missing"] = 1
+                missing += 1
                 continue
-            c = closes_by_date.get(nd.isoformat())
+            nd = _to_date(nd_str)
+            if nd > target:  # 未到期/未来数据不可见（无前视）
+                continue
+            c = closes_by_date.get(nd_str)
             if c is None:
                 updates["data_missing"] = 1
                 missing += 1
@@ -321,6 +329,24 @@ async def run_smart_picker_hub_once(target_date=None, force: bool = False, notif
     """盘后聚合：读四策略快照 → 去重合并 → 门控 → 统一分 → badges → 图表 → 快照/入库/绩效/邮件。"""
     now = datetime.now(BEIJING_TZ)
     target = _to_date(target_date) if target_date is not None else now.date()
+    # DIFF-4：并发写保护（db_delete+db_append 非原子；cron 与手动并发时第二个进程跳过）
+    lock_path = REPORT_DIR / ".hub.lock"
+    if lock_path.exists():
+        logger.warning("检测到 %s（另一进程聚合中），本轮跳过", lock_path.name)
+        return {"status": "skipped", "reason": "hub_lock_held", "date": target.isoformat(), "items": []}
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path.write_text(now.isoformat(), encoding="utf-8")
+    try:
+        return await _hub_run_locked(now, target, force, notifier, kline_fetcher)
+    finally:
+        try:
+            lock_path.unlink()
+        except OSError:  # noqa: BLE001
+            pass
+
+
+async def _hub_run_locked(now: datetime, target: date, force: bool, notifier=None, kline_fetcher=None) -> dict:
+    """聚合主逻辑（调用方须先取得 .hub.lock）。"""
     if not force and not is_trading_day(target):
         payload = {"status": "skipped", "reason": "非交易日", "date": target.isoformat(), "items": []}
         write_snapshot(SNAPSHOT_NAME, payload)

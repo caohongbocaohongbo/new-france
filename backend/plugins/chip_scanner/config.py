@@ -37,6 +37,8 @@ CONFIG = {
     "show_star": _env_bool("CHIP_SHOW_STAR", False),
     # 本地专属标记（东财分价接口不可用，降级为 pytdx 分钟 K 近似）
     "local_only": _env_bool("CHIP_LOCAL_ONLY", True),
+    # 云端远端兜底开关（22 方案 §2.4 步骤 3：false=云端不发网络，直接 local_only）
+    "chip_remote_fetch": _env_bool("CHIP_REMOTE_FETCH", False),
     # 高度控盘🔥邮件推送冷却（分钟，仿 15 RED 信号推送）
     "notify_cooldown_minutes": int(_env_float("CHIP_NOTIFY_COOLDOWN_MINUTES", 30)),
 }

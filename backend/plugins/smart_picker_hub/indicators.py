@@ -12,6 +12,22 @@ def zcode(code) -> str:
     return str(code or "").zfill(6)
 
 
+def trading_days_after(bar_dates: list, anchor_date: str, k: int) -> str:
+    """D 之后第 k 个交易日的日期字符串（22 方案 §7.4 / DIFF-6 规格）。
+
+    直接从 K 线 bar 日期序列推导：东财 fetch_historical 返回的 bar 序列本身即交易日
+    序列（已剔除休市/停牌缺 bar 日），不依赖外部日历文件、无网络依赖。
+    锚点缺失或 bars 不足 → None（调用方按 data_missing 处理）。
+    """
+    anchor = str(anchor_date)[:10]
+    try:
+        idx = bar_dates.index(anchor)
+    except ValueError:
+        return None
+    target_idx = idx + int(k)
+    return bar_dates[target_idx] if 0 <= target_idx < len(bar_dates) else None
+
+
 def extract_rows(snapshot) -> list:
     """单快照命中行：items 优先、各 *_pool 补齐，按 code 去重（消除 items/pool 重复行）。"""
     if not isinstance(snapshot, dict) or snapshot.get("status") != "completed":

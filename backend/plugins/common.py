@@ -26,9 +26,13 @@ DATA_DIR = PROJECT_DIR / "data"
 BEIJING_TZ = timezone(timedelta(hours=8))
 
 SNAPSHOT_RAW_BASE = os.environ.get(
-    "NF_SNAPSHOT_RAW_BASE",
-    "https://raw.githubusercontent.com/caohongbocaohongbo/new-france/data-snapshots",
+    "GITHUB_RAW_BASE",
+    os.environ.get(
+        "NF_SNAPSHOT_RAW_BASE",  # 兼容旧 env 名
+        "https://raw.githubusercontent.com/caohongbocaohongbo/new-france/data-snapshots",
+    ),
 ).rstrip("/")
+REMOTE_CACHE_DIR = REPORT_DIR / ".cache"  # 磁盘 TTL 缓存（不进 git）
 
 
 def json_safe(value):
@@ -168,30 +172,100 @@ def read_snapshot(name: str) -> Optional[dict]:
         return None
 
 
-def fetch_remote_snapshot(name: str) -> Optional[dict]:
-    """从 data-snapshots 分支拉取 reports/<name>_latest.json，失败返回 None。"""
-    import requests  # 延迟导入
-
-    url = f"{SNAPSHOT_RAW_BASE}/reports/data_backend/{name}_latest.json"
+def _read_json_file(path: Path) -> Optional[dict]:
+    if not path.exists():
+        return None
     try:
-        resp = requests.get(url, timeout=8)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as exc:  # noqa: BLE001
-        logger.info("远程快照拉取失败(%s): %s", name, exc)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else None
+    except (json.JSONDecodeError, OSError):
         return None
 
 
-def read_snapshot_resilient(name: str) -> dict:
-    """本地完成态优先，否则回退远程快照。"""
-    local = read_snapshot(name)
-    if local:
-        return local
-    remote = fetch_remote_snapshot(name)
-    if remote:
-        remote["_source"] = "snapshot"
-        return remote
-    return {"status": "empty", "items": [], "message": f"{name} 暂无数据，请先运行任务"}
+def _remote_cache_path(name: str) -> Path:
+    return REMOTE_CACHE_DIR / f"{name}_remote.json"
+
+
+def _read_remote_cache(name: str, ttl_seconds: int) -> Optional[dict]:
+    """读磁盘 TTL 缓存；ttl_seconds<=0 或过期/损坏返回 None。"""
+    if int(ttl_seconds) <= 0:
+        return None
+    path = _remote_cache_path(name)
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        cached_at = datetime.fromisoformat(data["cached_at"])
+        if (now_beijing() - cached_at).total_seconds() < int(ttl_seconds):
+            return data.get("payload")
+    except (json.JSONDecodeError, OSError, KeyError, TypeError, ValueError):
+        return None
+    return None
+
+
+def _write_remote_cache(name: str, payload: dict) -> None:
+    """写磁盘 TTL 缓存（best-effort，失败静默，不阻断主链路）。"""
+    try:
+        REMOTE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        _remote_cache_path(name).write_text(
+            json.dumps({"cached_at": now_beijing().isoformat(), "payload": payload},
+                       ensure_ascii=False, default=str),
+            encoding="utf-8",
+        )
+    except OSError:  # noqa: BLE001
+        pass
+
+
+def read_snapshot_resilient(snapshot_name: str, timeout: float = 5.0, ttl_seconds: int = 600) -> dict:
+    """22 方案 §2.4 规格：本地文件 → 磁盘 TTL → raw.githubusercontent(data-snapshots) 兜底。
+
+    永不抛异常；失败返回 {"status":"no_data","_source":"unavailable","items":[],"reason":"..."}。
+    函数本身不做内存缓存——内存缓存在各 router 的 _latest_cached() 一层完成。
+    """
+    name = str(snapshot_name)
+    # 步骤 1/2：本地完成态优先（reports/ 主目录 + data_backend 目录）
+    for path in (latest_path(name), data_backend_path(name)):
+        payload = _read_json_file(path)
+        if payload is not None:
+            payload["_source"] = "local"
+            return payload
+    # 步骤 3：chip 专属拦截（本地专属，云端不发网络）
+    if name == "chip_scanner":
+        chip_remote_fetch = False
+        try:
+            from backend.plugins.chip_scanner.config import CONFIG as _CHIP_CONFIG
+            chip_remote_fetch = bool(_CHIP_CONFIG.get("chip_remote_fetch", False))
+        except Exception:  # noqa: BLE001 配置缺失按默认 False
+            pass
+        if not chip_remote_fetch:
+            return {"status": "no_data", "_source": "local_only", "items": [],
+                    "reason": "chip_remote_fetch_disabled"}
+    # 步骤 3.5：磁盘 TTL 缓存（未过期即命中，不再发网络）
+    payload = _read_remote_cache(name, ttl_seconds)
+    if payload is not None:
+        payload["_source"] = "snapshot"
+        return payload
+    # 步骤 4：网络兜底（httpx，超时可配置）
+    try:
+        import httpx  # 延迟导入
+        url = f"{SNAPSHOT_RAW_BASE}/reports/data_backend/{name}_latest.json"
+        resp = httpx.get(url, timeout=float(timeout))
+        resp.raise_for_status()
+        payload = resp.json()
+        if not isinstance(payload, dict):
+            raise ValueError("远端返回非 JSON 对象")
+    except Exception as exc:  # noqa: BLE001 永不抛异常
+        code = "err"
+        resp_obj = getattr(exc, "response", None)
+        if resp_obj is not None and getattr(resp_obj, "status_code", None):
+            code = str(resp_obj.status_code)
+        logger.info("远程快照拉取失败(%s): %s", name, exc)
+        return {"status": "no_data", "_source": "unavailable", "items": [],
+                "reason": f"remote_fetch_failed:{code}:{type(exc).__name__}"}
+    payload["_source"] = "snapshot"
+    if int(ttl_seconds) > 0:
+        _write_remote_cache(name, payload)
+    return payload
 
 
 def error_response(message: str) -> dict:

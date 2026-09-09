@@ -41,6 +41,7 @@ done
 
 if [[ -d reports ]]; then
   cp -R reports/. "${snapshot_dir}/reports/"
+  rm -rf "${snapshot_dir}/reports/.cache"  # 22 方案 §2.4 磁盘 TTL 缓存不进 git
 fi
 
 cat > "${snapshot_dir}/data/snapshot_manifest.json" <<EOF

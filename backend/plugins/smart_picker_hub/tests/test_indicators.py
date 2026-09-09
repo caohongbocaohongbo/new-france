@@ -1,7 +1,8 @@
 """22 聚合纯函数单测（离线，不联网）。"""
 from backend.plugins.smart_picker_hub.indicators import (
     apply_gates, compute_hub_score, explain_chip, explain_pattern, explain_tech, explain_trend,
-    extract_rows, fill_strategy_pct, filter_items, normalize_weights, percentiles, union_table, zcode,
+    extract_rows, fill_strategy_pct, filter_items, normalize_weights, percentiles, trading_days_after,
+    union_table, zcode,
 )
 
 
@@ -149,3 +150,15 @@ def test_explainers():
     assert explain_chip({"concentrated": 1, "concentration_ratio": 0.08, "high_profit": 1,
                          "profit_ratio": 0.75, "trend_up": 1, "ma20_slope": 0.01})
     assert explain_tech({"macd_golden": 0, "kdj_golden": 0, "rsi_oversold": 0, "boll_rebound": 0}) is None
+
+
+def test_trading_days_after():
+    bars = ["2026-09-02", "2026-09-03", "2026-09-04", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10"]
+    assert trading_days_after(bars, "2026-09-03", 1) == "2026-09-04"
+    assert trading_days_after(bars, "2026-09-03", 3) == "2026-09-08"
+    assert trading_days_after(bars, "2026-09-03", 5) == "2026-09-10"
+    # bars 不足 k 条 → None（停牌缺口）
+    assert trading_days_after(bars, "2026-09-08", 5) is None
+    # 锚点不在 bars（当日停牌无 bar）→ None
+    assert trading_days_after(bars, "2026-09-06", 1) is None
+    assert trading_days_after(bars, "2026-09-03", 0) == "2026-09-03"

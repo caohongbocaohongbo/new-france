@@ -27,6 +27,9 @@ $CODEX_HOME/
 data/data_backend/
 reports/data_backend/
 
+# 22 方案 §2.4 远端兜底磁盘 TTL 缓存（不进 git，commit_screening_data.sh 亦排除）
+reports/.cache/
+
 # smart_money_radar 盘中雷达运行时数据 (阶段状态/去重/回放, 本地生成不进库)
 data/smart_money_radar_*.json
 data/smart_money_radar_*.sqlite3
