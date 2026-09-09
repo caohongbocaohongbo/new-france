@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-09T13:13:06.892624+08:00",
+  "now": "2026-09-09T13:19:12.167489+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4842
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1243
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 53594
+        "latency_ms": 53456
       }
     ],
     "is_stale": false,
@@ -33,44 +31,92 @@
     "verify_result": null
   },
   "scanned": 3195,
-  "buy_candidates": 16,
-  "sell_candidates": 46,
+  "buy_candidates": 14,
+  "sell_candidates": 48,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 5,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000963",
-      "name": "华东医药",
-      "price": 27.01,
-      "change_pct": -1.0623,
-      "total_amount": 221807483.82,
-      "main_net_inflow": -74511008.92,
-      "main_inflow_ratio": -33.5926,
-      "super_net": -50945888.36,
-      "big_net": -23565120.56,
-      "mid_net": -4228744.78,
-      "small_net": 223833.0,
+      "code": "002032",
+      "name": "苏 泊 尔",
+      "price": 38.95,
+      "change_pct": -1.1923,
+      "total_amount": 51335767.68,
+      "main_net_inflow": -17861965.32,
+      "main_inflow_ratio": -34.7944,
+      "super_net": -9966024.0,
+      "big_net": -7895941.32,
+      "mid_net": -3135723.0,
+      "small_net": -3910596.0,
       "source": "sina",
-      "flow_time": "2026-09-09T13:13:06.892624+08:00",
+      "flow_time": "2026-09-09T13:19:12.167489+08:00",
       "severity": "warn"
     },
     {
-      "code": "003000",
-      "name": "劲仔食品",
-      "price": 9.84,
-      "change_pct": -1.4028,
-      "total_amount": 32071825.14,
-      "main_net_inflow": -9805417.3,
-      "main_inflow_ratio": -30.5733,
-      "super_net": -2303337.0,
-      "big_net": -7502080.3,
-      "mid_net": -2864067.56,
-      "small_net": -126970.0,
+      "code": "002777",
+      "name": "久远银海",
+      "price": 12.78,
+      "change_pct": -1.4649,
+      "total_amount": 37977870.3,
+      "main_net_inflow": -12496628.19,
+      "main_inflow_ratio": -32.905,
+      "super_net": -5050117.0,
+      "big_net": -7446511.19,
+      "mid_net": -3683608.0,
+      "small_net": 481435.89,
       "source": "sina",
-      "flow_time": "2026-09-09T13:13:06.892624+08:00",
+      "flow_time": "2026-09-09T13:19:12.167489+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002577",
+      "name": "雷柏科技",
+      "price": 18.49,
+      "change_pct": -3.0414,
+      "total_amount": 45355457.9,
+      "main_net_inflow": -14731167.0,
+      "main_inflow_ratio": -32.4794,
+      "super_net": -6767801.0,
+      "big_net": -7963366.0,
+      "mid_net": -3616630.0,
+      "small_net": -1896253.1,
+      "source": "sina",
+      "flow_time": "2026-09-09T13:19:12.167489+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603333",
+      "name": "福华尚纬",
+      "price": 9.7,
+      "change_pct": -2.5126,
+      "total_amount": 64465669.0,
+      "main_net_inflow": -20336020.0,
+      "main_inflow_ratio": -31.5455,
+      "super_net": -10265191.0,
+      "big_net": -10070829.0,
+      "mid_net": -2702248.0,
+      "small_net": 203285.0,
+      "source": "sina",
+      "flow_time": "2026-09-09T13:19:12.167489+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002867",
+      "name": "周大生",
+      "price": 10.71,
+      "change_pct": -0.6494,
+      "total_amount": 45803140.29,
+      "main_net_inflow": -13857266.29,
+      "main_inflow_ratio": -30.254,
+      "super_net": -6919873.29,
+      "big_net": -6937393.0,
+      "mid_net": -2262019.0,
+      "small_net": -3582626.4,
+      "source": "sina",
+      "flow_time": "2026-09-09T13:19:12.167489+08:00",
       "severity": "warn"
     }
   ]
