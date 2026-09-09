@@ -207,3 +207,23 @@
 
 - **代码侧已全部完成并实测通过**：M1（51 passed）/ M2（无前视）/ M3（15 项接口冒烟）/ M4（bench 10 项 PASS）均绿。
 - **待办仅 3 项、全部在部署侧**：P1 改 crontab 一行（授权后我 30 秒内可完成）→ P2 核验后 commit+push main → P3 跑 commit_screening_data.sh。P1/P2/P3 任一未做，明天的自动化与云端页面都不会有新功能/新数据。
+
+---
+
+## 部署完成记录（2026-09-08 16:36，P1/P2/P3 已全部执行并云端验证）
+
+| 项 | 执行结果 | 验证 |
+|---|---|---|
+| P1 crontab 接入 | crontab 一行已加 --run-smart-picker-all（sed 替换，其余条目原样） | crontab -l 输出含 --run-smart-picker-all |
+| P2 push main | 5ab1806..a6a981c 推送成功 | Render 自动重建；云端 API 200 |
+| P3 data-snapshots | 593dacd..17a5447 推送成功 | raw 兜底可读 |
+
+云端抽查实测（https://new-france-api.onrender.com）：
+
+- /api/v1/smart-picker/latest → status=completed、date=2026-09-08、source=snapshot、total=100、data_age_days=0
+- /smart-picker/perf → ok；/smart-picker/meta → 22.1、四策略全 available
+- /smart-picker/601086/chart?days=80 → cached=true、records=80
+- 4 个既有插件页（tech 80 / trend 80 / pattern 7 / chip 80）当日数据可读（读入口切换在云端生效）
+- 静态站 new-france.onrender.com 已服务新前端（含 _spRenderAll）
+
+至此代码 + 调度 + 数据 + 云端全部闭环。次日 15:10 起 crontab 自动跑 --run-smart-picker-all，信号质量卡自 T+1 起积累样本。
