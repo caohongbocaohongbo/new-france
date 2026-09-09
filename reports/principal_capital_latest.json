@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-09T13:07:05.740842+08:00",
+  "now": "2026-09-09T13:13:06.892624+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4842
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1243
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 55566
+        "latency_ms": 53594
       }
     ],
     "is_stale": false,
@@ -32,75 +34,43 @@
   },
   "scanned": 3195,
   "buy_candidates": 16,
-  "sell_candidates": 47,
+  "sell_candidates": 46,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 4,
+  "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600436",
-      "name": "片仔癀",
-      "price": 122.0,
-      "change_pct": -1.0864,
-      "total_amount": 135591109.08,
-      "main_net_inflow": -44098884.36,
-      "main_inflow_ratio": -32.5234,
-      "super_net": -26347902.56,
-      "big_net": -17750981.8,
-      "mid_net": -1795112.94,
-      "small_net": 2589028.9,
+      "code": "000963",
+      "name": "华东医药",
+      "price": 27.01,
+      "change_pct": -1.0623,
+      "total_amount": 221807483.82,
+      "main_net_inflow": -74511008.92,
+      "main_inflow_ratio": -33.5926,
+      "super_net": -50945888.36,
+      "big_net": -23565120.56,
+      "mid_net": -4228744.78,
+      "small_net": 223833.0,
       "source": "sina",
-      "flow_time": "2026-09-09T13:07:05.740842+08:00",
+      "flow_time": "2026-09-09T13:13:06.892624+08:00",
       "severity": "warn"
     },
     {
-      "code": "600984",
-      "name": "建设机械",
-      "price": 3.69,
-      "change_pct": -2.3809,
-      "total_amount": 76279684.5,
-      "main_net_inflow": -24421599.3,
-      "main_inflow_ratio": -32.0159,
-      "super_net": -17441238.0,
-      "big_net": -6980361.3,
-      "mid_net": -4002597.0,
-      "small_net": -2031066.2,
+      "code": "003000",
+      "name": "劲仔食品",
+      "price": 9.84,
+      "change_pct": -1.4028,
+      "total_amount": 32071825.14,
+      "main_net_inflow": -9805417.3,
+      "main_inflow_ratio": -30.5733,
+      "super_net": -2303337.0,
+      "big_net": -7502080.3,
+      "mid_net": -2864067.56,
+      "small_net": -126970.0,
       "source": "sina",
-      "flow_time": "2026-09-09T13:07:05.740842+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000970",
-      "name": "中科三环",
-      "price": 11.75,
-      "change_pct": -0.6762,
-      "total_amount": 110995880.98,
-      "main_net_inflow": -34967622.22,
-      "main_inflow_ratio": -31.5035,
-      "super_net": -22529524.0,
-      "big_net": -12438098.22,
-      "mid_net": -592779.7,
-      "small_net": 1039998.46,
-      "source": "sina",
-      "flow_time": "2026-09-09T13:07:05.740842+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603341",
-      "name": "龙旗科技",
-      "price": 36.47,
-      "change_pct": -1.4324,
-      "total_amount": 157525192.07,
-      "main_net_inflow": -49557352.93,
-      "main_inflow_ratio": -31.46,
-      "super_net": -27732576.0,
-      "big_net": -21824776.93,
-      "mid_net": -9386411.0,
-      "small_net": 1394550.0,
-      "source": "sina",
-      "flow_time": "2026-09-09T13:07:05.740842+08:00",
+      "flow_time": "2026-09-09T13:13:06.892624+08:00",
       "severity": "warn"
     }
   ]
