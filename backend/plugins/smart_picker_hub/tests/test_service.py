@@ -129,6 +129,30 @@ def test_refresh_perf_no_lookahead(monkeypatch):
     assert deleted == [{"signal_date": "2026-09-03", "code": "600001"}]
 
 
+def test_refresh_perf_nan_filled_columns(monkeypatch):
+    """回归：SQLite NULL 读回为 NaN 时，filled 判断不得抛 ValueError（实测线上 bug）。"""
+    import numpy as np
+
+    rows = [{"signal_date": "2026-09-03", "code": "600001", "strategies": "tech",
+             "hub_score": 80.0, "close_entry": 10.0,
+             "t1_filled": np.nan, "t3_filled": np.nan, "t5_filled": np.nan}]
+    monkeypatch.setattr(service, "db_query",
+                        lambda sql, params=None: pd.DataFrame(rows) if "picker_perf_daily" in sql else pd.DataFrame())
+    appended = []
+    monkeypatch.setattr(service, "db_append", lambda table, r: appended.extend(r) or len(r))
+    monkeypatch.setattr(service, "db_delete", lambda table, where: 0)
+
+    def fake_kline(code, days):
+        dates = ["2026-09-02", "2026-09-03", "2026-09-04", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10"]
+        closes = [10.0, 10.0, 10.2, 10.1, 10.3, 10.4, 10.5]
+        return pd.DataFrame({"日期": dates, "收盘": closes})
+
+    result = service.refresh_perf([], date(2026, 9, 8),
+                                  {"perf_windows": [1, 3, 5], "perf_track_top_n": 60, "perf_lookback_days": 20},
+                                  fake_kline)
+    assert result["filled"] == 2  # NaN 视为未填 → 正常回填 t1/t3
+
+
 def test_hub_lock_held_skips(monkeypatch, tmp_path):
     """DIFF-4：另一进程持有 .hub.lock → 本轮跳过，不写快照。"""
     monkeypatch.setattr(service, "REPORT_DIR", tmp_path)

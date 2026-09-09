@@ -257,8 +257,8 @@ def refresh_perf(items: list, target: date, cfg: dict, kline_fetcher=None) -> di
             continue
         entry = closes_by_date.get(signal_date.isoformat()) or float_or(row.get("close_entry"))
         for k in windows:
-            if int(row.get(f"t{k}_filled") or 0):
-                continue
+            if float_or(row.get(f"t{k}_filled")) == 1:
+                continue  # 已回填；NULL/NaN（缺省列）视为未填
             # DIFF-6：交易日序列直接从 bar 日期推导，不依赖外部日历
             nd_str = trading_days_after(bar_dates, signal_date.isoformat(), k)
             if nd_str is None:  # bars 不足 k 条 / 锚点缺失 → 停牌类缺口
