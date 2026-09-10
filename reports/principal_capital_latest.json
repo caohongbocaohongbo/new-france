@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-10T13:41:17.553246+08:00",
+  "now": "2026-09-10T13:47:00.515179+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4686
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1081
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 37267
+        "latency_ms": 35073
       }
     ],
     "is_stale": false,
@@ -32,43 +34,59 @@
   },
   "scanned": 3195,
   "buy_candidates": 13,
-  "sell_candidates": 32,
+  "sell_candidates": 34,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002884",
-      "name": "凌霄泵业",
-      "price": 15.79,
-      "change_pct": -1.0031,
-      "total_amount": 19750268.0,
-      "main_net_inflow": -6475320.0,
-      "main_inflow_ratio": -32.786,
-      "super_net": -3308005.0,
-      "big_net": -3167315.0,
-      "mid_net": -1592671.0,
-      "small_net": -705621.0,
+      "code": "000420",
+      "name": "吉林化纤",
+      "price": 3.66,
+      "change_pct": -2.139,
+      "total_amount": 132798389.13,
+      "main_net_inflow": -42469503.59,
+      "main_inflow_ratio": -31.9804,
+      "super_net": -35398615.95,
+      "big_net": -7070887.64,
+      "mid_net": -7602927.0,
+      "small_net": -2759092.22,
       "source": "sina",
-      "flow_time": "2026-09-10T13:41:17.553246+08:00",
+      "flow_time": "2026-09-10T13:47:00.515179+08:00",
       "severity": "warn"
     },
     {
-      "code": "603077",
-      "name": "和邦生物",
-      "price": 2.46,
-      "change_pct": -3.9062,
-      "total_amount": 547854942.18,
-      "main_net_inflow": -165505171.6,
-      "main_inflow_ratio": -30.2097,
-      "super_net": -105019825.27,
-      "big_net": -60485346.33,
-      "mid_net": -25760365.6,
-      "small_net": -7308224.0,
+      "code": "603610",
+      "name": "麒盛科技",
+      "price": 13.67,
+      "change_pct": -4.1375,
+      "total_amount": 44515754.0,
+      "main_net_inflow": -14163621.0,
+      "main_inflow_ratio": -31.8171,
+      "super_net": -2435537.0,
+      "big_net": -11728084.0,
+      "mid_net": -2455087.0,
+      "small_net": 1682063.56,
       "source": "sina",
-      "flow_time": "2026-09-10T13:41:17.553246+08:00",
+      "flow_time": "2026-09-10T13:47:00.515179+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600784",
+      "name": "鲁银投资",
+      "price": 7.32,
+      "change_pct": -3.0464,
+      "total_amount": 57699772.0,
+      "main_net_inflow": -17369969.0,
+      "main_inflow_ratio": -30.1041,
+      "super_net": -7601582.0,
+      "big_net": -9768387.0,
+      "mid_net": -1996837.0,
+      "small_net": -452690.0,
+      "source": "sina",
+      "flow_time": "2026-09-10T13:47:00.515179+08:00",
       "severity": "warn"
     }
   ]
