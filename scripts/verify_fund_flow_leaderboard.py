@@ -134,32 +134,54 @@ def main():
                    and str(r.get("symbol"))[2:].zfill(6).startswith(MAIN_BOARD_PREFIXES)
                    and (_float(r.get("ratioamount")) or 0) * 100 <= -args.coarse_ratio * 0.6]
     print(f"  粗筛圈定: 买侧 ratioamount≥{args.coarse_ratio}% → {len(coarse)} 只 | 卖侧 ≤-{args.coarse_ratio*0.6:.0f}% → {len(coarse_sell)} 只")
-    # 买侧：圈定集全精算（量小）；卖侧：r0_net 升序头部 150 精算 + 圈定内剩余抽样 10
+    # P3（grill 实测修正）：买+卖圈定集全量精算（卖侧头部 150 实测漏检 83% → 必须全量），并发 20
+    from concurrent.futures import ThreadPoolExecutor
+
     refine_total = 0
-    buys = []
-    for r in coarse:
+    t0_refine = time.perf_counter()
+    results_map = {}
+    targets = list(coarse) + list(coarse_sell)
+
+    def _refine_one(r):
         code = str(r.get("symbol"))[2:].zfill(6)
         try:
-            _, ratio = fetch_single(code)
-            refine_total += 1
+            return code, fetch_single(code)[1]
         except Exception:
-            continue
-        if ratio is not None and ratio >= BUY_MAIN_RATIO:
-            buys.append((code, round(ratio, 2)))
-    sell_head = coarse_sell[:150]
-    sell_tail_sample = coarse_sell[150:160]
-    sells = []
-    for r in sell_head + sell_tail_sample:
+            return code, None
+
+    with ThreadPoolExecutor(max_workers=20) as pool:
+        for code, ratio in pool.map(_refine_one, targets):
+            results_map[code] = ratio
+            if ratio is not None:
+                refine_total += 1
+    refine_ms = (time.perf_counter() - t0_refine) * 1000
+    buys = [(str(r.get("symbol"))[2:].zfill(6), round(v, 2)) for r in coarse
+            for v in [results_map.get(str(r.get("symbol"))[2:].zfill(6))]
+            if v is not None and v >= BUY_MAIN_RATIO]
+    sells = [(str(r.get("symbol"))[2:].zfill(6), round(v, 2)) for r in coarse_sell
+             for v in [results_map.get(str(r.get("symbol"))[2:].zfill(6))]
+             if v is not None and v <= -SELL_MAIN_RATIO]
+    print(f"  圈定精算 {refine_total} 只(并发20, {refine_ms:.0f}ms) → 买 main≥50% 共 {len(buys)} 只: {buys[:5]}")
+    print(f"  卖 main≤-30% 共 {len(sells)} 只: {sells[:5]}")
+    # P3 反证：圈定线之外（ratioamount > -24%）随机 20 只，断言无 main≤-30% 越界（圈定线本身不漏）
+    import random
+
+    outside_sell = [r for r in rows
+                    if str(r.get("symbol") or "")[:2] in ("sh", "sz")
+                    and str(r.get("symbol"))[2:].zfill(6).startswith(MAIN_BOARD_PREFIXES)
+                    and (_float(r.get("ratioamount")) or 0) * 100 > -24][:2000]
+    sample_n = min(20, len(outside_sell))
+    sell_violators = []
+    for r in random.sample(outside_sell, sample_n) if sample_n else []:
         code = str(r.get("symbol"))[2:].zfill(6)
         try:
             _, ratio = fetch_single(code)
-            refine_total += 1
         except Exception:
             continue
         if ratio is not None and ratio <= -SELL_MAIN_RATIO:
-            sells.append((code, round(ratio, 2)))
-    print(f"  买侧圈定 {len(coarse)} 只全精算 → main≥50% 共 {len(buys)} 只: {buys[:5]}")
-    print(f"  卖侧头部 {len(sell_head)}+抽样 {len(sell_tail_sample)} 精算 → main≤-30% 共 {len(sells)} 只: {sells[:5]}")
+            sell_violators.append((code, round(ratio, 2)))
+    report("卖侧圈定线外反证(≤-30% 越界=0)", not sell_violators,
+           f"圈定外随机精算 {sample_n} 只，越界 {len(sell_violators)}: {sell_violators[:5]}")
     # 反证：圈定外（ratioamount < 粗筛线）是否可能 main≥50%
     outside = [r for r in rows[:3000]
                if str(r.get("symbol") or "")[:2] in ("sh", "sz")
@@ -177,7 +199,7 @@ def main():
     report("粗筛不漏(圈定外无 main≥50%)", not violators,
            f"抽样圈定外 {len(outside)} 只精算，越界 {len(violators)}: {violators[:5]}")
     saved = 1 - (1 + refine_total) / 3195
-    report("请求削减", saved > 0.9, f"3195 → 1(bulk) + {refine_total} 精算 = 削减 {saved*100:.0f}%")
+    report("请求削减", saved > 0.8, f"3195 → 1(bulk) + {refine_total} 精算 = 削减 {saved*100:.0f}%")
 
     print(f"\n结论: {'全部 PASS' if not any(r[3] and not r[1] for r in RESULTS) else '存在硬性 FAIL'}")
     return 0 if not any(r[3] and not r[1] for r in RESULTS) else 1
