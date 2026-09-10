@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-10T13:24:06.777177+08:00",
+  "now": "2026-09-10T13:29:50.662692+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2966
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1309
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 35983
+        "latency_ms": 36517
       }
     ],
     "is_stale": false,
@@ -34,11 +32,44 @@
   },
   "scanned": 3195,
   "buy_candidates": 13,
-  "sell_candidates": 24,
+  "sell_candidates": 28,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "002275",
+      "name": "桂林三金",
+      "price": 12.32,
+      "change_pct": -0.885,
+      "total_amount": 15664215.0,
+      "main_net_inflow": -5710460.0,
+      "main_inflow_ratio": -36.4554,
+      "super_net": -2464920.0,
+      "big_net": -3245540.0,
+      "mid_net": -1302249.0,
+      "small_net": -293442.0,
+      "source": "sina",
+      "flow_time": "2026-09-10T13:29:50.662692+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002226",
+      "name": "江南化工",
+      "price": 5.11,
+      "change_pct": -0.969,
+      "total_amount": 41972814.0,
+      "main_net_inflow": -13637063.0,
+      "main_inflow_ratio": -32.4902,
+      "super_net": -2403233.0,
+      "big_net": -11233830.0,
+      "mid_net": -1501665.0,
+      "small_net": -2131170.0,
+      "source": "sina",
+      "flow_time": "2026-09-10T13:29:50.662692+08:00",
+      "severity": "warn"
+    }
+  ]
 }
