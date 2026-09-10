@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-10T13:06:53.497138+08:00",
+  "now": "2026-09-10T13:12:35.241991+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 2451
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1188
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 37993
+        "latency_ms": 38935
       }
     ],
     "is_stale": false,
@@ -32,11 +34,60 @@
   },
   "scanned": 3195,
   "buy_candidates": 13,
-  "sell_candidates": 33,
+  "sell_candidates": 31,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 3,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603311",
+      "name": "金海高科",
+      "price": 25.48,
+      "change_pct": -7.278,
+      "total_amount": 230847383.0,
+      "main_net_inflow": -76134121.0,
+      "main_inflow_ratio": -32.9803,
+      "super_net": -47516838.0,
+      "big_net": -28617283.0,
+      "mid_net": -2278323.0,
+      "small_net": 502139.0,
+      "source": "sina",
+      "flow_time": "2026-09-10T13:12:35.241991+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600006",
+      "name": "东风股份",
+      "price": 5.36,
+      "change_pct": -0.5566,
+      "total_amount": 33772740.0,
+      "main_net_inflow": -10268125.0,
+      "main_inflow_ratio": -30.4036,
+      "super_net": -9309725.0,
+      "big_net": -958400.0,
+      "mid_net": -1714943.0,
+      "small_net": -907110.0,
+      "source": "sina",
+      "flow_time": "2026-09-10T13:12:35.241991+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002042",
+      "name": "华孚时尚",
+      "price": 3.98,
+      "change_pct": -1.9704,
+      "total_amount": 59728281.0,
+      "main_net_inflow": -18031030.0,
+      "main_inflow_ratio": -30.1884,
+      "super_net": -11204119.0,
+      "big_net": -6826911.0,
+      "mid_net": -1551311.0,
+      "small_net": -1232970.0,
+      "source": "sina",
+      "flow_time": "2026-09-10T13:12:35.241991+08:00",
+      "severity": "warn"
+    }
+  ]
 }
