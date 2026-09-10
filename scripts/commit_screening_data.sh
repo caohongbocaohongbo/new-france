@@ -22,12 +22,30 @@ if [[ "${HEAD_SHA}" != "${REMOTE_BASE_SHA}" ]]; then
   exit 0
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 snapshot_dir="$(mktemp -d)"
 data_worktree_dir="$(mktemp -d)"
+picker_keep_dir="$(mktemp -d)"
+# 22 方案：picker 快照白名单（与 restore_screening_data.sh 保持一致）
+PICKER_FILES=(
+  reports/tech_indicators_latest.json
+  reports/trend_strength_latest.json
+  reports/pattern_scanner_latest.json
+  reports/chip_scanner_latest.json
+  reports/smart_picker_latest.json
+  reports/smart_picker_charts_latest.json
+  reports/data_backend/tech_indicators_latest.json
+  reports/data_backend/trend_strength_latest.json
+  reports/data_backend/pattern_scanner_latest.json
+  reports/data_backend/chip_scanner_latest.json
+  reports/data_backend/smart_picker_latest.json
+  reports/data_backend/smart_picker_charts_latest.json
+)
 cleanup() {
   rm -rf "${snapshot_dir}"
   git worktree remove --force "${data_worktree_dir}" >/dev/null 2>&1 || true
   rm -rf "${data_worktree_dir}"
+  rm -rf "${picker_keep_dir}"
 }
 trap cleanup EXIT
 
@@ -73,10 +91,21 @@ git -C "${data_worktree_dir}" config user.email "github-actions[bot]@users.norep
   fi
 
   mkdir -p data reports
+  # 22 方案：破坏性重建前先保留分支上现有的 picker 快照（只升不降合并的 keep 侧）
+  for f in "${PICKER_FILES[@]}"; do
+    if [[ -f "${f}" ]]; then
+      mkdir -p "$(dirname "${picker_keep_dir}/${f}")"
+      cp "${f}" "${picker_keep_dir}/${f}"
+    fi
+  done
+
   rm -rf data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json data/snapshot_manifest.json reports
   mkdir -p data reports
   cp -R "${snapshot_dir}/data/." data/
   cp -R "${snapshot_dir}/reports/." reports/
+
+  # 22 方案：picker 快照只升不降合并（缺者补回、旧者不覆盖；并发 push 时取较新）
+  python3 "${SCRIPT_DIR}/merge_picker_snapshots.py" "${picker_keep_dir}" "$(pwd)" "${PICKER_FILES[@]}"
 
   add_paths=(data/snapshot_manifest.json)
   for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json reports; do
