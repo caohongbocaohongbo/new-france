@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-10T13:35:33.498687+08:00",
+  "now": "2026-09-10T13:41:17.553246+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2694
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 910
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 34833
+        "latency_ms": 37267
       }
     ],
     "is_stale": false,
@@ -33,60 +31,44 @@
     "verify_result": null
   },
   "scanned": 3195,
-  "buy_candidates": 14,
-  "sell_candidates": 28,
-  "buy_fresh_count": 1,
+  "buy_candidates": 13,
+  "sell_candidates": 32,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 2,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600359",
-      "name": "新农开发",
-      "price": 9.64,
-      "change_pct": 10.0457,
-      "total_amount": 302771070.2,
-      "main_net_inflow": 181805693.24,
-      "main_inflow_ratio": 60.0472,
-      "super_net": 148951165.8,
-      "big_net": 32854527.44,
-      "mid_net": 25039061.32,
-      "small_net": 13613617.64,
-      "source": "sina",
-      "flow_time": "2026-09-10T13:35:33.498687+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000683",
-      "name": "博源化工",
-      "price": 6.16,
-      "change_pct": -1.9108,
-      "total_amount": 247734163.8,
-      "main_net_inflow": -82452390.0,
-      "main_inflow_ratio": -33.2826,
-      "super_net": -68453399.0,
-      "big_net": -13998991.0,
-      "mid_net": 1857249.0,
-      "small_net": 146959.2,
+      "code": "002884",
+      "name": "凌霄泵业",
+      "price": 15.79,
+      "change_pct": -1.0031,
+      "total_amount": 19750268.0,
+      "main_net_inflow": -6475320.0,
+      "main_inflow_ratio": -32.786,
+      "super_net": -3308005.0,
+      "big_net": -3167315.0,
+      "mid_net": -1592671.0,
+      "small_net": -705621.0,
       "source": "sina",
-      "flow_time": "2026-09-10T13:35:33.498687+08:00",
+      "flow_time": "2026-09-10T13:41:17.553246+08:00",
       "severity": "warn"
     },
     {
-      "code": "600538",
-      "name": "国发股份",
-      "price": 5.16,
-      "change_pct": -3.1895,
-      "total_amount": 30100173.0,
-      "main_net_inflow": -9316768.0,
-      "main_inflow_ratio": -30.9525,
-      "super_net": -5047203.0,
-      "big_net": -4269565.0,
-      "mid_net": -1408525.0,
-      "small_net": -225602.0,
+      "code": "603077",
+      "name": "和邦生物",
+      "price": 2.46,
+      "change_pct": -3.9062,
+      "total_amount": 547854942.18,
+      "main_net_inflow": -165505171.6,
+      "main_inflow_ratio": -30.2097,
+      "super_net": -105019825.27,
+      "big_net": -60485346.33,
+      "mid_net": -25760365.6,
+      "small_net": -7308224.0,
       "source": "sina",
-      "flow_time": "2026-09-10T13:35:33.498687+08:00",
+      "flow_time": "2026-09-10T13:41:17.553246+08:00",
       "severity": "warn"
     }
   ]
