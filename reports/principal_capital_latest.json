@@ -1,44 +1,76 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-11T14:38:37.000012+08:00",
+  "now": "2026-09-11T14:44:37.566036+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3954
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
-        "source": "sina",
+        "source": "akshare",
         "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 53544
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1736
+      },
+      {
+        "source": "sina",
+        "status": "ok",
+        "latency_ms": 53835
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 420,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2074,
-  "buy_candidates": 11,
-  "sell_candidates": 34,
+  "scanned": 1372,
+  "buy_candidates": 8,
+  "sell_candidates": 27,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603444",
+      "name": "吉比特",
+      "price": 375.6,
+      "change_pct": -2.4162,
+      "total_amount": 488750455.94,
+      "main_net_inflow": -164796048.31,
+      "main_inflow_ratio": -33.7178,
+      "super_net": -101587393.0,
+      "big_net": -63208655.31,
+      "mid_net": -25356923.91,
+      "small_net": -4048605.0,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:44:37.566036+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002482",
+      "name": "广田集团",
+      "price": 1.33,
+      "change_pct": -2.9197,
+      "total_amount": 80698192.96,
+      "main_net_inflow": -24718536.32,
+      "main_inflow_ratio": -30.6308,
+      "super_net": -16820619.04,
+      "big_net": -7897917.28,
+      "mid_net": -2905113.0,
+      "small_net": -1430169.0,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:44:37.566036+08:00",
+      "severity": "warn"
+    }
+  ]
 }
