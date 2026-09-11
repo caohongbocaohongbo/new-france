@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-11T14:26:34.169112+08:00",
+  "now": "2026-09-11T14:32:34.301854+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,19 +11,19 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4087
-      },
-      {
-        "source": "akshare",
         "status": "skipped_blocked",
         "latency_ms": 0
       },
       {
+        "source": "akshare",
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1471
+      },
+      {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 53163
+        "latency_ms": 56916
       }
     ],
     "is_stale": false,
@@ -31,13 +31,77 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1080,
-  "buy_candidates": 9,
-  "sell_candidates": 24,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 2074,
+  "buy_candidates": 11,
+  "sell_candidates": 34,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "600410",
+      "name": "华胜天成",
+      "price": 15.42,
+      "change_pct": 9.9857,
+      "total_amount": 2060226312.38,
+      "main_net_inflow": 1337444855.96,
+      "main_inflow_ratio": 64.9174,
+      "super_net": 1048537188.54,
+      "big_net": 288907667.42,
+      "mid_net": 119017512.12,
+      "small_net": 33093047.04,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:32:34.301854+08:00"
+    },
+    {
+      "code": "002560",
+      "name": "通达股份",
+      "price": 6.88,
+      "change_pct": 10.08,
+      "total_amount": 518202857.16,
+      "main_net_inflow": 279332720.96,
+      "main_inflow_ratio": 53.9041,
+      "super_net": 236959316.24,
+      "big_net": 42373404.72,
+      "mid_net": 43304883.28,
+      "small_net": 25935245.32,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:32:34.301854+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "603048",
+      "name": "浙江黎明",
+      "price": 22.5,
+      "change_pct": -2.8497,
+      "total_amount": 24528166.0,
+      "main_net_inflow": -7620661.0,
+      "main_inflow_ratio": -31.069,
+      "super_net": -4849867.0,
+      "big_net": -2770794.0,
+      "mid_net": -1608503.0,
+      "small_net": -2087320.0,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:32:34.301854+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601990",
+      "name": "南京证券",
+      "price": 6.61,
+      "change_pct": -2.9369,
+      "total_amount": 174546607.0,
+      "main_net_inflow": -52868632.0,
+      "main_inflow_ratio": -30.2891,
+      "super_net": -30613302.0,
+      "big_net": -22255330.0,
+      "mid_net": 4268697.0,
+      "small_net": 2377604.0,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:32:34.301854+08:00",
+      "severity": "warn"
+    }
+  ]
 }
