@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-11T14:14:30.963937+08:00",
+  "now": "2026-09-11T14:20:35.178857+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,24 +11,24 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 6050
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1588
       },
       {
         "source": "sina",
         "status": "error",
         "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 55362
+        "latency_ms": 53052
       }
     ],
     "is_stale": true,
-    "cache_age_seconds": 426,
+    "cache_age_seconds": 784,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,9 +36,74 @@
   "buy_candidates": 9,
   "sell_candidates": 40,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 4,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "002191",
+      "name": "劲嘉股份",
+      "price": 3.57,
+      "change_pct": -1.6529,
+      "total_amount": 42626581.64,
+      "main_net_inflow": -19177907.88,
+      "main_inflow_ratio": -44.9905,
+      "super_net": -8397946.16,
+      "big_net": -10779961.72,
+      "mid_net": -1581989.28,
+      "small_net": 1324000.48,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:20:35.178857+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "600221",
+      "name": "海航控股",
+      "price": 1.29,
+      "change_pct": -0.7692,
+      "total_amount": 220379532.18,
+      "main_net_inflow": -95844348.06,
+      "main_inflow_ratio": -43.4906,
+      "super_net": -89340892.0,
+      "big_net": -6503456.06,
+      "mid_net": 1813083.0,
+      "small_net": 2333150.76,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:20:35.178857+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "002377",
+      "name": "国创高新",
+      "price": 3.21,
+      "change_pct": -7.4928,
+      "total_amount": 714828156.63,
+      "main_net_inflow": -229442805.92,
+      "main_inflow_ratio": -32.0976,
+      "super_net": -237970872.28,
+      "big_net": 8528066.36,
+      "mid_net": 5534320.71,
+      "small_net": 5539070.32,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:20:35.178857+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002332",
+      "name": "仙琚制药",
+      "price": 8.59,
+      "change_pct": -1.6037,
+      "total_amount": 78819693.0,
+      "main_net_inflow": -24271571.0,
+      "main_inflow_ratio": -30.7938,
+      "super_net": -10989130.0,
+      "big_net": -13282441.0,
+      "mid_net": -4433320.0,
+      "small_net": -4118362.0,
+      "source": "sina",
+      "flow_time": "2026-09-11T14:20:35.178857+08:00",
+      "severity": "warn"
+    }
+  ]
 }
