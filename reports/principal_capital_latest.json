@@ -1,93 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-09-14T11:28:19.952036+08:00",
+  "status": "skipped",
+  "reason": "休市中",
+  "now": "2026-09-14T12:55:45.814329+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4412
-      },
-      {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1418
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 35267
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 1603,
-  "buy_candidates": 9,
-  "sell_candidates": 7,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "001216",
-      "name": "华瓷股份",
-      "price": 14.93,
-      "change_pct": 2.5412,
-      "total_amount": 29605237.0,
-      "main_net_inflow": 15656405.0,
-      "main_inflow_ratio": 52.8839,
-      "super_net": 12250800.0,
-      "big_net": 3405605.0,
-      "mid_net": 1310933.0,
-      "small_net": 225825.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T11:28:19.952036+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "000709",
-      "name": "河钢股份",
-      "price": 2.07,
-      "change_pct": -0.4808,
-      "total_amount": 92574040.6,
-      "main_net_inflow": -28287875.74,
-      "main_inflow_ratio": -30.557,
-      "super_net": -26346688.32,
-      "big_net": -1941187.42,
-      "mid_net": -745251.29,
-      "small_net": -2739987.43,
-      "source": "sina",
-      "flow_time": "2026-09-14T11:28:19.952036+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600429",
-      "name": "三元股份",
-      "price": 4.61,
-      "change_pct": -0.2165,
-      "total_amount": 51040279.0,
-      "main_net_inflow": -15329869.0,
-      "main_inflow_ratio": -30.0348,
-      "super_net": 0.0,
-      "big_net": -15329869.0,
-      "mid_net": -3331688.0,
-      "small_net": 295640.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T11:28:19.952036+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
