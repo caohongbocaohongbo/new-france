@@ -8,14 +8,16 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from threading import Lock
 from typing import Optional
 
-from backend.plugins.common import BEIJING_TZ, now_beijing
+from backend.plugins.common import now_beijing
 
 PROJECT_DIR = Path(__file__).resolve().parents[3]
 DATA_DIR = PROJECT_DIR / "data"
 SHADOW_FILE = DATA_DIR / "shadow_run.json"
 _MAX_RECORDS = 20000
+_LOCK = Lock()
 
 
 def enabled() -> bool:
@@ -34,10 +36,10 @@ def _read() -> list:
 
 def _write(records: list) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    SHADOW_FILE.write_text(
-        json.dumps({"records": records[-_MAX_RECORDS:]}, ensure_ascii=False, indent=1, default=str),
-        encoding="utf-8",
-    )
+    payload = json.dumps({"records": records[-_MAX_RECORDS:]}, ensure_ascii=False, indent=1, default=str)
+    tmp = SHADOW_FILE.with_name(f".{SHADOW_FILE.name}.{os.getpid()}.tmp")
+    tmp.write_text(payload, encoding="utf-8")
+    os.replace(tmp, SHADOW_FILE)
 
 
 def record(asset: str, source: str, status: str, *, coverage: Optional[dict] = None,
@@ -46,17 +48,18 @@ def record(asset: str, source: str, status: str, *, coverage: Optional[dict] = N
     """记录一轮；未开启时静默跳过。"""
     if not enabled():
         return
-    records = _read()
-    records.append({
-        "ts": now_beijing().isoformat(),
-        "asset": asset, "source": source, "status": status,
-        "coverage": coverage or {},
-        "source_time": source_time,
-        "age_seconds": age_seconds,
-        "error": error,
-        "deadline_met": deadline_met,
-    })
-    _write(records)
+    with _LOCK:
+        records = _read()
+        records.append({
+            "ts": now_beijing().isoformat(),
+            "asset": asset, "source": source, "status": status,
+            "coverage": coverage or {},
+            "source_time": source_time,
+            "age_seconds": age_seconds,
+            "error": error,
+            "deadline_met": deadline_met,
+        })
+        _write(records)
 
 
 def summarize() -> dict:

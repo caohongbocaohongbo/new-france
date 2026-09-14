@@ -20,11 +20,12 @@ class OvernightArbitragePipelineTest(unittest.TestCase):
     BEIJING_TZ = timezone(timedelta(hours=8))
 
     @staticmethod
-    def _quotes(volume_ratio=2.8):
+    def _quotes(volume_ratio=2.8, source_time="2026-06-04T14:40:00+08:00"):
         return pd.DataFrame([{
             "代码": "600001", "名称": "主板强势", "最新价": 12.3, "涨跌幅": 9.82,
             "最高价": 12.6, "成交额": 420_000_000, "换手率": 7.2,
             "量比": volume_ratio, "市盈率": 18.6, "流通市值": 8_800_000_000,
+            "source_time": source_time,
         }])
 
     @staticmethod
@@ -94,11 +95,13 @@ class OvernightArbitragePipelineTest(unittest.TestCase):
                 "代码": "600001", "名称": "主板强势", "最新价": 12.3, "涨跌幅": 9.82,
                 "最高价": 12.6, "成交额": 420_000_000, "换手率": 7.2,
                 "量比": None, "市盈率": 18.6, "流通市值": 8_800_000_000,
+                "source_time": "2026-06-04T14:44:30+08:00",
             },
             {
                 "代码": "000002", "名称": "主板完整", "最新价": 9.3, "涨跌幅": 9.2,
                 "最高价": 9.5, "成交额": 360_000_000, "换手率": 6.5,
                 "量比": 2.4, "市盈率": 16.8, "流通市值": 7_600_000_000,
+                "source_time": "2026-06-04T14:44:30+08:00",
             },
         ])
         with TemporaryDirectory() as tmp, \
@@ -106,6 +109,10 @@ class OvernightArbitragePipelineTest(unittest.TestCase):
             result = self._run_isolated(
                 now=now,
                 quotes=quotes,
+                zt_pool=pd.DataFrame([
+                    {"代码": "600001", "封板时间": 144100, "炸板次数": 0, "连板数": 1},
+                    {"代码": "000002", "封板时间": 144200, "炸板次数": 0, "连板数": 1},
+                ]),
                 notification_state_file=Path(tmp) / "sent.json",
             )
 
@@ -175,6 +182,7 @@ class OvernightArbitragePipelineTest(unittest.TestCase):
             "代码": "600001", "名称": "主板强势", "最新价": 12.3, "涨跌幅": 9.82,
             "最高价": 12.6, "成交额": 420_000_000, "换手率": 7.2,
             "量比": 2.8, "市盈率": 18.6, "流通市值": 8_800_000_000,
+            "source_time": "2026-06-04T14:44:30+08:00",
         }])
         zt_pool = pd.DataFrame([{"代码": "600001", "封板时间": 144100, "炸板次数": 0, "连板数": 1}])
 

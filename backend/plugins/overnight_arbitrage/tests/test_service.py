@@ -145,7 +145,11 @@ class OvernightArbitrageServiceTest(unittest.TestCase):
             limit=10,
         )
 
-        self.assertEqual(decision["results"][0]["code"], "688010")
+        self.assertEqual(decision["results"], [])
+        self.assertEqual(
+            decision["data_quality"]["removed"][0]["unavailable_required_fields"],
+            ["zt_events"],
+        )
         self.assertNotIn("688010", {item["code"] for item in decision["rejected"]})
 
     def test_write_overnight_report_uses_independent_cache_file(self):

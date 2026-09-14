@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query, status
 
 from .service import (
+    _refine_quotes_with_tencent,
     read_overnight_history_resilient,
     read_overnight_report_resilient,
     run_overnight_arbitrage,
@@ -35,7 +36,11 @@ def _execute_overnight_pipeline(dry_run: bool = False) -> dict:
     import asyncio
 
     target_date = datetime.now(BEIJING_TZ).date()
-    return asyncio.run(run_overnight_arbitrage(target_date=target_date, dry_run=dry_run))
+    return asyncio.run(run_overnight_arbitrage(
+        target_date=target_date,
+        dry_run=dry_run,
+        candidate_refiner=_refine_quotes_with_tencent,
+    ))
 
 
 def _run_overnight_task(dry_run: bool = False):

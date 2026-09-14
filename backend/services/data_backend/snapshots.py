@@ -80,10 +80,10 @@ def _write_local_snapshot(asset: str, payload: dict) -> None:
     payload = dict(payload)
     payload["snapshot_version"] = version
     payload["written_at"] = _now().isoformat()
-    _MEMORY_CACHE[asset] = payload
     # 先写 canonical（data_backend），再写镜像（reports）；任一失败不污染已成功副本
     _atomic_write_json(_snapshot_path(asset), payload)
     _atomic_write_json(_report_snapshot_path(asset), payload)
+    _MEMORY_CACHE[asset] = payload
 
 
 def _read_local_snapshot(asset: str) -> Optional[dict]:
@@ -144,6 +144,8 @@ def _is_payload_covering_codes(payload: Optional[dict], request_codes: Optional[
 def _is_fresh(asset: str, payload: Optional[dict]) -> bool:
     if not payload:
         return False
+    if payload.get("_batch_inconsistent"):
+        return False
     fetched = _parse_dt(payload.get("fetched_at"))
     if fetched is None:
         return False
@@ -158,6 +160,52 @@ def _is_fresh(asset: str, payload: Optional[dict]) -> bool:
     if age is None:
         return False
     return age <= ASSET_TTLS[asset]
+
+
+def _quote_row_degraded(row: dict) -> bool:
+    if not isinstance(row, dict):
+        return True
+    if row.get("degraded") is True or row.get("is_stale") is True:
+        return True
+    if "source_time" not in row and not any(key in row for key in ("source", "数据源", "quote_source")):
+        return False
+    stamp = _parse_dt(row.get("source_time"))
+    if stamp is None:
+        return True
+    now = _now()
+    if stamp.date() != now.date() or (stamp - now).total_seconds() > 5:
+        return True
+    session = current_trading_session(now)
+    if session == "open" and (now - stamp).total_seconds() > ASSET_TTLS["quotes"]:
+        return True
+    return False
+
+
+def _payload_degraded_reason(asset: str, payload: Optional[dict], request_codes: Optional[list[str]] = None) -> Optional[str]:
+    if not payload:
+        return "missing_payload"
+    if payload.get("_batch_inconsistent"):
+        return "batch_inconsistent"
+    if not _is_payload_covering_codes(payload, request_codes):
+        return "coverage_missing"
+    if asset != "quotes":
+        return None
+    records = payload.get("records")
+    if not isinstance(records, list) or not records:
+        return "empty_records"
+    requested = {str(code).zfill(6) for code in request_codes or []}
+    target_records = []
+    for row in records:
+        if not isinstance(row, dict):
+            continue
+        code = str(row.get("代码") or "").zfill(6)
+        if not requested or code in requested:
+            target_records.append(row)
+    if not target_records:
+        return "coverage_missing"
+    if any(_quote_row_degraded(row) for row in target_records):
+        return "quote_quality_degraded"
+    return None
 
 
 def _status_for_cache(asset: str, source: str) -> Tuple[str, Optional[str]]:
@@ -210,7 +258,8 @@ def _read_asset(
 ) -> Tuple[Any, dict]:
     local = _read_local_snapshot(asset)
     local_usable = _is_payload_covering_codes(local, request_codes)
-    if local_usable and _is_fresh(asset, local):
+    local_degraded_reason = _payload_degraded_reason(asset, local, request_codes)
+    if local_usable and _is_fresh(asset, local) and local_degraded_reason is None:
         if prefer_dataframe:
             return _to_dataframe(local.get("records")) if local else None, _meta(asset, local, local.get("source") or "cache", "fresh", None)
         return (local.get("records") if local else None), _meta(asset, local, local.get("source") or "cache", "fresh", None)
@@ -244,9 +293,10 @@ def _read_asset(
                 "missing_reasons": {"partial": "fetcher 未返回全部请求代码"} if missing else {},
             }
             _write_local_snapshot(asset, payload)
-            # 有返回但全部降级（如 source_time 未知）时不标 fresh
-            if prefer_dataframe and received and not eligible:
-                return fetched, _meta(asset, payload, "live", "degraded", "live")
+            degraded_reason = _payload_degraded_reason(asset, payload, request_codes)
+            # 有返回但覆盖或行质量不足时不标 fresh
+            if degraded_reason is not None:
+                return fetched, _meta(asset, payload, "live", "degraded", "live", degraded_reason)
             return fetched, _meta(asset, payload, "live", "fresh", None)
     except Exception as exc:  # noqa: BLE001
         fetch_error = str(exc)
@@ -256,16 +306,21 @@ def _read_asset(
     if local and local_usable:
         source = local.get("source") or "cache"
         status, degraded_from = _status_for_cache(asset, source)
+        if local_degraded_reason is not None:
+            status = "degraded"
         if prefer_dataframe:
-            return _to_dataframe(local.get("records")), _meta(asset, local, source, status, degraded_from, fetch_error)
-        return local.get("records"), _meta(asset, local, source, status, degraded_from, fetch_error)
+            return _to_dataframe(local.get("records")), _meta(asset, local, source, status, degraded_from, fetch_error or local_degraded_reason)
+        return local.get("records"), _meta(asset, local, source, status, degraded_from, fetch_error or local_degraded_reason)
 
     remote = _fetch_remote_snapshot_json(asset)
-    if remote:
+    if remote and _is_payload_covering_codes(remote, request_codes):
         status, degraded_from = _status_for_cache(asset, "data-snapshots")
+        remote_degraded_reason = _payload_degraded_reason(asset, remote, request_codes)
+        if remote_degraded_reason is not None:
+            status = "degraded"
         if prefer_dataframe:
-            return _to_dataframe(remote.get("records")), _meta(asset, remote, "data-snapshots", status, degraded_from, fetch_error)
-        return remote.get("records"), _meta(asset, remote, "data-snapshots", status, degraded_from, fetch_error)
+            return _to_dataframe(remote.get("records")), _meta(asset, remote, "data-snapshots", status, degraded_from, fetch_error or remote_degraded_reason)
+        return remote.get("records"), _meta(asset, remote, "data-snapshots", status, degraded_from, fetch_error or remote_degraded_reason)
 
     return None, {
         "asset": asset,
