@@ -94,6 +94,7 @@ def _append_quote_source(quotes: pd.DataFrame, source_name: str) -> pd.DataFrame
     result = quotes.copy()
     if not result.empty:
         result["数据源"] = source_name
+    result.attrs = dict(getattr(quotes, "attrs", {}) or {})
     return result
 
 
@@ -172,6 +173,31 @@ def _missing_quote_fields(row: dict) -> List[str]:
     ]
 
 
+def _quote_quality_block(row: dict, now: Optional[datetime] = None) -> Optional[str]:
+    """统一报价质量门控（§12.4 第1步）：降级/陈旧/未知源时间不得参与有效 BUY。
+
+    无任何质量元数据的旧/合成行保持兼容（不拦截）；真实兜底行由 degraded 标记拦截。
+    """
+    if row.get("degraded") is True or row.get("is_stale") is True:
+        return "degraded_or_stale"
+    source_time = row.get("source_time")
+    if source_time is None:
+        return None
+    try:
+        stamp = datetime.fromisoformat(str(source_time))
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=BEIJING_TZ)
+        stamp = stamp.astimezone(BEIJING_TZ)
+    except (TypeError, ValueError):
+        return "source_time_invalid"
+    now = (now or datetime.now(BEIJING_TZ)).astimezone(BEIJING_TZ)
+    if stamp.date() != now.date():
+        return "source_time_stale_date"
+    if (now - stamp).total_seconds() > 900:
+        return "source_time_too_old"
+    return None
+
+
 def _reject_reason(row: dict) -> Optional[str]:
     scope_reason = _scope_reject_reason(row)
     if scope_reason:
@@ -225,7 +251,7 @@ def _build_zt_map(zt_pool: Optional[pd.DataFrame]) -> dict:
     return result
 
 
-def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
+def _decision_item(row: dict, zt_info: dict, minute: dict, zt_events_available: bool = True) -> dict:
     code = str(row.get("代码", "")).zfill(6)
     current_price = _float(row.get("最新价"))
     change_pct = _float(row.get("涨跌幅"), 0) or 0
@@ -237,6 +263,9 @@ def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
     break_count = int(zt_info.get("break_count") or 0)
     consecutive = int(zt_info.get("consecutive") or 0)
     missing_quote_fields = _missing_quote_fields(row)
+    unavailable_required_fields = []
+    if not zt_events_available:
+        unavailable_required_fields.append("zt_events")
 
     score = 0.0
     score += _clip((change_pct - 5.5) * 4.2, 0, 22)
@@ -310,6 +339,8 @@ def _decision_item(row: dict, zt_info: dict, minute: dict) -> dict:
         "consecutive": consecutive,
         "minute_strength": minute or {},
         "missing_quote_fields": missing_quote_fields,
+        "unavailable_required_fields": unavailable_required_fields,
+        "zt_events_available": zt_events_available,
         "reasons": reasons[:6],
         "risks": risks[:5],
         "valid_until": "14:40-14:55",
@@ -332,6 +363,7 @@ def build_overnight_decision(
     generated_at = generated_at or datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M:%S")
     minute_strength = minute_strength or {}
     zt_map = _build_zt_map(zt_pool)
+    zt_events_available = bool(zt_pool is not None and not getattr(zt_pool, "empty", False))
 
     rejected = []
     removed = []
@@ -346,6 +378,10 @@ def build_overnight_decision(
             if scope_reason:
                 rejected.append({"code": code, "name": name, "reason": scope_reason})
                 continue
+            quality_reason = _quote_quality_block(row)
+            if quality_reason:
+                removed.append({"code": code, "name": name, "quality": quality_reason})
+                continue
             missing_fields = _missing_quote_fields(row)
             if missing_fields:
                 removed.append({"code": code, "name": name, "missing_fields": missing_fields})
@@ -354,7 +390,7 @@ def build_overnight_decision(
             if reason:
                 rejected.append({"code": code, "name": name, "reason": reason})
                 continue
-            item = _decision_item(row, zt_map.get(code, {}), minute_strength.get(code, {}))
+            item = _decision_item(row, zt_map.get(code, {}), minute_strength.get(code, {}), zt_events_available)
             if item["action"] != "PASS":
                 candidates.append(item)
             else:
@@ -388,12 +424,13 @@ def build_overnight_decision(
         "total_scanned": total,
         "results": results,
         "data_quality": {
-            "status": "complete",
+            "status": "complete" if not any("quality" in r for r in removed) else "partial",
             "required_fields": list(REQUIRED_QUOTE_FIELDS),
             "removed_count": len(removed),
             "removed": removed,
         },
         "rejected": rejected[:50],
+        "capabilities": {"zt_events_available": zt_events_available},
         "source_status": {
             "quotes": normalized_quote_status,
             "channel": _detect_quote_channel_issue(normalized_quote_status),
@@ -635,16 +672,25 @@ def _attach_history_summary(decision: dict, history: dict) -> None:
     }
 
 
-def _eastmoney_all_a_snapshot() -> pd.DataFrame:
-    """拉取沪深全 A 实时快照，供尾盘套利粗筛。"""
+def _eastmoney_all_a_snapshot(max_pages: int = 40, budget_seconds: float = 60.0) -> pd.DataFrame:
+    """拉取沪深全 A 实时快照，供尾盘套利粗筛；记录真实覆盖/截断元数据（§12.2 P1）。"""
+    import time as _time
     import requests
 
     url = "https://push2.eastmoney.com/api/qt/clist/get"
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/center/gridlist.html"}
     fields = "f2,f3,f5,f6,f8,f9,f10,f12,f14,f15,f20,f21"
     rows = []
+    seen = set()
+    universe_total = 0
+    truncated = False
+    started = _time.monotonic()
     for fs in ("m:1+t:2,m:1+t:23", "m:0+t:6,m:0+t:80"):
-        for page in range(1, 8):
+        page = 1
+        while page <= max_pages and not truncated:
+            if _time.monotonic() - started > budget_seconds:
+                truncated = True
+                break
             params = {
                 "pn": page,
                 "pz": 200,
@@ -657,14 +703,25 @@ def _eastmoney_all_a_snapshot() -> pd.DataFrame:
                 "fields": fields,
                 "ut": "bd1d9ddb04089700cf9c27f6f7426281",
             }
-            resp = requests.get(url, params=params, headers=headers, timeout=12)
-            resp.raise_for_status()
-            diff = resp.json().get("data", {}).get("diff") or []
+            try:
+                resp = requests.get(url, params=params, headers=headers, timeout=12)
+                resp.raise_for_status()
+                data = resp.json().get("data") or {}
+                universe_total += int(data.get("total") or 0)
+                diff = data.get("diff") or []
+            except Exception as exc:
+                logger.warning("东财全A快照第%d页失败: %s", page, exc)
+                truncated = True
+                break
             if not diff:
                 break
             for item in diff:
+                code = str(item.get("f12", "")).zfill(6)
+                if code in seen:
+                    continue
+                seen.add(code)
                 rows.append({
-                    "代码": str(item.get("f12", "")).zfill(6),
+                    "代码": code,
                     "名称": str(item.get("f14", "")),
                     "最新价": _float(item.get("f2")),
                     "涨跌幅": _float(item.get("f3")),
@@ -677,11 +734,19 @@ def _eastmoney_all_a_snapshot() -> pd.DataFrame:
                     "总市值": _float(item.get("f20")),
                     "流通市值": _float(item.get("f21")),
                 })
-    return pd.DataFrame(rows)
+            page += 1
+    df = pd.DataFrame(rows)
+    df.attrs["coverage"] = {
+        "source": "eastmoney_all_a",
+        "universe_total": universe_total,
+        "received": len(rows),
+        "truncated": truncated or len(rows) < universe_total,
+    }
+    return df
 
 
 def _sina_all_a_snapshot(max_pages: int = 80) -> pd.DataFrame:
-    """新浪财经全A兜底源；过滤创业板，只保留沪深可交易A股字段。"""
+    """新浪财经全A兜底源；过滤创业板，只保留沪深可交易A股字段（附覆盖元数据）。"""
     import requests
 
     url = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
@@ -731,7 +796,14 @@ def _sina_all_a_snapshot(max_pages: int = 80) -> pd.DataFrame:
             seen.add(code)
         if len(data) < 80:
             break
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    df.attrs["coverage"] = {
+        "source": "sina_all_a",
+        "universe_total": None,  # 新浪此端点不返回总数，记 None
+        "received": len(rows),
+        "truncated": False,
+    }
+    return df
 
 
 def _zt_pool_quote_fallback(zt_pool: Optional[pd.DataFrame]) -> pd.DataFrame:
@@ -760,6 +832,28 @@ def _zt_pool_quote_fallback(zt_pool: Optional[pd.DataFrame]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _refine_quotes_with_tencent(quotes: pd.DataFrame, codes: list) -> pd.DataFrame:
+    """候选精查贯通（§12.4 第2步）：对候选代码重取精查行情并整体替换该行，不跨源拼接字段。"""
+    if quotes is None or quotes.empty or not codes:
+        return quotes
+    try:
+        from backend.agents.layer1_data_collector.sources.eastmoney_quote import fetch_tencent_quotes_for_codes
+
+        refined = fetch_tencent_quotes_for_codes(list(codes))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("候选精查失败，保留粗筛行情: %s", exc)
+        return quotes
+    if refined.empty:
+        return quotes
+    target = {str(c).zfill(6) for c in codes}
+    refined = refined[refined["代码"].map(lambda c: str(c).zfill(6) in target)] if "代码" in refined.columns else refined
+    kept = quotes[~quotes["代码"].map(lambda c: str(c).zfill(6) in set(refined["代码"]))]
+    result = pd.concat([kept, refined], ignore_index=True)
+    result.attrs = dict(getattr(quotes, "attrs", {}) or {})
+    result.attrs["refined_codes"] = sorted(set(str(c).zfill(6) for c in refined["代码"]))
+    return result
+
+
 def _fetch_quotes_with_fallbacks(
     primary_fetcher: Callable[[], pd.DataFrame],
     zt_pool: Optional[pd.DataFrame] = None,
@@ -777,7 +871,13 @@ def _fetch_quotes_with_fallbacks(
             quotes = fetcher()
             count = 0 if quotes is None else len(quotes)
             if count:
-                statuses.append(_empty_source_status(source_name, "ok", count))
+                coverage = getattr(quotes, "attrs", {}).get("coverage") or {}
+                status = _empty_source_status(source_name, "ok", count)
+                status["coverage"] = coverage
+                if coverage.get("truncated"):
+                    status["status"] = "degraded"
+                    errors.append(f"{source_name} 覆盖不完整: received={coverage.get('received')} universe={coverage.get('universe_total')}")
+                statuses.append(status)
                 return _append_quote_source(quotes, source_name), statuses, errors
             statuses.append(_empty_source_status(source_name, "empty", 0))
             errors.append(f"{source_name} 返回空行情")
@@ -798,37 +898,66 @@ def _fetch_quotes_with_fallbacks(
 
 
 def _fetch_yahoo_5m_strength(codes: Iterable[str]) -> Dict[str, dict]:
-    """对前排候选拉 Yahoo 5 分钟 K 线，失败时返回空映射。"""
-    import time
+    """对前排候选拉 Yahoo 5 分钟 K 线（§12.4 第1步：按 timestamp 整根对齐，失败时返回空映射）。"""
+    import time as _time
     import requests
 
     result = {}
-    now = int(time.time())
-    start = now - 2 * 24 * 3600
+    now_ts = int(_time.time())
+    start = now_ts - 2 * 24 * 3600
     headers = {"User-Agent": "Mozilla/5.0"}
     for code in list(codes)[:30]:
         suffix = ".SS" if str(code).startswith(("6", "9")) else ".SZ"
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{code}{suffix}"
-        params = {"period1": start, "period2": now, "interval": "5m", "includePrePost": "false"}
+        params = {"period1": start, "period2": now_ts, "interval": "5m", "includePrePost": "false"}
         try:
             resp = requests.get(url, params=params, headers=headers, timeout=8)
             resp.raise_for_status()
             chart = (resp.json().get("chart", {}).get("result") or [None])[0] or {}
+            timestamps = chart.get("timestamp") or []
             quote = ((chart.get("indicators") or {}).get("quote") or [None])[0] or {}
-            closes = [v for v in quote.get("close") or [] if v is not None]
-            highs = [v for v in quote.get("high") or [] if v is not None]
-            lows = [v for v in quote.get("low") or [] if v is not None]
-            if len(closes) < 4 or not highs or not lows:
+            closes = quote.get("close") or []
+            highs = quote.get("high") or []
+            lows = quote.get("low") or []
+            # 按 timestamp 组合整根 bar，丢弃缺字段样本
+            bars = []
+            for i, ts in enumerate(timestamps):
+                c = closes[i] if i < len(closes) else None
+                h = highs[i] if i < len(highs) else None
+                l = lows[i] if i < len(lows) else None
+                if c is None or h is None or l is None:
+                    continue
+                bars.append((int(ts), c, h, l))
+            bars.sort()
+            if len(bars) < 4:
                 continue
-            base = closes[-4]
-            change = 0.0 if not base else (closes[-1] - base) / base * 100
-            high = max(highs[-6:])
-            low = min(lows[-6:])
-            position = 0.5 if high <= low else (closes[-1] - low) / (high - low)
+            # 新鲜度：最后一根不得早于 now-10min，极旧时间戳不产生强度
+            last_ts = bars[-1][0]
+            if now_ts - last_ts > 10 * 60:
+                continue
+            # 同日连续窗口：最近若干根必须同一交易日且相邻间隔 ≤10min（午休/跨日缺口即排除）
+            last_dt = datetime.fromtimestamp(last_ts, tz=BEIJING_TZ)
+            recent = []
+            for b in reversed(bars[-6:]):
+                dt = datetime.fromtimestamp(b[0], tz=BEIJING_TZ)
+                if dt.date() != last_dt.date():
+                    break
+                if recent and (recent[-1][0] - b[0]) > 10 * 60:
+                    break
+                recent.append(b)
+            recent.reverse()
+            if len(recent) < 4:
+                continue
+            base = recent[-4][1]
+            change = 0.0 if not base else (recent[-1][1] - base) / base * 100
+            high = max(b[2] for b in recent)
+            low = min(b[3] for b in recent)
+            position = 0.5 if high <= low else (recent[-1][1] - low) / (high - low)
             result[str(code)] = {
                 "last_15m_change_pct": round(change, 3),
                 "last_close_position": round(_clip(position, 0, 1), 3),
                 "source": "Yahoo 5m",
+                "source_time": last_dt.isoformat(),
             }
         except Exception as exc:
             logger.debug("Yahoo 5m %s 失败: %s", code, exc)
@@ -861,6 +990,7 @@ async def run_overnight_arbitrage(
     quote_fetcher: Optional[Callable[[], pd.DataFrame]] = None,
     zt_fetcher: Optional[Callable[..., Optional[pd.DataFrame]]] = None,
     minute_fetcher: Optional[Callable[[Iterable[str]], Dict[str, dict]]] = None,
+    candidate_refiner: Optional[Callable[[pd.DataFrame, list], pd.DataFrame]] = None,
     dry_run: bool = False,
     current_time: Optional[datetime] = None,
     notification_state_file: Optional[Path] = None,
@@ -873,6 +1003,7 @@ async def run_overnight_arbitrage(
         current_time = current_time.astimezone(BEIJING_TZ)
     target_date = target_date or current_time.date()
     generated_at = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    wall_started = datetime.now(BEIJING_TZ).astimezone(BEIJING_TZ)
     notification_state_file = notification_state_file or NOTIFICATION_STATE_FILE
     quote_fetcher = quote_fetcher or _eastmoney_all_a_snapshot
     if zt_fetcher is None:
@@ -912,6 +1043,14 @@ async def run_overnight_arbitrage(
         logger.warning("尾盘套利5分钟K线增强失败: %s", exc)
         errors.append(f"5分钟K线增强失败: {exc}")
 
+    # 候选精查贯通（§12.4 第2步）：生产 CLI 注入腾讯精查；测试不注入时保持原行为
+    if candidate_refiner is not None and seed_codes:
+        try:
+            quotes = candidate_refiner(quotes, seed_codes)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("候选精查失败: %s", exc)
+            errors.append(f"候选精查失败: {exc}")
+
     decision = build_overnight_decision(
         quotes,
         zt_pool=zt_pool,
@@ -937,6 +1076,9 @@ async def run_overnight_arbitrage(
         blocked_reasons.append("zt_pool_unavailable")
     if _notification_already_sent(target_date, notification_state_file):
         blocked_reasons.append("already_sent")
+    # §12.4 第1步：完成时刻复核，任务超时不能沿用启动时刻放行（按真实墙钟耗时）
+    if (datetime.now(BEIJING_TZ).astimezone(BEIJING_TZ) - wall_started).total_seconds() > 900:
+        blocked_reasons.append("task_exceeded_valid_window")
     decision["notification"] = {
         "eligible": not blocked_reasons,
         "sent": False,

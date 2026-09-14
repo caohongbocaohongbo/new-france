@@ -1,5 +1,5 @@
 """
-历史K线数据源 — akshare + 新浪备用
+历史K线数据源 — 明确复权能力，未知口径不进入前复权消费接口。
 """
 import logging
 from datetime import datetime, timedelta, timezone
@@ -26,23 +26,10 @@ def fetch_historical_with_source(symbol: str, days: int = 60) -> Optional[tuple[
     if df is not None and not df.empty:
         return df, "东方财富历史K线API(push2his)"
 
-    try:
-        import akshare as ak
-        end = datetime.now(BEIJING_TZ)
-        start = end - timedelta(days=days + 30)
-        df = ak.stock_zh_a_hist(
-            symbol=symbol, period="daily",
-            start_date=start.strftime("%Y%m%d"),
-            end_date=end.strftime("%Y%m%d"), adjust="qfq",
-        )
-        if df is not None and not df.empty:
-            return df, "akshare.stock_zh_a_hist(东方财富历史行情)"
-    except Exception as e:
-        logger.debug(f"akshare历史数据 {symbol} 失败: {e}")
-
-    df = _fetch_hist_sina(symbol, days)
+    # 东财直连失败后不再通过AKShare重打同一上游；新浪轻量端点复权未知。
+    df = _fetch_hist_tencent(symbol, days)
     if df is not None and not df.empty:
-        return df, "新浪财经K线API"
+        return df, "腾讯前复权K线API"
     return None
 
 
@@ -69,7 +56,9 @@ def _parse_eastmoney_kline_rows(rows: list[str]) -> pd.DataFrame:
             })
         except (TypeError, ValueError):
             continue
-    return pd.DataFrame(parsed)
+    df = pd.DataFrame(parsed)
+    df.attrs.update({"adjustment": "qfq", "volume_unit": "lot", "source": "eastmoney"})
+    return df
 
 
 def _fetch_hist_eastmoney_direct(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
@@ -78,7 +67,7 @@ def _fetch_hist_eastmoney_direct(symbol: str, days: int = 60) -> Optional[pd.Dat
 
     market = "1" if symbol.startswith(("6", "9")) else "0"
     end = datetime.now(BEIJING_TZ)
-    start = end - timedelta(days=days + 30)
+    start = end - timedelta(days=days * 2 + 30)
     url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
     params = {
         "secid": f"{market}.{symbol}",
@@ -106,7 +95,7 @@ def _fetch_hist_eastmoney_direct(symbol: str, days: int = 60) -> Optional[pd.Dat
 
 
 def _fetch_hist_sina(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
-    """新浪K线API备用"""
+    """新浪轻量日K，仅供核验；未证明复权，不作为qfq兜底。"""
     import requests as req
 
     prefix = "sh" if symbol.startswith(("6", "9")) else "sz"
@@ -118,6 +107,7 @@ def _fetch_hist_sina(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
 
     try:
         resp = req.get(url, params=params, headers=headers, timeout=10)
+        resp.raise_for_status()
         data = resp.json()
         if not data or not isinstance(data, list) or len(data) < 3:
             return None
@@ -126,7 +116,7 @@ def _fetch_hist_sina(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
         prev_close = None
         for item in data:
             close_val = float(item.get("close", 0))
-            pct = 0.0
+            pct = None
             if prev_close is not None and prev_close > 0:
                 pct = round((close_val - prev_close) / prev_close * 100, 2)
             row = {
@@ -135,16 +125,62 @@ def _fetch_hist_sina(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
                 "收盘": close_val,
                 "最高": float(item.get("high", 0)),
                 "最低": float(item.get("low", 0)),
-                "成交量": float(item.get("volume", 0)),
-                "成交额": 0.0, "振幅": 0.0,
-                "涨跌幅": pct, "换手率": 0.0,
+                "成交量": float(item.get("volume", 0)) / 100,
+                "成交额": None, "振幅": None,
+                "涨跌幅": pct, "换手率": None,
             }
             rows.append(row)
             prev_close = close_val
 
         df = pd.DataFrame(rows)
+        df.attrs.update({"adjustment": "unknown", "volume_unit": "lot", "source": "sina",
+                         "missing_fields": ["成交额", "换手率", "振幅"], "degraded": True})
         logger.debug(f"  新浪K线 {symbol} 获取成功, {len(df)}行")
         return df
     except Exception as e:
         logger.debug(f"新浪K线 {symbol} 失败: {e}")
+        return None
+
+
+def _fetch_hist_tencent(symbol: str, days: int = 60) -> Optional[pd.DataFrame]:
+    """仅接收qfqday；不以day替代，缺额/换手保持空值。"""
+    import requests
+    from .quote_contract import number
+
+    if not str(symbol).isdigit() or len(str(symbol)) != 6 or not 1 <= days <= 600:
+        return None
+    code = ("sh" if symbol.startswith(("6", "9")) else "sz") + symbol
+    try:
+        response = requests.get(
+            "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get",
+            params={"param": f"{code},day,,,{days},qfq"},
+            headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"}, timeout=(3, 8),
+        )
+        response.raise_for_status()
+        bars = response.json().get("data", {}).get(code, {}).get("qfqday")
+        if not isinstance(bars, list) or not bars:
+            return None
+        rows = []
+        for bar in bars:
+            if not isinstance(bar, list) or len(bar) < 6:
+                raise ValueError("腾讯K线结构变化")
+            values = [number(value) for value in bar[1:6]]
+            if any(value is None for value in values) or values[4] < 0:
+                raise ValueError("腾讯K线数值缺失")
+            opening, close, high, low, volume = values
+            if min(opening, close, low) <= 0 or high < max(opening, close) or low > min(opening, close):
+                raise ValueError("腾讯K线OHLC不一致")
+            day = datetime.strptime(bar[0], "%Y-%m-%d").date().isoformat()
+            if rows and day <= rows[-1]["日期"]:
+                raise ValueError("腾讯K线日期重复或乱序")
+            rows.append({"日期": day, "开盘": opening, "收盘": close, "最高": high, "最低": low,
+                         "成交量": volume, "成交额": None, "换手率": None,
+                         "振幅": None, "涨跌幅": None})
+        df = pd.DataFrame(rows).tail(days)
+        df["涨跌幅"] = df["收盘"].pct_change(fill_method=None) * 100
+        df.attrs.update({"source": "tencent", "adjustment": "qfq", "volume_unit": "lot",
+                         "missing_fields": ["成交额", "换手率", "振幅"], "degraded": True})
+        return df
+    except Exception as exc:
+        logger.debug("腾讯前复权K线 %s 失败: %s", symbol, exc)
         return None

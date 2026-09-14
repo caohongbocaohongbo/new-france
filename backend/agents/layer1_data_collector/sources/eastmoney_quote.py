@@ -1,6 +1,5 @@
 """
-实时行情数据源 — 批量查询股票行情
-requests 优先，curl_cffi 备选（GitHub Actions 环境 curl_cffi 易超时）
+实时行情兼容入口 — 腾讯批量优先，旧源按缺失代码补齐。
 """
 import logging
 import os
@@ -8,18 +7,62 @@ import time
 from typing import List
 from urllib.parse import quote
 import pandas as pd
+from .quote_contract import number
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 80  # 每批最多80只，避免URL过长
+BATCH_SIZE = 60  # 初始保守批量，腾讯与兼容源共用
 MIN_SPLIT_BATCH_SIZE = 10  # 大批失败后拆小批重试，降低 GitHub Actions 限流/空响应影响
 BATCH_DELAY_SECONDS = 0.25
 ALLOW_STALE_QUOTE_CACHE = os.getenv("ALLOW_STALE_QUOTE_CACHE", "").lower() in {"1", "true", "yes"}
 _QUOTE_CACHE = {}
 
 
+class QuoteSourcesUnavailable(RuntimeError):
+    """整批供应商不可用，不通过递归拆分重复轰炸相同端点。"""
+
+
+def _fetch_tencent_batch(secids_batch: List[str]) -> list:
+    """最多60只一批，仅接受当日新鲜且必需字段完整的腾讯报价。"""
+    import requests
+    from .quote_contract import parse_tencent_quotes, quote_is_current
+
+    symbols = [("sh" if secid.startswith("1.") else "sz") + secid.split(".", 1)[1]
+               for secid in secids_batch]
+    rows = []
+    for start in range(0, len(symbols), 60):
+        batch = symbols[start:start + 60]
+        response = requests.get("https://qt.gtimg.cn/q=" + ",".join(batch),
+                                headers={"User-Agent": "Mozilla/5.0", "Referer": "https://gu.qq.com/"},
+                                timeout=(3, 5))
+        response.raise_for_status()
+        response.encoding = "gbk"
+        rows.extend(row for row in parse_tencent_quotes(response.text, batch)
+                    if not row["degraded"] and quote_is_current(row))
+    return rows
+
+
 def _fetch_one_batch(secids_batch: List[str]) -> list:
-    """单批次请求，requests 优先，curl_cffi 备选。返回 rows 列表"""
+    """独立报价源优先；只对缺失代码走兼容后备，不覆盖已成功报价。"""
+    try:
+        rows = _fetch_tencent_batch(secids_batch)
+    except Exception as exc:
+        logger.debug("腾讯批量报价失败: %s", exc)
+        rows = []
+    found = {row["代码"] for row in rows}
+    missing = [secid for secid in secids_batch if secid.split(".", 1)[1] not in found]
+    if missing:
+        try:
+            rows.extend(_fetch_legacy_batch(missing))
+        except Exception:
+            if not rows:
+                raise
+            logger.warning("报价部分缺失，保留腾讯已成功的%d只", len(rows))
+    return rows
+
+
+def _fetch_legacy_batch(secids_batch: List[str]) -> list:
+    """兼容后备：东财一次，再新浪一次，不叠加同源客户端重试。"""
     url = "https://push2.eastmoney.com/api/qt/ulist.np/get"
     params = {
         "fields": "f2,f3,f5,f6,f8,f9,f10,f12,f14,f20,f21",
@@ -36,47 +79,26 @@ def _fetch_one_batch(secids_batch: List[str]) -> list:
         "Referer": "https://quote.eastmoney.com/",
     }
 
-    last_error = None
-    for attempt in range(2):
-        # ---- 方案1: 标准 requests（GitHub Actions 环境更稳定） ----
-        try:
-            import requests
-            resp = requests.get(url, params=params, headers=headers, timeout=15)
-            resp.raise_for_status()
-            rows = _parse_response(resp.json())
-            if rows:
-                return rows
-            last_error = RuntimeError("东方财富返回空行情")
-        except Exception as e:
-            last_error = e
-            logger.debug(f"  requests 请求失败: {e}")
-
-        # ---- 方案2: curl_cffi 模拟 Chrome ----
-        try:
-            from curl_cffi import requests as curl_req
-            resp = curl_req.get(url, params=params, headers=headers,
-                               impersonate="chrome120", timeout=15)
-            rows = _parse_response(resp.json())
-            if rows:
-                return rows
-            last_error = RuntimeError("东方财富 curl_cffi 返回空行情")
-        except Exception as e:
-            last_error = e
-            logger.debug(f"  curl_cffi 请求也失败: {e}")
-
-        try:
-            rows = _fetch_sina_batch(secids_batch)
-            if rows:
-                logger.warning(f"  东方财富行情不可用，新浪财经补齐 {len(rows)}/{len(secids_batch)} 只")
-                return rows
-        except Exception as e:
-            last_error = e
-            logger.debug(f"  新浪财经请求也失败: {e}")
-
-        if attempt == 0:
-            time.sleep(0.35)
-
-    raise RuntimeError(f"所有请求方式均失败: {last_error}")
+    errors = []
+    try:
+        import requests
+        resp = requests.get(url, params=params, headers=headers, timeout=(3, 5))
+        resp.raise_for_status()
+        wanted = {secid.split(".", 1)[1] for secid in secids_batch}
+        rows = [row for row in _parse_response(resp.json()) if row["代码"] in wanted]
+        if rows:
+            return rows
+        errors.append("东财返回空行情")
+    except Exception as exc:
+        errors.append(f"东财: {exc}")
+    try:
+        rows = _fetch_sina_batch(secids_batch)
+        if rows:
+            return rows
+        errors.append("新浪返回空行情")
+    except Exception as exc:
+        errors.append(f"新浪: {exc}")
+    raise QuoteSourcesUnavailable("; ".join(errors))
 
 
 def _fetch_sina_batch(secids_batch: List[str]) -> list:
@@ -93,7 +115,7 @@ def _fetch_sina_batch(secids_batch: List[str]) -> list:
 
     url = "https://hq.sinajs.cn/list=" + quote(",".join(symbols), safe=",")
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}
-    resp = requests.get(url, headers=headers, timeout=15)
+    resp = requests.get(url, headers=headers, timeout=(3, 5))
     resp.raise_for_status()
     resp.encoding = "gbk"
 
@@ -102,6 +124,8 @@ def _fetch_sina_batch(secids_batch: List[str]) -> list:
         if not chunk.strip() or '="' not in chunk:
             continue
         symbol = chunk.split("hq_str_", 1)[-1].split("=", 1)[0]
+        if symbol not in symbols:
+            continue
         code = symbol[-6:]
         raw = chunk.split('="', 1)[1].rstrip('"')
         parts = raw.split(",")
@@ -110,7 +134,7 @@ def _fetch_sina_batch(secids_batch: List[str]) -> list:
 
         def _float_at(index):
             try:
-                value = float(parts[index])
+                value = number(parts[index])
             except (IndexError, TypeError, ValueError):
                 return None
             return value
@@ -127,13 +151,16 @@ def _fetch_sina_batch(secids_batch: List[str]) -> list:
             "名称": parts[0],
             "最新价": latest,
             "涨跌幅": change_pct,
-            "成交量": _float_at(8),
+            "成交量": None if _float_at(8) is None else _float_at(8) / 100,
             "成交额": amount,
             "换手率": None,
             "市盈率": None,
             "量比": None,
             "总市值": None,
             "流通市值": None,
+            "source": "sina", "degraded": True,
+            "source_time": (parts[30] + "T" + parts[31] + "+08:00") if len(parts) > 31 else None,
+            "missing_fields": ["换手率", "市盈率", "量比", "总市值", "流通市值"],
         })
     return rows
 
@@ -158,18 +185,22 @@ def _parse_response(data: dict) -> list:
             v = item.get(key)
             if v is None or v == "-":
                 return None
-            try:
-                return float(v)
-            except (ValueError, TypeError):
-                return None
+            return number(v)
 
-        rows.append({
-            "代码": code, "名称": name,
+        fields = {
             "最新价": _float("f2"), "涨跌幅": _float("f3"),
             "成交量": _float("f5"), "成交额": _float("f6"),
             "换手率": _float("f8"), "市盈率": _float("f9"),
             "量比": _float("f10"), "总市值": _float("f20"),
             "流通市值": _float("f21"),
+        }
+        missing_fields = [key for key in ("涨跌幅", "成交量", "成交额") if fields.get(key) is None]
+        rows.append({
+            "代码": code, "名称": name, **fields,
+            "source": "eastmoney", "source_time": None,
+            # 东财此端点无逐行行情时间：未知时间不得冒充新鲜，必须显式降级
+            "degraded": True,
+            "missing_fields": missing_fields,
         })
     return rows
 
@@ -182,6 +213,9 @@ def _fetch_batch_with_split(secids_batch: List[str], batch_no: str = "") -> tupl
     """
     try:
         return _fetch_one_batch(secids_batch), 0
+    except QuoteSourcesUnavailable as exc:
+        logger.warning("行情源均不可用，跳过拆分重试: %s", exc)
+        return [], 1
     except Exception as e:
         if len(secids_batch) <= MIN_SPLIT_BATCH_SIZE:
             label = f" {batch_no}" if batch_no else ""
@@ -206,6 +240,15 @@ def _fetch_batch_with_split(secids_batch: List[str], batch_no: str = "") -> tupl
         return rows, failed
 
 
+def fetch_tencent_quotes_for_codes(codes: list) -> pd.DataFrame:
+    """候选精查：对给定代码走腾讯批量优先 + 缺失后备，返回带质量字段的报价行。"""
+    secids = [("1." if str(c).startswith(("6", "9")) else "0.") + str(c).zfill(6) for c in codes]
+    if not secids:
+        return pd.DataFrame()
+    rows = _fetch_batch_with_split(secids)[0]
+    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+
 def fetch_single_quote_verified(code: str) -> dict:
     """对单只股票做交叉验证：东方财富 + 新浪备用源对比价格"""
     result = {"code": code, "price_eastmoney": None, "price_sina": None,
@@ -213,8 +256,9 @@ def fetch_single_quote_verified(code: str) -> dict:
 
     # 东方财富源
     try:
-        df = fetch_stock_quotes([code])
-        if not df.empty:
+        market = "1" if code.startswith(("6", "9")) else "0"
+        df = pd.DataFrame(_fetch_legacy_batch([f"{market}.{code}"]))
+        if not df.empty and df.iloc[0].get("source") == "eastmoney":
             result["price_eastmoney"] = float(df.iloc[0]["最新价"])
     except Exception:
         pass
@@ -268,7 +312,7 @@ def fetch_stock_quotes(codes: List[str]) -> pd.DataFrame:
 
     if ALLOW_STALE_QUOTE_CACHE:
         found_codes = {row["代码"] for row in all_rows}
-        cached_rows = [_QUOTE_CACHE[code] for code in codes
+        cached_rows = [dict(_QUOTE_CACHE[code], source="cache", degraded=True, is_stale=True) for code in codes
                        if code not in found_codes and code in _QUOTE_CACHE]
         if cached_rows:
             all_rows.extend(cached_rows)
@@ -276,4 +320,12 @@ def fetch_stock_quotes(codes: List[str]) -> pd.DataFrame:
 
     logger.info(f"  行情获取完成: {len(all_rows)}/{len(codes)} 只"
                 + (f" (失败 {failed_batches} 批)" if failed_batches else ""))
-    return pd.DataFrame(all_rows)
+    df = pd.DataFrame(all_rows)
+    found = {row["代码"] for row in all_rows}
+    df.attrs["source_meta"] = {
+        "sources": sorted({row.get("source", "unknown") for row in all_rows}),
+        "requested_count": len(set(codes)), "received_count": len(found),
+        "missing_codes": sorted(set(codes) - found),
+        "degraded": bool(set(codes) - found) or any(row.get("degraded", False) for row in all_rows),
+    }
+    return df

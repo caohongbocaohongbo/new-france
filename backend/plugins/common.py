@@ -13,6 +13,8 @@ import logging
 import math
 import os
 import queue as _queue
+from threading import RLock
+from time import monotonic
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
@@ -104,31 +106,119 @@ def publish_snapshot_update(name: str) -> None:
 
 
 # ==== K 线共享缓存（18/19/20/21 共用，第七波 G5）====
-# 当日 K 线内存缓存：同日内复用，避免四插件重复拉东财（东财请求量减半）
+# 当前接口仍可能包含未完成日K，因此成功结果也只缓存短时间。
 _kline_cache: dict = {}
 _kline_cache_date: Optional[str] = None
+_kline_cache_generation = 0
+_kline_guard = RLock()
+_kline_locks = [RLock() for _ in range(64)]
+KLINE_CACHE_TTL_SECONDS = 45.0
+KLINE_NEGATIVE_CACHE_TTL_SECONDS = 5.0
+
+
+def _kline_slice(data, days):
+    """返回副本，防止一个消费者修改其他消费者的缓存；附实际覆盖元数据（§12.4 第2步）。"""
+    if data is None:
+        return None
+    if hasattr(data, "iloc"):
+        result = data.iloc[-days:].copy(deep=True)
+        result.attrs["kline_coverage"] = _kline_coverage(result, days)
+        return result
+    from copy import deepcopy
+    return deepcopy(data[-days:])
+
+
+def _persist_kline_best_effort(code: str, data) -> None:
+    """旁路持久化（§12.4 第3步）：best-effort 写 bars_store，失败静默不阻断。
+
+    默认关闭（KLINE_STORE_WRITE_ENABLED），由部署环境达标后开启；读复用待字段契约扩展。
+    """
+    import os
+
+    if os.environ.get("KLINE_STORE_WRITE_ENABLED", "").lower() not in {"1", "true", "yes"}:
+        return
+    if data is None or getattr(data, "empty", False):
+        return
+    try:
+        from backend.services.data_backend.bars_store import upsert_daily_bars
+
+        attrs = getattr(data, "attrs", {}) or {}
+        upsert_daily_bars(
+            str(code).zfill(6), data,
+            adjustment=attrs.get("adjustment") or "raw",
+            adjustment_version=attrs.get("adjustment_version"),
+            source=attrs.get("source") or "kline",
+            is_final=bool(attrs.get("is_final", True)),
+        )
+    except Exception:  # noqa: BLE001 旁路失败不阻断主链路
+        pass
+
+
+def _kline_coverage(df, days):
+    """记录实际交易日范围/有效行数/是否短窗，区分新股历史不足与上游截断。"""
+    if df is None or getattr(df, "empty", False):
+        return {"rows": 0, "first": None, "last": None, "short": True, "reason": "empty"}
+    rows = len(df)
+    dates = None
+    for col in ("日期", "date"):
+        if col in df.columns:
+            dates = [str(v)[:10] for v in df[col].tolist()]
+            break
+    first = dates[0] if dates else None
+    last = dates[-1] if dates else None
+    return {"rows": rows, "first": first, "last": last, "short": rows < int(days), "reason": "short" if rows < int(days) else None}
 
 
 def get_kline_cached(code: str, days: int = 130, fetcher=None):
-    """当日 K 线内存缓存。同日内复用，18/19/20/21 共享，避免重复拉东财。"""
-    global _kline_cache, _kline_cache_date
+    """按取数器隔离、校验窗口、短TTL缓存；同键并发合并。"""
+    global _kline_cache_date
+    days = int(days)
+    if days <= 0:
+        raise ValueError("K线窗口必须为正整数")
+    if fetcher is None:
+        from backend.agents.layer1_data_collector.sources.historical_kline import fetch_historical as fetcher
     today = datetime.now(BEIJING_TZ).date().isoformat()
-    if _kline_cache_date != today:
-        _kline_cache = {}
-        _kline_cache_date = today
     code = str(code).zfill(6)
-    if code not in _kline_cache:
-        if fetcher is None:
-            from backend.agents.layer1_data_collector.sources.historical_kline import fetch_historical as fetcher
-        _kline_cache[code] = fetcher(code, days)
-    return _kline_cache[code]
+    # 保留取数器引用避免id重用；未来不同复权能力须传不同取数器。
+    key = (code, id(fetcher))
+    with _kline_locks[hash(key) % len(_kline_locks)]:
+        with _kline_guard:
+            if _kline_cache_date != today:
+                _kline_cache.clear()
+                _kline_cache_date = today
+            generation = _kline_cache_generation
+            entry = _kline_cache.get(key)
+            if entry and entry["expires"] > monotonic():
+                if entry.get("failed"):
+                    return None  # 负缓存：短 TTL 内不重复轰炸
+                # 短窗口不得冒充长窗口：实际行数不足请求窗口时必须补取（P1）
+                if entry["days"] >= days and entry.get("rows", entry["days"]) >= days:
+                    return _kline_slice(entry["data"], days)
+        data = fetcher(code, days)
+        failed = data is None or getattr(data, "empty", False) or len(data) == 0
+        if not failed:
+            _persist_kline_best_effort(code, data)
+        ttl = KLINE_NEGATIVE_CACHE_TTL_SECONDS if failed else KLINE_CACHE_TTL_SECONDS
+        with _kline_guard:
+            if generation == _kline_cache_generation and _kline_cache_date == today:
+                if len(_kline_cache) >= 4096:
+                    _kline_cache.pop(next(iter(_kline_cache)))
+                cached = _kline_slice(data, days)
+                _kline_cache[key] = {
+                    "data": cached, "days": days, "failed": bool(failed),
+                    "rows": 0 if failed else (len(cached) if cached is not None else 0),
+                    "expires": monotonic() + ttl, "fetcher": fetcher,
+                }
+        return _kline_slice(data, days)
 
 
 def kline_cache_clear() -> None:
     """清空 K 线缓存（测试/跨日重置用）。"""
-    global _kline_cache, _kline_cache_date
-    _kline_cache = {}
-    _kline_cache_date = None
+    global _kline_cache_date, _kline_cache_generation
+    with _kline_guard:
+        _kline_cache.clear()
+        _kline_cache_date = None
+        _kline_cache_generation += 1
 
 
 # ==== 快照内存缓存（router 列表接口 <1ms，第七波 G6）====
@@ -354,9 +444,7 @@ def read_code_kline(code: str, days: int = 60) -> list:
     返回 [{date, open, close, high, low, vol}, ...]（JSON 安全）。
     """
     try:
-        from backend.agents.layer1_data_collector.sources.historical_kline import fetch_historical
-
-        hist = fetch_historical(str(code).zfill(6), int(days))
+        hist = get_kline_cached(str(code).zfill(6), int(days))
     except Exception:  # noqa: BLE001
         return []
     if hist is None or getattr(hist, "empty", True):
@@ -397,4 +485,3 @@ def intraday_append(values: list, realtime_value) -> list:
     if rt is None or rt <= 0:
         return values or []
     return list(values or []) + [rt]
-

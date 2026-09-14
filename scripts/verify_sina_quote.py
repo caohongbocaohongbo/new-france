@@ -1,47 +1,58 @@
 #!/usr/bin/env python3
-"""M0 验证 C：新浪全市场实时行情 + 指数（24 方案 quotes/index_snapshot 主源）。一次性脚本。
-断言：ssggzj bulk 全市场行情字段（trade/changeratio/turnover/amount）非空；主板清单覆盖 0 漏；指数接口可达。
-"""
+"""新浪bulk单位、覆盖与腾讯交叉核验；缺时间戳时不授予实时准入。"""
 import json
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import requests
+from backend.agents.layer1_data_collector.sources.quote_contract import (
+    normalize_sina_bulk, parse_tencent_quotes, quote_is_current,
+)
+from scripts.source_verification import Checks
 
 H = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}
 BULK = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/MoneyFlow.ssl_bkzj_ssggzj"
-
-
-def report(name, ok, detail, hard=True):
-    print(f"[{'PASS' if ok else ('FAIL' if hard else 'WARN')}] {name}: {detail}")
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    r = requests.get(BULK, params={"num": "8000", "sort": "r0_net", "asc": "0"}, headers=H, timeout=20)
-    rows = r.json()
-    print("bulk rows:", len(rows), "http:", r.status_code)
-    sample = rows[:500]
-    need = ["symbol", "name", "trade", "changeratio", "turnover", "amount"]
-    missing = [c for c in need if sum(1 for x in sample if x.get(c) in (None, "")) > 450]
-    report("行情字段完整(trade/changeratio/turnover/amount)", not missing, f"缺失: {missing or '无'}")
-    # 换手率有值抽样
-    tvs = [x for x in sample if x.get("turnover") not in (None, "", "0")]
-    report("换手率有值", len(tvs) > 100, f"抽样500中 {len(tvs)} 只有换手率")
-    # 主板覆盖
-    cached = json.load(open("data/principal_capital_sina_codes.json", encoding="utf-8"))
-    want = {str(c).zfill(6) for c in (cached.get("codes") or [])}
-    got = {str(x.get("symbol"))[2:].zfill(6) for x in rows if str(x.get("symbol") or "")[:2] in ("sh", "sz")}
-    miss = sorted(want - got)
-    report("主板清单覆盖 0 漏", not miss, f"清单 {len(want)} / bulk {len(want & got)} / 漏 {len(miss)}")
-    # 指数接口试探
-    idx = "https://hq.sinajs.cn/list=s_sh000001,s_sz399001,s_sz399006"
+    checks = Checks()
     try:
-        ir = requests.get(idx, headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}, timeout=8)
-        ir.encoding = "gbk"
-        report("新浪指数接口可达", ir.status_code == 200 and len(ir.text) > 50,
-               f"http {ir.status_code} / {ir.text[:80]}")
-    except Exception as e:
-        report("新浪指数接口可达", False, f"异常 {e}")
-    print("结论:", "PASS" if not missing and not miss else "FAIL")
-    return 0 if (not missing and not miss) else 1
+        response = requests.get(BULK, params={"num": 8000, "sort": "r0_net", "asc": 0}, headers=H, timeout=(3, 8))
+        response.raise_for_status()
+        rows = normalize_sina_bulk(response.json())
+        checks.check("全返回字段", all(all(row[k] is not None for k in
+                      ("price", "change_pct", "turnover_pct", "amount")) for row in rows), f"{len(rows)}行")
+        cache = ROOT / "data/principal_capital_sina_codes.json"
+        if cache.exists():
+            wanted = set(json.loads(cache.read_text(encoding="utf-8")).get("codes") or [])
+            got = {row["code"] for row in rows}
+            checks.check("现有清单覆盖", bool(wanted) and wanted <= got, f"缺{len(wanted - got)}只")
+            checks.skip("当日主数据完整性", "缓存清单不能证明当日新上市/停牌范围已核验")
+        else:
+            checks.skip("主板覆盖", "无已验证股票清单")
+        sample = sorted((r for r in rows if r["price"] and r["turnover_pct"] is not None),
+                        key=lambda r: r["turnover_pct"], reverse=True)[:20]
+        symbols = [row["symbol"] for row in sample]
+        if not symbols:
+            raise ValueError("没有可交叉验证的样本")
+        response = requests.get("https://qt.gtimg.cn/q=" + ",".join(symbols), headers=H, timeout=(3, 8))
+        response.raise_for_status()
+        response.encoding = "gbk"
+        tx = {r["代码"]: r for r in parse_tencent_quotes(response.text, symbols)}
+        for row in sample:
+            peer = tx.get(row["code"])
+            if not checks.check(row["code"] + " 独立报价", bool(peer)):
+                continue
+            checks.check(row["code"] + " 腾讯时效", quote_is_current(peer))
+            turn = peer["换手率"]
+            checks.check(row["code"] + " 换手率单位",
+                         turn is not None and abs(row["turnover_pct"] - turn) <= max(0.05, abs(turn) * 0.02),
+                         f"新浪{row['turnover_pct']:.4f}% / 腾讯{turn}%")
+        checks.skip("实时及资金策略准入", "bulk无明确源时间，且缺r1/r2分类；仅用于报价观察")
+    except Exception as exc:
+        checks.check("新浪bulk核验", False, str(exc))
+    return checks.finish()
 
 
 if __name__ == "__main__":

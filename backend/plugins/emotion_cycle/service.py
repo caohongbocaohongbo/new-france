@@ -74,9 +74,22 @@ def run_emotion_once(target_date=None, force: bool = False) -> dict:
     try:
         from backend.agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
         zt_pool = fetch_zt_pool(target)
+        zt_fetch_error = None
     except Exception as exc:  # noqa: BLE001
         logger.warning("涨停池拉取失败: %s", exc)
         zt_pool = None
+        zt_fetch_error = str(exc)
+    # 源不可用（封板/连板事件缺失）≠ 合法空池：显式 unavailable，不静默当 0 涨停
+    if zt_pool is None:
+        payload = {
+            "status": "unavailable_required_fields",
+            "reason": "涨停池源不可用（封板/连板事件缺失）",
+            "unavailable_required_fields": ["zt_events"],
+            "zt_fetch_error": zt_fetch_error,
+            "date": target.isoformat(), "regime": "no_data", "count": 0,
+        }
+        write_snapshot(SNAPSHOT_NAME, payload)
+        return payload
     records = parse_zt_records(zt_pool)
     if not records:
         payload = {"status": "no_data", "reason": "涨停池为空", "date": target.isoformat(), "regime": "no_data", "count": 0}

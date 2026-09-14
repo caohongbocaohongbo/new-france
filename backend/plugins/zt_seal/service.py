@@ -81,9 +81,22 @@ def run_zt_seal_once(target_date=None, force: bool = False) -> dict:
     try:
         from backend.agents.layer1_data_collector.sources.eastmoney_zt import fetch_zt_pool
         zt_pool = fetch_zt_pool(target)
+        zt_fetch_error = None
     except Exception as exc:  # noqa: BLE001
         logger.warning("涨停池拉取失败: %s", exc)
         zt_pool = None
+        zt_fetch_error = str(exc)
+    # 源不可用（封单事件缺失）≠ 合法空池：显式 unavailable，不静默当 0
+    if zt_pool is None:
+        payload = {
+            "status": "unavailable_required_fields",
+            "reason": "涨停池源不可用（封单事件缺失）",
+            "unavailable_required_fields": ["zt_events"],
+            "zt_fetch_error": zt_fetch_error,
+            "date": target.isoformat(), "items": [],
+        }
+        write_snapshot(SNAPSHOT_NAME, payload)
+        return payload
     rows = build_seal_rows(zt_pool)
     if not rows:
         payload = {"status": "no_data", "reason": "涨停池为空", "date": target.isoformat(), "items": []}

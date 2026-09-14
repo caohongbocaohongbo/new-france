@@ -62,21 +62,40 @@ def _read_json(path: Path) -> Optional[dict]:
         return None
 
 
+def _atomic_write_json(path: Path, payload: dict) -> None:
+    """唯一临时文件 + 原子替换，避免读者读到半截 JSON。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{int(_now().timestamp() * 1_000_000)}.tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def _write_local_snapshot(asset: str, payload: dict) -> None:
+    """原子双写并附同一 snapshot_version；读取方据此拒绝批次不一致的副本（§12.4 第2步）。"""
+    import uuid
+
     DATA_BACKEND_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DATA_BACKEND_DIR.mkdir(parents=True, exist_ok=True)
+    version = uuid.uuid4().hex
+    payload = dict(payload)
+    payload["snapshot_version"] = version
+    payload["written_at"] = _now().isoformat()
     _MEMORY_CACHE[asset] = payload
-    text = json.dumps(payload, ensure_ascii=False, indent=2, default=str)
-    _snapshot_path(asset).write_text(text, encoding="utf-8")
-    _report_snapshot_path(asset).write_text(text, encoding="utf-8")
+    # 先写 canonical（data_backend），再写镜像（reports）；任一失败不污染已成功副本
+    _atomic_write_json(_snapshot_path(asset), payload)
+    _atomic_write_json(_report_snapshot_path(asset), payload)
 
 
 def _read_local_snapshot(asset: str) -> Optional[dict]:
     if asset in _MEMORY_CACHE:
         return _MEMORY_CACHE[asset]
-    payload = _read_json(_snapshot_path(asset))
-    if not payload:
-        payload = _read_json(_report_snapshot_path(asset))
+    canonical = _read_json(_snapshot_path(asset))
+    mirror = _read_json(_report_snapshot_path(asset))
+    payload = canonical or mirror
+    if canonical and mirror and canonical.get("snapshot_version") != mirror.get("snapshot_version"):
+        # 批次不一致：以 canonical 为准，显式标记不一致（旧文件无 version 时不判定）
+        payload = dict(canonical)
+        payload["_batch_inconsistent"] = True
     if payload:
         _MEMORY_CACHE[asset] = payload
     return payload
@@ -101,12 +120,24 @@ def _age_seconds(fetched_at: Any) -> Optional[int]:
     return max(int((_now() - fetched_dt).total_seconds()), 0)
 
 
+def _records_codes(records: Any) -> set:
+    """从快照记录提取实际收到的代码集合；无代码字段时返回空集。"""
+    if not isinstance(records, list):
+        return set()
+    codes = set()
+    for row in records:
+        if isinstance(row, dict) and row.get("代码"):
+            codes.add(str(row["代码"]).zfill(6))
+    return codes
+
+
 def _is_payload_covering_codes(payload: Optional[dict], request_codes: Optional[list[str]]) -> bool:
     if not request_codes:
         return True
     if not payload:
         return False
-    cached_codes = set(payload.get("codes") or [])
+    # 优先用实际收到的 received_codes；旧快照无该字段时回退 codes（历史兼容）
+    cached_codes = set(payload.get("received_codes") or payload.get("codes") or [])
     return set(request_codes).issubset(cached_codes)
 
 
@@ -145,12 +176,18 @@ def _meta(asset: str, payload: Optional[dict], source: str, status: str, degrade
         record_count = 1 if records else 0
     else:
         record_count = 0
+    requested = payload.get("requested_codes") if payload else None
+    received = payload.get("received_codes") if payload else None
+    missing = payload.get("missing_codes") if payload else None
     return {
         "asset": asset,
         "source": source,
         "fetched_at": payload.get("fetched_at") if payload else None,
         "age_seconds": _age_seconds(payload.get("fetched_at")) if payload else None,
         "record_count": record_count,
+        "requested_count": len(requested) if isinstance(requested, list) else None,
+        "received_count": len(received) if isinstance(received, list) else None,
+        "missing_count": len(missing) if isinstance(missing, list) else None,
         "status": status,
         "trading_session": current_trading_session(_now()),
         "degraded_from": degraded_from,
@@ -182,13 +219,34 @@ def _read_asset(
         fetched = fetcher(*fetch_args)
         if fetched is not None and (not prefer_dataframe or not getattr(fetched, "empty", False)):
             records = fetched.to_dict("records") if prefer_dataframe else fetched
+            requested = sorted(set(request_codes or []))
+            received = _records_codes(records) if prefer_dataframe else set()
+            missing = [c for c in requested if c not in received]
+            eligible = set()
+            if prefer_dataframe and received:
+                by_code = {}
+                for row in records:
+                    if isinstance(row, dict) and row.get("代码"):
+                        by_code[str(row["代码"]).zfill(6)] = row
+                for code in received:
+                    row = by_code.get(code) or {}
+                    if row.get("degraded") is not True:
+                        eligible.add(code)
             payload = {
                 "source": "live",
                 "fetched_at": _now().isoformat(),
                 "records": records,
-                "codes": sorted(set(request_codes or [])),
+                # codes 必须是实际收到集合，部分返回不得冒充完整覆盖
+                "codes": sorted(received) if received else sorted(requested),
+                "requested_codes": requested,
+                "received_codes": sorted(received),
+                "missing_codes": missing,
+                "missing_reasons": {"partial": "fetcher 未返回全部请求代码"} if missing else {},
             }
             _write_local_snapshot(asset, payload)
+            # 有返回但全部降级（如 source_time 未知）时不标 fresh
+            if prefer_dataframe and received and not eligible:
+                return fetched, _meta(asset, payload, "live", "degraded", "live")
             return fetched, _meta(asset, payload, "live", "fresh", None)
     except Exception as exc:  # noqa: BLE001
         fetch_error = str(exc)
