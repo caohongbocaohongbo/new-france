@@ -1,32 +1,35 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-14T10:47:47.829432+08:00",
+  "now": "2026-09-14T10:53:27.890305+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 9395
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 6741
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 35157
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 37958
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 394,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -34,57 +37,25 @@
   "buy_candidates": 9,
   "sell_candidates": 6,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002912",
-      "name": "中新赛克",
-      "price": 25.86,
-      "change_pct": 9.9958,
-      "total_amount": 59272438.86,
-      "main_net_inflow": -25987257.06,
-      "main_inflow_ratio": -43.8437,
-      "super_net": -28218975.06,
-      "big_net": 2231718.0,
-      "mid_net": 3659190.0,
-      "small_net": 3074754.0,
+      "code": "000099",
+      "name": "中信海直",
+      "price": 13.17,
+      "change_pct": -1.3483,
+      "total_amount": 33141236.78,
+      "main_net_inflow": -10776916.49,
+      "main_inflow_ratio": -32.5181,
+      "super_net": 0.0,
+      "big_net": -10776916.49,
+      "mid_net": -2142063.73,
+      "small_net": -661115.0,
       "source": "sina",
-      "flow_time": "2026-09-14T10:47:47.829432+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "603656",
-      "name": "泰禾智能",
-      "price": 16.94,
-      "change_pct": 0.6536,
-      "total_amount": 14451620.04,
-      "main_net_inflow": -5909855.0,
-      "main_inflow_ratio": -40.8941,
-      "super_net": -6978064.0,
-      "big_net": 1068209.0,
-      "mid_net": 919173.9,
-      "small_net": 9320.86,
-      "source": "sina",
-      "flow_time": "2026-09-14T10:47:47.829432+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "600208",
-      "name": "衢州发展",
-      "price": 2.81,
-      "change_pct": 0.0,
-      "total_amount": 39432850.2,
-      "main_net_inflow": -14349324.2,
-      "main_inflow_ratio": -36.3893,
-      "super_net": -12457842.0,
-      "big_net": -1891482.2,
-      "mid_net": -612847.0,
-      "small_net": -2635618.6,
-      "source": "sina",
-      "flow_time": "2026-09-14T10:47:47.829432+08:00",
+      "flow_time": "2026-09-14T10:53:27.890305+08:00",
       "severity": "warn"
     }
   ]
