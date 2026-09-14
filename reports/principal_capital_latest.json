@@ -1,139 +1,45 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-14T09:49:27.898670+08:00",
+  "now": "2026-09-14T09:55:14.334854+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A0%2Bt%3A6%2Cm%3A0%2Bt%3A80&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 7610
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1494
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 41707
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 35235
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 390,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1404,
   "buy_candidates": 15,
   "sell_candidates": 18,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 5,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603657",
-      "name": "春光科技",
-      "price": 31.36,
-      "change_pct": 9.8809,
-      "total_amount": 90565611.5,
-      "main_net_inflow": 46225409.5,
-      "main_inflow_ratio": 51.0408,
-      "super_net": 25900543.9,
-      "big_net": 20324865.6,
-      "mid_net": 5000500.0,
-      "small_net": 252658.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T09:49:27.898670+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600765",
-      "name": "中航重机",
-      "price": 13.73,
-      "change_pct": -2.1383,
-      "total_amount": 73155393.0,
-      "main_net_inflow": -28376819.0,
-      "main_inflow_ratio": -38.7898,
-      "super_net": -10351678.0,
-      "big_net": -18025141.0,
-      "mid_net": -2045847.0,
-      "small_net": -739441.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T09:49:27.898670+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600738",
-      "name": "丽尚国潮",
-      "price": 4.32,
-      "change_pct": -0.6897,
-      "total_amount": 19147934.3,
-      "main_net_inflow": -7108496.0,
-      "main_inflow_ratio": -37.1241,
-      "super_net": -6029460.0,
-      "big_net": -1079036.0,
-      "mid_net": -669996.0,
-      "small_net": -536024.3,
-      "source": "sina",
-      "flow_time": "2026-09-14T09:49:27.898670+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000099",
-      "name": "中信海直",
-      "price": 13.17,
-      "change_pct": -1.3483,
-      "total_amount": 14683555.0,
-      "main_net_inflow": -5092498.0,
-      "main_inflow_ratio": -34.6816,
-      "super_net": 0.0,
-      "big_net": -5092498.0,
-      "mid_net": -2241600.0,
-      "small_net": -536351.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T09:49:27.898670+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601669",
-      "name": "中国电建",
-      "price": 4.59,
-      "change_pct": -0.2174,
-      "total_amount": 82174267.0,
-      "main_net_inflow": -27853602.0,
-      "main_inflow_ratio": -33.8958,
-      "super_net": -25761965.0,
-      "big_net": -2091637.0,
-      "mid_net": -3274552.0,
-      "small_net": -1806099.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T09:49:27.898670+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "600777",
-      "name": "新潮能源",
-      "price": 4.09,
-      "change_pct": -0.2439,
-      "total_amount": 56689286.0,
-      "main_net_inflow": -17466916.0,
-      "main_inflow_ratio": -30.8117,
-      "super_net": -9291521.0,
-      "big_net": -8175395.0,
-      "mid_net": -1363463.0,
-      "small_net": -929379.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T09:49:27.898670+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
