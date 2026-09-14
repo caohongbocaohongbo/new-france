@@ -1,13 +1,13 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-14T14:38:44.861679+08:00",
+  "now": "2026-09-14T14:51:27.493128+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
@@ -16,24 +16,24 @@
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1177
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 35721
+        "status": "ok",
+        "latency_ms": 35242
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 721,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1707,
+  "scanned": 1468,
   "buy_candidates": 8,
-  "sell_candidates": 9,
+  "sell_candidates": 4,
   "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
