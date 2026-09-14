@@ -1,34 +1,33 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-14T14:10:04.544657+08:00",
+  "now": "2026-09-14T14:15:53.960060+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3360
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1171
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 38969
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 35282
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 384,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,57 +35,25 @@
   "buy_candidates": 8,
   "sell_candidates": 10,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "601669",
-      "name": "中国电建",
-      "price": 4.57,
-      "change_pct": -0.6522,
-      "total_amount": 284168792.06,
-      "main_net_inflow": -100131178.06,
-      "main_inflow_ratio": -35.2365,
-      "super_net": -93722516.06,
-      "big_net": -6408662.0,
-      "mid_net": -6256405.0,
-      "small_net": -3530821.0,
+      "code": "000655",
+      "name": "金岭矿业",
+      "price": 7.19,
+      "change_pct": -1.2363,
+      "total_amount": 41503051.62,
+      "main_net_inflow": -13313741.06,
+      "main_inflow_ratio": -32.0789,
+      "super_net": -13065962.0,
+      "big_net": -247779.06,
+      "mid_net": -1187601.0,
+      "small_net": -2038435.68,
       "source": "sina",
-      "flow_time": "2026-09-14T14:10:04.544657+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601390",
-      "name": "中国中铁",
-      "price": 4.36,
-      "change_pct": -0.6834,
-      "total_amount": 246141661.34,
-      "main_net_inflow": -83550149.34,
-      "main_inflow_ratio": -33.9439,
-      "super_net": -75640150.34,
-      "big_net": -7909999.0,
-      "mid_net": -1697324.0,
-      "small_net": 882568.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T14:10:04.544657+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000709",
-      "name": "河钢股份",
-      "price": 2.07,
-      "change_pct": -0.4808,
-      "total_amount": 115364108.62,
-      "main_net_inflow": -34904886.74,
-      "main_inflow_ratio": -30.2563,
-      "super_net": -27985714.32,
-      "big_net": -6919172.42,
-      "mid_net": -2833191.29,
-      "small_net": -4666302.45,
-      "source": "sina",
-      "flow_time": "2026-09-14T14:10:04.544657+08:00",
+      "flow_time": "2026-09-14T14:15:53.960060+08:00",
       "severity": "warn"
     }
   ]
