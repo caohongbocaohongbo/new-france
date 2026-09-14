@@ -1,109 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-14T13:24:10.328958+08:00",
+  "now": "2026-09-14T13:29:58.171565+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5264
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1302
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 35173
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 35806
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 383,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1587,
   "buy_candidates": 8,
   "sell_candidates": 7,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603657",
-      "name": "春光科技",
-      "price": 31.39,
-      "change_pct": 9.986,
-      "total_amount": 111622667.08,
-      "main_net_inflow": 56110120.5,
-      "main_inflow_ratio": 50.2677,
-      "super_net": 25900543.9,
-      "big_net": 30209576.6,
-      "mid_net": 11454346.78,
-      "small_net": 4839411.8,
-      "source": "sina",
-      "flow_time": "2026-09-14T13:24:10.328958+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "000099",
-      "name": "中信海直",
-      "price": 13.13,
-      "change_pct": -1.6479,
-      "total_amount": 49062435.0,
-      "main_net_inflow": -16004039.71,
-      "main_inflow_ratio": -32.6197,
-      "super_net": -1972314.0,
-      "big_net": -14031725.71,
-      "mid_net": -2883660.73,
-      "small_net": -1655305.0,
-      "source": "sina",
-      "flow_time": "2026-09-14T13:24:10.328958+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603656",
-      "name": "泰禾智能",
-      "price": 16.9,
-      "change_pct": 0.4159,
-      "total_amount": 17479531.24,
-      "main_net_inflow": -5643583.0,
-      "main_inflow_ratio": -32.2868,
-      "super_net": -6978064.0,
-      "big_net": 1334481.0,
-      "mid_net": 142607.9,
-      "small_net": -495595.94,
-      "source": "sina",
-      "flow_time": "2026-09-14T13:24:10.328958+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "601727",
-      "name": "上海电气",
-      "price": 6.5,
-      "change_pct": -0.9146,
-      "total_amount": 165740292.85,
-      "main_net_inflow": -52001708.73,
-      "main_inflow_ratio": -31.3754,
-      "super_net": -45451575.0,
-      "big_net": -6550133.73,
-      "mid_net": 2946670.85,
-      "small_net": 2041502.41,
-      "source": "sina",
-      "flow_time": "2026-09-14T13:24:10.328958+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
