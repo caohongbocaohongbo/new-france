@@ -1,61 +1,74 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-14T10:53:27.890305+08:00",
+  "now": "2026-09-14T10:59:26.918594+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 9395
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 6741
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 37958
+        "status": "ok",
+        "latency_ms": 37336
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 394,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1427,
-  "buy_candidates": 9,
+  "scanned": 1367,
+  "buy_candidates": 8,
   "sell_candidates": 6,
-  "buy_fresh_count": 0,
+  "buy_fresh_count": 1,
   "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "002876",
+      "name": "三利谱",
+      "price": 30.75,
+      "change_pct": 9.2362,
+      "total_amount": 271191325.33,
+      "main_net_inflow": 154857793.17,
+      "main_inflow_ratio": 57.1028,
+      "super_net": 124201762.17,
+      "big_net": 30656031.0,
+      "mid_net": 8710370.16,
+      "small_net": 5535792.0,
+      "source": "sina",
+      "flow_time": "2026-09-14T10:59:26.918594+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "000099",
-      "name": "中信海直",
-      "price": 13.17,
-      "change_pct": -1.3483,
-      "total_amount": 33141236.78,
-      "main_net_inflow": -10776916.49,
-      "main_inflow_ratio": -32.5181,
-      "super_net": 0.0,
-      "big_net": -10776916.49,
-      "mid_net": -2142063.73,
-      "small_net": -661115.0,
+      "code": "600777",
+      "name": "新潮能源",
+      "price": 4.05,
+      "change_pct": -1.2195,
+      "total_amount": 98194127.0,
+      "main_net_inflow": -33300306.76,
+      "main_inflow_ratio": -33.9127,
+      "super_net": -17383776.76,
+      "big_net": -15916530.0,
+      "mid_net": -5006908.0,
+      "small_net": -2851960.24,
       "source": "sina",
-      "flow_time": "2026-09-14T10:53:27.890305+08:00",
+      "flow_time": "2026-09-14T10:59:26.918594+08:00",
       "severity": "warn"
     }
   ]
