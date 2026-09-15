@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-15T13:52:58.156783+08:00",
+  "now": "2026-09-15T13:58:39.861990+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5515
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1186
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38033
+        "latency_ms": 36442
       }
     ],
     "is_stale": false,
@@ -30,13 +32,78 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1282,
-  "buy_candidates": 4,
-  "sell_candidates": 25,
+  "scanned": 1517,
+  "buy_candidates": 7,
+  "sell_candidates": 33,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 4,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "600558",
+      "name": "大西洋",
+      "price": 4.7,
+      "change_pct": -1.6736,
+      "total_amount": 42394984.0,
+      "main_net_inflow": -18618827.0,
+      "main_inflow_ratio": -43.9175,
+      "super_net": -13925959.0,
+      "big_net": -4692868.0,
+      "mid_net": -4127546.0,
+      "small_net": -1219749.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T13:58:39.861990+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "600208",
+      "name": "衢州发展",
+      "price": 2.79,
+      "change_pct": -1.4134,
+      "total_amount": 76624948.0,
+      "main_net_inflow": -23949176.0,
+      "main_inflow_ratio": -31.2551,
+      "super_net": -17127931.0,
+      "big_net": -6821245.0,
+      "mid_net": -2231390.0,
+      "small_net": -3688218.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T13:58:39.861990+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "605333",
+      "name": "沪光股份",
+      "price": 16.0,
+      "change_pct": -1.4778,
+      "total_amount": 20692916.02,
+      "main_net_inflow": -6316778.0,
+      "main_inflow_ratio": -30.5263,
+      "super_net": -1053828.0,
+      "big_net": -5262950.0,
+      "mid_net": -2230194.0,
+      "small_net": -1117939.14,
+      "source": "sina",
+      "flow_time": "2026-09-15T13:58:39.861990+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002860",
+      "name": "星帅尔",
+      "price": 15.78,
+      "change_pct": -1.3133,
+      "total_amount": 102522026.45,
+      "main_net_inflow": -30868801.25,
+      "main_inflow_ratio": -30.1094,
+      "super_net": -25460350.0,
+      "big_net": -5408451.25,
+      "mid_net": -418308.6,
+      "small_net": -363663.7,
+      "source": "sina",
+      "flow_time": "2026-09-15T13:58:39.861990+08:00",
+      "severity": "warn"
+    }
+  ]
 }
