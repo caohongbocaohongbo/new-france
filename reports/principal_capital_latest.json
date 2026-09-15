@@ -1,108 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-15T13:35:42.077627+08:00",
+  "now": "2026-09-15T13:41:29.913075+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2892
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1354
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 37571
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 36669
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 384,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1490,
   "buy_candidates": 7,
   "sell_candidates": 31,
-  "buy_fresh_count": 2,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "001216",
-      "name": "华瓷股份",
-      "price": 16.43,
-      "change_pct": 9.9732,
-      "total_amount": 62468364.0,
-      "main_net_inflow": 42790153.0,
-      "main_inflow_ratio": 68.4989,
-      "super_net": 20064510.0,
-      "big_net": 22725643.0,
-      "mid_net": 11285767.0,
-      "small_net": 8392444.0,
-      "source": "sina",
-      "flow_time": "2026-09-15T13:35:42.077627+08:00"
-    },
-    {
-      "code": "603266",
-      "name": "天龙股份",
-      "price": 16.73,
-      "change_pct": 9.9934,
-      "total_amount": 141650502.0,
-      "main_net_inflow": 80545578.0,
-      "main_inflow_ratio": 56.8622,
-      "super_net": 43500939.0,
-      "big_net": 37044639.0,
-      "mid_net": 9465110.0,
-      "small_net": 2895136.0,
-      "source": "sina",
-      "flow_time": "2026-09-15T13:35:42.077627+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "002191",
-      "name": "劲嘉股份",
-      "price": 3.58,
-      "change_pct": -2.1858,
-      "total_amount": 36259602.0,
-      "main_net_inflow": -12637363.0,
-      "main_inflow_ratio": -34.8525,
-      "super_net": -10415632.0,
-      "big_net": -2221731.0,
-      "mid_net": -2591674.0,
-      "small_net": -1118037.0,
-      "source": "sina",
-      "flow_time": "2026-09-15T13:35:42.077627+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002489",
-      "name": "浙江永强",
-      "price": 2.79,
-      "change_pct": -1.7606,
-      "total_amount": 33246118.67,
-      "main_net_inflow": -10148254.39,
-      "main_inflow_ratio": -30.5246,
-      "super_net": -7694559.0,
-      "big_net": -2453695.39,
-      "mid_net": -3482569.0,
-      "small_net": -1773306.72,
-      "source": "sina",
-      "flow_time": "2026-09-15T13:35:42.077627+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
