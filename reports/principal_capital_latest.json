@@ -1,13 +1,13 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-15T11:09:31.151372+08:00",
+  "now": "2026-09-15T11:22:20.031440+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
@@ -16,28 +16,172 @@
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1639
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 43857
+        "status": "ok",
+        "latency_ms": 41742
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 397,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 980,
-  "buy_candidates": 3,
-  "sell_candidates": 22,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 1286,
+  "buy_candidates": 5,
+  "sell_candidates": 32,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 7,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "002912",
+      "name": "中新赛克",
+      "price": 28.45,
+      "change_pct": 10.0155,
+      "total_amount": 388125499.85,
+      "main_net_inflow": 325157094.65,
+      "main_inflow_ratio": 83.7763,
+      "super_net": 316132754.65,
+      "big_net": 9024340.0,
+      "mid_net": 7453900.0,
+      "small_net": 5242083.2,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00"
+    },
+    {
+      "code": "600088",
+      "name": "中视传媒",
+      "price": 15.57,
+      "change_pct": 5.6309,
+      "total_amount": 610155152.39,
+      "main_net_inflow": 314377222.27,
+      "main_inflow_ratio": 51.5241,
+      "super_net": 278037874.23,
+      "big_net": 36339348.04,
+      "mid_net": 23366212.12,
+      "small_net": 12474243.4,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "601878",
+      "name": "浙商证券",
+      "price": 9.02,
+      "change_pct": -0.4415,
+      "total_amount": 46600345.0,
+      "main_net_inflow": -15702156.6,
+      "main_inflow_ratio": -33.6954,
+      "super_net": -11896504.8,
+      "big_net": -3805651.8,
+      "mid_net": -1071716.0,
+      "small_net": -79850.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601368",
+      "name": "绿城水务",
+      "price": 4.48,
+      "change_pct": -1.9694,
+      "total_amount": 12711684.0,
+      "main_net_inflow": -4192663.0,
+      "main_inflow_ratio": -32.9828,
+      "super_net": 0.0,
+      "big_net": -4192663.0,
+      "mid_net": -1488352.0,
+      "small_net": -358775.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603210",
+      "name": "泰鸿万立",
+      "price": 12.91,
+      "change_pct": 0.3888,
+      "total_amount": 12574695.99,
+      "main_net_inflow": -4134788.0,
+      "main_inflow_ratio": -32.8818,
+      "super_net": 0.0,
+      "big_net": -4134788.0,
+      "mid_net": -1959337.01,
+      "small_net": -65657.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600300",
+      "name": "维维股份",
+      "price": 3.15,
+      "change_pct": -2.4768,
+      "total_amount": 67599772.0,
+      "main_net_inflow": -22042102.92,
+      "main_inflow_ratio": -32.6068,
+      "super_net": -16164856.0,
+      "big_net": -5877246.92,
+      "mid_net": -138041.0,
+      "small_net": -1871785.92,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002847",
+      "name": "盐津铺子",
+      "price": 43.29,
+      "change_pct": -1.0514,
+      "total_amount": 34127992.73,
+      "main_net_inflow": -10895104.31,
+      "main_inflow_ratio": -31.9242,
+      "super_net": -1593072.0,
+      "big_net": -9302032.31,
+      "mid_net": -833737.42,
+      "small_net": -1622221.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600846",
+      "name": "同济科技",
+      "price": 10.92,
+      "change_pct": -1.7102,
+      "total_amount": 13090991.0,
+      "main_net_inflow": -4174982.0,
+      "main_inflow_ratio": -31.892,
+      "super_net": 0.0,
+      "big_net": -4174982.0,
+      "mid_net": -2134985.0,
+      "small_net": 453632.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600061",
+      "name": "国投资本",
+      "price": 6.24,
+      "change_pct": -0.9524,
+      "total_amount": 72124569.0,
+      "main_net_inflow": -21682393.0,
+      "main_inflow_ratio": -30.0624,
+      "super_net": -14818057.0,
+      "big_net": -6864336.0,
+      "mid_net": -3670848.0,
+      "small_net": -830800.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T11:22:20.031440+08:00",
+      "severity": "warn"
+    }
+  ]
 }
