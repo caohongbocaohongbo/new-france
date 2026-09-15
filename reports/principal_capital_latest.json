@@ -1,45 +1,154 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-15T10:17:10.248557+08:00",
+  "now": "2026-09-15T10:22:55.815793+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3732
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1490
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 37473
+        "status": "ok",
+        "latency_ms": 41792
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 387,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1327,
-  "buy_candidates": 3,
-  "sell_candidates": 77,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "scanned": 1317,
+  "buy_candidates": 4,
+  "sell_candidates": 56,
+  "buy_fresh_count": 2,
+  "sell_fresh_count": 5,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "601218",
+      "name": "吉鑫科技",
+      "price": 5.18,
+      "change_pct": 9.9788,
+      "total_amount": 262325995.9,
+      "main_net_inflow": 140172404.9,
+      "main_inflow_ratio": 53.4344,
+      "super_net": 108135950.14,
+      "big_net": 32036454.76,
+      "mid_net": -825032.0,
+      "small_net": -1048639.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00"
+    },
+    {
+      "code": "600987",
+      "name": "航民股份",
+      "price": 6.36,
+      "change_pct": 0.7924,
+      "total_amount": 11560940.7,
+      "main_net_inflow": 6073059.0,
+      "main_inflow_ratio": 52.5308,
+      "super_net": 0.0,
+      "big_net": 6073059.0,
+      "mid_net": 129791.0,
+      "small_net": -211970.7,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "002035",
+      "name": "华帝股份",
+      "price": 4.51,
+      "change_pct": -1.5284,
+      "total_amount": 13945723.0,
+      "main_net_inflow": -6470674.0,
+      "main_inflow_ratio": -46.399,
+      "super_net": -1346316.0,
+      "big_net": -5124358.0,
+      "mid_net": -1830369.0,
+      "small_net": -760192.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "002191",
+      "name": "劲嘉股份",
+      "price": 3.59,
+      "change_pct": -1.9126,
+      "total_amount": 27533242.0,
+      "main_net_inflow": -10991066.0,
+      "main_inflow_ratio": -39.9193,
+      "super_net": -8549752.0,
+      "big_net": -2441314.0,
+      "mid_net": -1927373.0,
+      "small_net": -743891.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600261",
+      "name": "阳光照明",
+      "price": 3.18,
+      "change_pct": -1.548,
+      "total_amount": 17758213.0,
+      "main_net_inflow": -6230794.0,
+      "main_inflow_ratio": -35.0868,
+      "super_net": -4080843.0,
+      "big_net": -2149951.0,
+      "mid_net": -2108361.5,
+      "small_net": -296529.5,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603111",
+      "name": "康尼机电",
+      "price": 6.05,
+      "change_pct": -1.626,
+      "total_amount": 13297537.0,
+      "main_net_inflow": -4326109.0,
+      "main_inflow_ratio": -32.5332,
+      "super_net": -3449710.0,
+      "big_net": -876399.0,
+      "mid_net": -334813.0,
+      "small_net": 40545.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601963",
+      "name": "重庆银行",
+      "price": 11.19,
+      "change_pct": -2.014,
+      "total_amount": 44866028.2,
+      "main_net_inflow": -13505455.8,
+      "main_inflow_ratio": -30.1017,
+      "super_net": -2669057.8,
+      "big_net": -10836398.0,
+      "mid_net": -2169837.0,
+      "small_net": 61351.0,
+      "source": "sina",
+      "flow_time": "2026-09-15T10:22:55.815793+08:00",
+      "severity": "warn"
+    }
+  ]
 }
