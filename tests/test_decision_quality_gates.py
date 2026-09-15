@@ -474,6 +474,69 @@ def test_zt_seal_unavailable_on_zt_fetch_failure(monkeypatch):
     assert out["unavailable_required_fields"] == ["zt_events"]
 
 
+
+
+def test_fallback_supplements_missing_codes_from_backup(monkeypatch):
+    import pandas as pd
+    import backend.plugins.overnight_arbitrage.service as oa
+
+    def primary():
+        df = pd.DataFrame([
+            _quote_row("600001", 换手率=8.0),
+            _quote_row("600002", 换手率=8.0),
+        ])
+        df.attrs["coverage"] = {"source": "eastmoney_all_a", "universe_total": 100, "received": 2, "truncated": True}
+        return df
+
+    def backup():
+        df = pd.DataFrame([
+            _quote_row("600002", 换手率=9.0),
+            _quote_row("600003", 换手率=7.0),
+        ])
+        df.attrs["coverage"] = {"source": "sina_all_a", "universe_total": None, "received": 2, "truncated": False}
+        return df
+
+    monkeypatch.setattr(oa, "_sina_all_a_snapshot", backup)
+    quotes, statuses, errors = oa._fetch_quotes_with_fallbacks(primary, zt_pool=None)
+    codes = set(quotes["代码"])
+    assert codes == {"600001", "600002", "600003"}
+    assert any(s["source"] == "sina_all_a" for s in statuses)
+
+
+def test_kline_adjustment_version_invalidation_on_change(monkeypatch):
+    import pandas as pd
+    import backend.plugins.common as common
+    import backend.services.data_backend.bars_store as bs
+
+    calls = {"deleted": 0, "upserted": 0}
+    monkeypatch.setenv("KLINE_STORE_WRITE_ENABLED", "1")
+    monkeypatch.setattr(bs, "current_version", lambda code, adj: "v1")
+
+    def fake_delete(code, adj):
+        calls["deleted"] += 1
+
+    def fake_upsert(code, df, **kw):
+        calls["upserted"] += 1
+
+    monkeypatch.setattr(bs, "delete_adjustment", fake_delete)
+    monkeypatch.setattr(bs, "upsert_daily_bars", fake_upsert)
+
+    df = pd.DataFrame({"日期": ["2026-06-01"], "收盘": [1.0]})
+    df.attrs["adjustment"] = "qfq"
+    df.attrs["adjustment_version"] = "v2"
+    common._persist_kline_best_effort("600519", df)
+    assert calls["deleted"] == 1
+    assert calls["upserted"] == 1
+
+
+def test_compute_limit_prices_limit_free_returns_unknown():
+    from backend.agents.layer1_data_collector.sources.zt_contract import compute_limit_prices, classify_zt_basic
+
+    assert compute_limit_prices("10.0", "600001", "", None, limit_free=True) == (None, None, None)
+    out = classify_zt_basic({"代码": "600001", "名称": "新股", "最新价": 10.0, "最高价": 10.5, "涨停价": 11.0, "limit_free": True})
+    assert out["state"] == "unknown" and "price_limit_free" in out["unknown_reasons"]
+
+
 def test_kline_return_carries_coverage_attrs():
     import backend.plugins.common as common
 

@@ -130,6 +130,17 @@ def missing_dates(code: str, start: str, end: str, adjustment: str = "raw") -> l
     return [d for d in expected if d not in existing]
 
 
+def current_version(code: str, adjustment: str = "raw") -> Optional[str]:
+    """返回该 (code, adjustment) 已入库的 adjustment_version；无记录返回 None。"""
+    ensure_schema()
+    df = pd.read_sql(
+        f"SELECT DISTINCT adjustment_version FROM {TABLE} WHERE code = :c AND adjustment = :a LIMIT 2",
+        engine, params={"c": str(code).zfill(6), "a": adjustment},
+    )
+    versions = [v for v in df["adjustment_version"].tolist() if v]
+    return versions[0] if len(versions) == 1 else None
+
+
 def delete_adjustment(code: str, adjustment: str) -> int:
     """复权版本失效：删除该 (code, adjustment) 全部行。"""
     ensure_schema()

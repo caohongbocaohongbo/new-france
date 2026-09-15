@@ -36,8 +36,13 @@ def _quantize_price(value: Decimal) -> Decimal:
     return value.quantize(_PRICE_STEP, rounding=ROUND_HALF_UP)
 
 
-def compute_limit_prices(prev_close, code, name="", on_date=None):
-    """按有效规则/参考价/报价单位计算涨停价与跌停价；未知返回 (None, None, None)。"""
+def compute_limit_prices(prev_close, code, name="", on_date=None, limit_free=None):
+    """按有效规则/参考价/报价单位计算涨停价与跌停价；未知返回 (None, None, None)。
+
+    limit_free=True 表示无涨跌幅限制期（新股上市初期等），不进入普通规则分支。
+    """
+    if limit_free is True:
+        return None, None, None
     try:
         prev = Decimal(str(prev_close))
     except (InvalidOperation, ValueError, TypeError):
@@ -68,8 +73,11 @@ def classify_zt_basic(row) -> dict:
     unknown = []
     if not code:
         return {"code": code, "state": "unknown", "touched": False, "at_limit": False, "unknown_reasons": ["missing_code"]}
+    if row.get("limit_free") is True:
+        return {"code": code, "state": "unknown", "touched": False, "at_limit": False,
+                "unknown_reasons": ["price_limit_free"]}
     if limit_up is None:
-        limit_up, _, _ = compute_limit_prices(row.get("昨收"), code, name)
+        limit_up, _, _ = compute_limit_prices(row.get("昨收"), code, name, limit_free=row.get("limit_free"))
         if limit_up is None:
             unknown.append("limit_price_unknown")
     if limit_up is None:

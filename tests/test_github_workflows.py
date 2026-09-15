@@ -168,6 +168,7 @@ class GitHubWorkflowTest(unittest.TestCase):
             script_path = repo / "scripts/commit_screening_data.sh"
             script_path.parent.mkdir()
             shutil.copy2(SCRIPT, script_path)
+            shutil.copy2(ROOT / "scripts/merge_picker_snapshots.py", repo / "scripts/merge_picker_snapshots.py")
 
             (repo / "data/france.md").write_text("generated main data\n", encoding="utf-8")
             (repo / "reports/latest.json").write_text('{"generated": true}\n', encoding="utf-8")

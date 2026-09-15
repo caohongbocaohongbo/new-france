@@ -1047,25 +1047,53 @@ def _fetch_quotes_with_fallbacks(
     statuses: List[dict] = []
     errors: List[str] = []
 
+    merged = None
+    covered_codes = set()
+
+    def _merge(quotes, source_name):
+        nonlocal merged, covered_codes
+        batch = quotes.copy()
+        batch["数据源"] = source_name
+        if merged is None:
+            merged = batch
+        else:
+            # 只补 primary 缺失的代码；不覆盖、不跨源拼接同一行，各自保留 source/source_time
+            codes = {str(c).zfill(6) for c in batch["代码"]}
+            missing = batch[~batch["代码"].map(lambda c: str(c).zfill(6) in covered_codes)].copy()
+            merged = pd.concat([merged, missing], ignore_index=True)
+        covered_codes |= {str(c).zfill(6) for c in batch["代码"]}
+
     for source_name, fetcher in sources:
         try:
             quotes = fetcher()
-            count = 0 if quotes is None else len(quotes)
-            if count:
-                coverage = getattr(quotes, "attrs", {}).get("coverage") or {}
-                status = _empty_source_status(source_name, "ok", count)
-                status["coverage"] = coverage
-                if coverage.get("truncated"):
-                    status["status"] = "degraded"
-                    errors.append(f"{source_name} 覆盖不完整: received={coverage.get('received')} universe={coverage.get('universe_total')}")
-                statuses.append(status)
-                return _append_quote_source(quotes, source_name), statuses, errors
-            statuses.append(_empty_source_status(source_name, "empty", 0))
-            errors.append(f"{source_name} 返回空行情")
         except Exception as exc:
             logger.warning("尾盘套利行情源 %s 失败: %s", source_name, exc)
             statuses.append(_empty_source_status(source_name, "error", 0, str(exc)))
             errors.append(f"{source_name} 失败: {exc}")
+            continue
+        count = 0 if quotes is None else len(quotes)
+        if not count:
+            statuses.append(_empty_source_status(source_name, "empty", 0))
+            errors.append(f"{source_name} 返回空行情")
+            continue
+        coverage = getattr(quotes, "attrs", {}).get("coverage") or {}
+        _merge(quotes, source_name)
+        status = _empty_source_status(source_name, "ok", count)
+        status["coverage"] = coverage
+        if coverage.get("truncated"):
+            status["status"] = "degraded"
+            errors.append(f"{source_name} 覆盖不完整: received={coverage.get('received')} universe={coverage.get('universe_total')}")
+        statuses.append(status)
+        # 完整覆盖即止；截断/空才继续下一源补缺
+        if not coverage.get("truncated"):
+            break
+
+    if merged is not None and not merged.empty:
+        merged.attrs["coverage"] = {
+            "received": len(merged),
+            "by_source": {s["source"]: s["count"] for s in statuses},
+        }
+        return merged, statuses, errors
 
     fallback = _zt_pool_quote_fallback(zt_pool)
     fallback_count = len(fallback)

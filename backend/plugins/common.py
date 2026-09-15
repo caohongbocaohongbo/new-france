@@ -140,13 +140,20 @@ def _persist_kline_best_effort(code: str, data) -> None:
     if data is None or getattr(data, "empty", False):
         return
     try:
-        from backend.services.data_backend.bars_store import upsert_daily_bars
+        from backend.services.data_backend.bars_store import current_version, delete_adjustment, upsert_daily_bars
 
         attrs = getattr(data, "attrs", {}) or {}
+        adjustment = attrs.get("adjustment") or "raw"
+        version = attrs.get("adjustment_version")
+        # 复权版本失效：版本变化时先删除旧版本，再写新版本（§12.4 第3步接入消费链路）
+        if version:
+            old = current_version(str(code).zfill(6), adjustment)
+            if old is not None and old != version:
+                delete_adjustment(str(code).zfill(6), adjustment)
         upsert_daily_bars(
             str(code).zfill(6), data,
-            adjustment=attrs.get("adjustment") or "raw",
-            adjustment_version=attrs.get("adjustment_version"),
+            adjustment=adjustment,
+            adjustment_version=version,
             source=attrs.get("source") or "kline",
             is_final=bool(attrs.get("is_final", True)),
         )
