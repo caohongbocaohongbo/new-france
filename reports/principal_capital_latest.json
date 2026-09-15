@@ -1,59 +1,92 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-15T14:39:11.542008+08:00",
+  "now": "2026-09-15T14:44:54.139265+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 2785
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1225
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 36810
+        "status": "ok",
+        "latency_ms": 40987
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 392,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1514,
-  "buy_candidates": 7,
+  "scanned": 1436,
+  "buy_candidates": 5,
   "sell_candidates": 32,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "002489",
-      "name": "浙江永强",
-      "price": 2.76,
-      "change_pct": -2.8169,
-      "total_amount": 42837834.67,
-      "main_net_inflow": -15017725.53,
-      "main_inflow_ratio": -35.0572,
-      "super_net": -9595142.14,
-      "big_net": -5422583.39,
-      "mid_net": -4382174.0,
-      "small_net": -3152192.58,
+      "code": "002146",
+      "name": "荣盛发展",
+      "price": 1.14,
+      "change_pct": -1.7241,
+      "total_amount": 60449745.0,
+      "main_net_inflow": -19757658.0,
+      "main_inflow_ratio": -32.6844,
+      "super_net": -13209538.0,
+      "big_net": -6548120.0,
+      "mid_net": -835153.0,
+      "small_net": -1568212.0,
       "source": "sina",
-      "flow_time": "2026-09-15T14:39:11.542008+08:00",
+      "flow_time": "2026-09-15T14:44:54.139265+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000157",
+      "name": "中联重科",
+      "price": 6.44,
+      "change_pct": -1.227,
+      "total_amount": 145830849.96,
+      "main_net_inflow": -45851568.59,
+      "main_inflow_ratio": -31.4416,
+      "super_net": -30170767.39,
+      "big_net": -15680801.2,
+      "mid_net": -10902979.16,
+      "small_net": 451771.59,
+      "source": "sina",
+      "flow_time": "2026-09-15T14:44:54.139265+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600300",
+      "name": "维维股份",
+      "price": 3.13,
+      "change_pct": -3.096,
+      "total_amount": 94227771.0,
+      "main_net_inflow": -28684945.92,
+      "main_inflow_ratio": -30.4421,
+      "super_net": -18529963.0,
+      "big_net": -10154982.92,
+      "mid_net": -1520664.0,
+      "small_net": -3620284.92,
+      "source": "sina",
+      "flow_time": "2026-09-15T14:44:54.139265+08:00",
       "severity": "warn"
     }
   ]
