@@ -1,43 +1,109 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T10:23:54.764734+08:00",
+  "now": "2026-09-16T10:29:42.904145+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 4773
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1497
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 45353
+        "status": "ok",
+        "latency_ms": 41296
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 405,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1139,
+  "scanned": 1418,
   "buy_candidates": 7,
   "sell_candidates": 48,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 4,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603049",
+      "name": "中策橡胶",
+      "price": 44.36,
+      "change_pct": -1.1807,
+      "total_amount": 50678727.0,
+      "main_net_inflow": -19853982.0,
+      "main_inflow_ratio": -39.1762,
+      "super_net": -10763747.0,
+      "big_net": -9090235.0,
+      "mid_net": -3969272.0,
+      "small_net": 596285.0,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:29:42.904145+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002252",
+      "name": "上海莱士",
+      "price": 4.82,
+      "change_pct": -1.833,
+      "total_amount": 69465325.0,
+      "main_net_inflow": -24411105.0,
+      "main_inflow_ratio": -35.1414,
+      "super_net": -21745633.0,
+      "big_net": -2665472.0,
+      "mid_net": 1392676.0,
+      "small_net": 1075156.0,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:29:42.904145+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "000898",
+      "name": "鞍钢股份",
+      "price": 1.99,
+      "change_pct": -1.9704,
+      "total_amount": 48551554.0,
+      "main_net_inflow": -14813193.0,
+      "main_inflow_ratio": -30.5102,
+      "super_net": -11168636.0,
+      "big_net": -3644557.0,
+      "mid_net": -1843800.0,
+      "small_net": 665599.0,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:29:42.904145+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002984",
+      "name": "森麒麟",
+      "price": 12.61,
+      "change_pct": -2.5502,
+      "total_amount": 78353140.1,
+      "main_net_inflow": -23685830.8,
+      "main_inflow_ratio": -30.2296,
+      "super_net": -10569853.8,
+      "big_net": -13115977.0,
+      "mid_net": -1422642.1,
+      "small_net": 817257.4,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:29:42.904145+08:00",
+      "severity": "warn"
+    }
+  ]
 }
