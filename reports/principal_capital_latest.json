@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T10:12:04.789201+08:00",
+  "now": "2026-09-16T10:17:54.831132+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3530
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1476
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 45960
+        "latency_ms": 49748
       }
     ],
     "is_stale": false,
@@ -30,93 +32,45 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1288,
-  "buy_candidates": 6,
-  "sell_candidates": 53,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 5,
+  "scanned": 1139,
+  "buy_candidates": 7,
+  "sell_candidates": 48,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "002961",
+      "name": "瑞达期货",
+      "price": 20.97,
+      "change_pct": 10.021,
+      "total_amount": 126977399.35,
+      "main_net_inflow": 67214277.7,
+      "main_inflow_ratio": 52.934,
+      "super_net": 65666840.0,
+      "big_net": 1547437.7,
+      "mid_net": 3999267.3,
+      "small_net": 291335.45,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:17:54.831132+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "600905",
-      "name": "三峡能源",
-      "price": 3.65,
-      "change_pct": -0.8152,
-      "total_amount": 81863686.4,
-      "main_net_inflow": -45970864.4,
-      "main_inflow_ratio": -56.1554,
-      "super_net": -41353588.4,
-      "big_net": -4617276.0,
-      "mid_net": -3141560.0,
-      "small_net": -1568084.0,
+      "code": "603707",
+      "name": "健友股份",
+      "price": 7.35,
+      "change_pct": -0.6757,
+      "total_amount": 17943520.0,
+      "main_net_inflow": -7077013.0,
+      "main_inflow_ratio": -39.4405,
+      "super_net": -6003451.0,
+      "big_net": -1073562.0,
+      "mid_net": -1633738.0,
+      "small_net": 516435.0,
       "source": "sina",
-      "flow_time": "2026-09-16T10:12:04.789201+08:00",
-      "severity": "danger"
-    },
-    {
-      "code": "601155",
-      "name": "新城控股",
-      "price": 10.99,
-      "change_pct": -2.5709,
-      "total_amount": 69932484.08,
-      "main_net_inflow": -28461999.34,
-      "main_inflow_ratio": -40.6993,
-      "super_net": -20124423.0,
-      "big_net": -8337576.34,
-      "mid_net": -1690532.74,
-      "small_net": 84110.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:12:04.789201+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "000885",
-      "name": "城发环境",
-      "price": 11.62,
-      "change_pct": -0.5137,
-      "total_amount": 10866079.16,
-      "main_net_inflow": -3380403.8,
-      "main_inflow_ratio": -31.1097,
-      "super_net": 0.0,
-      "big_net": -3380403.8,
-      "mid_net": -1110553.04,
-      "small_net": -529558.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:12:04.789201+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002216",
-      "name": "三全食品",
-      "price": 11.54,
-      "change_pct": -0.0866,
-      "total_amount": 14512512.91,
-      "main_net_inflow": -4468412.0,
-      "main_inflow_ratio": -30.7901,
-      "super_net": -1414500.0,
-      "big_net": -3053912.0,
-      "mid_net": 1163842.54,
-      "small_net": 635730.37,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:12:04.789201+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "603338",
-      "name": "浙江鼎力",
-      "price": 54.54,
-      "change_pct": -3.2979,
-      "total_amount": 78211175.64,
-      "main_net_inflow": -23702728.76,
-      "main_inflow_ratio": -30.3061,
-      "super_net": -12944394.0,
-      "big_net": -10758334.76,
-      "mid_net": -3702741.0,
-      "small_net": -906781.88,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:12:04.789201+08:00",
+      "flow_time": "2026-09-16T10:17:54.831132+08:00",
       "severity": "warn"
     }
   ]
