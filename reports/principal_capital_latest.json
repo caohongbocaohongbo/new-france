@@ -1,108 +1,44 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T10:35:35.050264+08:00",
+  "now": "2026-09-16T10:41:28.661202+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 6067
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1511
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 48570
+        "status": "ok",
+        "latency_ms": 43432
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 400,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1418,
+  "scanned": 1107,
   "buy_candidates": 7,
-  "sell_candidates": 48,
+  "sell_candidates": 31,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 4,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "000978",
-      "name": "桂林旅游",
-      "price": 8.79,
-      "change_pct": -10.0307,
-      "total_amount": 126065301.0,
-      "main_net_inflow": -116522877.0,
-      "main_inflow_ratio": -92.4306,
-      "super_net": -99765621.0,
-      "big_net": -16757256.0,
-      "mid_net": -4391484.0,
-      "small_net": -5150940.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:35:35.050264+08:00",
-      "severity": "danger"
-    },
-    {
-      "code": "002212",
-      "name": "天融信",
-      "price": 6.99,
-      "change_pct": -10.0386,
-      "total_amount": 252206190.0,
-      "main_net_inflow": -217708443.0,
-      "main_inflow_ratio": -86.3216,
-      "super_net": -184001265.0,
-      "big_net": -33707178.0,
-      "mid_net": -25059150.0,
-      "small_net": -9438597.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:35:35.050264+08:00",
-      "severity": "danger"
-    },
-    {
-      "code": "600166",
-      "name": "福田汽车",
-      "price": 2.74,
-      "change_pct": -3.5211,
-      "total_amount": 213782804.0,
-      "main_net_inflow": -83809118.0,
-      "main_inflow_ratio": -39.2029,
-      "super_net": -76463225.0,
-      "big_net": -7345893.0,
-      "mid_net": 1479056.0,
-      "small_net": 2236102.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:35:35.050264+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000001",
-      "name": "平安银行",
-      "price": 11.6,
-      "change_pct": -1.8613,
-      "total_amount": 486475581.84,
-      "main_net_inflow": -169275723.28,
-      "main_inflow_ratio": -34.7963,
-      "super_net": -142738778.88,
-      "big_net": -26536944.4,
-      "mid_net": -6627132.44,
-      "small_net": 822633.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T10:35:35.050264+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
