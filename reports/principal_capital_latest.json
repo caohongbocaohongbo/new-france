@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T10:53:17.513025+08:00",
+  "now": "2026-09-16T10:59:12.708862+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3595
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1497
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 45314
+        "latency_ms": 42780
       }
     ],
     "is_stale": false,
@@ -32,45 +30,125 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 869,
-  "buy_candidates": 5,
-  "sell_candidates": 23,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "scanned": 1326,
+  "buy_candidates": 8,
+  "sell_candidates": 28,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 6,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
+  "buy_triggered": [
+    {
+      "code": "002076",
+      "name": "星光股份",
+      "price": 2.12,
+      "change_pct": 3.9216,
+      "total_amount": 25363772.8,
+      "main_net_inflow": 13167370.8,
+      "main_inflow_ratio": 51.9141,
+      "super_net": 10285101.0,
+      "big_net": 2882269.8,
+      "mid_net": -18108.0,
+      "small_net": -1129578.0,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:59:12.708862+08:00"
+    }
+  ],
   "sell_triggered": [
     {
-      "code": "601390",
-      "name": "中国中铁",
-      "price": 4.27,
-      "change_pct": -1.1574,
-      "total_amount": 184619332.48,
-      "main_net_inflow": -74251114.98,
-      "main_inflow_ratio": -40.2185,
-      "super_net": -54920263.77,
-      "big_net": -19330851.21,
-      "mid_net": -352047.0,
-      "small_net": 3712716.0,
+      "code": "000709",
+      "name": "河钢股份",
+      "price": 2.04,
+      "change_pct": -1.4493,
+      "total_amount": 85042802.61,
+      "main_net_inflow": -47281635.62,
+      "main_inflow_ratio": -55.5975,
+      "super_net": -43245608.62,
+      "big_net": -4036027.0,
+      "mid_net": -2242443.0,
+      "small_net": -727197.83,
       "source": "sina",
-      "flow_time": "2026-09-16T10:53:17.513025+08:00",
-      "severity": "alert"
+      "flow_time": "2026-09-16T10:59:12.708862+08:00",
+      "severity": "danger"
     },
     {
-      "code": "000531",
-      "name": "穗恒运Ａ",
-      "price": 5.73,
-      "change_pct": -1.0363,
-      "total_amount": 36057215.16,
-      "main_net_inflow": -11136748.02,
-      "main_inflow_ratio": -30.8863,
-      "super_net": -9567849.0,
-      "big_net": -1568899.02,
-      "mid_net": -831399.34,
-      "small_net": -1167380.48,
+      "code": "603518",
+      "name": "锦泓集团",
+      "price": 7.55,
+      "change_pct": -1.178,
+      "total_amount": 34109700.0,
+      "main_net_inflow": -12730115.0,
+      "main_inflow_ratio": -37.3211,
+      "super_net": 0.0,
+      "big_net": -12730115.0,
+      "mid_net": 806666.0,
+      "small_net": 421207.0,
       "source": "sina",
-      "flow_time": "2026-09-16T10:53:17.513025+08:00",
+      "flow_time": "2026-09-16T10:59:12.708862+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002595",
+      "name": "豪迈科技",
+      "price": 39.36,
+      "change_pct": -2.2597,
+      "total_amount": 108080461.25,
+      "main_net_inflow": -38571451.1,
+      "main_inflow_ratio": -35.6877,
+      "super_net": -14954550.1,
+      "big_net": -23616901.0,
+      "mid_net": -2753948.6,
+      "small_net": 1793192.15,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:59:12.708862+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002001",
+      "name": "新 和 成",
+      "price": 25.86,
+      "change_pct": -3.3271,
+      "total_amount": 399999625.96,
+      "main_net_inflow": -138727125.82,
+      "main_inflow_ratio": -34.6818,
+      "super_net": -103117763.01,
+      "big_net": -35609362.81,
+      "mid_net": 3418174.9,
+      "small_net": 2376435.08,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:59:12.708862+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002867",
+      "name": "周大生",
+      "price": 10.33,
+      "change_pct": -1.1483,
+      "total_amount": 36399802.5,
+      "main_net_inflow": -11452488.5,
+      "main_inflow_ratio": -31.4631,
+      "super_net": -6794047.0,
+      "big_net": -4658441.5,
+      "mid_net": -1140578.0,
+      "small_net": 1152671.0,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:59:12.708862+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601369",
+      "name": "陕鼓动力",
+      "price": 8.32,
+      "change_pct": -0.9524,
+      "total_amount": 24365577.0,
+      "main_net_inflow": -7597448.0,
+      "main_inflow_ratio": -31.1811,
+      "super_net": 0.0,
+      "big_net": -7597448.0,
+      "mid_net": -173752.0,
+      "small_net": 1781891.0,
+      "source": "sina",
+      "flow_time": "2026-09-16T10:59:12.708862+08:00",
       "severity": "warn"
     }
   ]
