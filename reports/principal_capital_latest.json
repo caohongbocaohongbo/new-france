@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T14:27:44.184297+08:00",
+  "now": "2026-09-16T14:33:28.014782+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 5083
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1276
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 38079
+        "latency_ms": 39986
       }
     ],
     "is_stale": false,
@@ -31,210 +33,28 @@
     "verify_result": null
   },
   "scanned": 2565,
-  "buy_candidates": 21,
+  "buy_candidates": 22,
   "sell_candidates": 5,
-  "buy_fresh_count": 12,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "002383",
-      "name": "合众思壮",
-      "price": 8.16,
-      "change_pct": 9.9731,
-      "total_amount": 386645966.48,
-      "main_net_inflow": 251725616.1,
-      "main_inflow_ratio": 65.1049,
-      "super_net": 202100557.74,
-      "big_net": 49625058.36,
-      "mid_net": 27232326.0,
-      "small_net": 18644899.0,
+      "code": "002442",
+      "name": "龙星科技",
+      "price": 5.68,
+      "change_pct": 10.0775,
+      "total_amount": 120691161.92,
+      "main_net_inflow": 84221904.0,
+      "main_inflow_ratio": 69.783,
+      "super_net": 67423872.0,
+      "big_net": 16798032.0,
+      "mid_net": 12001840.0,
+      "small_net": 7792073.92,
       "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "002806",
-      "name": "华锋股份",
-      "price": 15.62,
-      "change_pct": 10.0,
-      "total_amount": 199103478.5,
-      "main_net_inflow": 125576198.82,
-      "main_inflow_ratio": 63.0708,
-      "super_net": 91590343.82,
-      "big_net": 33985855.0,
-      "mid_net": 16210157.68,
-      "small_net": 8316080.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "002730",
-      "name": "电光科技",
-      "price": 23.8,
-      "change_pct": 9.9815,
-      "total_amount": 292111746.0,
-      "main_net_inflow": 176947113.0,
-      "main_inflow_ratio": 60.5751,
-      "super_net": 120407880.0,
-      "big_net": 56539233.0,
-      "mid_net": 17663676.0,
-      "small_net": 7929151.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "605566",
-      "name": "福莱蒽特",
-      "price": 27.58,
-      "change_pct": 10.012,
-      "total_amount": 89266027.0,
-      "main_net_inflow": 53834847.0,
-      "main_inflow_ratio": 60.3083,
-      "super_net": 25431243.0,
-      "big_net": 28403604.0,
-      "mid_net": 5885773.0,
-      "small_net": 4067025.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "003031",
-      "name": "中瓷电子",
-      "price": 137.72,
-      "change_pct": 10.0,
-      "total_amount": 766064338.68,
-      "main_net_inflow": 438910342.76,
-      "main_inflow_ratio": 57.2942,
-      "super_net": 359142918.76,
-      "big_net": 79767424.0,
-      "mid_net": 62001544.0,
-      "small_net": 25463326.24,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "000670",
-      "name": "盈方微",
-      "price": 7.96,
-      "change_pct": 9.9447,
-      "total_amount": 580556367.76,
-      "main_net_inflow": 316482501.16,
-      "main_inflow_ratio": 54.5137,
-      "super_net": 246179982.16,
-      "big_net": 70302519.0,
-      "mid_net": 58093178.6,
-      "small_net": 26860946.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "002787",
-      "name": "华源控股",
-      "price": 25.4,
-      "change_pct": 10.0043,
-      "total_amount": 703815237.2,
-      "main_net_inflow": 381827548.0,
-      "main_inflow_ratio": 54.2511,
-      "super_net": 280840817.0,
-      "big_net": 100986731.0,
-      "mid_net": 21850363.88,
-      "small_net": 7991190.68,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "605058",
-      "name": "澳弘电子",
-      "price": 44.33,
-      "change_pct": 10.0,
-      "total_amount": 449718407.56,
-      "main_net_inflow": 239559774.46,
-      "main_inflow_ratio": 53.2688,
-      "super_net": 211556999.96,
-      "big_net": 28002774.5,
-      "mid_net": 13188175.0,
-      "small_net": 13044989.1,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "600206",
-      "name": "有研新材",
-      "price": 51.63,
-      "change_pct": 9.9915,
-      "total_amount": 3610141225.06,
-      "main_net_inflow": 1913779923.09,
-      "main_inflow_ratio": 53.0112,
-      "super_net": 1677805806.43,
-      "big_net": 235974116.66,
-      "mid_net": 105139549.77,
-      "small_net": 27425856.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "603155",
-      "name": "新亚强",
-      "price": 15.4,
-      "change_pct": 10.0,
-      "total_amount": 371836448.83,
-      "main_net_inflow": 191979217.82,
-      "main_inflow_ratio": 51.63,
-      "super_net": 134595819.49,
-      "big_net": 57383398.33,
-      "mid_net": 29532768.85,
-      "small_net": 15576559.8,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "605100",
-      "name": "华丰股份",
-      "price": 34.08,
-      "change_pct": 10.0065,
-      "total_amount": 286630978.24,
-      "main_net_inflow": 147433769.0,
-      "main_inflow_ratio": 51.4368,
-      "super_net": 89032854.8,
-      "big_net": 58400914.2,
-      "mid_net": 19615099.0,
-      "small_net": 5412740.64,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
-    },
-    {
-      "code": "002281",
-      "name": "光迅科技",
-      "price": 185.21,
-      "change_pct": 10.0018,
-      "total_amount": 6789997878.95,
-      "main_net_inflow": 3416329714.0,
-      "main_inflow_ratio": 50.3141,
-      "super_net": 3108752109.68,
-      "big_net": 307577604.32,
-      "mid_net": 99379229.43,
-      "small_net": 12112734.0,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00"
+      "flow_time": "2026-09-16T14:33:28.014782+08:00"
     }
   ],
-  "sell_triggered": [
-    {
-      "code": "600783",
-      "name": "鲁信创投",
-      "price": 15.21,
-      "change_pct": -0.9121,
-      "total_amount": 311436058.26,
-      "main_net_inflow": -99416220.4,
-      "main_inflow_ratio": -31.9219,
-      "super_net": -83388758.6,
-      "big_net": -16027461.8,
-      "mid_net": 1795831.0,
-      "small_net": 4585705.14,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:27:44.184297+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
