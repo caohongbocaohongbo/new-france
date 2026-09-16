@@ -1,41 +1,38 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T11:04:59.506209+08:00",
+  "now": "2026-09-16T11:10:57.477797+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3623
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1479
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 48847
+        "status": "ok",
+        "latency_ms": 57562
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 400,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1326,
-  "buy_candidates": 8,
-  "sell_candidates": 28,
+  "scanned": 821,
+  "buy_candidates": 5,
+  "sell_candidates": 19,
   "buy_fresh_count": 0,
   "sell_fresh_count": 1,
   "email_sent": true,
@@ -43,20 +40,20 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600022",
-      "name": "山东钢铁",
-      "price": 1.3,
-      "change_pct": -1.5151,
-      "total_amount": 80967227.1,
-      "main_net_inflow": -44520624.8,
-      "main_inflow_ratio": -54.986,
-      "super_net": -36431427.0,
-      "big_net": -8089197.8,
-      "mid_net": -1755597.0,
-      "small_net": 1780417.3,
+      "code": "601128",
+      "name": "常熟银行",
+      "price": 6.31,
+      "change_pct": -1.252,
+      "total_amount": 171510408.86,
+      "main_net_inflow": -52382685.12,
+      "main_inflow_ratio": -30.542,
+      "super_net": -48357175.5,
+      "big_net": -4025509.62,
+      "mid_net": -5072910.3,
+      "small_net": 345813.56,
       "source": "sina",
-      "flow_time": "2026-09-16T11:04:59.506209+08:00",
-      "severity": "danger"
+      "flow_time": "2026-09-16T11:10:57.477797+08:00",
+      "severity": "warn"
     }
   ]
 }
