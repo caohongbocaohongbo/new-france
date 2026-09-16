@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-16T14:33:28.014782+08:00",
+  "now": "2026-09-16T14:39:18.264562+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5083
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1276
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 39986
+        "latency_ms": 37697
       }
     ],
     "is_stale": false,
@@ -34,27 +32,11 @@
   },
   "scanned": 2565,
   "buy_candidates": 22,
-  "sell_candidates": 5,
-  "buy_fresh_count": 1,
+  "sell_candidates": 4,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002442",
-      "name": "龙星科技",
-      "price": 5.68,
-      "change_pct": 10.0775,
-      "total_amount": 120691161.92,
-      "main_net_inflow": 84221904.0,
-      "main_inflow_ratio": 69.783,
-      "super_net": 67423872.0,
-      "big_net": 16798032.0,
-      "mid_net": 12001840.0,
-      "small_net": 7792073.92,
-      "source": "sina",
-      "flow_time": "2026-09-16T14:33:28.014782+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
