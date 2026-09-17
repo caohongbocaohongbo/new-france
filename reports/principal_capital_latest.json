@@ -1,91 +1,21 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-09-17T11:24:27.782160+08:00",
+  "status": "skipped",
+  "reason": "休市中",
+  "now": "2026-09-17T12:55:42.352755+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
-      },
-      {
-        "source": "sina",
-        "status": "ok",
-        "latency_ms": 42106
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": null,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 2677,
-  "buy_candidates": 10,
-  "sell_candidates": 41,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "002446",
-      "name": "盛路通信",
-      "price": 8.07,
-      "change_pct": -3.6993,
-      "total_amount": 181766504.44,
-      "main_net_inflow": -57953996.76,
-      "main_inflow_ratio": -31.8838,
-      "super_net": -45653716.76,
-      "big_net": -12300280.0,
-      "mid_net": 3670041.68,
-      "small_net": 2928262.0,
-      "source": "sina",
-      "flow_time": "2026-09-17T11:24:27.782160+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000733",
-      "name": "振华科技",
-      "price": 40.46,
-      "change_pct": -2.176,
-      "total_amount": 298060475.22,
-      "main_net_inflow": -91298979.0,
-      "main_inflow_ratio": -30.631,
-      "super_net": -50939401.0,
-      "big_net": -40359578.0,
-      "mid_net": -5583513.11,
-      "small_net": -1948013.11,
-      "source": "sina",
-      "flow_time": "2026-09-17T11:24:27.782160+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002255",
-      "name": "海陆重工",
-      "price": 7.55,
-      "change_pct": -1.3072,
-      "total_amount": 27828920.05,
-      "main_net_inflow": -8424968.0,
-      "main_inflow_ratio": -30.2741,
-      "super_net": -1654960.0,
-      "big_net": -6770008.0,
-      "mid_net": -36441.0,
-      "small_net": 2062559.15,
-      "source": "sina",
-      "flow_time": "2026-09-17T11:24:27.782160+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
