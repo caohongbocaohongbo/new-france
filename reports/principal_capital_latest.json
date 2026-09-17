@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-17T10:30:41.299310+08:00",
+  "now": "2026-09-17T10:36:43.181583+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 8262
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 5879
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 44345
+        "latency_ms": 55733
       }
     ],
     "is_stale": false,
@@ -34,11 +32,76 @@
   },
   "scanned": 2677,
   "buy_candidates": 10,
-  "sell_candidates": 74,
+  "sell_candidates": 65,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 4,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "000600",
+      "name": "建投能源",
+      "price": 7.2,
+      "change_pct": -2.0408,
+      "total_amount": 100091058.46,
+      "main_net_inflow": -41150515.04,
+      "main_inflow_ratio": -41.1131,
+      "super_net": -37607593.54,
+      "big_net": -3542921.5,
+      "mid_net": 1201170.8,
+      "small_net": 1301821.1,
+      "source": "sina",
+      "flow_time": "2026-09-17T10:36:43.181583+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "001223",
+      "name": "欧克科技",
+      "price": 44.16,
+      "change_pct": -3.2428,
+      "total_amount": 122465642.92,
+      "main_net_inflow": -42082086.68,
+      "main_inflow_ratio": -34.3624,
+      "super_net": -35387863.48,
+      "big_net": -6694223.2,
+      "mid_net": -4948317.4,
+      "small_net": -3042987.0,
+      "source": "sina",
+      "flow_time": "2026-09-17T10:36:43.181583+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "603060",
+      "name": "国检集团",
+      "price": 5.32,
+      "change_pct": -1.4815,
+      "total_amount": 12281923.64,
+      "main_net_inflow": -3972035.0,
+      "main_inflow_ratio": -32.3405,
+      "super_net": -1062650.0,
+      "big_net": -2909385.0,
+      "mid_net": -871945.72,
+      "small_net": -209513.64,
+      "source": "sina",
+      "flow_time": "2026-09-17T10:36:43.181583+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600516",
+      "name": "方大炭素",
+      "price": 5.16,
+      "change_pct": -1.5267,
+      "total_amount": 102226987.79,
+      "main_net_inflow": -31962371.74,
+      "main_inflow_ratio": -31.2661,
+      "super_net": -26277064.23,
+      "big_net": -5685307.51,
+      "mid_net": 1696625.28,
+      "small_net": -1296786.25,
+      "source": "sina",
+      "flow_time": "2026-09-17T10:36:43.181583+08:00",
+      "severity": "warn"
+    }
+  ]
 }
