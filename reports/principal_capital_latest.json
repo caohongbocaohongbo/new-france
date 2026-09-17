@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-17T10:24:36.935717+08:00",
+  "now": "2026-09-17T10:30:41.299310+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 8262
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 5879
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 57407
+        "latency_ms": 44345
       }
     ],
     "is_stale": false,
@@ -32,76 +34,11 @@
   },
   "scanned": 2677,
   "buy_candidates": 10,
-  "sell_candidates": 95,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "sell_candidates": 74,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603773",
-      "name": "沃格光电",
-      "price": 101.86,
-      "change_pct": 10.0,
-      "total_amount": 1893568534.04,
-      "main_net_inflow": 1017623834.94,
-      "main_inflow_ratio": 53.7411,
-      "super_net": 858693879.94,
-      "big_net": 158929955.0,
-      "mid_net": 23173150.0,
-      "small_net": 2740034.0,
-      "source": "sina",
-      "flow_time": "2026-09-17T10:24:36.935717+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "002258",
-      "name": "利尔化学",
-      "price": 15.0,
-      "change_pct": -1.6393,
-      "total_amount": 116417888.03,
-      "main_net_inflow": -36602507.59,
-      "main_inflow_ratio": -31.4406,
-      "super_net": -12957450.0,
-      "big_net": -23645057.59,
-      "mid_net": -7298132.12,
-      "small_net": -676585.64,
-      "source": "sina",
-      "flow_time": "2026-09-17T10:24:36.935717+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000751",
-      "name": "锌业股份",
-      "price": 4.55,
-      "change_pct": -3.397,
-      "total_amount": 76211847.36,
-      "main_net_inflow": -23505699.04,
-      "main_inflow_ratio": -30.8426,
-      "super_net": -16697019.0,
-      "big_net": -6808680.04,
-      "mid_net": -1079097.6,
-      "small_net": 423994.4,
-      "source": "sina",
-      "flow_time": "2026-09-17T10:24:36.935717+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000060",
-      "name": "中金岭南",
-      "price": 6.13,
-      "change_pct": -1.4469,
-      "total_amount": 242969714.5,
-      "main_net_inflow": -73720870.3,
-      "main_inflow_ratio": -30.3416,
-      "super_net": -69471853.15,
-      "big_net": -4249017.15,
-      "mid_net": 5195941.62,
-      "small_net": 515111.0,
-      "source": "sina",
-      "flow_time": "2026-09-17T10:24:36.935717+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
