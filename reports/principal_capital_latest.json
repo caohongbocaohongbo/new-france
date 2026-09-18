@@ -1,45 +1,91 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-18T13:24:28.888037+08:00",
+  "now": "2026-09-18T13:30:17.730672+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 2888
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1361
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 40879
+        "status": "ok",
+        "latency_ms": 44667
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 391,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1295,
-  "buy_candidates": 11,
+  "scanned": 1318,
+  "buy_candidates": 12,
   "sell_candidates": 2,
-  "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "buy_fresh_count": 1,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
-  "buy_triggered": [],
-  "sell_triggered": []
+  "buy_triggered": [
+    {
+      "code": "603068",
+      "name": "博通集成",
+      "price": 39.81,
+      "change_pct": 10.0028,
+      "total_amount": 471879486.49,
+      "main_net_inflow": 285886871.33,
+      "main_inflow_ratio": 60.5847,
+      "super_net": 245482828.5,
+      "big_net": 40404042.83,
+      "mid_net": 20789255.0,
+      "small_net": 11627669.0,
+      "source": "sina",
+      "flow_time": "2026-09-18T13:30:17.730672+08:00"
+    }
+  ],
+  "sell_triggered": [
+    {
+      "code": "002373",
+      "name": "千方科技",
+      "price": 7.34,
+      "change_pct": -0.2717,
+      "total_amount": 58066179.0,
+      "main_net_inflow": -19077317.0,
+      "main_inflow_ratio": -32.8544,
+      "super_net": -13030272.0,
+      "big_net": -6047045.0,
+      "mid_net": -1239675.0,
+      "small_net": 433645.0,
+      "source": "sina",
+      "flow_time": "2026-09-18T13:30:17.730672+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "002562",
+      "name": "兄弟科技",
+      "price": 4.8,
+      "change_pct": -0.4149,
+      "total_amount": 49541144.64,
+      "main_net_inflow": -14879688.16,
+      "main_inflow_ratio": -30.035,
+      "super_net": -8696602.4,
+      "big_net": -6183085.76,
+      "mid_net": 2613987.0,
+      "small_net": 3730081.0,
+      "source": "sina",
+      "flow_time": "2026-09-18T13:30:17.730672+08:00",
+      "severity": "warn"
+    }
+  ]
 }
