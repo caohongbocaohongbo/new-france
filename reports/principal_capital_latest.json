@@ -1,91 +1,45 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-18T13:18:42.025788+08:00",
+  "now": "2026-09-18T13:24:28.888037+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 2888
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1361
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 41411
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 40879
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 391,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1295,
   "buy_candidates": 11,
   "sell_candidates": 2,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "002185",
-      "name": "华天科技",
-      "price": 18.03,
-      "change_pct": 10.0061,
-      "total_amount": 5852435711.97,
-      "main_net_inflow": 3429997108.06,
-      "main_inflow_ratio": 58.608,
-      "super_net": 3130352168.77,
-      "big_net": 299644939.29,
-      "mid_net": 85314191.69,
-      "small_net": 5782221.0,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:18:42.025788+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "603062",
-      "name": "麦加芯彩",
-      "price": 36.31,
-      "change_pct": 0.2762,
-      "total_amount": 17124325.67,
-      "main_net_inflow": -9850248.0,
-      "main_inflow_ratio": -57.522,
-      "super_net": 0.0,
-      "big_net": -9850248.0,
-      "mid_net": -1024126.0,
-      "small_net": -157565.67,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:18:42.025788+08:00",
-      "severity": "danger"
-    },
-    {
-      "code": "002701",
-      "name": "奥瑞金",
-      "price": 4.4,
-      "change_pct": 0.4566,
-      "total_amount": 36541852.83,
-      "main_net_inflow": -11460412.14,
-      "main_inflow_ratio": -31.3624,
-      "super_net": -11786958.0,
-      "big_net": 326545.86,
-      "mid_net": 390629.86,
-      "small_net": -70739.11,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:18:42.025788+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
