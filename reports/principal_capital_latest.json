@@ -1,45 +1,59 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-18T13:36:07.927795+08:00",
+  "now": "2026-09-18T13:41:54.824396+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3161
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1207
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 38810
+        "status": "ok",
+        "latency_ms": 40107
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 393,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1318,
-  "buy_candidates": 12,
+  "scanned": 1202,
+  "buy_candidates": 10,
   "sell_candidates": 2,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 1,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "605128",
+      "name": "上海沿浦",
+      "price": 22.56,
+      "change_pct": -0.3093,
+      "total_amount": 57262113.18,
+      "main_net_inflow": -17407751.23,
+      "main_inflow_ratio": -30.4001,
+      "super_net": -9397888.0,
+      "big_net": -8009863.23,
+      "mid_net": -2215317.98,
+      "small_net": 1381239.49,
+      "source": "sina",
+      "flow_time": "2026-09-18T13:41:54.824396+08:00",
+      "severity": "warn"
+    }
+  ]
 }
