@@ -1,32 +1,35 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-18T11:18:32.562715+08:00",
+  "now": "2026-09-18T11:24:11.541513+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 3243
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1168
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 33298
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 34936
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 378,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -40,19 +43,19 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "000778",
-      "name": "新兴铸管",
-      "price": 3.61,
-      "change_pct": 0.0,
-      "total_amount": 72738059.75,
-      "main_net_inflow": -24363706.0,
-      "main_inflow_ratio": -33.4951,
-      "super_net": -17785632.0,
-      "big_net": -6578074.0,
-      "mid_net": -7813914.15,
-      "small_net": -1378743.6,
+      "code": "601375",
+      "name": "中原证券",
+      "price": 3.97,
+      "change_pct": 0.5063,
+      "total_amount": 53423652.0,
+      "main_net_inflow": -20519458.0,
+      "main_inflow_ratio": -38.4089,
+      "super_net": -15488979.0,
+      "big_net": -5030479.0,
+      "mid_net": -1257466.0,
+      "small_net": -1626632.0,
       "source": "sina",
-      "flow_time": "2026-09-18T11:18:32.562715+08:00",
+      "flow_time": "2026-09-18T11:24:11.541513+08:00",
       "severity": "warn"
     }
   ]
