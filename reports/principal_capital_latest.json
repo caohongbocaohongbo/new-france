@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-18T10:27:32.590752+08:00",
+  "now": "2026-09-18T10:33:17.707951+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 4962
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1119
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 33529
+        "latency_ms": 33850
       }
     ],
     "is_stale": false,
@@ -32,62 +30,13 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 2677,
-  "buy_candidates": 27,
-  "sell_candidates": 7,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "scanned": 1644,
+  "buy_candidates": 12,
+  "sell_candidates": 4,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603375",
-      "name": "盛景微",
-      "price": 51.5,
-      "change_pct": 9.5978,
-      "total_amount": 228201002.82,
-      "main_net_inflow": 114939403.94,
-      "main_inflow_ratio": 50.3676,
-      "super_net": 91410728.33,
-      "big_net": 23528675.61,
-      "mid_net": 5529201.0,
-      "small_net": 1530444.48,
-      "source": "sina",
-      "flow_time": "2026-09-18T10:27:32.590752+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "600117",
-      "name": "西宁特钢",
-      "price": 2.2,
-      "change_pct": 0.9174,
-      "total_amount": 12441262.0,
-      "main_net_inflow": -4558900.0,
-      "main_inflow_ratio": -36.6434,
-      "super_net": -2157760.0,
-      "big_net": -2401140.0,
-      "mid_net": -410701.0,
-      "small_net": 305583.0,
-      "source": "sina",
-      "flow_time": "2026-09-18T10:27:32.590752+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000550",
-      "name": "江铃汽车",
-      "price": 16.82,
-      "change_pct": -2.9989,
-      "total_amount": 31477531.88,
-      "main_net_inflow": -9622954.0,
-      "main_inflow_ratio": -30.5709,
-      "super_net": -3600996.0,
-      "big_net": -6021958.0,
-      "mid_net": -2246201.12,
-      "small_net": -1986279.0,
-      "source": "sina",
-      "flow_time": "2026-09-18T10:27:32.590752+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
