@@ -1,109 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-18T13:59:24.154698+08:00",
+  "now": "2026-09-18T14:05:15.153313+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 5892
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1287
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 38002
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 41785
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 392,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1629,
   "buy_candidates": 13,
   "sell_candidates": 7,
-  "buy_fresh_count": 1,
-  "sell_fresh_count": 3,
-  "email_sent": true,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "600577",
-      "name": "精达股份",
-      "price": 8.72,
-      "change_pct": 9.9622,
-      "total_amount": 879839451.54,
-      "main_net_inflow": 449264383.0,
-      "main_inflow_ratio": 51.0621,
-      "super_net": 301255058.8,
-      "big_net": 148009324.2,
-      "mid_net": 48940007.3,
-      "small_net": 4423130.72,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:59:24.154698+08:00"
-    }
-  ],
-  "sell_triggered": [
-    {
-      "code": "601818",
-      "name": "光大银行",
-      "price": 3.03,
-      "change_pct": -0.6557,
-      "total_amount": 299404328.0,
-      "main_net_inflow": -135077781.0,
-      "main_inflow_ratio": -45.1155,
-      "super_net": -119328145.8,
-      "big_net": -15749635.2,
-      "mid_net": -2475293.0,
-      "small_net": -3092562.0,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:59:24.154698+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "603219",
-      "name": "富佳股份",
-      "price": 12.89,
-      "change_pct": 0.4677,
-      "total_amount": 19416199.36,
-      "main_net_inflow": -6054764.0,
-      "main_inflow_ratio": -31.1841,
-      "super_net": 0.0,
-      "big_net": -6054764.0,
-      "mid_net": -1229060.0,
-      "small_net": 217050.4,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:59:24.154698+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "002284",
-      "name": "亚太股份",
-      "price": 9.52,
-      "change_pct": -1.7544,
-      "total_amount": 116421536.8,
-      "main_net_inflow": -35317738.8,
-      "main_inflow_ratio": -30.3361,
-      "super_net": -11115034.0,
-      "big_net": -24202704.8,
-      "mid_net": -4143596.0,
-      "small_net": -346790.0,
-      "source": "sina",
-      "flow_time": "2026-09-18T13:59:24.154698+08:00",
-      "severity": "warn"
-    }
-  ]
+  "buy_triggered": [],
+  "sell_triggered": []
 }
