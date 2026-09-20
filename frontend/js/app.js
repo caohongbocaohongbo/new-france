@@ -279,7 +279,8 @@ function navigateTo(route, pushState = true, force = false) {
         emotion:'情绪周期',lhb:'龙虎榜席位','tier-flow':'大单分层资金流',
         'tail-raid':'尾盘抢筹',board:'板块轮动','zt-seal':'涨停封单',
         'volume-profile':'分价成本带','factor-lab':'因子实验室',l2:'真实L2升级',
-        'low-position':'低位涨停选股',resonance:'四维共振信号'
+        'low-position':'低位涨停选股',resonance:'四维共振信号',
+        'smart-picker':'智能选股器'
     }[page] || page;
     setTopbarMeta(page);
     if (page === 'dashboard') loadDashboard();

@@ -352,7 +352,7 @@
             card("tech", by.tech || 0) + card("trend", by.trend || 0) +
             card("pattern", by.pattern || 0) + card("chip", by.chip || 0) + "</div>";
         var pools = _SP_POOLS.map(function (p) {
-            return '<button class="tab-btn' + (_spState.pool === p.k ? " active" : "") + '" data-sp-pool="' + p.k + '">' + p.label + "</button>";
+            return '<button type="button" class="tab' + (_spState.pool === p.k ? " active" : "") + '" data-sp-pool="' + p.k + '">' + p.label + "</button>";
         }).join("");
         var sortOpts = ["hub_score:综合分", "hit_strategies:命中策略数", "price:价格", "change_pct:涨跌幅",
                         "total_amount:成交额", "code:代码"].map(function (kv) {
@@ -363,18 +363,22 @@
             var parts = kv.split(":");
             return '<option value="' + parts[0] + '"' + (_spState.market === parts[0] ? " selected" : "") + ">" + parts[1] + "</option>";
         }).join("");
-        return '<div class="smart-picker-tabs">' + pools + "</div>" +
-            '<div class="sp-filters">' +
-            '<input id="sp-q" type="text" placeholder="搜索代码/名称" value="' + escapeHtml(_spState.q) + '">' +
-            '<select id="sp-min-hit">' + [1, 2, 3, 4].map(function (n) {
+        var orderOpts = ['<option value="desc"' + (_spState.order === "desc" ? " selected" : "") + '>降序</option>',
+                          '<option value="asc"' + (_spState.order === "asc" ? " selected" : "") + '>升序</option>'].join("");
+        return '<div class="screening-mode-tabs" role="tablist" aria-label="选股池">' + pools + "</div>" +
+            '<div class="sp-filters result-tools">' +
+            '<input id="sp-q" type="text" class="input" placeholder="搜索代码/名称" value="' + escapeHtml(_spState.q) + '">' +
+            '<select id="sp-min-hit" class="select">' + [1, 2, 3, 4].map(function (n) {
                 return '<option value="' + n + '"' + (_spState.min_hit === n ? " selected" : "") + ">≥" + n + " 策略</option>";
             }).join("") + "</select>" +
-            '<select id="sp-sort">' + sortOpts + "</select>" +
-            '<select id="sp-order"><option value="desc" selected>降序</option><option value="asc">升序</option></select>' +
-            '<select id="sp-market">' + marketOpts + "</select>" +
-            '<button id="sp-prev" class="btn">上一页</button><button id="sp-next" class="btn">下一页</button>' +
+            '<select id="sp-sort" class="select">' + sortOpts + "</select>" +
+            '<select id="sp-order" class="select">' + orderOpts + "</select>" +
+            '<select id="sp-market" class="select">' + marketOpts + "</select>" +
+            '<button type="button" id="sp-search" class="btn btn-primary">查询</button>' +
+            '<button type="button" id="sp-prev" class="btn">上一页</button><button type="button" id="sp-next" class="btn">下一页</button>' +
             "</div>" +
             _spHintHtml(data) + cards +
+            '<div class="sp-divider" role="separator" aria-hidden="true"></div>' +
             '<div id="sp-perf" class="sp-perf"></div>' +
             '<div id="sp-table-wrap">' + _spRenderTable(data) + "</div>" +
             '<div id="sp-detail"></div>' +
@@ -382,11 +386,11 @@
     }
 
     function bindSmartPickerControls() {
-        document.querySelectorAll(".smart-picker-tabs .tab-btn").forEach(function (btn) {
+        document.querySelectorAll(".screening-mode-tabs .tab[data-sp-pool]").forEach(function (btn) {
             btn.addEventListener("click", function () {
                 _spState.pool = btn.getAttribute("data-sp-pool");
                 _spState.offset = 0;
-                document.querySelectorAll(".smart-picker-tabs .tab-btn").forEach(function (b) {
+                document.querySelectorAll(".screening-mode-tabs .tab[data-sp-pool]").forEach(function (b) {
                     b.classList.toggle("active", b.getAttribute("data-sp-pool") === _spState.pool);
                 });
                 _spReload();
@@ -394,6 +398,12 @@
         });
         var q = document.getElementById("sp-q");
         if (q) q.addEventListener("change", function () { _spState.q = q.value.trim(); _spState.offset = 0; _spReload(); });
+        var spSearch = document.getElementById("sp-search");
+        if (spSearch) spSearch.addEventListener("click", function () {
+            _spState.q = (q ? q.value.trim() : "");
+            _spState.offset = 0;
+            _spReload();
+        });
         var mh = document.getElementById("sp-min-hit");
         if (mh) mh.addEventListener("change", function () { _spState.min_hit = parseInt(mh.value, 10); _spState.offset = 0; _spReload(); });
         var st = document.getElementById("sp-sort");
