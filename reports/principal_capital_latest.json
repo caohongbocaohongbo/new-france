@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T10:22:51.478264+08:00",
+  "now": "2026-09-21T10:28:27.194294+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 2544
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1327
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 32080
+        "latency_ms": 30296
       }
     ],
     "is_stale": false,
@@ -30,28 +32,28 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1428,
-  "buy_candidates": 18,
-  "sell_candidates": 9,
+  "scanned": 1416,
+  "buy_candidates": 19,
+  "sell_candidates": 8,
   "buy_fresh_count": 1,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
   "buy_triggered": [
     {
-      "code": "600812",
-      "name": "华北制药",
-      "price": 5.08,
-      "change_pct": 9.9567,
-      "total_amount": 357396370.75,
-      "main_net_inflow": 188345271.39,
-      "main_inflow_ratio": 52.6993,
-      "super_net": 144411021.0,
-      "big_net": 43934250.39,
-      "mid_net": 1156312.36,
-      "small_net": -10147.0,
+      "code": "000829",
+      "name": "天音控股",
+      "price": 9.77,
+      "change_pct": 10.0225,
+      "total_amount": 281050718.59,
+      "main_net_inflow": 150247259.8,
+      "main_inflow_ratio": 53.4591,
+      "super_net": 112782856.56,
+      "big_net": 37464403.24,
+      "mid_net": 7559381.79,
+      "small_net": 664017.0,
       "source": "sina",
-      "flow_time": "2026-09-21T10:22:51.478264+08:00"
+      "flow_time": "2026-09-21T10:28:27.194294+08:00"
     }
   ],
   "sell_triggered": []
