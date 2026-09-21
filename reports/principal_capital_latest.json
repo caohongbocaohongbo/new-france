@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T10:34:04.887095+08:00",
+  "now": "2026-09-21T10:39:43.479474+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,18 +11,20 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "latency_ms": 8023
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 1306
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 33693
+        "latency_ms": 30903
       }
     ],
     "is_stale": false,
@@ -30,9 +32,9 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1760,
-  "buy_candidates": 19,
-  "sell_candidates": 9,
+  "scanned": 1735,
+  "buy_candidates": 20,
+  "sell_candidates": 10,
   "buy_fresh_count": 0,
   "sell_fresh_count": 2,
   "email_sent": true,
@@ -40,36 +42,36 @@
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600157",
-      "name": "永泰能源",
-      "price": 1.53,
-      "change_pct": 0.6579,
-      "total_amount": 137542293.99,
-      "main_net_inflow": -59664584.28,
-      "main_inflow_ratio": -43.3791,
-      "super_net": -52546825.44,
-      "big_net": -7117758.84,
-      "mid_net": -4632993.2,
-      "small_net": -2661384.93,
+      "code": "600282",
+      "name": "南钢股份",
+      "price": 4.45,
+      "change_pct": -1.1111,
+      "total_amount": 135073945.0,
+      "main_net_inflow": -55195574.0,
+      "main_inflow_ratio": -40.8632,
+      "super_net": -42399414.0,
+      "big_net": -12796160.0,
+      "mid_net": -5164131.0,
+      "small_net": 874358.0,
       "source": "sina",
-      "flow_time": "2026-09-21T10:34:04.887095+08:00",
+      "flow_time": "2026-09-21T10:39:43.479474+08:00",
       "severity": "alert"
     },
     {
-      "code": "600292",
-      "name": "电投水电",
-      "price": 11.66,
-      "change_pct": -1.1864,
-      "total_amount": 39121441.05,
-      "main_net_inflow": -16635738.0,
-      "main_inflow_ratio": -42.5233,
-      "super_net": -3972278.0,
-      "big_net": -12663460.0,
-      "mid_net": 1376329.15,
-      "small_net": 1547446.3,
+      "code": "600369",
+      "name": "西南证券",
+      "price": 3.94,
+      "change_pct": -0.5051,
+      "total_amount": 41842400.4,
+      "main_net_inflow": -13208812.6,
+      "main_inflow_ratio": -31.568,
+      "super_net": -11221487.6,
+      "big_net": -1987325.0,
+      "mid_net": -213134.0,
+      "small_net": 312217.0,
       "source": "sina",
-      "flow_time": "2026-09-21T10:34:04.887095+08:00",
-      "severity": "alert"
+      "flow_time": "2026-09-21T10:39:43.479474+08:00",
+      "severity": "warn"
     }
   ]
 }
