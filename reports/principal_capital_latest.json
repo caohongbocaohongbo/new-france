@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T11:02:25.375807+08:00",
+  "now": "2026-09-21T11:08:31.823060+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 6943
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 19999
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 34416
+        "latency_ms": 34239
       }
     ],
     "is_stale": false,
@@ -32,60 +30,61 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1386,
-  "buy_candidates": 22,
-  "sell_candidates": 6,
-  "buy_fresh_count": 2,
-  "sell_fresh_count": 1,
+  "scanned": 1470,
+  "buy_candidates": 21,
+  "sell_candidates": 10,
+  "buy_fresh_count": 0,
+  "sell_fresh_count": 3,
   "email_sent": true,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "001282",
-      "name": "三联锻造",
-      "price": 16.57,
-      "change_pct": 6.4226,
-      "total_amount": 91123564.58,
-      "main_net_inflow": 53375909.46,
-      "main_inflow_ratio": 58.5753,
-      "super_net": 35919629.96,
-      "big_net": 17456279.5,
-      "mid_net": 9633825.46,
-      "small_net": 662959.1,
-      "source": "sina",
-      "flow_time": "2026-09-21T11:02:25.375807+08:00"
-    },
-    {
-      "code": "600308",
-      "name": "华泰股份",
-      "price": 3.54,
-      "change_pct": 9.9379,
-      "total_amount": 34307421.92,
-      "main_net_inflow": 18440035.48,
-      "main_inflow_ratio": 53.7494,
-      "super_net": 9402476.52,
-      "big_net": 9037558.96,
-      "mid_net": 1777059.0,
-      "small_net": -945533.44,
-      "source": "sina",
-      "flow_time": "2026-09-21T11:02:25.375807+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600595",
-      "name": "中孚实业",
-      "price": 6.03,
-      "change_pct": -1.1475,
-      "total_amount": 201435701.49,
-      "main_net_inflow": -78479925.15,
-      "main_inflow_ratio": -38.9603,
-      "super_net": -61258987.57,
-      "big_net": -17220937.58,
-      "mid_net": -2475933.8,
-      "small_net": -4930073.0,
+      "code": "600987",
+      "name": "航民股份",
+      "price": 6.35,
+      "change_pct": 0.1577,
+      "total_amount": 20063608.39,
+      "main_net_inflow": -8934928.16,
+      "main_inflow_ratio": -44.533,
+      "super_net": -7916019.0,
+      "big_net": -1018909.16,
+      "mid_net": 499127.0,
+      "small_net": -201529.67,
       "source": "sina",
-      "flow_time": "2026-09-21T11:02:25.375807+08:00",
+      "flow_time": "2026-09-21T11:08:31.823060+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "000875",
+      "name": "电投绿能",
+      "price": 4.82,
+      "change_pct": -0.823,
+      "total_amount": 104168880.25,
+      "main_net_inflow": -41501616.75,
+      "main_inflow_ratio": -39.8407,
+      "super_net": -29361578.75,
+      "big_net": -12140038.0,
+      "mid_net": 2083656.0,
+      "small_net": 2833592.5,
+      "source": "sina",
+      "flow_time": "2026-09-21T11:08:31.823060+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "601065",
+      "name": "江盐集团",
+      "price": 6.74,
+      "change_pct": 0.597,
+      "total_amount": 18702591.0,
+      "main_net_inflow": -7325252.0,
+      "main_inflow_ratio": -39.167,
+      "super_net": 0.0,
+      "big_net": -7325252.0,
+      "mid_net": 467189.0,
+      "small_net": 407834.0,
+      "source": "sina",
+      "flow_time": "2026-09-21T11:08:31.823060+08:00",
       "severity": "warn"
     }
   ]
