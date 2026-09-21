@@ -1,34 +1,33 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T10:51:06.265071+08:00",
+  "now": "2026-09-21T10:56:50.427013+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 7274
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1251
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 30808
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 31315
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 375,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -36,26 +35,9 @@
   "buy_candidates": 19,
   "sell_candidates": 8,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 1,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "600350",
-      "name": "山东高速",
-      "price": 9.85,
-      "change_pct": -1.5,
-      "total_amount": 90369667.11,
-      "main_net_inflow": -28938487.13,
-      "main_inflow_ratio": -32.0223,
-      "super_net": -28190868.1,
-      "big_net": -747619.03,
-      "mid_net": -1819354.0,
-      "small_net": 3748574.08,
-      "source": "sina",
-      "flow_time": "2026-09-21T10:51:06.265071+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
