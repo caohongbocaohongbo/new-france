@@ -1,7 +1,7 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T13:59:12.706490+08:00",
+  "now": "2026-09-21T14:05:07.076433+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
@@ -11,20 +11,18 @@
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3707
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 4037
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
         "status": "ok",
-        "latency_ms": 43050
+        "latency_ms": 39646
       }
     ],
     "is_stale": false,
@@ -32,13 +30,46 @@
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1322,
-  "buy_candidates": 18,
-  "sell_candidates": 4,
+  "scanned": 1532,
+  "buy_candidates": 19,
+  "sell_candidates": 5,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603196",
+      "name": "璞源材料",
+      "price": 19.15,
+      "change_pct": -0.9312,
+      "total_amount": 25363993.0,
+      "main_net_inflow": -8891528.0,
+      "main_inflow_ratio": -35.0557,
+      "super_net": -2845910.0,
+      "big_net": -6045618.0,
+      "mid_net": -869580.0,
+      "small_net": -68427.0,
+      "source": "sina",
+      "flow_time": "2026-09-21T14:05:07.076433+08:00",
+      "severity": "warn"
+    },
+    {
+      "code": "600619",
+      "name": "海立股份",
+      "price": 13.17,
+      "change_pct": -0.6787,
+      "total_amount": 106166517.98,
+      "main_net_inflow": -32145221.98,
+      "main_inflow_ratio": -30.2781,
+      "super_net": -16221482.48,
+      "big_net": -15923739.5,
+      "mid_net": -2035925.0,
+      "small_net": -1937975.0,
+      "source": "sina",
+      "flow_time": "2026-09-21T14:05:07.076433+08:00",
+      "severity": "warn"
+    }
+  ]
 }
