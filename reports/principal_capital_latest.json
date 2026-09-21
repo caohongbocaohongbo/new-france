@@ -1,41 +1,17 @@
 {
-  "status": "completed",
-  "reason": "",
-  "now": "2026-09-18T14:58:21.140053+08:00",
+  "status": "skipped",
+  "reason": "未开盘",
+  "now": "2026-09-21T09:25:47.679516+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Read timed out. (read timeout=5); https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 7251
-      },
-      {
-        "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1388
-      },
-      {
-        "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 41057
-      }
-    ],
-    "is_stale": true,
-    "cache_age_seconds": 395,
-    "codes_stale_date": null,
-    "verify_result": null
+    "active_source": "none"
   },
-  "scanned": 1510,
-  "buy_candidates": 12,
-  "sell_candidates": 3,
+  "scanned": 0,
+  "buy_candidates": 0,
+  "sell_candidates": 0,
   "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
