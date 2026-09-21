@@ -1,60 +1,43 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T13:36:09.518934+08:00",
+  "now": "2026-09-21T13:41:57.742844+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3796
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1476
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 39763
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 39307
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 387,
     "codes_stale_date": null,
     "verify_result": null
   },
   "scanned": 1457,
   "buy_candidates": 19,
   "sell_candidates": 6,
-  "buy_fresh_count": 1,
+  "buy_fresh_count": 0,
   "sell_fresh_count": 0,
   "email_sent": false,
   "email_error": null,
-  "buy_triggered": [
-    {
-      "code": "603001",
-      "name": "奥康国际",
-      "price": 11.47,
-      "change_pct": 9.9712,
-      "total_amount": 250360431.05,
-      "main_net_inflow": 145900955.05,
-      "main_inflow_ratio": 58.2764,
-      "super_net": 110650028.05,
-      "big_net": 35250927.0,
-      "mid_net": 6287067.0,
-      "small_net": 3377915.0,
-      "source": "sina",
-      "flow_time": "2026-09-21T13:36:09.518934+08:00"
-    }
-  ],
+  "buy_triggered": [],
   "sell_triggered": []
 }
