@@ -1,77 +1,58 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T14:10:53.064613+08:00",
+  "now": "2026-09-21T14:16:54.645386+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3247
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1366
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 51182
+        "status": "ok",
+        "latency_ms": 38536
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 401,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1532,
-  "buy_candidates": 19,
+  "scanned": 1587,
+  "buy_candidates": 18,
   "sell_candidates": 5,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
+  "sell_fresh_count": 1,
   "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
   "sell_triggered": [
     {
-      "code": "600595",
-      "name": "中孚实业",
-      "price": 6.02,
-      "change_pct": -1.3115,
-      "total_amount": 288414165.89,
-      "main_net_inflow": -111515437.95,
-      "main_inflow_ratio": -38.665,
-      "super_net": -87406144.97,
-      "big_net": -24109292.98,
-      "mid_net": -8033250.7,
-      "small_net": -11985212.9,
+      "code": "600478",
+      "name": "科力远",
+      "price": 4.58,
+      "change_pct": -0.8658,
+      "total_amount": 86802434.9,
+      "main_net_inflow": -29699784.14,
+      "main_inflow_ratio": -34.2154,
+      "super_net": -20420796.14,
+      "big_net": -9278988.0,
+      "mid_net": -964442.3,
+      "small_net": 112368.06,
       "source": "sina",
-      "flow_time": "2026-09-21T14:10:53.064613+08:00",
-      "severity": "warn"
-    },
-    {
-      "code": "000875",
-      "name": "电投绿能",
-      "price": 4.8,
-      "change_pct": -1.2346,
-      "total_amount": 182311777.75,
-      "main_net_inflow": -69908505.75,
-      "main_inflow_ratio": -38.3456,
-      "super_net": -42965176.75,
-      "big_net": -26943329.0,
-      "mid_net": -9065152.0,
-      "small_net": 383222.0,
-      "source": "sina",
-      "flow_time": "2026-09-21T14:10:53.064613+08:00",
+      "flow_time": "2026-09-21T14:16:54.645386+08:00",
       "severity": "warn"
     }
   ]
