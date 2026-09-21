@@ -1,32 +1,35 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T11:19:53.230017+08:00",
+  "now": "2026-09-21T11:25:30.557541+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "sina",
+    "active_source": "cache",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
+        "latency_ms": 7070
       },
       {
         "source": "akshare",
-        "status": "skipped_blocked",
-        "latency_ms": 0
+        "status": "error",
+        "error": "Expecting value: line 1 column 1 (char 0)",
+        "latency_ms": 15340
       },
       {
         "source": "sina",
-        "status": "ok",
-        "latency_ms": 32515
+        "status": "error",
+        "error": "新浪主力资金流全部查询失败",
+        "latency_ms": 32706
       }
     ],
-    "is_stale": false,
-    "cache_age_seconds": null,
+    "is_stale": true,
+    "cache_age_seconds": 392,
     "codes_stale_date": null,
     "verify_result": null
   },
@@ -34,42 +37,9 @@
   "buy_candidates": 19,
   "sell_candidates": 9,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 2,
-  "email_sent": true,
+  "sell_fresh_count": 0,
+  "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": [
-    {
-      "code": "603196",
-      "name": "璞源材料",
-      "price": 19.06,
-      "change_pct": -1.3968,
-      "total_amount": 21100142.0,
-      "main_net_inflow": -8615025.0,
-      "main_inflow_ratio": -40.8292,
-      "super_net": -2845910.0,
-      "big_net": -5769115.0,
-      "mid_net": -1145914.0,
-      "small_net": -352089.0,
-      "source": "sina",
-      "flow_time": "2026-09-21T11:19:53.230017+08:00",
-      "severity": "alert"
-    },
-    {
-      "code": "601515",
-      "name": "衢州东峰",
-      "price": 3.3,
-      "change_pct": 0.304,
-      "total_amount": 19514690.04,
-      "main_net_inflow": -7216880.0,
-      "main_inflow_ratio": -36.9818,
-      "super_net": -2050576.0,
-      "big_net": -5166304.0,
-      "mid_net": -550304.0,
-      "small_net": 238018.04,
-      "source": "sina",
-      "flow_time": "2026-09-21T11:19:53.230017+08:00",
-      "severity": "warn"
-    }
-  ]
+  "sell_triggered": []
 }
