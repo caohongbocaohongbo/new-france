@@ -1,45 +1,75 @@
 {
   "status": "completed",
   "reason": "",
-  "now": "2026-09-21T11:14:10.808587+08:00",
+  "now": "2026-09-21T11:19:53.230017+08:00",
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "cache",
+    "active_source": "sina",
     "attempts": [
       {
         "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: 502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&fid=f62&fs=m%3A1%2Bt%3A2%2Cm%3A1%2Bt%3A23&fields=f12%2Cf14%2Cf2%2Cf3%2Cf5%2Cf6%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf21&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2; https://push2his.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); https://62.push2.eastmoney.com/api/qt/clist/get: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 3648
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "akshare",
-        "status": "error",
-        "error": "Expecting value: line 1 column 1 (char 0)",
-        "latency_ms": 1359
+        "status": "skipped_blocked",
+        "latency_ms": 0
       },
       {
         "source": "sina",
-        "status": "error",
-        "error": "新浪主力资金流全部查询失败",
-        "latency_ms": 34007
+        "status": "ok",
+        "latency_ms": 32515
       }
     ],
-    "is_stale": true,
-    "cache_age_seconds": 378,
+    "is_stale": false,
+    "cache_age_seconds": null,
     "codes_stale_date": null,
     "verify_result": null
   },
-  "scanned": 1470,
-  "buy_candidates": 21,
-  "sell_candidates": 10,
+  "scanned": 1612,
+  "buy_candidates": 19,
+  "sell_candidates": 9,
   "buy_fresh_count": 0,
-  "sell_fresh_count": 0,
-  "email_sent": false,
+  "sell_fresh_count": 2,
+  "email_sent": true,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [
+    {
+      "code": "603196",
+      "name": "璞源材料",
+      "price": 19.06,
+      "change_pct": -1.3968,
+      "total_amount": 21100142.0,
+      "main_net_inflow": -8615025.0,
+      "main_inflow_ratio": -40.8292,
+      "super_net": -2845910.0,
+      "big_net": -5769115.0,
+      "mid_net": -1145914.0,
+      "small_net": -352089.0,
+      "source": "sina",
+      "flow_time": "2026-09-21T11:19:53.230017+08:00",
+      "severity": "alert"
+    },
+    {
+      "code": "601515",
+      "name": "衢州东峰",
+      "price": 3.3,
+      "change_pct": 0.304,
+      "total_amount": 19514690.04,
+      "main_net_inflow": -7216880.0,
+      "main_inflow_ratio": -36.9818,
+      "super_net": -2050576.0,
+      "big_net": -5166304.0,
+      "mid_net": -550304.0,
+      "small_net": 238018.04,
+      "source": "sina",
+      "flow_time": "2026-09-21T11:19:53.230017+08:00",
+      "severity": "warn"
+    }
+  ]
 }
