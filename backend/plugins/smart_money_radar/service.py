@@ -259,8 +259,9 @@ def _update_notified_map(notified_map: dict, hits: list, now: datetime) -> dict:
 
 
 def _write_latest(payload: dict) -> None:
-    LATEST_FILE.parent.mkdir(parents=True, exist_ok=True)
-    LATEST_FILE.write_text(json.dumps(_json_safe(payload), ensure_ascii=False, indent=2), encoding="utf-8")
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(LATEST_FILE, payload)
 
 
 def read_latest() -> dict:
@@ -292,16 +293,20 @@ def _write_extension_snapshots(store: RadarStore, now: datetime, watch_pool: lis
                 "minutes": _orderflow.summarize_minute(buckets),
                 "wash_trade": _orderflow.wash_trade_flag(buckets),
             })
+        from backend.services.snapshot_store import atomic_write_json
+
         ORDERFLOW_LATEST = REPORT_DIR / "orderflow_latest.json"
-        ORDERFLOW_LATEST.write_text(json.dumps({
+        atomic_write_json(ORDERFLOW_LATEST, {
             "status": "completed" if of_items else "no_data",
             "now": now.isoformat(), "count": len(of_items), "items": of_items,
-        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        })
     except Exception as exc:  # noqa: BLE001
         logger.warning("逐笔快照物化失败: %s", exc)
     try:
+        from backend.services.snapshot_store import atomic_write_json
+
         AUCTION_LATEST = REPORT_DIR / "auction_latest.json"
-        AUCTION_LATEST.write_text(json.dumps(_json_safe(_auction.build_auction_snapshot(store, now, _auction.load_prev_zt_codes(now))), ensure_ascii=False, indent=2), encoding="utf-8")
+        atomic_write_json(AUCTION_LATEST, _auction.build_auction_snapshot(store, now, _auction.load_prev_zt_codes(now)))
     except Exception as exc:  # noqa: BLE001
         logger.warning("竞价快照物化失败: %s", exc)
 
@@ -319,8 +324,10 @@ async def run_auction_poll_once(pool, store: RadarStore, now: datetime, watch_po
         quote["name"] = payload.get("name") or quote.get("name") or ""
         store.add_auction_frame(payload.get("code"), quote, now)
     snapshot = _auction.build_auction_snapshot(store, now, _auction.load_prev_zt_codes(now))
+    from backend.services.snapshot_store import atomic_write_json
+
     AUCTION_LATEST = REPORT_DIR / "auction_latest.json"
-    AUCTION_LATEST.write_text(json.dumps(_json_safe(snapshot), ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_json(AUCTION_LATEST, snapshot)
     return snapshot
 
 

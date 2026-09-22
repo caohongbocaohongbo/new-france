@@ -478,7 +478,7 @@ async function loadDashboard() {
         // 并行请求 watchlist stats 和最新筛选结果
         const [wlResp, recResp, statusResp] = await Promise.all([
             apiFetch('/watchlist/stats'),
-            apiFetch('/screening/latest'),
+            apiFetch('/screening/latest?view=summary'),
             apiFetch('/system/status')
         ]);
         const wl = await wlResp.json();
@@ -1786,7 +1786,7 @@ async function loadRecommendations() {
     document.getElementById('recStats').innerHTML = '';
 
     try {
-        const resp = await apiFetch('/screening/latest');
+        const resp = await apiFetch('/screening/latest?view=summary');
         const data = await resp.json();
         recommendationLastData = data;
         if (data.date) {
@@ -2295,7 +2295,7 @@ async function runScreening() {
         let dots = 0;
         for (let i = 0; i < 100; i++) {
             await new Promise(r => setTimeout(r, 3000));
-            const pollResp = await apiFetch('/screening/latest', { timeout: 10000 });
+            const pollResp = await apiFetch('/screening/latest?view=summary', { timeout: 10000 });
             const pollData = await pollResp.json();
 
             // 更新进度提示
@@ -2706,7 +2706,7 @@ async function manualRun(event) {
         for (let i = 0; i < 100; i++) {
             await new Promise(r => setTimeout(r, 3000));
             btn.textContent = `轮询中 (${i + 1}/100)...`;
-            const pollResp = await apiFetch('/screening/latest', { timeout: 10000 });
+            const pollResp = await apiFetch('/screening/latest?view=summary', { timeout: 10000 });
             const pollData = await pollResp.json();
             if (pollData.status === 'completed') {
                 const total = pollData.total_scored || pollData.results?.length || 0;

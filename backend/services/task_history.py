@@ -54,11 +54,9 @@ def append_task_record(
             "error": str(error or "").strip(),
         }
     )
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    TASK_HISTORY_FILE.write_text(
-        json.dumps({"records": records[-max_records:]}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    from .snapshot_store import atomic_write_json
+
+    atomic_write_json(TASK_HISTORY_FILE, {"records": records[-max_records:]})
 
 
 def _fetch_snapshot_json(filename: str) -> Optional[dict]:

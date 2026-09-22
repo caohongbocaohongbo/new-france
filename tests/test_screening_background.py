@@ -103,7 +103,8 @@ class ScreeningBackgroundTaskTest(unittest.TestCase):
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         cache_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
         try:
-            result = __import__("asyncio").run(router_screening.get_latest_screening())
+            # P1 后 /latest 改为同步 def（快照字节缓存），直接调用无需 asyncio.run
+            result = router_screening.get_latest_screening()
         finally:
             if original is None:
                 cache_file.unlink(missing_ok=True)

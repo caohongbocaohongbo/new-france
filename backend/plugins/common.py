@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import math
 import os
 import queue as _queue
@@ -248,12 +249,11 @@ def snapshot_mem_pop(name: str) -> None:
 
 
 def write_snapshot(name: str, payload: dict) -> Path:
-    """双写快照：reports/<name>_latest.json + reports/data_backend/<name>_latest.json（原子）。"""
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    DATA_BACKEND_DIR.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(json_safe(payload), ensure_ascii=False, indent=2, default=str)
-    _atomic_write(latest_path(name), text)
-    _atomic_write(data_backend_path(name), text)
+    """双写快照：reports/<name>_latest.json + reports/data_backend/<name>_latest.json（P1 原子写）。"""
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(latest_path(name), payload)
+    atomic_write_json(data_backend_path(name), payload)
     snapshot_mem_set(name, payload)  # 写完更新内存缓存，列表接口直接命中
     publish_snapshot_update(name)
     return latest_path(name)
@@ -342,25 +342,29 @@ def read_snapshot_resilient(snapshot_name: str, timeout: float = 5.0, ttl_second
     if payload is not None:
         payload["_source"] = "snapshot"
         return payload
-    # 步骤 4：网络兜底（httpx，超时可配置）
-    try:
-        import httpx  # 延迟导入
-        url = f"{SNAPSHOT_RAW_BASE}/reports/data_backend/{name}_latest.json"
-        resp = httpx.get(url, timeout=float(timeout))
-        resp.raise_for_status()
-        payload = resp.json()
-        if not isinstance(payload, dict):
-            raise ValueError("远端返回非 JSON 对象")
-    except Exception as exc:  # noqa: BLE001 永不抛异常
-        code = "err"
-        resp_obj = getattr(exc, "response", None)
-        if resp_obj is not None and getattr(resp_obj, "status_code", None):
-            code = str(resp_obj.status_code)
-        logger.info("远程快照拉取失败(%s): %s", name, exc)
+    # 步骤 4：远程合并缓存（P1 snapshot_store：single-flight/退避/条件GET/stale-while-revalidate）
+    from backend.services.snapshot_store import RemotePolicy, fetch_remote_snapshot
+
+    url = f"{SNAPSHOT_RAW_BASE}/reports/data_backend/{name}_latest.json"
+    policy = RemotePolicy(total_timeout=float(timeout), connect_timeout=1.5, ttl_seconds=float(ttl_seconds))
+    entry = fetch_remote_snapshot(name, url, policy)
+    if entry is None:
+        from backend.services.snapshot_store import remote_last_error
+
+        err = remote_last_error(name)
         return {"status": "no_data", "_source": "unavailable", "items": [],
-                "reason": f"remote_fetch_failed:{code}:{type(exc).__name__}"}
+                "reason": f"remote_fetch_failed:err:{err.split(':', 1)[0]}"}
+    try:
+        payload = entry.parsed()
+    except Exception as exc:  # noqa: BLE001 永不抛异常
+        return {"status": "no_data", "_source": "unavailable", "items": [],
+                "reason": f"remote_fetch_failed:err:{type(exc).__name__}"}
     payload["_source"] = "snapshot"
-    if int(ttl_seconds) > 0:
+    if entry.stale:  # stale 数据显式标注（P1 §3.3）
+        payload["stale"] = True
+        payload["fetched_at"] = entry.fetched_at
+        payload["refresh_error"] = entry.refresh_error
+    elif int(ttl_seconds) > 0:
         _write_remote_cache(name, payload)
     return payload
 
@@ -369,37 +373,59 @@ def error_response(message: str) -> dict:
     return {"status": "error", "message": str(message), "items": []}
 
 
+def _is_sqlite_busy(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return "locked" in text or "busy" in text
+
+
 def db_append(table: str, rows: list) -> int:
-    """最佳努力写入 SQLite（pandas to_sql append），失败返回 0 不阻断主链路。"""
+    """最佳努力写入 SQLite（pandas to_sql append）；busy 有界重试，其余失败返回 0 不阻断。"""
     if not rows:
         return 0
-    try:
-        import pandas as pd
-        from backend.db.database import engine, init_db
+    import pandas as pd
+    from backend.db.database import engine, init_db
 
-        init_db()
-        pd.DataFrame(rows).to_sql(table, engine, if_exists="append", index=False)
-        return len(rows)
-    except Exception as exc:  # noqa: BLE001
-        logger.info("SQLite 写入 %s 失败(已忽略): %s", table, exc)
-        return 0
+    init_db()
+    frame = pd.DataFrame(rows)
+    last_wait = 0.0
+    for attempt in range(3):
+        if attempt:
+            time.sleep(min(0.2 * (2 ** (attempt - 1)), 1.0))
+        try:
+            frame.to_sql(table, engine, if_exists="append", index=False)
+            if attempt:
+                logger.info("SQLite 写入 %s busy 重试成功 retry_count=%d", table, attempt)
+            return len(rows)
+        except Exception as exc:  # noqa: BLE001
+            if not _is_sqlite_busy(exc) or attempt == 2:
+                logger.info("SQLite 写入 %s 失败(已忽略): %s", table, exc)
+                return 0
+            last_wait = round(0.2 * (2 ** attempt), 3)
+            logger.warning("SQLite 写入 %s 锁等待 retry=%d wait_s=%s table=%s", table, attempt + 1, last_wait, table)
+    return 0
 
 
 def db_delete(table: str, where: dict) -> int:
-    """按条件删除行（用于 date 唯一表的重复写入前清理），失败返回 0。"""
+    """按条件删除行（用于 date 唯一表的重复写入前清理）；busy 有界重试，其余失败返回 0。"""
     if not where:
         return 0
-    try:
-        from sqlalchemy import text
+    from sqlalchemy import text
 
-        from backend.db.database import engine
+    from backend.db.database import engine
 
-        clauses = " AND ".join(f"{k} = :{k}" for k in where)
-        with engine.begin() as conn:
-            return conn.execute(text(f"DELETE FROM {table} WHERE {clauses}"), where).rowcount
-    except Exception as exc:  # noqa: BLE001
-        logger.info("SQLite 删除 %s 失败(已忽略): %s", table, exc)
-        return 0
+    clauses = " AND ".join(f"{k} = :{k}" for k in where)
+    for attempt in range(3):
+        if attempt:
+            time.sleep(min(0.2 * (2 ** (attempt - 1)), 1.0))
+        try:
+            with engine.begin() as conn:
+                return conn.execute(text(f"DELETE FROM {table} WHERE {clauses}"), where).rowcount
+        except Exception as exc:  # noqa: BLE001
+            if not _is_sqlite_busy(exc) or attempt == 2:
+                logger.info("SQLite 删除 %s 失败(已忽略): %s", table, exc)
+                return 0
+            logger.warning("SQLite 删除 %s 锁等待 retry=%d table=%s", table, attempt + 1, table)
+    return 0
 
 
 def db_query(sql: str, params: dict = None):

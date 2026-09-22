@@ -107,41 +107,22 @@ def get_app():
         version="1.0.0",
         description="A股尾盘涨停股监控与多因子推荐系统 API",
     )
+    # P0 观测：纯 ASGI middleware，位于 GZip/路由之外，记录首/末响应字节与快照来源
+    from .middleware.performance import PerformanceMiddleware
+    _app.add_middleware(PerformanceMiddleware)
+
+    # P2 GZip：字段裁剪完成后启用（min 1KB，避免小响应徒增 CPU）
+    from fastapi.middleware.gzip import GZipMiddleware
+    _app.add_middleware(GZipMiddleware, minimum_size=1024)
+
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    # 数据回显 ETag（Phase 2）：对 JSON 响应加 ETag，支持 If-None-Match → 304
-    import hashlib as _hashlib
-    from starlette.concurrency import iterate_in_threadpool as _iterate_in_threadpool
-    from starlette.middleware.base import BaseHTTPMiddleware as _BaseHTTPMiddleware
-
-    class _ETagMiddleware(_BaseHTTPMiddleware):
-        async def dispatch(self, request, call_next):
-            response = await call_next(request)
-            if request.method == "GET" and response.status_code == 200:
-                content_type = response.headers.get("content-type", "")
-                if "application/json" in content_type:
-                    try:
-                        chunks = [section async for section in response.body_iterator]
-                        response.body_iterator = _iterate_in_threadpool(iter(chunks))
-                        body = b"".join(chunks)
-                    except Exception:  # noqa: BLE001 非可缓冲响应跳过
-                        return response
-                    if body:
-                        etag = _hashlib.md5(body).hexdigest()
-                        if request.headers.get("if-none-match") == f'"{etag}"':
-                            from fastapi import Response as _FR
-
-                            return _FR(status_code=304)
-                        response.headers["ETag"] = f'"{etag}"'
-                        response.headers["Cache-Control"] = "no-cache"
-            return response
-
-    _app.add_middleware(_ETagMiddleware)
+    # 全局响应体 ETag 缓冲中间件已移除（P1）：ETag 改由 snapshot_store 在目标快照接口
+    # 于 JSON 解析/序列化之前早返回；未迁移的小型动态接口暂不发 ETag。
     _app.include_router(screening_router, prefix="/api/v1/screening", tags=["筛选"])
     _app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["监控列表"])
     _app.include_router(events_router, prefix="/api/v1/events", tags=["事件"])

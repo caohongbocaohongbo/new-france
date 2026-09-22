@@ -13,6 +13,7 @@ from . import notifier
 from .config import (
     BEIJING_TZ,
     CONFIG,
+    HISTORY_COMPACT_FILE,
     HISTORY_FILE,
     NOTIFICATION_STATE_FILE,
     PROJECT_DIR,
@@ -492,11 +493,45 @@ def build_overnight_decision(
 
 
 def write_overnight_report(payload: dict, report_file: Path = REPORT_FILE) -> None:
-    report_file.parent.mkdir(parents=True, exist_ok=True)
-    report_file.write_text(
-        json.dumps(_json_safe(payload), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(report_file, payload)
+
+
+# P2 契约字段（overnight-arbitrage/latest compact，见性能优化方案 §6.3）
+OA_COMPACT_TOP_FIELDS = (
+    "status", "strategy", "date", "generated_at", "valid_window", "buy_count", "watch_count",
+    "total_candidates", "total_scanned", "source_status", "empty_reason", "trade_note", "message",
+)
+OA_COMPACT_RESULT_FIELDS = (
+    "code", "name", "action", "decision_score", "current_price", "change_pct",
+    "turnover", "volume_ratio", "reasons", "risks",
+)
+
+
+def compact_overnight_report(payload: dict) -> dict:
+    """latest compact：保留前端契约字段，剔除 data_quality.removed / rejected / 原始行情中间因子。"""
+    out = {k: payload.get(k) for k in OA_COMPACT_TOP_FIELDS}
+    results = payload.get("results") or []
+    out["results"] = [{k: it.get(k) for k in OA_COMPACT_RESULT_FIELDS} for it in results
+                      if isinstance(it, dict)]
+    return out
+
+
+def compact_history_payload(payload: dict) -> dict:
+    """history compact：汇总字段，剔除嵌套 recommendations 与数值序列长明细（明细走 /{code}/history）。"""
+    records = payload.get("records") or []
+    drop = ("recommendations", "price_pushes", "pe_values", "pullback_values")
+    compact_records = [{k: v for k, v in it.items() if k not in drop} for it in records
+                       if isinstance(it, dict)]
+    return {
+        "status": payload.get("status"),
+        "strategy": payload.get("strategy"),
+        "updated_at": payload.get("updated_at"),
+        "total_stocks": payload.get("total_stocks"),
+        "total_recommendations": payload.get("total_recommendations"),
+        "records": compact_records,
+    }
 
 
 def read_overnight_report(report_file: Path = REPORT_FILE) -> dict:
@@ -693,8 +728,12 @@ def update_overnight_history(decision: dict, history_file: Path = HISTORY_FILE) 
         "total_recommendations": sum(item["recommendation_count"] for item in records),
         "records": records,
     }
-    history_file.parent.mkdir(parents=True, exist_ok=True)
-    history_file.write_text(json.dumps(_json_safe(payload), ensure_ascii=False, indent=2), encoding="utf-8")
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(history_file, payload)
+    # compact artifact 与 history_file 同目录同 stem（测试注入 tmp 路径时不污染全局 artifact）
+    compact_file = history_file.parent / f"{history_file.stem}_compact.json"
+    atomic_write_json(compact_file, compact_history_payload(payload))
     return payload
 
 

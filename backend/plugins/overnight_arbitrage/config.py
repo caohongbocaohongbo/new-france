@@ -26,6 +26,8 @@ DATA_DIR = _resolve_dir("OA_DATA_DIR", PROJECT_DIR / "data")
 REPORT_DIR = _resolve_dir("OA_REPORT_DIR", PROJECT_DIR / "reports")
 REPORT_FILE = REPORT_DIR / "overnight_arbitrage_latest.json"
 HISTORY_FILE = REPORT_DIR / "overnight_arbitrage_history.json"
+# P2：历史列表 compact 汇总 artifact（写入时同步生成，请求时不解析 500KB 完整文件再分页）
+HISTORY_COMPACT_FILE = REPORT_DIR / "overnight_arbitrage_history_compact.json"
 NOTIFICATION_STATE_FILE = REPORT_DIR / "overnight_arbitrage_notification_state.json"
 BEIJING_TZ = timezone(timedelta(hours=8))
 

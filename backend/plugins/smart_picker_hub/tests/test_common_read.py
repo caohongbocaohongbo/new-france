@@ -3,9 +3,11 @@ import json
 from types import SimpleNamespace
 
 import backend.plugins.common as common
+from backend.services import snapshot_store
 
 
 def _setup_paths(monkeypatch, tmp_path):
+    snapshot_store.reset_remote_cache()  # 远程合并缓存为进程级，用例间重置
     monkeypatch.setattr(common, "REPORT_DIR", tmp_path)
     monkeypatch.setattr(common, "DATA_BACKEND_DIR", tmp_path / "data_backend")
     monkeypatch.setattr(common, "REMOTE_CACHE_DIR", tmp_path / ".cache")
@@ -46,7 +48,7 @@ def test_remote_success_writes_ttl_cache(monkeypatch, tmp_path):
     _setup_paths(monkeypatch, tmp_path)
     calls = {"n": 0}
 
-    def fake_get(url, timeout=None):
+    def fake_get(url, **kwargs):
         calls["n"] += 1
         return SimpleNamespace(status_code=200, raise_for_status=lambda: None, json=lambda: {"status": "completed", "items": []})
 
@@ -64,7 +66,7 @@ def test_ttl_zero_skips_cache(monkeypatch, tmp_path):
     _setup_paths(monkeypatch, tmp_path)
     calls = {"n": 0}
 
-    def fake_get(url, timeout=None):
+    def fake_get(url, **kwargs):
         calls["n"] += 1
         return SimpleNamespace(status_code=200, raise_for_status=lambda: None, json=lambda: {"status": "completed"})
 
@@ -79,7 +81,7 @@ def test_ttl_zero_skips_cache(monkeypatch, tmp_path):
 def test_remote_failure_shape(monkeypatch, tmp_path):
     _setup_paths(monkeypatch, tmp_path)
 
-    def fake_get(url, timeout=None):
+    def fake_get(url, **kwargs):
         raise ValueError("boom")
 
     import httpx as _httpx

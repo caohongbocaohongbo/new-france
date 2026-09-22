@@ -9,7 +9,7 @@ from datetime import date
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Query, BackgroundTasks
+from fastapi import APIRouter, Query, BackgroundTasks, Request
 
 from ..services.runtime_config import resolve_screening_params
 
@@ -64,10 +64,9 @@ def _json_safe(value):
 
 
 def _write_json_cache(payload: dict):
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file = REPORTS_DIR / "latest.json"
-    cache_file.write_text(json.dumps(_json_safe(payload), ensure_ascii=False, indent=2),
-                          encoding="utf-8")
+    from ..services.snapshot_store import atomic_write_json
+
+    atomic_write_json(REPORTS_DIR / "latest.json", payload)
 
 
 def _cache_error(msg: str):
@@ -138,23 +137,63 @@ async def run_screening(
     }
 
 
-@router.get("/latest")
-async def get_latest_screening():
-    """获取最新筛选结果"""
-    cache_file = REPORTS_DIR / "latest.json"
-    if cache_file.exists():
-        try:
-            data = json.loads(cache_file.read_text(encoding="utf-8"))
-            return _json_safe(_enrich_latest_with_watchlist(data))
-        except Exception:
-            pass
+WATCHLIST_FILE = REPORTS_DIR.parent / "data" / "france.md"
 
-    html_file = REPORTS_DIR / f"{date.today().strftime('%Y-%m-%d')}.html"
-    if html_file.exists():
-        return {"date": date.today().strftime("%Y-%m-%d"), "has_report": True,
-                "html_path": str(html_file)}
-    return {"date": date.today().strftime("%Y-%m-%d"), "has_report": False,
-            "results": [], "message": "今日暂无筛选报告，请先执行筛选"}
+
+@router.get("/latest")
+def get_latest_screening(request: Request = None, view: str = Query("full")):
+    """获取最新筛选结果（P1：早期 304；P2：view=summary 契约裁剪，默认 full 保留旧语义）。
+
+    request=None 时退化为纯 dict 返回（兼容既有内部/单测直接调用）。
+    """
+    from ..middleware.performance import set_snapshot_context
+    from ..services.snapshot_store import (
+        dumps_bytes, etag_for_params, json_response_from_bytes, read_snapshot_entry,
+    )
+
+    cache_file = REPORTS_DIR / "latest.json"
+    entry = read_snapshot_entry(cache_file)
+    if entry is None:
+        html_file = REPORTS_DIR / f"{date.today().strftime('%Y-%m-%d')}.html"
+        if html_file.exists():
+            return {"date": date.today().strftime("%Y-%m-%d"), "has_report": True,
+                    "html_path": str(html_file)}
+        return {"date": date.today().strftime("%Y-%m-%d"), "has_report": False,
+                "results": [], "message": "今日暂无筛选报告，请先执行筛选"}
+    if request is None:  # 直接调用兼容路径（无 ETag）
+        try:
+            return _json_safe(_enrich_latest_with_watchlist(json.loads(entry.payload_bytes.decode("utf-8"))))
+        except Exception:  # noqa: BLE001
+            return {"date": date.today().strftime("%Y-%m-%d"), "has_report": False,
+                    "results": [], "message": "今日暂无筛选报告，请先执行筛选"}
+    if view not in ("full", "summary"):
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=422, detail="view 必须为 full/summary")
+    wl_entry = read_snapshot_entry(WATCHLIST_FILE)
+    canonical = f"watchlist={wl_entry.etag if wl_entry else 'none'}&view={view}"
+    etag = etag_for_params(entry.etag, canonical)
+    early = json_response_from_bytes(request, b"", etag, cache_control="no-cache", vary="Accept-Encoding")
+    if early.status_code == 304:
+        set_snapshot_context(request, source=entry.source or "local", cache="memory")
+        return early
+    try:
+        data = json.loads(entry.payload_bytes.decode("utf-8"))
+        enriched = _json_safe(_enrich_latest_with_watchlist(data))
+    except Exception:  # noqa: BLE001 损坏快照按旧行为回退
+        html_file = REPORTS_DIR / f"{date.today().strftime('%Y-%m-%d')}.html"
+        if html_file.exists():
+            return {"date": date.today().strftime("%Y-%m-%d"), "has_report": True,
+                    "html_path": str(html_file)}
+        return {"date": date.today().strftime("%Y-%m-%d"), "has_report": False,
+                "results": [], "message": "今日暂无筛选报告，请先执行筛选"}
+    if view == "summary":  # 契约裁剪：仅去掉前端确认未使用的字段（audit/price_history/factors 均保留）
+        enriched = {k: v for k, v in enriched.items() if k not in ("report_md", "report_html")}
+        results = enriched.get("results") or []
+        enriched["results"] = [{k: v for k, v in it.items() if k != "evidence"} for it in results]
+    set_snapshot_context(request, source=entry.source or "local", cache="memory")
+    return json_response_from_bytes(request, dumps_bytes(enriched), etag,
+                                    cache_control="no-cache", vary="Accept-Encoding")
 
 
 @router.get("/history")
