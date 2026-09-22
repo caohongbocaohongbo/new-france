@@ -62,6 +62,12 @@ CONFIG = {
     "pool_keys": _env_csv("POOL_KEYS", "buy_candidates,sell_candidates"),
     "pool_max": _env_int("POOL_MAX", 40),
     "pool_refresh_min": _env_int("POOL_REFRESH_MIN", 10),
+    # 23 v2 雷达池驻留/保护席/轮换席/陈旧期限（与 principal_capital 日内状态池选择共用）
+    "radar_pool_max": _env_int("POOL_MAX", 40),
+    "radar_pool_min_dwell_min": _env_int("POOL_MIN_DWELL_MIN", 30),
+    "radar_pool_protected_cap": _env_int("POOL_PROTECTED_CAP", 30),
+    "radar_pool_rotation_seats": _env_int("POOL_ROTATION_SEATS", 10),
+    "radar_pool_max_stale_min": _env_int("POOL_MAX_STALE_MIN", 15),
     "exclude_gem": _env_bool("EXCLUDE_GEM", True),
     "exclude_star": _env_bool("EXCLUDE_STAR", True),
     "poll_interval_s": _env_int("POLL_INTERVAL_S", 4),

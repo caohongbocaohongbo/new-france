@@ -8,6 +8,8 @@ import html
 import json
 import logging
 import math
+import time
+import uuid
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -19,16 +21,29 @@ import pandas as pd
 from backend.api.router_system import trading_session_status
 
 # === plugin 内部依赖 ===
+from . import intraday_state as intraday
+from . import pipeline as pipeline_mod
 from .config import (
     CONFIG,
     DATA_DIR,
     HISTORY_FILE,
+    INTRADAY_STATE_FILE,
+    M5_AUDIT_FILE,
+    M5_AUDIT_MAX_RECORDS,
+    MANUAL_STATUS_FILE,
+    OWNER_CONFLICT_FILE,
     REPORT_DIR,
     REPORT_FILE,
+    SHADOW_REPORT_FILE,
+    SHADOW_STATE_FILE,
     SNAPSHOT_RAW_BASE,
     SOURCE_HEALTH_FILE,
+    atomic_write_json,
+    config_fingerprint,
+    resolve_execution_mode,
+    resolve_pipeline_mode,
 )
-from .notifier import get_smtp_config, send_email
+from .notifier import build_summary_payload, get_smtp_config, send_email
 from .sources.multi_source import fetch_market_fund_flow_resilient
 
 logger = logging.getLogger(__name__)
@@ -109,12 +124,8 @@ def load_notified_map(today: date, direction: str) -> Dict[str, list]:
 
 
 def save_notified_map(today: date, direction: str, notified_map: Dict[str, list]) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
     payload = {"date": today.isoformat(), "notified": notified_map}
-    _notified_file(today, direction).write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    atomic_write_json(_notified_file(today, direction), payload)
 
 
 def cleanup_old_notified(today: date, keep_days: int = 7) -> None:
@@ -156,15 +167,17 @@ def _base_filter(df: pd.DataFrame, exclude_star: bool = True, min_amount: float 
     result["name"] = result["name"].fillna("").astype(str)
     result["main_inflow_ratio"] = pd.to_numeric(result["main_inflow_ratio"], errors="coerce")
     result["total_amount"] = pd.to_numeric(result["total_amount"], errors="coerce")
-    result = result[result["code"].map(_is_main_board)]
-    result = result[~result["code"].map(_is_excluded_market)]
+    # 合并为单次布尔掩码，避免空 DataFrame 上逐次布尔过滤触发 pandas 空掩码取列误判。
+    # 过滤条件（板块/ST/成交额/阈值）与之前完全一致，仅改变应用方式。
+    keep = result["code"].map(_is_main_board)
+    keep &= ~result["code"].map(_is_excluded_market)
     if exclude_star:
-        result = result[~result["code"].map(_is_star_market)]
-    result = result[~result["name"].map(_is_st_name)]
-    result = result[result["main_inflow_ratio"].notna()]
+        keep &= ~result["code"].map(_is_star_market)
+    keep &= ~result["name"].map(_is_st_name)
+    keep &= result["main_inflow_ratio"].notna()
     amount_mask = result["total_amount"].isna() | (result["total_amount"] >= float(min_amount))
-    result = result[amount_mask]
-    return result.reset_index(drop=True)
+    keep &= amount_mask
+    return result[keep].reset_index(drop=True)
 
 
 def filter_buy_candidates(df, buy_threshold=50.0, exclude_star=True, min_amount=1e7) -> pd.DataFrame:
@@ -360,11 +373,7 @@ def build_email_payload(
 # ---- 报告落盘 ----
 
 def write_report(payload: dict) -> None:
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    REPORT_FILE.write_text(
-        json.dumps(_json_safe(payload), ensure_ascii=False, indent=2, default=str),
-        encoding="utf-8",
-    )
+    atomic_write_json(REPORT_FILE, payload)
 
 
 def read_report() -> dict:
@@ -427,11 +436,44 @@ def _normalize_report_payload(payload: Optional[dict]) -> dict:
     return normalized
 
 
+def _check_report_consistency(report: dict) -> dict:
+    """P1-7：读取组合数据时核验 state.last_batch_id == report.batch_id。"""
+    # P1-R4：所有带 batch_id 的 official 报告都执行一致性检查
+    if not report or not report.get("batch_id"):
+        return report
+    try:
+        state = intraday.load_state(trade_date=report.get("trade_date"))
+        problems = []
+        if state.get("schema_version") != 2:
+            problems.append("state_schema_incompatible")
+        if state.get("_source_unavailable") or state.get("warming_reason") == "corrupt_state_recovered":
+            problems.append("state_unavailable_or_recovering")
+        last_batch_id = state.get("last_batch_id")
+        if not last_batch_id:
+            problems.append("state_last_batch_id_empty")
+        elif last_batch_id != report.get("batch_id"):
+            problems.append("state_report_batch_mismatch")
+        if report.get("trade_date") and state.get("trade_date") and report.get("trade_date") != state.get("trade_date"):
+            problems.append("state_report_trade_date_mismatch")
+        if problems:
+            report = dict(report)
+            report["consistency_error"] = True
+            report["consistency_problems"] = problems
+            report["status"] = "degraded"
+            report.setdefault("reason", "state_report_inconsistent")
+    except Exception:
+        pass
+    return report
+
+
 def read_report_resilient() -> dict:
-    """读最新报告：本地完成态优先，否则返回远程快照的真实状态。"""
+    """读最新报告：本地带 batch_id 的报告优先（含一致性核验），否则回退远程快照。
+
+    远程快照不与本地 state 组合做一致性判定（避免把无关 runner 的 state 与快照混合）。
+    """
     local = _normalize_report_payload(read_report())
-    if local.get("status") == "completed":
-        return local
+    if local.get("batch_id"):
+        return _check_report_consistency(local)
     remote = _fetch_snapshot_json("principal_capital_latest.json")
     if remote and remote.get("status"):
         remote = _normalize_report_payload(remote)
@@ -496,10 +538,7 @@ def append_history(result: dict, max_records: int = 1000) -> None:
             "amount": item.get("total_amount"),
             "change_pct": item.get("change_pct"),
         })
-    HISTORY_FILE.write_text(
-        json.dumps({"records": records[-max_records:]}, ensure_ascii=False, indent=2, default=str),
-        encoding="utf-8",
-    )
+    atomic_write_json(HISTORY_FILE, {"records": records[-max_records:]})
 
 
 # ---- 主流程 ----
@@ -526,11 +565,28 @@ def _update_notified_map(notified_map: Dict[str, list], df: pd.DataFrame,
 
 
 def _empty_result(status: str, reason: str, now: datetime, buy_threshold: float,
-                  sell_threshold: float, source_status: Optional[dict] = None) -> dict:
+                  sell_threshold: float, source_status: Optional[dict] = None,
+                  execution_mode: str = "readonly", pipeline_mode: str = "strict",
+                  owner_id: Optional[str] = None) -> dict:
     return {
+        "schema_version": 2,
         "status": status,
         "reason": reason,
+        "trade_date": now.date().isoformat(),
         "now": now.isoformat(),
+        "batch_id": None,
+        "owner_id": owner_id,
+        "execution_mode": execution_mode,
+        "pipeline_mode": pipeline_mode,
+        "deadline_met": None,
+        "quality": {"status": "provisional", "notify_eligible": False, "degraded_reasons": []},
+        "universe": {"source": "none", "count": 0, "stale": False},
+        "bulk": {"status": "not_run", "rows": 0, "main_board_rows": 0, "admitted": False,
+                 "candidate_count": 0, "latency_ms": None},
+        "refine": {"status": "not_run", "requested_count": 0, "received_count": 0,
+                   "missing_codes": [], "coverage_ratio": None, "latency_ms": None},
+        "audit": {"kind": "shadow_truth", "truth_buy_count": 0, "truth_sell_count": 0,
+                  "false_negative_buy": [], "false_negative_sell": []},
         "thresholds": {"buy": buy_threshold, "sell": sell_threshold},
         "source_status": source_status or {"active_source": "none"},
         "scanned": 0,
@@ -538,7 +594,232 @@ def _empty_result(status: str, reason: str, now: datetime, buy_threshold: float,
         "buy_fresh_count": 0, "sell_fresh_count": 0,
         "email_sent": False, "email_error": None,
         "buy_triggered": [], "sell_triggered": [],
+        "buy_candidates_current": [], "sell_candidates_current": [],
+        "buy_candidates_today": [], "sell_candidates_today": [],
     }
+
+
+def _evaluate_quality(source_status: dict, coverage_ratio, has_source_time: bool) -> dict:
+    """行级质量门控（P1-6）：按覆盖率 + 源时间契约判定，不按供应商名称放行。"""
+    active = (source_status or {}).get("active_source", "none")
+    stale = bool((source_status or {}).get("is_stale", False))
+    if active == "cache" or stale:
+        return {"status": "degraded", "notify_eligible": False, "degraded_reasons": ["stale_cache"]}
+    if coverage_ratio is not None and coverage_ratio < 1.0:
+        return {"status": "degraded", "notify_eligible": False, "degraded_reasons": ["incomplete_coverage"]}
+    if has_source_time:
+        return {"status": "accepted", "notify_eligible": True, "degraded_reasons": []}
+    return {
+        "status": "provisional",
+        "notify_eligible": bool(CONFIG["allow_provisional_notify"]),
+        "degraded_reasons": ["fund_source_time_unavailable"],
+    }
+
+
+def _determine_status(coverage_ratio, quality: dict, source_status: dict) -> str:
+    """P0-2：completed 只允许完整覆盖且质量门禁通过；否则 partial/degraded。"""
+    if (source_status or {}).get("active_source") == "cache" or (source_status or {}).get("is_stale"):
+        return "degraded"
+    if quality.get("status") == "degraded":
+        return "degraded"
+    if coverage_ratio is None or coverage_ratio < 1.0:
+        return "partial"
+    return "completed"
+
+
+def _radar_pool_cfg() -> dict:
+    """读取 smart_money_radar 的池参数（懒导入，避免循环依赖）。"""
+    try:
+        from backend.plugins.smart_money_radar.config import CONFIG as RADAR_CONFIG
+        keys = (
+            "radar_pool_max", "radar_pool_min_dwell_min", "radar_pool_protected_cap",
+            "radar_pool_rotation_seats", "radar_pool_max_stale_min",
+        )
+        return {key: RADAR_CONFIG[key] for key in keys}
+    except Exception:
+        return {}
+
+
+def write_shadow_report(payload: dict) -> None:
+    atomic_write_json(SHADOW_REPORT_FILE, payload)
+
+
+def write_manual_status(payload: dict) -> None:
+    atomic_write_json(MANUAL_STATUS_FILE, payload)
+
+
+def write_owner_conflict_diagnostic(payload: dict) -> None:
+    atomic_write_json(OWNER_CONFLICT_FILE, payload)
+
+
+def read_intraday_state() -> dict:
+    """读取日内状态（供雷达/前端/诊断复用）。"""
+    return intraday.load_state()
+
+
+def _fetch_strict_truth(now) -> tuple:
+    """P0-1：strict 真值固定为完整 sina_full 同批数据。
+
+    抓取前生成权威主板 universe（requested_codes），返回后计算 received/missing/coverage。
+    返回 (df, source_status, truth_meta)。
+    """
+    from .sources.sina import fetch_codes_fund_flow_sina_detailed
+    from .sources.sina_market import fetch_main_board_universe, get_last_codes_stale_date
+
+    universe = fetch_main_board_universe()
+    requested = [str(code).zfill(6) for code in universe.get("codes") or []]
+    stale_date = get_last_codes_stale_date()
+    rows, rejected = fetch_codes_fund_flow_sina_detailed(
+        requested,
+        max_workers=int(CONFIG["sina_max_workers"]),
+        timeout=int(CONFIG["refine_timeout_seconds"]),
+        batch_timeout=float(CONFIG["round_deadline_seconds"]),
+        now=now,
+    )
+    received_codes = sorted({str(row.get("code") or "").zfill(6) for row in rows if row.get("code")})
+    missing = sorted(set(requested) - set(received_codes))
+    coverage = round(len(received_codes) / len(requested), 6) if requested else 0.0
+    df = pd.DataFrame(rows) if rows else pd.DataFrame()
+    universe_verified = bool(universe.get("verified"))
+    source_status = {
+        "active_source": "sina_full",
+        "is_stale": False,
+        "codes_stale_date": stale_date,
+        "invalid_rows": len(rejected),
+        "universe_verified": universe_verified,
+    }
+    truth = {
+        "source": "sina_full",
+        "requested_codes": requested,
+        "received_codes": received_codes,
+        "missing_codes": missing,
+        "coverage_ratio": coverage,
+        "rejected_rows": rejected,
+        "has_source_time": False,  # 新浪单股无 source_time
+        "universe_verified": universe_verified,
+        "universe_meta": universe,
+        "valid_for_admission": bool(rows and not missing and not rejected and universe_verified),
+    }
+    return df, source_status, truth
+
+
+def _fetch_truth_with_fallback(now, enable_verify) -> tuple:
+    """strict 主路径；sina_full 失败才走备用源并标 strict_fallback（不计入 M5）。"""
+    df, source_status, truth = _fetch_strict_truth(now)
+    if df is not None and not df.empty:
+        return df, source_status, truth, "strict"
+    df, source_status = fetch_market_fund_flow_resilient(enable_verify=enable_verify)
+    truth = {
+        "source": (source_status or {}).get("active_source", "none"),
+        "requested_codes": [],
+        "received_codes": [str(code).zfill(6) for code in df["code"].tolist()] if not df.empty else [],
+        "missing_codes": [],
+        "coverage_ratio": None,
+        "rejected_rows": {},
+        "has_source_time": False,
+        "valid_for_admission": False,
+    }
+    return df, source_status, truth, "strict_fallback"
+
+
+def _record_m5_audit(result: dict, truth: dict, elapsed_seconds: float) -> None:
+    """P1-3：保存有界的每日 M5 审计记录（可逐轮回放；只有 valid_for_admission 计入验收）。"""
+    records = []
+    if M5_AUDIT_FILE.exists():
+        try:
+            payload = json.loads(M5_AUDIT_FILE.read_text(encoding="utf-8"))
+            records = payload.get("records") or []
+        except (json.JSONDecodeError, OSError):
+            records = []
+    audit = result.get("audit") or {}
+    record = {
+        "batch_id": result.get("batch_id"),
+        "trade_date": result.get("trade_date"),
+        "session": result.get("session"),
+        "now": result.get("now"),
+        "truth_source": truth.get("source"),
+        "universe_count": len(truth.get("requested_codes") or []),
+        "requested_count": len(truth.get("requested_codes") or []),
+        "received_count": len(truth.get("received_codes") or []),
+        "coverage_ratio": truth.get("coverage_ratio"),
+        "config_fingerprint": config_fingerprint(),
+        "thresholds": result.get("thresholds"),
+        "candidate_summary": {
+            "buy": result.get("buy_candidates"),
+            "sell": result.get("sell_candidates"),
+        },
+        "false_negative_buy": audit.get("false_negative_buy", []),
+        "false_negative_sell": audit.get("false_negative_sell", []),
+        "latency_ms": int(elapsed_seconds * 1000),
+        "deadline_met": result.get("deadline_met"),
+        "valid_for_admission": bool(result.get("round_valid")),
+    }
+    records.append(record)
+    atomic_write_json(M5_AUDIT_FILE, {"records": records[-M5_AUDIT_MAX_RECORDS:]})
+
+
+def _run_bulk_shadow(now, df, universe_codes, state, buy_threshold, sell_threshold, exclude_star):
+    """strict 全量结果作为真值，对 bulk 漏斗做零额外精算请求的影子比较。
+
+    返回 (bulk_meta, audit, next_audit_cursor)。
+    """
+    bulk_meta = {
+        "status": "shadow_only", "rows": 0, "main_board_rows": 0, "admitted": bool(CONFIG["bulk_admitted"]),
+        "candidate_count": 0, "latency_ms": None, "validation": None, "error": None,
+    }
+    audit = {
+        "kind": "shadow_truth", "truth_buy_count": 0, "truth_sell_count": 0,
+        "false_negative_buy": [], "false_negative_sell": [],
+        "false_positive_buy": [], "false_positive_sell": [],
+        "valid_for_admission": False,
+    }
+    next_cursor = int((state or {}).get("audit_cursor", 0))
+    try:
+        from .sources.sina_market import fetch_bulk_fund_flow, parse_bulk_rows, validate_bulk_rows
+        payload, latency_ms = fetch_bulk_fund_flow()
+        rows = parse_bulk_rows(payload, now)
+        universe = {_stock_code(code) for code in (universe_codes or [])}
+        validation = validate_bulk_rows(rows, universe)
+        bulk_meta["rows"] = len(rows)
+        bulk_meta["main_board_rows"] = len([row for row in rows if row["code"] in universe])
+        bulk_meta["latency_ms"] = latency_ms
+        bulk_meta["validation"] = validation
+
+        candidates = (state or {}).get("candidates") or {}
+        previous_current = [key.split(":", 1)[1] for key, entry in candidates.items()
+                            if ":" in key and entry.get("is_current")]
+        dwell_codes = list((state or {}).get("pool_entries") or {})
+        # 补集审计只从「universe - 粗筛(不含 audit)」取样
+        coarse_without = pipeline_mod.build_coarse_union(
+            rows, previous_current, dwell_codes, [], CONFIG
+        )["codes"]
+        audit_codes, next_cursor = pipeline_mod.complement_audit_codes(
+            universe, coarse_without, (state or {}).get("audit_cursor", 0), CONFIG
+        )
+        coarse = pipeline_mod.build_coarse_union(rows, previous_current, dwell_codes, audit_codes, CONFIG)
+        bulk_meta["candidate_count"] = len(coarse["codes"])
+        bulk_meta["audit_codes"] = audit_codes
+        audit = pipeline_mod.compare_with_truth(coarse["codes"], df, {
+            "buy": lambda frame: filter_buy_candidates(frame, buy_threshold=buy_threshold, exclude_star=exclude_star),
+            "sell": lambda frame: filter_sell_candidates(frame, sell_threshold=sell_threshold, exclude_star=exclude_star),
+        })
+    except Exception as exc:  # noqa: BLE001 bulk shadow 失败不影响 strict 正式结果
+        logger.info("bulk shadow 比较失败: %s", exc)
+        bulk_meta["status"] = "shadow_error"
+        bulk_meta["error"] = f"{type(exc).__name__}: {exc}"
+    return bulk_meta, audit, next_cursor
+
+
+def _status_reason(status: str, coverage_ratio, deadline_met: bool) -> str:
+    if status == "completed":
+        return ""
+    if status == "partial":
+        if not deadline_met:
+            return "deadline_exceeded"
+        return f"coverage_incomplete:{coverage_ratio}"
+    if status == "degraded":
+        return "degraded_quality"
+    return status
 
 
 def run_principal_capital_scan(
@@ -550,63 +831,250 @@ def run_principal_capital_scan(
     enable_verify: bool = False,
     dry_run: bool = False,
     force: bool = False,
+    execution_mode: Optional[str] = None,
+    pipeline_mode: Optional[str] = None,
+    owner_id: Optional[str] = None,
+    enable_shadow: Optional[bool] = None,
+    batch_id: Optional[str] = None,
 ) -> dict:
-    """执行主力资金双向扫描。"""
+    """执行主力资金双向扫描（23 v2：strict=sina_full 同批真值 + bulk shadow 对照）。
+
+    - execution_mode 默认 readonly；official 是唯一写者。
+    - hybrid 在 M6 前代码层拒绝（resolve_pipeline_mode 抛 RuntimeError）。
+    """
     now = now or datetime.now(BEIJING_TZ)
-    if now.tzinfo is None:
-        now = now.replace(tzinfo=BEIJING_TZ)
+    now = intraday._ensure_aware(now)  # naive datetime 直接抛 ValueError（P1-1）
+    execution_mode = resolve_execution_mode(execution_mode)
+    requested_pipeline_mode = (pipeline_mode or CONFIG["pipeline_mode"]).strip().lower()
+    effective_pipeline_mode = resolve_pipeline_mode(requested_pipeline_mode)  # hybrid -> RuntimeError
+    owner_id = owner_id or CONFIG["official_owner"]
+
+    if execution_mode == "official" and not owner_id:
+        result = _empty_result("owner_conflict", "PC_OFFICIAL_OWNER 未配置", now,
+                               buy_threshold, sell_threshold, execution_mode=execution_mode,
+                               pipeline_mode=effective_pipeline_mode)
+        write_owner_conflict_diagnostic(result)  # P1-4：冲突方不得写 official 报告
+        return result
+
     session = trading_session_status(now)
     if not force and not session.get("is_trading_hours"):
-        result = _empty_result(
-            "skipped", session.get("market_status_text", "非交易时段"),
-            now, buy_threshold, sell_threshold,
-        )
-        write_report(result)
+        result = _empty_result("skipped", session.get("market_status_text", "非交易时段"),
+                               now, buy_threshold, sell_threshold, execution_mode=execution_mode,
+                               pipeline_mode=effective_pipeline_mode, owner_id=owner_id)
+        if execution_mode == "official":
+            write_report(result)
         return result
 
     today = now.date()
-    cleanup_old_notified(today)
-    buy_map = load_notified_map(today, DIRECTION_BUY)
-    sell_map = load_notified_map(today, DIRECTION_SELL)
+    # P1-2：shadow 使用独立状态；readonly 不读旧 official 状态，基于本轮结果自洽
+    if execution_mode == "official":
+        state = intraday.load_state(trade_date=today.isoformat(), now=now)
+    elif execution_mode == "shadow":
+        state = intraday.load_state(path=SHADOW_STATE_FILE, trade_date=today.isoformat(), now=now)
+    else:
+        state = intraday.empty_state(today.isoformat(), pipeline_mode=effective_pipeline_mode)
 
-    df, source_status = fetch_market_fund_flow_resilient(enable_verify=enable_verify)
+    round_ctx = pipeline_mod.build_round_context(
+        owner_id=owner_id, execution_mode=execution_mode, pipeline_mode=effective_pipeline_mode,
+        trade_date=today.isoformat(), started_at=now,
+        deadline_at=now + timedelta(seconds=int(CONFIG["round_deadline_seconds"])),
+    )
+    if batch_id:
+        round_ctx["batch_id"] = batch_id
+    batch_id = round_ctx["batch_id"]
+    started_monotonic = time.monotonic()
+    session_label = "am" if now.hour < 12 else "pm"
+
+    if execution_mode == "official":
+        ok, state, conflict = intraday.acquire_owner_atomic(
+            INTRADAY_STATE_FILE, owner_id, int(CONFIG["owner_lease_seconds"]), now
+        )
+        if not ok:
+            result = _empty_result("owner_conflict", conflict or "owner_conflict", now,
+                                   buy_threshold, sell_threshold, execution_mode=execution_mode,
+                                   pipeline_mode=effective_pipeline_mode, owner_id=owner_id)
+            write_owner_conflict_diagnostic(result)
+            return result
+        cleanup_old_notified(today)
+        buy_map = load_notified_map(today, DIRECTION_BUY)
+        sell_map = load_notified_map(today, DIRECTION_SELL)
+    else:
+        buy_map, sell_map = {}, {}
+
+    is_replay = (state.get("last_batch_id") == batch_id)
+
+    df, source_status, truth, effective_pipeline_mode = _fetch_truth_with_fallback(now, enable_verify)
     if df.empty:
-        result = _empty_result("no_data", "", now, buy_threshold, sell_threshold, source_status)
-        write_report(result)
+        result = _empty_result("no_data", "", now, buy_threshold, sell_threshold, source_status,
+                               execution_mode=execution_mode, pipeline_mode=effective_pipeline_mode,
+                               owner_id=owner_id)
+        if execution_mode == "official":
+            write_report(result)
         return result
+
+    requested = truth.get("requested_codes") or []
+    received = truth.get("received_codes") or []
+    missing = truth.get("missing_codes") or []
+    coverage_ratio = truth.get("coverage_ratio")
+    rejected_rows = truth.get("rejected_rows") or {}
+    has_source_time = bool(truth.get("has_source_time", False))
+    quality = _evaluate_quality(source_status, coverage_ratio, has_source_time)
 
     buy_cands = filter_buy_candidates(df, buy_threshold=buy_threshold, exclude_star=exclude_star)
     sell_cands = filter_sell_candidates(df, sell_threshold=sell_threshold, exclude_star=exclude_star)
+
+    truth_latency_ms = int((time.monotonic() - started_monotonic) * 1000)
+    if enable_shadow is None:
+        enable_shadow = execution_mode in ("official", "shadow")
+    bulk_meta, audit, next_audit_cursor = None, None, None
+    if enable_shadow:
+        bulk_meta, audit, next_audit_cursor = _run_bulk_shadow(
+            now, df, requested, state, buy_threshold, sell_threshold, exclude_star
+        )
+    bulk_latency_ms = int((time.monotonic() - started_monotonic) * 1000) - truth_latency_ms
+    # P1-R1：deadline 在 truth + bulk 结束后计算（含 bulk 耗时），并统一用于 status/fallback/M5
+    elapsed_seconds = time.monotonic() - started_monotonic
+    deadline_met = elapsed_seconds <= float(CONFIG["round_deadline_seconds"])
+
     buy_fresh = _fresh_rows(buy_cands, DIRECTION_BUY, now, buy_map, CONFIG["buy_dedup_minutes"])
     sell_fresh = _fresh_rows(sell_cands, DIRECTION_SELL, now, sell_map, sell_cooldown_minutes)
 
     email_sent = False
     email_error = None
-    # 降级：买入区不再单独触发邮件（仅作雷达数据源写入 latest.json），
-    # 仅当有卖出/派发信号时才发邮件，且邮件正文不含买入区（include_buy=False）
-    if not sell_fresh.empty and not dry_run:
+    notify_eligible = execution_mode == "official" and quality["notify_eligible"]
+    if notify_eligible and not sell_fresh.empty and not dry_run:
         subject, text, html_content = build_email_payload(
             buy_fresh, sell_fresh, now, source_status, include_buy=False
         )
         email_sent, email_error = send_email(subject, text, html_content, get_smtp_config())
 
-    # 买入去重独立于邮件：买入不再发邮件但仍写入 latest.json 供雷达消费，
-    # 当日去重需照常保存，否则同一只票每轮都会重复进 buy_triggered。
-    if dry_run or not buy_fresh.empty:
-        buy_map = _update_notified_map(buy_map, buy_fresh, now)
-        save_notified_map(today, DIRECTION_BUY, buy_map)
-    # 卖出去重绑定邮件发送成功（保持原冷却语义：发出去才算已通知）
-    if dry_run or email_sent:
-        sell_map = _update_notified_map(sell_map, sell_fresh, now)
-        save_notified_map(today, DIRECTION_SELL, sell_map)
+    status = _determine_status(coverage_ratio, quality, source_status)
+    batch_is_partial = status != "completed"
+
+    buy_records = buy_cands.to_dict("records")
+    sell_records = sell_cands.to_dict("records")
+    batch_meta = {
+        "batch_id": batch_id, "now": now.isoformat(),
+        "is_partial": batch_is_partial, "pipeline_mode": effective_pipeline_mode,
+    }
+
+    auto_fallback = None
+    features = {}
+    sentinel_label = None
+    if execution_mode in ("official", "shadow"):
+        state["candidates"] = intraday.merge_candidate_state(state, buy_records, sell_records, batch_meta)
+        state["last_batch_id"] = batch_id
+        state["pipeline_mode"] = effective_pipeline_mode
+        if next_audit_cursor is not None and not is_replay:
+            state["audit_cursor"] = next_audit_cursor
+
+        # P1-R5：sentinel 接入主路径（strict 全量即完整真值；标记 done 防重复）
+        sentinel_label = intraday.should_run_sentinel(state, now, CONFIG["sentinel_times"])
+        if sentinel_label:
+            state = intraday.mark_sentinel_done(state, sentinel_label)
+
+        pool_codes = set((state.get("pool_entries") or {}).keys())
+        fund_codes = {_stock_code(row.get("code")) for row in buy_records + sell_records} | pool_codes
+        fund_batch_meta = {
+            "batch_id": batch_id, "observed_at": now.isoformat(),
+            "source_segment": f"{source_status.get('active_source', 'sina_single')}:v1:{today.isoformat()}",
+            "trade_date": today.isoformat(), "is_partial": batch_is_partial,
+            "is_stale": bool(source_status.get("is_stale", False)),
+            "is_cache": source_status.get("active_source") == "cache",
+        }
+        refined_by_code = {_stock_code(row["code"]): row for _, row in df.iterrows()}
+        for code in fund_codes:
+            row = refined_by_code.get(code)
+            if row is None:
+                continue
+            state["fund_series"] = intraday.append_fund_observation(
+                state.get("fund_series") or {}, row, fund_batch_meta, CONFIG
+            )
+            features[code] = intraday.compute_intraday_features(
+                state["fund_series"].get(code), now, CONFIG
+            )
+        state["features"] = features
+        for _key, entry in state.get("candidates", {}).items():
+            code = _key.split(":", 1)[1] if ":" in _key else ""
+            if code in features:
+                entry.setdefault("latest_metrics", {})["features"] = features[code]
+
+        state["pool_entries"] = intraday.select_radar_pool(
+            state.get("pool_entries"), buy_records, now, _radar_pool_cfg()
+        )
+        # P1-R2：选池后统一回填 features，protected 与新成员都保留
+        for code, entry in (state.get("pool_entries") or {}).items():
+            if code in features:
+                entry.setdefault("latest_metrics", {})["features"] = features[code]
+
+        # P1-R5：auto_fallback 在 save_state 之前赋值并持久化
+        bulk_validation = bulk_meta.get("validation") if bulk_meta else None
+        fallback_decision = pipeline_mod.evaluate_auto_fallback(audit, bulk_validation, coverage_ratio, deadline_met)
+        auto_fallback = fallback_decision["reasons"] if fallback_decision["should_fallback"] else None
+        if auto_fallback:
+            state["auto_fallback"] = "strict_auto_fallback"
+
+        intraday.save_state(state)
+
+        if dry_run or not buy_fresh.empty:
+            buy_map = _update_notified_map(buy_map, buy_fresh, now)
+            save_notified_map(today, DIRECTION_BUY, buy_map)
+        if dry_run or email_sent:
+            sell_map = _update_notified_map(sell_map, sell_fresh, now)
+            save_notified_map(today, DIRECTION_SELL, sell_map)
+    else:
+        # readonly：基于本轮结果构造自洽列表，不持久化
+        state["candidates"] = intraday.merge_candidate_state({"candidates": {}}, buy_records, sell_records, batch_meta)
+
+    processing_latency_ms = int((time.monotonic() - started_monotonic) * 1000) - truth_latency_ms - bulk_latency_ms
+
+    # P0-R1：M5 单轮准入由完整条件计算，不得复制 truth 标记
+    round_valid = pipeline_mod.compute_round_valid(truth, bulk_meta, audit, deadline_met, truth.get("universe_verified"))
+    if audit is not None:
+        audit["valid_for_admission"] = round_valid
+
+    buy_current, sell_current, buy_today, sell_today = intraday.current_candidate_lists(state)
 
     result = {
-        "status": "completed",
-        "reason": "",
+        "schema_version": 2,
+        "status": status,
+        "reason": _status_reason(status, coverage_ratio, deadline_met),
+        "trade_date": today.isoformat(),
+        "session": session_label,
+        "round_valid": round_valid,
+        "sentinel_label": sentinel_label,
+        "latencies": {"truth_ms": truth_latency_ms, "bulk_ms": bulk_latency_ms, "processing_ms": processing_latency_ms},
+        "batch_id": batch_id,
+        "owner_id": owner_id,
+        "execution_mode": execution_mode,
+        "pipeline_mode": effective_pipeline_mode,
+        "requested_pipeline_mode": requested_pipeline_mode,
         "now": now.isoformat(),
+        "deadline_met": deadline_met,
+        "quality": quality,
+        "universe": {"source": truth.get("source", "none"), "count": len(requested),
+                     "stale": bool(source_status.get("is_stale") or source_status.get("codes_stale_date")),
+                     "verified": bool(truth.get("universe_verified")),
+                     "meta": truth.get("universe_meta")},
+        "bulk": bulk_meta or {"status": "not_run", "rows": 0, "main_board_rows": 0,
+                              "admitted": False, "candidate_count": 0, "latency_ms": None},
+        "refine": {
+            "status": "complete" if coverage_ratio == 1.0 else "partial",
+            "requested_count": len(requested),
+            "received_count": len(received),
+            "missing_codes": missing[:100],
+            "missing_count": len(missing),
+            "coverage_ratio": coverage_ratio,
+            "latency_ms": int(elapsed_seconds * 1000),
+            "invalid_rows": len(rejected_rows),
+            "rejected_rows": dict(list(rejected_rows.items())[:100]),
+        },
+        "audit": audit or {"kind": "shadow_truth", "truth_buy_count": 0, "truth_sell_count": 0,
+                           "false_negative_buy": [], "false_negative_sell": [],
+                           "valid_for_admission": False},
         "thresholds": {"buy": buy_threshold, "sell": sell_threshold},
         "source_status": source_status,
-        "scanned": int(len(df)),
+        "scanned": len(received),
         "buy_candidates": int(len(buy_cands)),
         "sell_candidates": int(len(sell_cands)),
         "buy_fresh_count": int(len(buy_fresh)),
@@ -615,9 +1083,112 @@ def run_principal_capital_scan(
         "email_error": email_error,
         "buy_triggered": buy_fresh.to_dict("records"),
         "sell_triggered": sell_fresh.to_dict("records"),
+        "buy_candidates_current": buy_current,
+        "sell_candidates_current": sell_current,
+        "buy_candidates_today": buy_today,
+        "sell_candidates_today": sell_today,
+        "features": state.get("features", {}),
+        "auto_fallback": auto_fallback,
     }
-    write_report(result)
-    append_history(result)
+    if execution_mode == "official":
+        write_report(result)
+        append_history(result)
+        if not is_replay:
+            _record_m5_audit(result, truth, elapsed_seconds)
+    elif execution_mode == "shadow":
+        write_shadow_report(result)
+    return result
+
+
+def finalize_principal_capital_session(
+    session: str,
+    now: Optional[datetime] = None,
+    execution_mode: Optional[str] = None,
+    owner_id: Optional[str] = None,
+    manual_retry: bool = False,
+    retry_operator: Optional[str] = None,
+) -> dict:
+    """午间/收盘摘要 finalizer（P0-R3）。
+
+    - 状态机：not_attempted / pending / sent / explicit_failed / delivery_unknown。
+    - pending+attempt_id 重启后解释为 delivery_unknown，禁止自动重发。
+    - explicit_failed 仅允许显式 manual_retry 重试（带操作者审计）。
+    """
+    now = now or datetime.now(BEIJING_TZ)
+    now = intraday._ensure_aware(now)
+    execution_mode = resolve_execution_mode(execution_mode)
+    if session not in ("am", "pm"):
+        raise ValueError(f"非法 session: {session!r}")
+    state = intraday.load_state(trade_date=now.date().isoformat(), now=now)
+    latest = read_report()
+
+    result = {
+        "status": "skipped", "session": session, "now": now.isoformat(),
+        "reason": "", "skipped_reason": None, "email_sent": False, "email_error": None,
+    }
+
+    if execution_mode == "official":
+        owner_id = owner_id or CONFIG["official_owner"]
+        if not owner_id or (state.get("owner_id") or "") != owner_id:
+            result.update({"status": "owner_conflict", "reason": "owner_mismatch"})
+            return result
+        expires = intraday._parse_dt(state.get("owner_lease_expires_at"))
+        if expires is None or expires <= now:
+            result.update({"status": "owner_conflict", "reason": "owner_lease_expired"})
+            return result
+
+    decision = intraday.should_finalize_session(state, session, latest, now, CONFIG)
+    result["reason"] = decision["reason"]
+    result["skipped_reason"] = decision.get("skipped_reason")
+
+    # P0-R3：explicit_failed 仅允许显式手工重试
+    allow_send = decision["should_send"]
+    if decision["reason"] == "explicit_failed" and manual_retry:
+        allow_send = True
+        result["manual_retry"] = True
+        result["retry_operator"] = retry_operator or "manual"
+
+    if not allow_send:
+        if execution_mode == "official":
+            state = intraday.release_owner(state)
+            intraday.save_state(state)
+        return result
+
+    _buy_current, _sell_current, buy_today, _sell_today = intraday.current_candidate_lists(state)
+    subject, text, html_content = build_summary_payload(buy_today, session, now)
+    if execution_mode != "official":
+        result.update({"status": "constructed", "subject": subject, "text": text})
+        return result
+
+    previous_entry = ((state.get("summary_state") or {}).get(session) or {})
+    attempt_id = uuid.uuid4().hex
+    state = intraday.mark_summary_pending(state, session, now.isoformat(), attempt_id)
+    if previous_entry.get("attempt_id"):
+        # 记录原 attempt_id 便于审计（手工重试场景）
+        entry = dict(state["summary_state"].get(session) or {})
+        entry["previous_attempt_id"] = previous_entry.get("attempt_id")
+        entry["retry_operator"] = result.get("retry_operator")
+        state["summary_state"][session] = entry
+    intraday.save_state(state)
+    try:
+        ok, error = send_email(subject, text, html_content, get_smtp_config())
+    except Exception as exc:  # noqa: BLE001 结果不明 -> delivery_unknown，禁止自动重发
+        state = intraday.mark_summary_delivery_unknown(state, session, now.isoformat())
+        state = intraday.release_owner(state)
+        intraday.save_state(state)
+        result.update({"status": "delivery_unknown", "email_error": f"{type(exc).__name__}: {exc}"})
+        return result
+
+    result["email_sent"] = bool(ok)
+    result["email_error"] = error
+    if ok:
+        state = intraday.mark_summary_sent(state, session, now.isoformat())
+        result["status"] = "sent"
+    else:
+        state = intraday.mark_summary_explicit_failed(state, session, now.isoformat())
+        result["status"] = "send_failed"
+    state = intraday.release_owner(state)
+    intraday.save_state(state)
     return result
 
 

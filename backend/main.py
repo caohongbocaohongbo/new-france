@@ -262,6 +262,15 @@ def main():
                         help="运行尾盘隔夜套利 14:43 决策任务")
     parser.add_argument("--run-principal-capital-scan", action="store_true",
                         help="[插件] 执行主力资金双向扫描")
+    parser.add_argument("--execution-mode", choices=["official", "shadow", "readonly"],
+                        default=None, help="[插件23v2] 执行模式（official/shadow/readonly，默认 readonly）")
+    parser.add_argument("--pipeline-mode", choices=["strict", "hybrid"],
+                        default=None, help="[插件23v2] 流水线模式（strict/hybrid）")
+    parser.add_argument("--owner-id", default=None, help="[插件23v2] official owner 标识")
+    parser.add_argument("--finalize-principal-capital-session", action="store_true",
+                        help="[插件23v2] 执行午间/收盘日内汇总 finalizer")
+    parser.add_argument("--session", choices=["am", "pm"], default="am",
+                        help="[插件23v2] finalizer 会话（am=午间，pm=收盘）")
     parser.add_argument("--run-radar-once", action="store_true",
                         help="[插件] 执行 smart_money_radar 盘中雷达单轮扫描")
     parser.add_argument("--run-radar-daemon", action="store_true",
@@ -359,6 +368,10 @@ def main():
         _run_principal_capital_cli(args, logger)
         return
 
+    if args.finalize_principal_capital_session:
+        _run_principal_capital_finalize_cli(args, logger)
+        return
+
     if args.run_radar_once:
         _run_smart_money_radar_once_cli(args, logger)
         return
@@ -444,14 +457,38 @@ def _run_principal_capital_cli(args, logger):
         return
     result = run_scan_cli(args)
     logger.info(
-        "主力资金扫描: status=%s source=%s scanned=%s buy_fresh=%s sell_fresh=%s email=%s",
+        "主力资金扫描: status=%s mode=%s source=%s scanned=%s buy_fresh=%s sell_fresh=%s email=%s",
         result.get("status"),
+        result.get("execution_mode"),
         (result.get("source_status") or {}).get("active_source"),
         result.get("scanned"),
         result.get("buy_fresh_count"),
         result.get("sell_fresh_count"),
         result.get("email_sent"),
     )
+    # P1-8：owner conflict / 一致性错误属于关键失败，映射为非零退出（workflow 不得忽略）
+    if result.get("status") in {"owner_conflict", "consistency_error"}:
+        raise SystemExit(2)
+
+
+def _run_principal_capital_finalize_cli(args, logger):
+    """[插件23v2] 午间/收盘日内汇总 finalizer CLI 入口。"""
+    try:
+        from .plugins.principal_capital import run_finalize_cli
+    except ImportError as exc:
+        logger.error("主力资金插件未安装: %s", exc)
+        return
+    result = run_finalize_cli(args)
+    logger.info(
+        "主力资金日内汇总 finalizer: session=%s status=%s reason=%s email=%s",
+        result.get("session"),
+        result.get("status"),
+        result.get("reason"),
+        result.get("email_sent"),
+    )
+    # P1-8：finalizer 关键失败（owner 冲突 / 发送失败 / 投递结果不明）非零退出
+    if result.get("status") in {"owner_conflict", "send_failed", "delivery_unknown"}:
+        raise SystemExit(2)
 
 
 def _run_smart_money_radar_once_cli(args, logger):
@@ -626,8 +663,12 @@ async def _run_daily_pipeline(args, logger):
 
     new_entries = []
     updated_entries = 0  # 已存在但更新了当天涨停数据的记录数
+    from .services.watchlist_store import is_bse_code
+
     for _, row in zt_pool.iterrows():
         code = str(row["代码"]).strip().zfill(6)
+        if is_bse_code(code):
+            continue  # 北交所行情源不支持，不写入监控列表
         name = str(row["名称"]).strip()
         price = float(row["最新价"])
         if price <= 0:

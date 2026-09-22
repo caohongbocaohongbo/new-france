@@ -23,6 +23,25 @@ def _row(code, name, ratio, amount=2e8, change_pct=3.0):
     }
 
 
+def _truth(df, source="eastmoney", coverage=1.0, has_source_time=False):
+    codes = list(df["code"].tolist()) if df is not None and not df.empty else []
+    return (
+        df,
+        {"active_source": source, "is_stale": False},
+        {
+            "source": source,
+            "requested_codes": codes,
+            "received_codes": codes,
+            "missing_codes": [],
+            "coverage_ratio": coverage,
+            "rejected_rows": {},
+            "has_source_time": has_source_time,
+            "valid_for_admission": bool(codes and coverage == 1.0),
+        },
+        "strict",
+    )
+
+
 class PrincipalCapitalServiceTest(unittest.TestCase):
 
     def test_read_report_resilient_returns_remote_non_completed_statuses(self):
@@ -43,8 +62,12 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
             self.assertIn("source_status", result)
 
     def test_read_report_resilient_keeps_local_completed_report_first(self):
-        local = {"status": "completed", "now": "2026-08-11T09:40:00+08:00"}
+        local = {"status": "completed", "now": "2026-08-11T09:40:00+08:00",
+                 "batch_id": "b1", "trade_date": "2026-08-11"}
+        state = pcs.intraday.empty_state("2026-08-11")
+        state["last_batch_id"] = "b1"
         with patch.object(pcs, "read_report", return_value=local), \
+             patch.object(pcs.intraday, "load_state", return_value=state), \
              patch.object(pcs, "_fetch_snapshot_json") as fetch_snapshot:
             result = pcs.read_report_resilient()
 
@@ -126,8 +149,12 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
                  patch.object(pcs, "REPORT_DIR", Path(tmp)), \
                  patch.object(pcs, "REPORT_FILE", Path(tmp) / "latest.json"), \
                  patch.object(pcs, "HISTORY_FILE", Path(tmp) / "history.json"), \
-                 patch.object(pcs, "fetch_market_fund_flow_resilient",
-                              return_value=(pd.DataFrame(), {"active_source": "none"})):
+                 patch.object(pcs, "_fetch_truth_with_fallback",
+                              return_value=(pd.DataFrame(), {"active_source": "none"},
+                                            {"source": "none", "requested_codes": [], "received_codes": [],
+                                             "missing_codes": [], "coverage_ratio": None, "rejected_rows": {},
+                                             "has_source_time": False, "valid_for_admission": False},
+                                            "strict_fallback")):
                 result = pcs.run_principal_capital_scan(
                     now=datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ), force=True)
         self.assertEqual(result["status"], "no_data")
@@ -139,12 +166,20 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
                  patch.object(pcs, "REPORT_DIR", Path(tmp)), \
                  patch.object(pcs, "REPORT_FILE", Path(tmp) / "latest.json"), \
                  patch.object(pcs, "HISTORY_FILE", Path(tmp) / "history.json"), \
-                 patch.object(pcs, "fetch_market_fund_flow_resilient",
-                              return_value=(df, {"active_source": "eastmoney"})), \
-                 patch.object(pcs, "send_email", return_value=(True, None)):
+                 patch.object(pcs, "M5_AUDIT_FILE", Path(tmp) / "m5_audit.json"), \
+                 patch.object(pcs, "_fetch_truth_with_fallback",
+                              return_value=_truth(df)), \
+                 patch.object(pcs, "send_email", return_value=(True, None)), \
+                 patch.object(pcs.intraday, "acquire_owner_atomic",
+                              return_value=(True, pcs.intraday.empty_state("2026-06-29"), None)), \
+                 patch.object(pcs.intraday, "save_state", return_value=None):
                 now = datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ)
-                first = pcs.run_principal_capital_scan(now=now, force=True)
-                second = pcs.run_principal_capital_scan(now=now + timedelta(minutes=5), force=True)
+                first = pcs.run_principal_capital_scan(now=now, force=True,
+                                                       execution_mode="official", owner_id="github_actions",
+                                                       enable_shadow=False)
+                second = pcs.run_principal_capital_scan(now=now + timedelta(minutes=5), force=True,
+                                                        execution_mode="official", owner_id="github_actions",
+                                                        enable_shadow=False)
         self.assertEqual(first["buy_fresh_count"], 2)
         self.assertEqual(second["buy_fresh_count"], 0)
 
@@ -155,15 +190,23 @@ class PrincipalCapitalServiceTest(unittest.TestCase):
                  patch.object(pcs, "REPORT_DIR", Path(tmp)), \
                  patch.object(pcs, "REPORT_FILE", Path(tmp) / "latest.json"), \
                  patch.object(pcs, "HISTORY_FILE", Path(tmp) / "history.json"), \
-                 patch.object(pcs, "fetch_market_fund_flow_resilient",
-                              return_value=(df, {"active_source": "eastmoney"})), \
-                 patch.object(pcs, "send_email", return_value=(True, None)):
+                 patch.object(pcs, "M5_AUDIT_FILE", Path(tmp) / "m5_audit.json"), \
+                 patch.object(pcs, "_fetch_truth_with_fallback",
+                              return_value=_truth(df)), \
+                 patch.dict(pcs.CONFIG, {"allow_provisional_notify": True}), \
+                 patch.object(pcs, "send_email", return_value=(True, None)), \
+                 patch.object(pcs.intraday, "acquire_owner_atomic",
+                              return_value=(True, pcs.intraday.empty_state("2026-06-29"), None)), \
+                 patch.object(pcs.intraday, "save_state", return_value=None):
                 t1 = pcs.run_principal_capital_scan(
-                    now=datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ), force=True)
+                    now=datetime(2026, 6, 29, 10, 0, tzinfo=BEIJING_TZ), force=True,
+                    execution_mode="official", owner_id="github_actions", enable_shadow=False)
                 t2 = pcs.run_principal_capital_scan(
-                    now=datetime(2026, 6, 29, 10, 30, tzinfo=BEIJING_TZ), force=True)
+                    now=datetime(2026, 6, 29, 10, 30, tzinfo=BEIJING_TZ), force=True,
+                    execution_mode="official", owner_id="github_actions", enable_shadow=False)
                 t3 = pcs.run_principal_capital_scan(
-                    now=datetime(2026, 6, 29, 11, 5, tzinfo=BEIJING_TZ), force=True)
+                    now=datetime(2026, 6, 29, 11, 5, tzinfo=BEIJING_TZ), force=True,
+                    execution_mode="official", owner_id="github_actions", enable_shadow=False)
         self.assertEqual(t1["sell_fresh_count"], 1)
         self.assertEqual(t2["sell_fresh_count"], 0)
         self.assertEqual(t3["sell_fresh_count"], 1)

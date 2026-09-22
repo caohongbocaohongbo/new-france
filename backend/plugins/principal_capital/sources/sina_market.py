@@ -7,8 +7,10 @@
   - 资金流：MoneyFlow 单股接口并发查询（单股返回可用 code 直接对应，天然不错位；
     逗号批量接口会乱序且不带 code，故不用批量）
 """
+import collections
 import json
 import logging
+import math
 import time
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple
@@ -46,6 +48,8 @@ _COLUMNS = [
     "code", "name", "price", "change_pct", "total_amount",
     "main_net_inflow", "main_inflow_ratio", "super_net", "big_net",
     "mid_net", "small_net", "source",
+    # 23 v2 数据契约：单股结果补齐元数据，供质量门控与同源差分复用
+    "endpoint", "fetched_at", "source_time", "freshness_basis", "quality_status",
 ]
 
 
@@ -53,18 +57,18 @@ def _is_main_board_code(code: str) -> bool:
     return str(code or "").zfill(6).startswith(MAIN_BOARD_PREFIXES)
 
 
-def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 18) -> List[str]:
+def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 18):
     """从新浪全A榜单分页翻取沪深主板代码清单（纯网络，无缓存）。
 
-    榜单按涨跌幅排序，主板股散落各页，必须翻完所有页才能取全，
-    因此 max_pages 需覆盖全A股数量（约 5400 只 / 80 每页 ≈ 68 页）。
-
-    跨太平洋抖动下单页偶发超时属常态，因此单页失败重试 1 次；仍失败则
-    跳过该页继续翻（已翻到的页照常累积），避免一页拖垮整份清单。只有全部
-    页都失败（codes 为空）才视为拉取失败，交由上层降级到旧缓存。
+    返回 (codes, meta)。meta 记录 failed_pages / pages_fetched / terminal_page_seen /
+    duplicate_count / verified。终止页之前出现任何缺页 -> verified=false。
     """
     codes: List[str] = []
     seen = set()
+    duplicates = 0
+    failed_pages: List[int] = []
+    pages_fetched = 0
+    terminal_page_seen = False
     session = requests.Session()
     empty_streak = 0
     for page in range(1, max_pages + 1):
@@ -93,22 +97,39 @@ def _fetch_main_board_codes_remote(max_pages: int = 80, timeout: int = 18) -> Li
                 logger.warning("主板清单第 %d 页拉取失败（已重试）：%s", page, exc)
                 data = None
         if data is None:
-            continue  # 该页放弃，继续下一页
+            failed_pages.append(page)
+            continue
+        pages_fetched += 1
         if not data:
             empty_streak += 1
             if empty_streak >= 2:  # 连续空页视为翻到末尾
+                terminal_page_seen = True
                 break
             continue
         empty_streak = 0
         for item in data:
             code = str(item.get("code") or "").zfill(6)
-            if not code or code in seen or not _is_main_board_code(code):
+            if not code:
                 continue
-            codes.append(code)
+            if code in seen:
+                duplicates += 1
+                continue
+            if not _is_main_board_code(code):
+                continue
             seen.add(code)
+            codes.append(code)
         if len(data) < 80:
+            terminal_page_seen = True
             break
-    return codes
+    verified = bool(codes and not failed_pages and terminal_page_seen)
+    meta = {
+        "failed_pages": failed_pages,
+        "pages_fetched": pages_fetched,
+        "terminal_page_seen": terminal_page_seen,
+        "duplicate_count": duplicates,
+        "verified": verified,
+    }
+    return codes, meta
 
 
 def _read_codes_cache(
@@ -138,12 +159,78 @@ def _read_codes_cache(
     return codes, cached_at
 
 
-def _write_codes_cache(codes: List[str]) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    payload = {"cached_at": datetime.now(BEIJING_TZ).isoformat(), "codes": codes}
-    SINA_CODES_CACHE_FILE.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+def _write_codes_cache(codes: List[str], verified: bool = True, cache_version: Optional[str] = None) -> None:
+    from ..config import atomic_write_json
+
+    payload = {
+        "cached_at": datetime.now(BEIJING_TZ).isoformat(),
+        "codes": codes,
+        "verified": bool(verified),
+        "cache_version": cache_version or datetime.now(BEIJING_TZ).strftime("%Y%m%dT%H%M%S"),
+    }
+    atomic_write_json(SINA_CODES_CACHE_FILE, payload)
+
+
+def _read_codes_cache_payload() -> Optional[dict]:
+    if not SINA_CODES_CACHE_FILE.exists():
+        return None
+    try:
+        payload = json.loads(SINA_CODES_CACHE_FILE.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else None
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def fetch_main_board_universe(max_pages: int = 80, timeout: int = 18, use_cache: bool = True) -> dict:
+    """P0-R5：取主板 universe，返回 codes + 分页完整性元数据。
+
+    只有 verified=true 才能写为新鲜权威缓存；中间页失败/未确认终止页必须 verified=false，
+    只能回退上一次经过验证的缓存并记录 cache_version/cached_at。
+    """
+    global _last_codes_stale_date
+    _last_codes_stale_date = None
+    ttl = int(CONFIG.get("sina_codes_cache_ttl_seconds", 259200))
+    now = datetime.now(BEIJING_TZ)
+
+    if use_cache:
+        cached, cached_at = _read_codes_cache(ttl)
+        if cached:
+            payload = _read_codes_cache_payload() or {}
+            logger.info("主板代码清单命中缓存：%d 只", len(cached))
+            return {
+                "codes": cached,
+                "failed_pages": [],
+                "pages_fetched": None,
+                "terminal_page_seen": True,
+                "duplicate_count": 0,
+                "verified": bool(payload.get("verified", False)),
+                "cache_version": payload.get("cache_version"),
+                "cached_at": cached_at.isoformat() if cached_at else None,
+                "from_cache": True,
+            }
+
+    codes, meta = _fetch_main_board_codes_remote(max_pages=max_pages, timeout=timeout)
+    if codes and meta["verified"]:
+        if use_cache:
+            _write_codes_cache(codes, verified=True)
+        return {**meta, "codes": codes, "cache_version": None, "cached_at": now.isoformat()}
+
+    # 实时拉取未验证：回退上一次经过验证的缓存（stale better than none）
+    if use_cache:
+        stale_codes, cached_at = _read_codes_cache(ttl, allow_stale=True)
+        if stale_codes:
+            payload = _read_codes_cache_payload() or {}
+            _last_codes_stale_date = cached_at.strftime("%m-%d") if cached_at else None
+            logger.warning("主板清单实时拉取未验证，回退旧缓存：%d 只", len(stale_codes))
+            return {
+                **meta,
+                "codes": stale_codes,
+                "verified": False,
+                "cache_version": payload.get("cache_version"),
+                "cached_at": cached_at.isoformat() if cached_at else None,
+                "fallback_to_cache": True,
+            }
+    return {**meta, "codes": codes, "cache_version": None, "cached_at": None}
 
 
 def get_last_codes_stale_date() -> Optional[str]:
@@ -157,39 +244,9 @@ def get_last_codes_stale_date() -> Optional[str]:
 def fetch_main_board_codes(
     max_pages: int = 80, timeout: int = 18, use_cache: bool = True
 ) -> List[str]:
-    """取沪深主板代码清单，默认带缓存。
-
-    主板成分变动极慢（仅新股上市增量），缓存 TTL 内直接复用，省去每轮翻页
-    约 25s（美国 IP 实测）。缓存未命中时翻页拉取并落盘。
-    use_cache=False 时强制走网络（供连通性验证等场景）。
-
-    网络拉取返回空时降级读过期缓存（allow_stale）——只要曾成功过一次，就不会
-    因榜单单次抖动而让整条新浪源判空；此时记录缓存日期供上层标注滞后。
-    """
-    global _last_codes_stale_date
-    _last_codes_stale_date = None
-    ttl = int(CONFIG.get("sina_codes_cache_ttl_seconds", 259200))
-    if use_cache:
-        cached, _ = _read_codes_cache(ttl)
-        if cached:
-            logger.info("主板代码清单命中缓存：%d 只", len(cached))
-            return cached
-    codes = _fetch_main_board_codes_remote(max_pages=max_pages, timeout=timeout)
-    if codes:
-        if use_cache:
-            _write_codes_cache(codes)
-        return codes
-    # 实时拉取失败：降级到过期缓存（stale better than none）
-    if use_cache:
-        stale_codes, cached_at = _read_codes_cache(ttl, allow_stale=True)
-        if stale_codes:
-            _last_codes_stale_date = cached_at.strftime("%m-%d") if cached_at else None
-            logger.warning(
-                "主板清单实时拉取失败，降级使用 %s 的旧缓存：%d 只",
-                _last_codes_stale_date, len(stale_codes),
-            )
-            return stale_codes
-    return codes
+    """取沪深主板代码清单（向后兼容：返回 codes 列表）。"""
+    universe = fetch_main_board_universe(max_pages=max_pages, timeout=timeout, use_cache=use_cache)
+    return universe["codes"]
 
 
 def verify_sina_connectivity(list_pages: int = 2, sample_size: int = 30) -> dict:
@@ -315,3 +372,137 @@ def fetch_market_fund_flow_via_sina(
     df.attrs["codes_stale_date"] = codes_stale_date
     logger.info("新浪全主板主力资金流：请求 %d 只，成功 %d 只", len(codes), len(df))
     return df
+
+# --------------------------------------------------------------------------- #
+# 23 v2 bulk 适配器：MoneyFlow.ssl_bkzj_ssggzj 单请求全市场粗筛
+# --------------------------------------------------------------------------- #
+
+SINA_BULK_URL = (
+    "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/"
+    "MoneyFlow.ssl_bkzj_ssggzj"
+)
+SINA_BULK_ENDPOINT = "MoneyFlow.ssl_bkzj_ssggzj"
+
+# bulk 原始字段 -> 标准化后字段。ratioamount / r0_ratio 是「总净占比分数」，
+# 必须在适配器内一次性 *100 标准化成百分数，任何下游不得再二次 *100。
+_BULK_KEY_FIELDS = ("total_amount", "super_net", "super_ratio", "netamount", "ratioamount")
+
+
+def _bulk_float(value):
+    """bulk 数值解析：None/空串/-/NaN/Inf 一律 None，不得变成合法零。"""
+    if value is None or value == "" or value == "-":
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def parse_bulk_rows(payload, fetched_at) -> List[dict]:
+    """把新浪 bulk 响应解析为 BulkRow 列表（无网络）。
+
+    - 只接受 sh/sz 前缀的 symbol，code 唯一标准化。
+    - ratioamount/r0_ratio 标准化为百分数；缺失/非法数值标 degraded，不进粗筛候选。
+    """
+    if not isinstance(payload, list):
+        raise ValueError("bulk 响应必须是列表")
+    rows: List[dict] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        symbol = str(item.get("symbol") or "")
+        if symbol[:2] not in ("sh", "sz"):
+            continue
+        code = symbol[2:].zfill(6)
+        if len(code) != 6 or not code.isdigit():
+            continue
+        changeratio = _bulk_float(item.get("changeratio"))
+        change_pct = round(changeratio * 100, 4) if changeratio is not None else None
+        super_ratio_raw = _bulk_float(item.get("r0_ratio"))
+        ratioamount_raw = _bulk_float(item.get("ratioamount"))
+        row = {
+            "code": code,
+            "name": str(item.get("name") or "").strip(),
+            "price": _bulk_float(item.get("trade")),
+            "change_pct": change_pct,
+            "total_amount": _bulk_float(item.get("amount")),
+            "super_net": _bulk_float(item.get("r0_net")),
+            "super_ratio": round(super_ratio_raw * 100, 4) if super_ratio_raw is not None else None,
+            "netamount": _bulk_float(item.get("netamount")),
+            "ratioamount": round(ratioamount_raw * 100, 4) if ratioamount_raw is not None else None,
+            "source": "sina_bulk",
+            "endpoint": SINA_BULK_ENDPOINT,
+            "fetched_at": fetched_at.isoformat() if isinstance(fetched_at, datetime) else str(fetched_at),
+            "source_time": None,
+            "eligible_for": [],
+            "degraded_reasons": ["source_time_unavailable"],
+        }
+        non_finite = [field for field in _BULK_KEY_FIELDS if row[field] is None]
+        if non_finite:
+            row["degraded_reasons"].append(f"non_finite:{','.join(sorted(non_finite))}")
+        else:
+            row["eligible_for"].append("coarse_candidate")
+        rows.append(row)
+    return rows
+
+
+def validate_bulk_rows(rows, universe, known_non_trading=None) -> dict:
+    """整表确定性校验（无网络）。universe 为当日有效主板代码集合。"""
+    known = {str(code).zfill(6): reason for code, reason in (known_non_trading or {}).items()}
+    universe_set = {str(code).zfill(6) for code in (universe or [])}
+    row_codes = [str(row.get("code") or "").zfill(6) for row in rows]
+    unique_codes = set(row_codes)
+    counts = collections.Counter(row_codes)
+    duplicates = sorted(code for code, count in counts.items() if count > 1)
+    missing = sorted(universe_set - unique_codes)
+    unexplained_missing = [code for code in missing if code not in known]
+    extra = sorted(unique_codes - universe_set)
+    non_finite = sorted({
+        row.get("code") for row in rows
+        if any(row.get(field) is None for field in _BULK_KEY_FIELDS)
+    })
+    received_in_universe = sorted(unique_codes & universe_set)
+    reasons = []
+    if duplicates:
+        reasons.append(f"duplicate_code:{len(duplicates)}")
+    if unexplained_missing:
+        reasons.append(f"missing_codes:{len(unexplained_missing)}")
+    if non_finite:
+        reasons.append(f"non_finite:{len(non_finite)}")
+    valid = not duplicates and not unexplained_missing and not non_finite
+    coverage_ratio = round(len(received_in_universe) / len(universe_set), 6) if universe_set else 0.0
+    return {
+        "valid": valid,
+        "universe_count": len(universe_set),
+        "received_count": len(received_in_universe),
+        "coverage_ratio": coverage_ratio,
+        "missing_codes": missing,
+        "missing_reasons": {code: known.get(code, "unexplained") for code in missing},
+        "extra_codes": extra,
+        "duplicate_codes": duplicates,
+        "non_finite_codes": non_finite,
+        "reasons": reasons,
+    }
+
+
+def fetch_bulk_fund_flow(
+    num: int = 8000,
+    timeout: int = 20,
+    session: Optional[requests.Session] = None,
+) -> Tuple[List[dict], int]:
+    """单请求拉取新浪全市场资金流榜单。返回 (原始列表, 延迟毫秒)。"""
+    http = session or requests.Session()
+    start = time.perf_counter()
+    resp = http.get(
+        SINA_BULK_URL,
+        params={"num": str(num)},
+        headers=SINA_NODE_HEADERS,
+        timeout=timeout,
+    )
+    latency_ms = int((time.perf_counter() - start) * 1000)
+    resp.raise_for_status()
+    data = resp.json()
+    if not isinstance(data, list):
+        raise FundFlowFetchError(f"bulk 非列表返回: {str(data)[:120]}")
+    return data, latency_ms

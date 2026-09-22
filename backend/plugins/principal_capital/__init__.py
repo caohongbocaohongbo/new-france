@@ -28,4 +28,17 @@ def run_scan_cli(args):
         enable_verify=getattr(args, "enable_verify", False),
         dry_run=getattr(args, "dry_run", False),
         force=getattr(args, "force", False),
+        execution_mode=getattr(args, "execution_mode", None),
+        pipeline_mode=getattr(args, "pipeline_mode", None),
+        owner_id=getattr(args, "owner_id", None),
+    )
+
+
+def run_finalize_cli(args):
+    """午间/收盘摘要 finalizer CLI 入口。"""
+    from .service import finalize_principal_capital_session
+    return finalize_principal_capital_session(
+        session=getattr(args, "session", "am"),
+        execution_mode=getattr(args, "execution_mode", None),
+        owner_id=getattr(args, "owner_id", None),
     )

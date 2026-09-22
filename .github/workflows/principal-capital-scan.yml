@@ -92,6 +92,8 @@ jobs:
           SELL_THRESHOLD: ${{ github.event.inputs.sell_threshold || '30' }}
           ENABLE_VERIFY_FLAG: ${{ github.event.inputs.enable_verify == 'true' && '--enable-verify' || '' }}
           FORCE_FLAG: ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+          PC_EXECUTION_MODE: official
+          PC_OFFICIAL_OWNER: "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
         run: |
           # ── 自循环：每 5 分钟扫描一次，直至本时段收盘 ──
           # 触发点无论早晚，只要落在交易日内进入循环即可覆盖整段。
@@ -99,12 +101,22 @@ jobs:
           #   这样上午盘 job 不会空占午休（11:30–13:00）时段。
           # 手动 workflow_dispatch 带 --force 时，只跑一轮即退出，避免非交易时段空转。
           scan_once() {
+            set +e
             timeout --signal=TERM 120 \
             python -m backend.main --run-principal-capital-scan \
               --buy-threshold "${BUY_THRESHOLD}" \
               --sell-threshold "${SELL_THRESHOLD}" \
               ${ENABLE_VERIFY_FLAG} \
-              ${FORCE_FLAG} || echo "本轮扫描非零退出（继续下一轮）"
+              ${FORCE_FLAG}
+            rc=$?
+            set -e
+            if [ "${rc}" -eq 2 ]; then
+              echo "关键失败（owner_conflict/consistency_error），终止本 session"
+              exit 2
+            fi
+            if [ "${rc}" -ne 0 ]; then
+              echo "本轮扫描非零退出（继续下一轮）"
+            fi
           }
 
           # 手动强制运行：仅一轮
@@ -117,9 +129,11 @@ jobs:
           start_hm="$(TZ=Asia/Shanghai date +%H%M)"
           if [ "${start_hm}" -lt 1200 ]; then
             SESSION_END=1130   # 上午盘
+            SESSION=am
             echo "进入上午盘循环（收于 11:30），触发时刻北京 ${start_hm}"
           else
             SESSION_END=1500   # 下午盘
+            SESSION=pm
             echo "进入下午盘循环（收于 15:00），触发时刻北京 ${start_hm}"
           fi
 
@@ -141,3 +155,7 @@ jobs:
             echo "等待 5 分钟进入下一轮..."
             sleep 300
           done
+
+          # 23 v2：session 边界额外调用一次 finalizer（午间/收盘日内汇总，恰好一次）
+          python -m backend.main --finalize-principal-capital-session --session "${SESSION}" --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || exit 2
+          bash scripts/commit_screening_data.sh || echo "快照提交失败（忽略）"

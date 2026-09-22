@@ -4,6 +4,7 @@
 """
 import logging
 import time
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request
 
@@ -13,25 +14,47 @@ from .service import (
     read_report_resilient,
     read_source_health_resilient,
     run_principal_capital_scan,
-    write_report,
+    write_manual_status,
 )
-from .config import REPORT_DIR
+from .config import REPORT_DIR, SHADOW_REPORT_FILE
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+BEIJING_TZ = timezone(timedelta(hours=8))
+_MANUAL_LOCK = False
+_LAST_MANUAL_TRIGGER_AT = 0.0
+_MANUAL_MIN_INTERVAL_SECONDS = 60
+
 
 def _run_scan_task(**kwargs):
+    global _MANUAL_LOCK
+    started_at = datetime.now(BEIJING_TZ).isoformat()
+    execution_mode = kwargs.get("execution_mode", "shadow")
     try:
-        run_principal_capital_scan(**kwargs)
+        result = run_principal_capital_scan(**kwargs)
+        # P1-R8：manual status 写入真实终态，不长期停留在 running
+        write_manual_status({
+            "status": result.get("status") or "completed",
+            "batch_id": result.get("batch_id"),
+            "execution_mode": execution_mode,
+            "started_at": started_at,
+            "finished_at": datetime.now(BEIJING_TZ).isoformat(),
+            "reason": result.get("reason") or "",
+            "shadow_report_path": str(SHADOW_REPORT_FILE) if execution_mode == "shadow" else None,
+        })
     except Exception as exc:
         logger.exception("主力资金后台任务异常: %s", exc)
-        write_report({
+        write_manual_status({
             "status": "error",
-            "error": str(exc),
-            "buy_triggered": [],
-            "sell_triggered": [],
+            "execution_mode": execution_mode,
+            "started_at": started_at,
+            "finished_at": datetime.now(BEIJING_TZ).isoformat(),
+            "reason": str(exc),
+            "shadow_report_path": None,
         })
+    finally:
+        _MANUAL_LOCK = False
 
 
 @router.post("/trigger")
@@ -43,13 +66,25 @@ async def trigger_principal_capital(
     dry_run: bool = Query(False),
     force: bool = Query(False),
     enable_verify: bool = Query(False),
+    execution_mode: str = Query("shadow"),
 ):
+    global _MANUAL_LOCK, _LAST_MANUAL_TRIGGER_AT
     try:
-        write_report({
+        # P0-6：API 手工触发默认 shadow/readonly；禁止路由写 official latest。
+        if execution_mode not in ("shadow", "readonly"):
+            return {"status": "error", "error": "manual trigger 仅允许 shadow/readonly"}
+        now_monotonic = time.monotonic()
+        if _MANUAL_LOCK:
+            return {"status": "busy", "error": "已有手动扫描在执行中"}
+        if _LAST_MANUAL_TRIGGER_AT and (now_monotonic - _LAST_MANUAL_TRIGGER_AT) < _MANUAL_MIN_INTERVAL_SECONDS:
+            return {"status": "rate_limited", "error": "手动扫描频率过高，请稍后再试"}
+        _MANUAL_LOCK = True
+        _LAST_MANUAL_TRIGGER_AT = now_monotonic
+        write_manual_status({
             "status": "running",
             "message": "主力资金扫描任务已启动",
-            "buy_triggered": [],
-            "sell_triggered": [],
+            "execution_mode": execution_mode,
+            "started_at": datetime.now(BEIJING_TZ).isoformat(),
         })
         background_tasks.add_task(
             _run_scan_task,
@@ -59,14 +94,18 @@ async def trigger_principal_capital(
             dry_run=dry_run,
             force=force,
             enable_verify=enable_verify,
+            execution_mode=execution_mode,
+            owner_id=None,
         )
-        return {"status": "started", "message": "主力资金扫描任务已启动"}
+        return {"status": "started", "message": "主力资金扫描任务已启动（shadow/readonly）"}
     except Exception as exc:
+        _MANUAL_LOCK = False
         return {"status": "error", "error": str(exc)}
 
 
 @router.get("/latest")
-def latest_principal_capital():  # 同步 def：阻塞读（含远程兜底）走线程池（P0-3）
+def latest_principal_capital():
+    """同步 def（阻塞读含远程兜底走线程池；P0-3 不在事件循环里做 requests.get）。"""
     try:
         return read_report_resilient()
     except Exception as exc:

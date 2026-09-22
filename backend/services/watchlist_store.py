@@ -21,6 +21,14 @@ DEFAULTS = {
     "consecutive": "0",
 }
 
+# 北交所代码段：43/83/87/88（老段）+ 920（新段）。行情源当前不支持北交所，监控列表不收录。
+BSE_PREFIXES = ("920", "43", "83", "87", "88")
+
+
+def is_bse_code(code) -> bool:
+    """判断是否为北交所代码。"""
+    return str(code or "").zfill(6).startswith(BSE_PREFIXES)
+
 
 def _parse_line(line: str) -> Optional[Dict]:
     """解析单行，兼容旧格式(4列)、8列、和9列(含炸板次数)"""
@@ -113,7 +121,7 @@ def parse_watchlist(path: Path = FRANCE_FILE) -> List[Dict]:
     entries = []
     for line in content.splitlines():
         entry = _parse_line(line)
-        if entry:
+        if entry and not is_bse_code(entry["code"]):
             entries.append(entry)
 
     unique, _ = dedupe_watchlist_entries(entries)
@@ -121,8 +129,10 @@ def parse_watchlist(path: Path = FRANCE_FILE) -> List[Dict]:
 
 
 def write_watchlist(entries: List[Dict], path: Path = FRANCE_FILE) -> int:
-    """写入监控列表文件，写入前再次去重。"""
-    unique, _ = dedupe_watchlist_entries(entries)
+    """写入监控列表文件，写入前再次去重并剔除北交所代码。"""
+    unique, _ = dedupe_watchlist_entries(
+        [entry for entry in entries if entry and not is_bse_code(entry.get("code"))]
+    )
     lines = [
         f"| {entry['code']} | {entry['name']} | {entry['zt_date']} | {entry['ref_price']:.2f} | "
         f"{entry.get('added_date', entry['zt_date'])} | "
@@ -158,17 +168,22 @@ def normalize_watchlist_file(path: Path = FRANCE_FILE) -> Tuple[List[Dict], int]
 
     content = path.read_text(encoding="utf-8")
     entries = []
+    bse_removed = 0
     for line in content.splitlines():
         entry = _parse_line(line)
-        if entry:
-            entries.append(entry)
+        if not entry:
+            continue
+        if is_bse_code(entry["code"]):
+            bse_removed += 1
+            continue
+        entries.append(entry)
 
     unique, duplicate_count = dedupe_watchlist_entries(entries)
 
     # 检查是否需要升级格式（旧格式4/8列 → 新格式9列）
     needs_upgrade = "| 炸板次数" not in content
 
-    if duplicate_count or needs_upgrade:
+    if duplicate_count or needs_upgrade or bse_removed:
         write_watchlist(unique, path)
     return unique, duplicate_count
 

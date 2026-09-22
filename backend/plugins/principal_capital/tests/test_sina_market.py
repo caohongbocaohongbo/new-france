@@ -61,7 +61,9 @@ class SinaMarketTest(unittest.TestCase):
             with patch.object(sm, "SINA_CODES_CACHE_FILE", cache_file), \
                  patch.object(sm, "DATA_DIR", Path(tmp)), \
                  patch.object(sm, "_fetch_main_board_codes_remote",
-                              return_value=["600000", "002415", "000001"]) as remote:
+                              return_value=(["600000", "002415", "000001"],
+                                            {"verified": True, "failed_pages": [], "pages_fetched": 1,
+                                             "terminal_page_seen": True, "duplicate_count": 0})) as remote:
                 codes = sm.fetch_main_board_codes()
             remote.assert_called_once()
             self.assertEqual(codes, ["600000", "002415", "000001"])
@@ -84,8 +86,10 @@ class SinaMarketTest(unittest.TestCase):
                 sm.requests.exceptions.ReadTimeout("t1-retry"),
                 good_resp, good_resp,
             ]
-            codes = sm._fetch_main_board_codes_remote(max_pages=5)
+            codes, meta = sm._fetch_main_board_codes_remote(max_pages=5)
         self.assertEqual(codes, ["000001"])
+        self.assertEqual(meta["failed_pages"], [1])
+        self.assertFalse(meta["verified"])
 
     def test_remote_empty_falls_back_to_stale_cache(self):
         """实时拉取返回空 → 降级用过期缓存，并记录清单日期供上层标注。"""
@@ -96,7 +100,10 @@ class SinaMarketTest(unittest.TestCase):
                 "cached_at": stale.isoformat(), "codes": ["600000", "000001"],
             }), encoding="utf-8")
             with patch.object(sm, "SINA_CODES_CACHE_FILE", cache_file), \
-                 patch.object(sm, "_fetch_main_board_codes_remote", return_value=[]):
+                 patch.object(sm, "_fetch_main_board_codes_remote",
+                              return_value=([], {"verified": False, "failed_pages": [1],
+                                               "pages_fetched": 0, "terminal_page_seen": False,
+                                               "duplicate_count": 0})):
                 codes = sm.fetch_main_board_codes()
             self.assertEqual(codes, ["600000", "000001"])
             self.assertEqual(sm.get_last_codes_stale_date(), stale.strftime("%m-%d"))
@@ -107,7 +114,9 @@ class SinaMarketTest(unittest.TestCase):
             with patch.object(sm, "SINA_CODES_CACHE_FILE", Path(tmp) / "c.json"), \
                  patch.object(sm, "DATA_DIR", Path(tmp)), \
                  patch.object(sm, "_fetch_main_board_codes_remote",
-                              return_value=["600000"]):
+                              return_value=(["600000"], {"verified": True, "failed_pages": [],
+                                             "pages_fetched": 1, "terminal_page_seen": True,
+                                             "duplicate_count": 0})):
                 sm.fetch_main_board_codes()
             self.assertIsNone(sm.get_last_codes_stale_date())
 

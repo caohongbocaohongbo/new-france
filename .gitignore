@@ -36,6 +36,14 @@ data/smart_money_radar_*.sqlite3
 data/orderbook_events_*.json
 data/auction_events_*.json
 
+# 智能选股器通知去重状态 (multi_hit_notifier, 本地生成不进库)
+data/smart_picker_*_notified_*.json
+
+# SQLite WAL/SHM 与进程锁等运行时文件 (本地生成, 不进库)
+data/*.db-shm
+data/*.db-wal
+data/*.lock
+
 # 本地过程产物 (codex diff 输出 / pytdx 连通性验证脚本, 不进库)
 output/
 verify_tdx*.py

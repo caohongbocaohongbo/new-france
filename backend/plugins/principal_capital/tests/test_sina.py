@@ -57,8 +57,8 @@ class SinaFundFlowTest(unittest.TestCase):
         self.assertIsNone(fetch_single_stock_fund_flow_sina("600001", session=session))
 
     def test_batch_query_skips_failed_rows(self):
-        def fake_fetch(code, timeout=8):
-            del timeout
+        def fake_fetch(code, timeout=8, session=None, now=None):
+            del timeout, session, now
             if code in {"600002", "600004"}:
                 return None
             return {"code": code, "name": f"股票{code}", "price": 10,

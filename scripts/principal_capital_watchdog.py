@@ -17,7 +17,18 @@ from backend.plugins.principal_capital.service import BEIJING_TZ, _fetch_snapsho
 
 ALERT_NOT_STARTED = "not_started"
 ALERT_SOURCE_FAILURE = "source_failure"
+ALERT_OWNER_CONFLICT = "owner_conflict"
+ALERT_DEGRADED = "degraded"
+ALERT_FINALIZER_MISSING = "finalizer_missing"
+ALERT_PENDING_STUCK = "pending_stuck"
+ALERT_DELIVERY_UNKNOWN = "delivery_unknown"
+ALERT_CONSISTENCY_ERROR = "consistency_error"
+ALERT_M5_GAP = "m5_gap"
+ALERT_M5_DAY_INVALID = "m5_day_invalid"
 STATE_FILE = REPORT_DIR / "principal_capital_watchdog_state.json"
+OWNER_CONFLICT_FILE = Path(__file__).resolve().parents[1] / "data" / "principal_capital_owner_conflict.json"
+INTRADAY_STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "principal_capital_intraday_state.json"
+M5_AUDIT_FILE = Path(__file__).resolve().parents[1] / "data" / "principal_capital_m5_audit.json"
 
 
 def _as_beijing_time(value: Any) -> Optional[datetime]:
@@ -48,8 +59,34 @@ def _attempts_text(snapshot: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def evaluate_snapshot(snapshot: Optional[Dict[str, Any]], now: datetime) -> Optional[Dict[str, str]]:
-    """根据当天快照判断是否需要发送未启动或数据源失败告警。"""
+def _summary_alert(intraday_state: Dict[str, Any], now: datetime) -> Optional[Dict[str, str]]:
+    """根据 summary_state 检查 finalizer 未完成 / pending 卡死 / delivery_unknown。"""
+    summary_state = (intraday_state or {}).get("summary_state") or {}
+    now_hm = now.hour * 100 + now.minute
+    for session, boundary in (("am", 1130), ("pm", 1500)):
+        entry = summary_state.get(session) or {}
+        status = entry.get("status")
+        if now_hm < boundary:
+            continue
+        if status == "delivery_unknown":
+            return {"kind": ALERT_DELIVERY_UNKNOWN, "message": f"{session} 摘要投递结果不明（delivery_unknown），需人工确认。"}
+        if status == "pending":
+            updated = _as_beijing_time(entry.get("updated_at"))
+            if updated is None or (now - updated).total_seconds() > 30 * 60:
+                return {"kind": ALERT_PENDING_STUCK, "message": f"{session} 摘要停留在 pending 超过 30 分钟，疑似卡死。"}
+        if status not in ("sent", "explicit_failed"):
+            return {"kind": ALERT_FINALIZER_MISSING, "message": f"{session} 摘要 finalizer 尚未完成（状态 {status or 'not_attempted'}）。"}
+    return None
+
+
+def evaluate_snapshot(
+    snapshot: Optional[Dict[str, Any]],
+    now: datetime,
+    owner_conflict: Optional[Dict[str, Any]] = None,
+    intraday_state: Optional[Dict[str, Any]] = None,
+    m5_audit: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, str]]:
+    """根据快照 + 独立诊断 + 日内状态 + M5 审计判断是否需要告警。"""
     now = _as_beijing_time(now) or datetime.now(BEIJING_TZ)
     snapshot = snapshot or {}
     snapshot_time = _as_beijing_time(snapshot.get("now"))
@@ -67,6 +104,30 @@ def evaluate_snapshot(snapshot: Optional[Dict[str, Any]], now: datetime) -> Opti
             "kind": ALERT_SOURCE_FAILURE,
             "message": "主力资金已运行但数据源失败/无数据。\n" + _attempts_text(snapshot),
         }
+
+    if status == "owner_conflict" or (owner_conflict and owner_conflict.get("status") == "owner_conflict"):
+        return {
+            "kind": ALERT_OWNER_CONFLICT,
+            "message": "主力资金出现唯一写者冲突（owner_conflict），正式任务未能写入。",
+        }
+
+    if status in {"partial", "degraded", "consistency_error"}:
+        return {
+            "kind": ALERT_DEGRADED,
+            "message": f"主力资金本轮状态为 {status}（覆盖不足/质量降级/批次不一致），详见最新报告。",
+        }
+
+    # M5 当日审计检查
+    records = (m5_audit or {}).get("records") or []
+    today_records = [r for r in records if r.get("trade_date") == now.date().isoformat()]
+    if today_records:
+        if not any(r.get("valid_for_admission") for r in today_records):
+            return {"kind": ALERT_M5_DAY_INVALID, "message": "今日 M5 审计轮次均无效，本日不计入连续五日。"}
+
+    # finalizer / summary 检查
+    summary_alert = _summary_alert(intraday_state, now)
+    if summary_alert is not None:
+        return summary_alert
 
     if status in {"completed", "skipped"}:
         return None
@@ -123,6 +184,16 @@ def _build_email(alert: Dict[str, str], snapshot: Dict[str, Any], now: datetime)
     return subject, text, html_content
 
 
+def _read_local_json(path: Path) -> Optional[Dict[str, Any]]:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload if isinstance(payload, dict) else None
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def run_watchdog(
     now: Optional[datetime] = None,
     snapshot_fetcher: Optional[Callable[[str], Optional[Dict[str, Any]]]] = None,
@@ -138,7 +209,10 @@ def run_watchdog(
     state_path = Path(state_path or STATE_FILE)
 
     snapshot = snapshot_fetcher("principal_capital_latest.json") or {}
-    alert = evaluate_snapshot(snapshot, now)
+    owner_conflict = _read_local_json(OWNER_CONFLICT_FILE)
+    intraday_state = _read_local_json(INTRADAY_STATE_FILE)
+    m5_audit = _read_local_json(M5_AUDIT_FILE)
+    alert = evaluate_snapshot(snapshot, now, owner_conflict, intraday_state, m5_audit)
     if alert is None:
         return {"status": "ok", "alert_type": None, "email_sent": False}
 

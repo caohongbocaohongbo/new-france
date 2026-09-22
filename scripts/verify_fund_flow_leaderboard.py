@@ -180,8 +180,9 @@ def main():
             continue
         if ratio is not None and ratio <= -SELL_MAIN_RATIO:
             sell_violators.append((code, round(ratio, 2)))
-    report("卖侧圈定线外反证(≤-30% 越界=0)", not sell_violators,
-           f"圈定外随机精算 {sample_n} 只，越界 {len(sell_violators)}: {sell_violators[:5]}")
+    # 23 v2：随机抽样不能证明“全市场不漏”，此处仅作经验烟测（WARN，不作准入证据）
+    report("抽样烟测·卖侧(非准入)", not sell_violators,
+           f"圈定外随机精算 {sample_n} 只，越界 {len(sell_violators)}: {sell_violators[:5]}", hard=False)
     # 反证：圈定外（ratioamount < 粗筛线）是否可能 main≥50%
     outside = [r for r in rows[:3000]
                if str(r.get("symbol") or "")[:2] in ("sh", "sz")
@@ -196,13 +197,14 @@ def main():
                 violators.append((code, ratio))
         except Exception:
             continue
-    report("粗筛不漏(圈定外无 main≥50%)", not violators,
-           f"抽样圈定外 {len(outside)} 只精算，越界 {len(violators)}: {violators[:5]}")
+    report("抽样烟测·买侧(非准入)", not violators,
+           f"抽样圈定外 {len(outside)} 只精算，越界 {len(violators)}: {violators[:5]}", hard=False)
     saved = 1 - (1 + refine_total) / 3195
     report("请求削减", saved > 0.8, f"3195 → 1(bulk) + {refine_total} 精算 = 削减 {saved*100:.0f}%")
 
-    print(f"\n结论: {'全部 PASS' if not any(r[3] and not r[1] for r in RESULTS) else '存在硬性 FAIL'}")
-    return 0 if not any(r[3] and not r[1] for r in RESULTS) else 1
+    hard_failures = [r for r in RESULTS if r[3] and not r[1]]
+    print(f"\n结论: {'无硬性 FAIL（随机抽样仅烟测，不作为准入证据）' if not hard_failures else '存在硬性 FAIL'}")
+    return 0 if not hard_failures else 1
 
 
 if __name__ == "__main__":

@@ -30,8 +30,11 @@ function _pcResolveApiBase() {
     return '/api/v1';
 }
 
-// _pcFetch: 走绝对 URL，避免与主项目 apiFetch 的 API_BASE 双重拼接 /api/v1
+// _pcFetch: 优先复用项目统一 apiFetch()，不可用时回退绝对 URL
 function _pcFetch(path, opts = {}) {
+    if (typeof apiFetch === 'function') {
+        return apiFetch(PC_PATH + path, opts);
+    }
     const url = _pcResolveApiBase() + PC_PATH + path;
     const ms = opts.timeout || 30000;
     const o = { ...opts };
@@ -83,15 +86,23 @@ function _pcFmtTime(iso) {
 
 const PC_STATUS_LABEL = {
     completed: '已扫描',
+    partial: '部分覆盖',
+    degraded: '降级',
     no_data: '数据源失败/无数据',
     skipped: '非交易时段',
     error: '运行异常',
     empty: '未运行',
     running: '运行中...',
+    owner_conflict: '写者冲突',
+    strict_fallback: 'strict 自动回退',
 };
 
 const PC_SOURCE_LABEL = {
-    eastmoney: '东方财富(主)',
+    sina_full: '新浪全量(strict)',
+    sina_single: '新浪单股',
+    sina: '新浪',
+    strict_fallback: 'strict 备用源(降级)',
+    eastmoney: '东方财富(备用)',
     eastmoney_backup: '东方财富(备)',
     akshare: 'akshare',
     cache: '本地缓存(降级)',
@@ -362,8 +373,16 @@ function _pcRenderReport(data) {
     const srcRaw = (data.source_status && data.source_status.active_source) || 'none';
     const srcLabel = (PC_SOURCE_LABEL[srcRaw] || srcRaw) + (stale ? ' (缓存降级)' : '');
     const statusLabel = PC_STATUS_LABEL[data.status] || data.status || '--';
+    const mode = (data.execution_mode || '') + (data.pipeline_mode ? '/' + data.pipeline_mode : '');
+    const triggerNote = ' · 列表为本轮新触发';
+    const quality = data.quality && data.quality.status ? data.quality.status : '';
+    const refine = data.refine || {};
+    const covText = (refine.coverage_ratio === null || refine.coverage_ratio === undefined)
+        ? ''
+        : ` · 覆盖 ${(refine.coverage_ratio * 100).toFixed(1)}%`;
+    const fallback = data.auto_fallback ? ` · 回退:${data.auto_fallback}` : '';
     if (meta) {
-        meta.textContent = `${_pcFmtTime(data.now)} · 扫描 ${data.scanned || 0} 只 · 数据源: ${srcLabel} · 状态: ${statusLabel}`;
+        meta.textContent = `${_pcFmtTime(data.now)} · 扫描 ${data.scanned || 0} 只 · 数据源: ${srcLabel} · 状态: ${statusLabel}${covText}${mode ? ' · ' + mode : ''}${quality ? ' · ' + quality : ''}${fallback}${triggerNote}`;
     }
     document.getElementById('pcBuyCount').textContent = String(buy.length);
     document.getElementById('pcSellCount').textContent = String(sell.length);

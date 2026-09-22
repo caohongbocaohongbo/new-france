@@ -176,19 +176,51 @@ def cleanup_old_notified(today: date, keep_days: int = 7) -> None:
 
 
 def _candidate_lists(payload: dict) -> list:
+    """23 v2：雷达池只消费买侧 current 列表；卖侧不混入吸筹观察池。
+
+    P1-5：key 存在且为 list 时必须尊重空列表（权威空）；只有 key 缺失才 legacy 回退。
+    """
+    if "buy_candidates_current" in payload:
+        value = payload.get("buy_candidates_current")
+        return list(value) if isinstance(value, list) else []
     items = []
     for key in CONFIG.get("pool_keys", []):
         value = payload.get(key)
         if isinstance(value, list):
             items.extend(value)
-    # 兼容既有 principal_capital_latest.json：buy_candidates/sell_candidates
-    # 是数量，实际可用的股票条目位于 buy_triggered/sell_triggered。
+    # 兼容旧报告：buy_candidates/sell_candidates 是数量，实际条目在 buy_triggered/sell_triggered
     if not items:
         for key in ("buy_triggered", "sell_triggered"):
             value = payload.get(key)
             if isinstance(value, list):
                 items.extend(value)
     return items
+
+
+def _pool_from_intraday_state(now: datetime):
+    """读取 principal_capital 日内状态的池选择结果。
+
+    P1-5：返回 None 表示来源不可用；返回 [] 表示权威空池。
+    """
+    try:
+        from backend.plugins.principal_capital.intraday_state import load_state
+        state = load_state(now=now)
+        if state.get("_source_unavailable") or state.get("warming_reason") == "corrupt_state_recovered":
+            return None
+        if "pool_entries" not in state:
+            return None
+        entries = state.get("pool_entries") or {}
+        items = []
+        for code, entry in entries.items():
+            metrics = dict(entry.get("latest_metrics") or {})
+            item = {"code": _stock_code(code), **metrics}
+            item["_pool_entry"] = entry
+            items.append(item)
+        items.sort(key=lambda item: str(item.get("code") or ""))
+        return items[: int(CONFIG["pool_max"])]
+    except Exception as exc:  # noqa: BLE001 来源不可用
+        logger.info("load_watch_pool: 日内状态池不可用，回退旧字段: %s", exc)
+        return None
 
 
 def _valid_pool_item(item: dict) -> bool:
@@ -211,6 +243,18 @@ def load_watch_pool(force: bool = False, now: Optional[datetime] = None) -> list
     source_file = str(CONFIG["pool_source_file"])
     if not force and expires_at and now < expires_at and _POOL_CACHE.get("source_file") == source_file:
         return list(_POOL_CACHE["items"])
+
+    pool = _pool_from_intraday_state(now)
+    if pool is not None:
+        # 权威空池（[]）也必须尊重，不得回退旧数据
+        items = pool
+        _POOL_CACHE.update({
+            "expires_at": now + timedelta(minutes=CONFIG["pool_refresh_min"]),
+            "items": items,
+            "source_file": source_file,
+        })
+        return items
+
     path = Path(source_file)
     payload = {}
     if path.exists():

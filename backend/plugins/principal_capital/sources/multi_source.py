@@ -72,13 +72,11 @@ def _load_health() -> dict:
 
 
 def _save_health() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    from ..config import atomic_write_json
+
     health = _load_health()
     health["updated_at"] = _now().isoformat()
-    SOURCE_HEALTH_FILE.write_text(
-        json.dumps(health, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    atomic_write_json(SOURCE_HEALTH_FILE, health)
 
 
 def _is_blocked(source: str, now: datetime) -> bool:
@@ -120,10 +118,9 @@ def _write_cache(df: pd.DataFrame, fetched_at: datetime) -> None:
         "fetched_at": fetched_at.isoformat(),
         "records": df.to_dict("records"),
     }
-    _CACHE_JSON_FILE.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, default=str),
-        encoding="utf-8",
-    )
+    from ..config import atomic_write_json
+
+    atomic_write_json(_CACHE_JSON_FILE, payload)
     try:
         df.assign(_cached_at=fetched_at.isoformat()).to_parquet(CACHE_FILE, index=False)
     except Exception:
