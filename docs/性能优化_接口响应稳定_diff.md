@@ -819,4 +819,6 @@ curl -s 'http://127.0.0.1:8000/api/v1/principal-capital/tier-flow/latest?limit=2
 
 - **P4 K 线持久化读穿 / P5 冷启动**：方案 §8/§9 明确要求"待 P0 生产数据（慢请求 TOP / 平台唤醒分段）后才开工"，本批不动。
 - **不新增重复索引**（§7.3 条件未触发）；**不改业务阈值/策略公式/邮件规则**；**不引入 Redis/外部库**（httpx 已在 22 方案进入 requirements）。
-- 本 diff 未提交到 git（工作区与 principal_capital 重构等其它在途改动混合，按需分拣后自行提交）；提交建议仅包含 §0 清单内文件。
+- **已提交并推送**：`61f8c3b perf: 查询接口响应稳定 P0-P3（...）`（仅 §0 清单内文件，混合文件按 HEAD+重放+还原做了分拣，principal_capital 重构等其它在途改动保持未提交）。
+- 干净检出验证（worktree @61f8c3b + 运行数据拷贝）：`tests backend/services backend/middleware` 235 passed。
+- 云端实测（new-france-api.onrender.com）：tier-flow compact total=3049/returned=100、`limit=201`→422、smart-picker source=snapshot；data-snapshots 白名单已补 tier_flow/oa_history_compact 防 GH 日跑清空。
