@@ -1,30 +1,53 @@
 {
-  "status": "no_data",
-  "reason": "",
-  "now": "2026-07-21T14:42:16.606313+08:00",
+  "schema_version": 2,
+  "status": "skipped",
+  "reason": "休市中",
+  "trade_date": "2026-09-22",
+  "now": "2026-09-22T12:55:57.356634+08:00",
+  "batch_id": null,
+  "owner_id": "35688702461:1:scan",
+  "execution_mode": "official",
+  "pipeline_mode": "strict",
+  "deadline_met": null,
+  "quality": {
+    "status": "provisional",
+    "notify_eligible": false,
+    "degraded_reasons": []
+  },
+  "universe": {
+    "source": "none",
+    "count": 0,
+    "stale": false
+  },
+  "bulk": {
+    "status": "not_run",
+    "rows": 0,
+    "main_board_rows": 0,
+    "admitted": false,
+    "candidate_count": 0,
+    "latency_ms": null
+  },
+  "refine": {
+    "status": "not_run",
+    "requested_count": 0,
+    "received_count": 0,
+    "missing_codes": [],
+    "coverage_ratio": null,
+    "latency_ms": null
+  },
+  "audit": {
+    "kind": "shadow_truth",
+    "truth_buy_count": 0,
+    "truth_sell_count": 0,
+    "false_negative_buy": [],
+    "false_negative_sell": []
+  },
   "thresholds": {
     "buy": 50.0,
     "sell": 30.0
   },
   "source_status": {
-    "active_source": "none",
-    "attempts": [
-      {
-        "source": "eastmoney",
-        "status": "error",
-        "error": "https://push2.eastmoney.com/api/qt/clist/get: empty dataframe; https://push2his.eastmoney.com/api/qt/clist/get: empty dataframe; https://62.push2.eastmoney.com/api/qt/clist/get: empty dataframe",
-        "latency_ms": 615
-      },
-      {
-        "source": "akshare",
-        "status": "error",
-        "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "latency_ms": 297
-      }
-    ],
-    "is_stale": false,
-    "cache_age_seconds": 84673,
-    "verify_result": null
+    "active_source": "none"
   },
   "scanned": 0,
   "buy_candidates": 0,
@@ -34,5 +57,9 @@
   "email_sent": false,
   "email_error": null,
   "buy_triggered": [],
-  "sell_triggered": []
+  "sell_triggered": [],
+  "buy_candidates_current": [],
+  "sell_candidates_current": [],
+  "buy_candidates_today": [],
+  "sell_candidates_today": []
 }
