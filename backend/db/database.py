@@ -31,9 +31,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-@event.listens_for(engine, "connect")
-def _set_sqlite_pragmas(dbapi_connection, connection_record):  # noqa: ARG001
-    """每个新连接的 PRAGMA（P3 §7.1）：busy_timeout / foreign_keys / synchronous。"""
+def _set_pragmas_on_connection(dbapi_connection) -> None:
     cursor = dbapi_connection.cursor()
     try:
         cursor.execute("PRAGMA busy_timeout=5000")
@@ -41,6 +39,17 @@ def _set_sqlite_pragmas(dbapi_connection, connection_record):  # noqa: ARG001
         cursor.execute("PRAGMA synchronous=NORMAL")
     finally:
         cursor.close()
+
+
+@event.listens_for(engine, "connect")
+def _set_sqlite_pragmas(dbapi_connection, connection_record):  # noqa: ARG001
+    """每个新连接的 PRAGMA（P3 §7.1）。"""
+    _set_pragmas_on_connection(dbapi_connection)
+
+
+def apply_sqlite_pragmas(target_engine) -> None:
+    """给任意 engine 挂 PRAGMA 连接事件（测试独立临时库用，P3 核验）。"""
+    event.listen(target_engine, "connect", lambda conn, rec: _set_pragmas_on_connection(conn))
 
 
 def _journal_mode(conn) -> str:

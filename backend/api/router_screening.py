@@ -166,10 +166,10 @@ def get_latest_screening(request: Request = None, view: str = Query("full")):
         except Exception:  # noqa: BLE001
             return {"date": date.today().strftime("%Y-%m-%d"), "has_report": False,
                     "results": [], "message": "今日暂无筛选报告，请先执行筛选"}
-    if view not in ("full", "summary"):
+    if view not in ("full", "summary", "compact"):
         from fastapi import HTTPException
 
-        raise HTTPException(status_code=422, detail="view 必须为 full/summary")
+        raise HTTPException(status_code=422, detail="view 必须为 full/summary/compact")
     wl_entry = read_snapshot_entry(WATCHLIST_FILE)
     canonical = f"watchlist={wl_entry.etag if wl_entry else 'none'}&view={view}"
     etag = etag_for_params(entry.etag, canonical)
@@ -191,6 +191,14 @@ def get_latest_screening(request: Request = None, view: str = Query("full")):
         enriched = {k: v for k, v in enriched.items() if k not in ("report_md", "report_html")}
         results = enriched.get("results") or []
         enriched["results"] = [{k: v for k, v in it.items() if k != "evidence"} for it in results]
+    elif view == "compact":  # 列表页字段（详情走 enrich 时的 watchlist detail 补 price_history）
+        _list_item_fields = ("rank", "code", "name", "adjusted_score", "drop_pct",
+                             "recommendation", "zt_date", "factors", "audit")
+        _list_top_fields = ("status", "date", "index_gain", "strong_buy", "buy", "watch",
+                            "total_scored", "errors")
+        results = enriched.get("results") or []  # 先取 results 再裁剪顶层
+        enriched = {k: v for k, v in enriched.items() if k in _list_top_fields}
+        enriched["results"] = [{k: v for k, v in it.items() if k in _list_item_fields} for it in results]
     set_snapshot_context(request, source=entry.source or "local", cache="memory")
     return json_response_from_bytes(request, dumps_bytes(enriched), etag,
                                     cache_control="no-cache", vary="Accept-Encoding")

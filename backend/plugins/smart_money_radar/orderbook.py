@@ -57,17 +57,19 @@ def evaluate_pool(store, now: datetime, cfg: dict = None) -> list:
 
 
 def write_orderbook_events(rows: list, now: datetime) -> Path:
-    """触发事件写 data/orderbook_events_{date}.json（只落本地）。"""
-    EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+    """触发事件写 data/orderbook_events_{date}.json（只落本地；P1-3 原子写）。"""
+    from backend.services.snapshot_store import atomic_write_json
+
     path = EVENTS_DIR / f"orderbook_events_{now.date().isoformat()}.json"
     events = [r for r in rows if r.get("events")]
-    path.write_text(json.dumps({"date": now.date().isoformat(), "events": events}, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_json(path, {"date": now.date().isoformat(), "events": events})
     return path
 
 
 def write_orderbook_latest(payload: dict) -> None:
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    ORDERBOOK_LATEST.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(ORDERBOOK_LATEST, payload)
 
 
 def read_orderbook_latest() -> dict:

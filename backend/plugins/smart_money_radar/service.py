@@ -62,11 +62,9 @@ def load_stage_map(today: date) -> dict:
 
 
 def save_stage_map(today: date, stages: dict) -> None:
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    _state_file(today).write_text(
-        json.dumps({"date": today.isoformat(), "stages": _json_safe(stages)}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(_state_file(today), {"date": today.isoformat(), "stages": _json_safe(stages)})
 
 
 def append_history(rows: list) -> None:
@@ -80,10 +78,9 @@ def append_history(rows: list) -> None:
             history = []
     if not isinstance(history, list):
         history = []
-    HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
-    HISTORY_FILE.write_text(
-        json.dumps(_json_safe(history + rows), ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(HISTORY_FILE, _json_safe(history + rows))
 
 
 def transition_stage(previous: dict, metrics: dict, cfg: dict = None) -> dict:
@@ -162,11 +159,9 @@ def load_notified_map(today: date) -> dict:
 
 
 def save_notified_map(today: date, notified_map: dict) -> None:
-    NOTIFIED_DIR.mkdir(parents=True, exist_ok=True)
-    _notified_file(today).write_text(
-        json.dumps({"date": today.isoformat(), "notified": notified_map}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    from backend.services.snapshot_store import atomic_write_json
+
+    atomic_write_json(_notified_file(today), {"date": today.isoformat(), "notified": notified_map})
 
 
 def cleanup_old_notified(today: date, keep_days: int = 7) -> None:

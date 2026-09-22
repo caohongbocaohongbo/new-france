@@ -15,7 +15,7 @@
         'factor-lab': { path: '/factor-lab/stats/latest', title: '因子实验室', kind: 'table', key: 'items',
             cols: [['factor','因子'],['sample_count','样本数'],['ic','IC'],['ir','IR']] },
         'l2': { path: '/l2/latest', title: '真实 L2 升级', kind: 'l2' },
-        'tier-flow': { path: '/principal-capital/tier-flow/latest', title: '分层资金流', kind: 'table', key: 'items',
+        'tier-flow': { path: '/principal-capital/tier-flow/latest?view=compact', title: '分层资金流', kind: 'table', key: 'items',
             cols: [['code','代码'],['name','名称'],['super_net','超大单净'],['big_net','大单净'],['smart_ratio','聪明钱占比'],['state','状态']] },
         'low-position': { path: '/low-position/latest', title: '低位涨停选股', kind: 'table', key: 'items',
             cols: [['code','代码'],['name','名称'],['price','价格'],['pullback_pct','回撤'],['price_percentile','百分位'],['zt_count_250d','涨停次数'],['low_score','低位分']] },

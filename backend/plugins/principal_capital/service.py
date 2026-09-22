@@ -388,16 +388,25 @@ def read_history() -> dict:
 # ---- data-snapshots 远程回退（Render 自身取不到东财，读快照分支保证与邮件同源）----
 
 def _fetch_snapshot_json(filename: str, directory: str = "reports") -> Optional[dict]:
-    """从 data-snapshots 分支拉取 JSON 快照，失败返回 None。"""
-    import requests  # 延迟导入，避免 CLI/离线路径强依赖
-    url = f"{SNAPSHOT_RAW_BASE}/{directory}/{filename}"
-    try:
-        resp = requests.get(url, timeout=8)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as exc:  # noqa: BLE001 网络/解析异常都视为回退失败
-        logger.info("主力资金远程快照拉取失败(%s): %s", filename, exc)
+    """远程回退统一走 snapshot_store 合并缓存（single-flight/退避/条件GET/SWR），失败返回 None。"""
+    from backend.services.snapshot_store import RemotePolicy, fetch_remote_snapshot
+
+    key = filename.replace(".json", "").replace("/", "_")
+    ttl = 60.0 if "source_health" in filename else 300.0
+    entry = fetch_remote_snapshot(key, f"{SNAPSHOT_RAW_BASE}/{directory}/{filename}", RemotePolicy(ttl_seconds=ttl))
+    if entry is None:
         return None
+    try:
+        payload = dict(entry.parsed())  # 复制后再附加元数据，不污染共享解析对象
+    except Exception as exc:  # noqa: BLE001
+        logger.info("主力资金远程快照解析失败(%s): %s", filename, exc)
+        return None
+    payload["_source"] = "snapshot"
+    if entry.stale:
+        payload["stale"] = True
+        payload["fetched_at"] = entry.fetched_at
+        payload["refresh_error"] = entry.refresh_error
+    return payload
 
 
 def _normalize_report_payload(payload: Optional[dict]) -> dict:

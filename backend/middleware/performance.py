@@ -1,9 +1,11 @@
-"""P0 应用内观测：纯 ASGI middleware（包装 send 记录首/末响应字节，不缓冲、不改流式语义）。
+"""P0 应用内观测：纯 ASGI middleware（位于最外层，记录压缩后字节与真实发送结束）。
 
-字段：request_id / method / route_template / status / ttfb_ms / duration_ms / response_bytes /
-      content_encoding / etag_result / snapshot_source / snapshot_cache / upstream_ms /
-      process_uptime_s / error_type。
-health 请求不写普通 access 日志，每 5 分钟汇总一次 health 延迟与 uptime。
+2026-09-22 核验修正：
+- request_id 在请求进入时生成并贯穿日志，响应附 X-Request-ID；
+- TTFB 以第一个 http.response.body 为准（非 response.start）；
+- duration 在最终 await send(message) 之后记录（覆盖最后一次发送）；
+- 异常路径记录一次日志（error_type 非 none）后再抛出；
+- health 请求不写普通 access 日志，每 5 分钟汇总一次。
 """
 from __future__ import annotations
 
@@ -14,7 +16,6 @@ import uuid
 logger = logging.getLogger("performance")
 _STARTED_AT = time.perf_counter()
 
-# health 聚合（不写逐请求日志，每 5 分钟汇总）
 _health_latencies: list = []
 _health_last_summary_at = 0.0
 HEALTH_SUMMARY_INTERVAL = 300.0
@@ -39,7 +40,7 @@ def _summarize_health() -> None:
 
 
 class PerformanceMiddleware:
-    """记录每个 HTTP 请求的响应生成与发送全程；SSE 等流式响应 ttfb < duration。"""
+    """记录每个 HTTP 请求的响应生成与发送全程（含压缩后字节）；SSE 等流式响应 ttfb < duration。"""
 
     def __init__(self, app):
         self.app = app
@@ -49,33 +50,45 @@ class PerformanceMiddleware:
             await self.app(scope, receive, send)
             return
         t0 = time.perf_counter()
-        info = {"status": None, "first_byte_at": None, "last_byte_at": None,
-                "bytes": 0, "headers": [], "logged": False, "error_type": None}
+        request_id = uuid.uuid4().hex[:12]
+        info = {"status": None, "ttfb_at": None, "end_at": None,
+                "bytes": 0, "headers": [], "logged": False, "error_type": None,
+                "request_id": request_id}
 
         async def send_wrapper(message):
             if message["type"] == "http.response.start":
                 info["status"] = message.get("status")
-                info["headers"] = list(message.get("headers") or [])
-                info["first_byte_at"] = time.perf_counter()
+                headers = list(message.get("headers") or [])
+                if not any(k.lower() == b"x-request-id" for k, _ in headers):
+                    headers.append((b"x-request-id", request_id.encode("latin-1")))
+                message["headers"] = headers
+                info["headers"] = headers
             elif message["type"] == "http.response.body":
-                info["last_byte_at"] = time.perf_counter()
+                if info["ttfb_at"] is None:
+                    info["ttfb_at"] = time.perf_counter()
                 info["bytes"] += len(message.get("body") or b"")
-                if not message.get("more_body", False):
+                is_final = not message.get("more_body", False)
+                await send(message)  # 先真实发送，再记录结束时间（覆盖最后一次发送开销）
+                if is_final:
+                    info["end_at"] = time.perf_counter()
                     self._log(scope, info, t0)
+                return
             await send(message)
 
         try:
             await self.app(scope, receive, send_wrapper)
-        except Exception as exc:  # noqa: BLE001 记录错误类型后上抛
+        except Exception as exc:  # noqa: BLE001 记录一次日志后上抛
             info["error_type"] = type(exc).__name__
+            if not info["logged"]:
+                self._log(scope, info, t0)
             raise
 
     def _log(self, scope, info: dict, t0: float) -> None:
         if info["logged"]:
             return
         info["logged"] = True
-        if info["last_byte_at"] is None:
-            info["last_byte_at"] = time.perf_counter()
+        if info["end_at"] is None:
+            info["end_at"] = time.perf_counter()
         path = scope.get("path") or ""
         is_health = path.rstrip("/").endswith(("/system/health", "/health"))
         if is_health:
@@ -88,13 +101,13 @@ class PerformanceMiddleware:
         snapshot = state.get("_snapshot_context") if isinstance(state, dict) else getattr(state, "_snapshot_context", None)
         snapshot = snapshot or {}
         etag_result = "hit" if info["status"] == 304 else ("miss" if headers.get("etag") else "none")
-        ttfb_ms = (info["first_byte_at"] - t0) * 1000 if info["first_byte_at"] else None
-        duration_ms = (info["last_byte_at"] - t0) * 1000
+        ttfb_ms = (info["ttfb_at"] - t0) * 1000 if info["ttfb_at"] else None
+        duration_ms = (info["end_at"] - t0) * 1000
         logger.info(
             "http request_id=%s method=%s route=%s status=%s ttfb_ms=%.2f duration_ms=%.2f "
             "response_bytes=%d content_encoding=%s etag_result=%s snapshot_source=%s "
             "snapshot_cache=%s upstream_ms=%s process_uptime_s=%.1f error_type=%s",
-            uuid.uuid4().hex[:12], scope.get("method"), route_template, info["status"],
+            info["request_id"], scope.get("method"), route_template, info["status"],
             ttfb_ms if ttfb_ms is not None else -1.0, duration_ms, info["bytes"],
             headers.get("content-encoding") or "identity", etag_result,
             snapshot.get("source", "none"), snapshot.get("cache", "none"),
@@ -103,9 +116,9 @@ class PerformanceMiddleware:
 
     def _record_health(self, info: dict, t0: float) -> None:
         global _health_latencies, _health_last_summary_at
-        if info["last_byte_at"] is None:
-            info["last_byte_at"] = time.perf_counter()
-        _health_latencies.append(info["last_byte_at"] - t0)
+        if info["end_at"] is None:
+            info["end_at"] = time.perf_counter()
+        _health_latencies.append(info["end_at"] - t0)
         if time.perf_counter() - _health_last_summary_at >= HEALTH_SUMMARY_INTERVAL:
             _summarize_health()
 
@@ -113,7 +126,7 @@ class PerformanceMiddleware:
 def set_snapshot_context(request, source: str = "none", cache: str = "none", upstream_ms=None) -> None:
     """端点向观测中间件注入快照来源/缓存命中/上游耗时（写入 request.state）。"""
     try:
-        state = request.state  # Starlette State（底层为 scope["state"] dict）
+        state = request.state
         payload = {
             "source": source, "cache": cache,
             "upstream_ms": (f"{upstream_ms:.0f}" if isinstance(upstream_ms, (int, float)) else upstream_ms),
@@ -125,3 +138,4 @@ def set_snapshot_context(request, source: str = "none", cache: str = "none", ups
             state._snapshot_context = {**context, **payload}
     except Exception:  # noqa: BLE001 观测失败不影响业务
         pass
+

@@ -142,8 +142,8 @@ def _oa_latest_entry():
 
 
 @router.get("/latest")
-def get_latest_overnight(request: Request, view: str = Query("compact")):
-    """最新尾盘决策（P2：view=compact 默认剔除 data_quality.removed 等大字段；早期 304）。"""
+def get_latest_overnight(request: Request, view: str = Query("full")):
+    """最新尾盘决策（P2：迁移期默认 full 保持旧契约；前端显式传 view=compact）。"""
     from backend.middleware.performance import set_snapshot_context
     from backend.services.snapshot_store import (
         dumps_bytes, etag_for_params, json_response_from_bytes, json_response_from_entry,
@@ -175,21 +175,25 @@ def get_overnight_history(
     code: str = Query(None),
     date_from: str = Query(None),
     date_to: str = Query(None),
+    view: str = Query("full"),
 ):
-    """跨日推荐统计（P2：默认不携带嵌套 recommendations；服务端分页/筛选；早期 304）。"""
+    """跨日推荐统计（P2：view=full 默认保留旧契约；view=compact 不携带嵌套明细；早期 304）。"""
     from backend.middleware.performance import set_snapshot_context
     from backend.services.snapshot_store import (
         RemotePolicy, SnapshotEntry, dumps_bytes, etag_for_params, fetch_remote_snapshot,
         json_response_from_bytes, read_snapshot_entry, weak_etag,
     )
 
+    if view not in ("full", "compact"):
+        raise HTTPException(status_code=422, detail="view 必须为 full/compact")
     entry = read_snapshot_entry(HISTORY_COMPACT_FILE)
     full = read_snapshot_entry(HISTORY_FILE)
     if entry is not None and full is not None:
         # mtime 或 total_stocks 不一致 → compact artifact 过期，即时重建（防测试/异常写入污染）
         if full.stat[0] > entry.stat[0] or entry.parsed().get("total_stocks") != full.parsed().get("total_stocks"):
             entry = None
-    if entry is None:
+    if view == "full":
+        # 迁移期默认 full：完整记录（含 recommendations），与列表/明细同一 entry 获取函数
         full = full or read_snapshot_entry(HISTORY_FILE)
         if full is None:
             t0 = time.perf_counter()
@@ -202,15 +206,30 @@ def get_overnight_history(
                 return read_overnight_history()
         else:
             set_snapshot_context(request, source=full.source or "local")
-        compact_bytes = dumps_bytes(compact_history_payload(full.parsed()))
-        entry = SnapshotEntry(path=full.path, payload_bytes=compact_bytes,
-                              etag=weak_etag(compact_bytes), stat=full.stat,
-                              loaded_at=full.loaded_at, source=full.source,
-                              stale=full.stale, fetched_at=full.fetched_at,
-                              refresh_error=full.refresh_error)
+        entry = full
     else:
-        set_snapshot_context(request, source=entry.source or "local")
-    canonical = f"limit={limit}&offset={offset}&code={code or ''}&date_from={date_from or ''}&date_to={date_to or ''}"
+        if entry is None:
+            full = full or read_snapshot_entry(HISTORY_FILE)
+            if full is None:
+                t0 = time.perf_counter()
+                full = fetch_remote_snapshot(
+                    "overnight_arbitrage_history", f"{SNAPSHOT_RAW_BASE}/reports/overnight_arbitrage_history.json",
+                    RemotePolicy(ttl_seconds=600.0))
+                upstream_ms = (time.perf_counter() - t0) * 1000 if full is not None else None
+                set_snapshot_context(request, source=(full.source if full else "none"), upstream_ms=upstream_ms)
+                if full is None:
+                    return read_overnight_history()
+            else:
+                set_snapshot_context(request, source=full.source or "local")
+            compact_bytes = dumps_bytes(compact_history_payload(full.parsed()))
+            entry = SnapshotEntry(path=full.path, payload_bytes=compact_bytes,
+                                  etag=weak_etag(compact_bytes), stat=full.stat,
+                                  loaded_at=full.loaded_at, source=full.source,
+                                  stale=full.stale, fetched_at=full.fetched_at,
+                                  refresh_error=full.refresh_error)
+        else:
+            set_snapshot_context(request, source=entry.source or "local")
+    canonical = f"limit={limit}&offset={offset}&code={code or ''}&date_from={date_from or ''}&date_to={date_to or ''}&view={view}"
     etag = etag_for_params(entry.etag, canonical)
     early = json_response_from_bytes(request, b"", etag, cache_control="no-cache", vary="Accept-Encoding")
     if early.status_code == 304:
@@ -241,16 +260,33 @@ def get_overnight_history(
 
 @router.get("/{code}/history")
 def get_overnight_history_code(request: Request, code: str):
-    """单股推荐明细（P2：嵌套 recommendations 完整返回，按需读取）。"""
-    from backend.services.snapshot_store import read_snapshot_entry
+    """单股推荐明细（P1-2：与列表同一 entry 获取函数——本地、远程缓存、stale、早期 ETag）。"""
+    from backend.middleware.performance import set_snapshot_context
+    from backend.services.snapshot_store import (
+        RemotePolicy, dumps_bytes, etag_for_params, fetch_remote_snapshot, json_response_from_bytes,
+        read_snapshot_entry,
+    )
 
     entry = read_snapshot_entry(HISTORY_FILE)
     if entry is None:
+        t0 = time.perf_counter()
+        entry = fetch_remote_snapshot(
+            "overnight_arbitrage_history", f"{SNAPSHOT_RAW_BASE}/reports/overnight_arbitrage_history.json",
+            RemotePolicy(ttl_seconds=600.0))
+        upstream_ms = (time.perf_counter() - t0) * 1000 if entry is not None else None
+        set_snapshot_context(request, source=(entry.source if entry else "none"), upstream_ms=upstream_ms)
+    if entry is None:
         return {"status": "empty", "code": str(code).zfill(6), "record": None}
+    etag = etag_for_params(entry.etag, f"code={str(code).zfill(6)}")
+    early = json_response_from_bytes(request, b"", etag, cache_control="no-cache", vary="Accept-Encoding")
+    if early.status_code == 304:
+        return early
     for record in entry.parsed().get("records") or []:
         if str(record.get("code") or "").zfill(6) == str(code).zfill(6):
-            return {"status": "ok", "code": str(code).zfill(6), "record": record}
-    return {"status": "ok", "code": str(code).zfill(6), "record": None, "note": "no_record"}
+            return json_response_from_bytes(request, dumps_bytes({"status": "ok", "code": str(code).zfill(6), "record": record}),
+                                            etag, cache_control="no-cache", vary="Accept-Encoding")
+    return json_response_from_bytes(request, dumps_bytes({"status": "ok", "code": str(code).zfill(6), "record": None, "note": "no_record"}),
+                                    etag, cache_control="no-cache", vary="Accept-Encoding")
 
 
 # ---- 03 T+1 溢价校准（扩展，不改核心决策） ----

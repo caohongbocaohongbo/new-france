@@ -107,13 +107,12 @@ def get_app():
         version="1.0.0",
         description="A股尾盘涨停股监控与多因子推荐系统 API",
     )
-    # P0 观测：纯 ASGI middleware，位于 GZip/路由之外，记录首/末响应字节与快照来源
-    from .middleware.performance import PerformanceMiddleware
-    _app.add_middleware(PerformanceMiddleware)
-
-    # P2 GZip：字段裁剪完成后启用（min 1KB，避免小响应徒增 CPU）
+    # P2 GZip：compresslevel=5（starlette 支持时），min 1KB
     from fastapi.middleware.gzip import GZipMiddleware
-    _app.add_middleware(GZipMiddleware, minimum_size=1024)
+    try:
+        _app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
+    except TypeError:  # 旧版 starlette 不支持 compresslevel → 默认参数
+        _app.add_middleware(GZipMiddleware, minimum_size=1024)
 
     _app.add_middleware(
         CORSMiddleware,
@@ -123,6 +122,10 @@ def get_app():
     )
     # 全局响应体 ETag 缓冲中间件已移除（P1）：ETag 改由 snapshot_store 在目标快照接口
     # 于 JSON 解析/序列化之前早返回；未迁移的小型动态接口暂不发 ETag。
+
+    # P0 观测：最外层（Starlette 后添加者在外），才能看到 GZip 压缩后的编码与字节数
+    from .middleware.performance import PerformanceMiddleware
+    _app.add_middleware(PerformanceMiddleware)
     _app.include_router(screening_router, prefix="/api/v1/screening", tags=["筛选"])
     _app.include_router(watchlist_router, prefix="/api/v1/watchlist", tags=["监控列表"])
     _app.include_router(events_router, prefix="/api/v1/events", tags=["事件"])

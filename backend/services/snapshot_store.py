@@ -1,10 +1,12 @@
-"""P1 统一快照存储层：原子写 + LRU 字节缓存 + 早期 304 + 远程合并缓存。
+"""P1 统一快照存储层：原子写 + LRU 字节缓存 + 早期 304 + 远程合并缓存（真 SWR）。
 
-设计约束（性能优化施工方案 §3.1/§3.3）：
-- 序列化内部完整实现 NaN/Infinity 清理，不引用外部 _json_safe；
+设计约束（性能优化施工方案 §3.1/§3.3 + 2026-09-22 核验修正）：
+- 序列化内部完整实现 NaN/Infinity 清理；
 - 临时文件名含 PID+UUID；flush+fsync 后 os.replace，目录 fsync best-effort；
-- LRU 按总字节上限（默认 32MB）逐出；未变更的无过滤响应直接返回预序列化 bytes；
-- 远程快照：正缓存 TTL / 负退避+抖动 / 条件 GET / 同 key single-flight / stale-while-revalidate。
+- LRU 按总字节上限（默认 32MB）逐出，带锁；单条超过上限直接跳过缓存；
+- 远程快照：正缓存 TTL / 负退避+抖动 / 条件 GET / 同 key single-flight /
+  真 stale-while-revalidate（有旧缓存立即返回 stale 并后台刷新，冷缓存才同步等待）；
+- 后台刷新线程池有上限（SNAPSHOT_BG_REFRESH_MAX，默认 4）。
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ import threading
 import time
 import uuid
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -31,7 +34,7 @@ def _now_iso() -> str:
     return datetime.now(BEIJING_TZ).isoformat()
 
 
-# ==== JSON 安全序列化（完整实现，勿引外部 _json_safe） ====
+# ==== JSON 安全序列化 ====
 
 def json_safe_value(value):
     if isinstance(value, float):
@@ -53,7 +56,6 @@ def weak_etag(data: bytes) -> str:
 
 
 def etag_for_params(entry_etag: str, canonical_params: str) -> str:
-    """动态过滤接口的 ETag = 底层快照版本 + 规范化查询参数（不对响应体重复哈希）。"""
     return weak_etag((str(entry_etag) + "|" + str(canonical_params)).encode("utf-8"))
 
 
@@ -78,10 +80,7 @@ def _stat_signature(path: Path) -> Optional[tuple]:
 
 
 def atomic_write_json(path: Path, payload: dict, indent: int = 2) -> SnapshotMeta:
-    """原子写：PID+UUID 临时文件 → flush+fsync → os.replace → 目录 fsync best-effort。
-
-    并发写同一文件时临时名不冲突；正式文件永远是完整 JSON。写入后主动刷新缓存。
-    """
+    """原子写：PID+UUID 临时文件 → flush+fsync → os.replace → 目录 fsync best-effort。"""
     data = dumps_bytes(payload, indent)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / f".{path.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp"
@@ -113,7 +112,7 @@ def atomic_write_json(path: Path, payload: dict, indent: int = 2) -> SnapshotMet
     return meta
 
 
-# ==== LRU 字节缓存 ====
+# ==== LRU 字节缓存（带锁） ====
 
 @dataclass
 class SnapshotEntry:
@@ -131,7 +130,7 @@ class SnapshotEntry:
     _parsed: Optional[dict] = field(default=None, repr=False)
 
     def parsed(self) -> dict:
-        """惰性解析（只读契约：调用方不得原地修改）。"""
+        """惰性解析（只读契约：调用方不得原地修改；需改时先 dict(parsed()) 复制）。"""
         if self._parsed is None:
             self._parsed = json.loads(self.payload_bytes.decode("utf-8"))
         return self._parsed
@@ -147,35 +146,42 @@ def _max_cache_bytes() -> int:
 _file_cache: OrderedDict = OrderedDict()
 _file_cache_bytes = 0
 _cache_stats = {"hits": 0, "misses": 0, "evictions": 0, "refreshes": 0}
+_file_cache_lock = threading.RLock()
 
 
 def _file_cache_put(key: str, entry: SnapshotEntry) -> None:
+    """入缓存；单条超过字节上限时跳过（不无限保留超限条目）。"""
     global _file_cache_bytes
-    if key in _file_cache:
-        _file_cache_bytes -= len(_file_cache.pop(key).payload_bytes)
-    _file_cache[key] = entry
-    _file_cache.move_to_end(key)
-    _file_cache_bytes += len(entry.payload_bytes)
-    limit = _max_cache_bytes()
-    while _file_cache_bytes > limit and len(_file_cache) > 1:
-        _old_key, old_entry = _file_cache.popitem(last=False)
-        _file_cache_bytes -= len(old_entry.payload_bytes)
-        _cache_stats["evictions"] += 1
+    if len(entry.payload_bytes) > _max_cache_bytes():
+        return
+    with _file_cache_lock:
+        if key in _file_cache:
+            _file_cache_bytes -= len(_file_cache.pop(key).payload_bytes)
+        _file_cache[key] = entry
+        _file_cache.move_to_end(key)
+        _file_cache_bytes += len(entry.payload_bytes)
+        limit = _max_cache_bytes()
+        while _file_cache_bytes > limit and _file_cache:
+            _old_key, old_entry = _file_cache.popitem(last=False)
+            _file_cache_bytes -= len(old_entry.payload_bytes)
+            _cache_stats["evictions"] += 1
 
 
 def cache_invalidate(path) -> None:
     global _file_cache_bytes
     key = str(path)
-    entry = _file_cache.pop(key, None)
-    if entry is not None:
-        _file_cache_bytes -= len(entry.payload_bytes)
+    with _file_cache_lock:
+        entry = _file_cache.pop(key, None)
+        if entry is not None:
+            _file_cache_bytes -= len(entry.payload_bytes)
 
 
 def cache_stats() -> dict:
-    return {"hits": _cache_stats["hits"], "misses": _cache_stats["misses"],
-            "evictions": _cache_stats["evictions"], "refreshes": _cache_stats["refreshes"],
-            "entries": len(_file_cache), "bytes": _file_cache_bytes,
-            "max_bytes": _max_cache_bytes()}
+    with _file_cache_lock:
+        return {"hits": _cache_stats["hits"], "misses": _cache_stats["misses"],
+                "evictions": _cache_stats["evictions"], "refreshes": _cache_stats["refreshes"],
+                "entries": len(_file_cache), "bytes": _file_cache_bytes,
+                "max_bytes": _max_cache_bytes()}
 
 
 def read_snapshot_entry(path: Path, source: str = "local") -> Optional[SnapshotEntry]:
@@ -187,12 +193,13 @@ def read_snapshot_entry(path: Path, source: str = "local") -> Optional[SnapshotE
     if sig is None:
         return None
     key = str(path)
-    cached = _file_cache.get(key)
-    if cached is not None and cached.stat == sig:
-        _cache_stats["hits"] += 1
-        _file_cache.move_to_end(key)
-        return cached
-    _cache_stats["misses"] += 1
+    with _file_cache_lock:
+        cached = _file_cache.get(key)
+        if cached is not None and cached.stat == sig:
+            _cache_stats["hits"] += 1
+            _file_cache.move_to_end(key)
+            return cached
+        _cache_stats["misses"] += 1
     try:
         data = path.read_bytes()
     except OSError as exc:  # noqa: BLE001
@@ -200,7 +207,8 @@ def read_snapshot_entry(path: Path, source: str = "local") -> Optional[SnapshotE
         return None
     entry = SnapshotEntry(path=path, payload_bytes=data, etag=weak_etag(data),
                           stat=sig, loaded_at=time.time(), source=source)
-    _cache_stats["refreshes"] += 1 if cached is not None else 0
+    with _file_cache_lock:
+        _cache_stats["refreshes"] += 1
     _file_cache_put(key, entry)
     return entry
 
@@ -248,7 +256,7 @@ def json_response_from_bytes(request, data: bytes, etag: str, cache_control: str
     return Response(content=data, media_type="application/json", headers=headers)
 
 
-# ==== 远程快照合并缓存（single-flight / 退避 / 条件 GET / stale-while-revalidate） ====
+# ==== 远程快照合并缓存（真 stale-while-revalidate / single-flight / 退避 / 条件 GET） ====
 
 @dataclass
 class RemotePolicy:
@@ -269,8 +277,17 @@ def remote_policy_for(key: str) -> RemotePolicy:
     return RemotePolicy()
 
 
+def _bg_refresh_max() -> int:
+    try:
+        return int(os.environ.get("SNAPSHOT_BG_REFRESH_MAX", 4))
+    except ValueError:
+        return 4
+
+
 _remote_state: dict = {}
-_remote_guard = threading.Lock()
+_remote_guard = threading.RLock()
+_bg_executor = ThreadPoolExecutor(max_workers=_bg_refresh_max(), thread_name_prefix="snap-bg")
+_bg_active = 0
 
 
 def _mark_stale(entry: SnapshotEntry, refresh_error: str) -> SnapshotEntry:
@@ -283,11 +300,93 @@ def _mark_stale(entry: SnapshotEntry, refresh_error: str) -> SnapshotEntry:
                          _parsed=entry._parsed)
 
 
-def fetch_remote_snapshot(key: str, url: str, policy: RemotePolicy = None) -> Optional[SnapshotEntry]:
-    """同 key single-flight 远程快照：正缓存 TTL、负退避+抖动、条件 GET、stale-while-revalidate。
+def _validate_payload(data: bytes) -> dict:
+    """进入缓存前完成 JSON 解码并验证顶层为对象；非法内容抛异常。"""
+    payload = json.loads(data.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("远端返回非 JSON 对象")
+    return payload
 
-    返回 SnapshotEntry 或 None；上游失败但存在可用陈旧数据时返回 stale 副本（refresh_error 标注）。
+
+def _do_fetch(state: dict, key: str, url: str, policy: RemotePolicy, now: float) -> Optional[SnapshotEntry]:
+    """执行一次上游请求并更新 state（调用方须持有 _remote_guard）。成功后返回新 entry。"""
+    entry = state["entry"]
+    headers = {}
+    if entry is not None and entry.upstream_etag:
+        headers["If-None-Match"] = entry.upstream_etag
+    if entry is not None and entry.upstream_last_modified:
+        headers["If-Modified-Since"] = entry.upstream_last_modified
+    import httpx
+
+    resp = httpx.get(url, headers=headers or None,
+                     timeout=httpx.Timeout(policy.total_timeout, connect=policy.connect_timeout))
+    if resp.status_code == 304 and entry is not None:
+        state["fetched_at"] = now
+        state["fail_count"] = 0
+        state["next_retry_at"] = 0.0
+        return entry
+    resp.raise_for_status()
+    data = getattr(resp, "content", None)
+    if data is None:  # 兼容返回 json 对象的测试替身
+        data = json.dumps(resp.json()).encode("utf-8")
+    if not data:
+        raise ValueError("远端响应为空")
+    _validate_payload(data)  # 非法 JSON/非对象不进入缓存
+    resp_headers = getattr(resp, "headers", None) or {}
+    get_h = getattr(resp_headers, "get", None)
+    new_entry = SnapshotEntry(path=None, payload_bytes=data, etag=weak_etag(data),
+                              stat=(0, len(data), 0), loaded_at=now, source="remote",
+                              upstream_etag=get_h("etag") if get_h else None,
+                              upstream_last_modified=get_h("last-modified") if get_h else None,
+                              fetched_at=_now_iso())
+    state["entry"] = new_entry
+    state["fetched_at"] = now
+    state["fail_count"] = 0
+    state["next_retry_at"] = 0.0
+    return new_entry
+
+
+def _record_failure(state: dict, key: str, policy: RemotePolicy, exc: Exception, now: float) -> None:
+    """调用方须持有 _remote_guard。"""
+    state["fail_count"] += 1
+    idx = min(state["fail_count"] - 1, len(policy.backoff_seconds) - 1)
+    base = float(policy.backoff_seconds[idx])
+    state["next_retry_at"] = now + base + random.uniform(0, base * policy.jitter)
+    code = ""
+    resp_obj = getattr(exc, "response", None)
+    if resp_obj is not None and getattr(resp_obj, "status_code", None):
+        code = str(resp_obj.status_code)
+    state["last_error"] = f"{type(exc).__name__}:{code}"
+    logger.info("远程快照拉取失败(%s): %s %s", key, type(exc).__name__, code)
+
+
+def _refresh_in_background(key: str, url: str, policy: RemotePolicy) -> None:
+    """后台刷新（线程池内执行）；完成/失败后在锁内更新状态并唤醒等待者。"""
+    global _bg_active
+    try:
+        with _remote_guard:
+            state = _remote_state.get(key) or {}
+            _do_fetch(state, key, url, policy, time.time())
+    except Exception as exc:  # noqa: BLE001
+        with _remote_guard:
+            state = _remote_state.get(key) or {}
+            _record_failure(state, key, policy, exc, time.time())
+    finally:
+        with _remote_guard:
+            state = _remote_state.get(key) or {}
+            state["inflight"] = False
+            state["event"].set()
+            _bg_active = max(0, _bg_active - 1)
+
+
+def fetch_remote_snapshot(key: str, url: str, policy: RemotePolicy = None) -> Optional[SnapshotEntry]:
+    """同 key 远程快照：正缓存 TTL / 负退避 / 条件 GET / single-flight / 真 stale-while-revalidate。
+
+    - 有陈旧缓存且 stale_ok → 立即返回 stale 副本，后台只启动一个刷新（有上限）；
+    - 冷缓存（无任何 entry）→ 同步等待上游（single-flight，其余请求等事件）；
+    - leader 成功/失败/超时后所有等待者获得一致状态。
     """
+    global _bg_active
     policy = policy or remote_policy_for(key)
     now = time.time()
     with _remote_guard:
@@ -299,19 +398,36 @@ def fetch_remote_snapshot(key: str, url: str, policy: RemotePolicy = None) -> Op
         # 正缓存命中（TTL 内）
         if entry is not None and now - state["fetched_at"] < policy.ttl_seconds:
             return entry
-        # 负退避窗口：不发起请求
+        # 负退避窗口：不发请求
         if now < state["next_retry_at"]:
             if entry is not None and policy.stale_ok:
                 return _mark_stale(entry, f"backoff_until_{int(state['next_retry_at'] - now)}s")
             return None
-        # single-flight：已有在途请求 → 等待其完成并复用结果
         if state["inflight"]:
+            if entry is not None and policy.stale_ok:
+                return _mark_stale(entry, "refreshing_inflight")  # 有旧缓存立即返回，不阻塞
+            # 冷缓存：等待在途请求完成
             event = state["event"]
             waiting = True
-        else:
+        elif entry is not None and policy.stale_ok and _bg_active < _bg_refresh_max():
+            # 真 SWR：立即返回 stale，后台启动唯一刷新
             state["inflight"] = True
             state["event"].clear()
-            waiting = False
+            _bg_active += 1
+            try:
+                _bg_executor.submit(_refresh_in_background, key, url, policy)
+            except RuntimeError:  # 线程池已关闭等 → 退化为同步刷新
+                state["inflight"] = False
+                _bg_active = max(0, _bg_active - 1)
+                state["inflight"] = True
+                state["event"].clear()
+                return _sync_refresh_locked(state, key, url, policy, now)
+            return _mark_stale(entry, "swr_refreshing")
+        else:
+            # 冷缓存（或 stale_ok=False / 后台额度耗尽）→ 同步刷新（leader）
+            state["inflight"] = True
+            state["event"].clear()
+            return _sync_refresh_locked(state, key, url, policy, now)
     if waiting:
         event.wait(timeout=policy.total_timeout + 2.0)
         with _remote_guard:
@@ -319,60 +435,26 @@ def fetch_remote_snapshot(key: str, url: str, policy: RemotePolicy = None) -> Op
         if waited_entry is not None:
             return waited_entry
         return None
+    return None  # unreachable
+
+
+def _sync_refresh_locked(state: dict, key: str, url: str, policy: RemotePolicy, now: float) -> Optional[SnapshotEntry]:
+    """调用方须持有 _remote_guard。执行成功后返回新 entry，失败返回 stale 副本或 None。"""
+    entry = state["entry"]
     try:
-        headers = {}
-        if entry is not None and entry.upstream_etag:
-            headers["If-None-Match"] = entry.upstream_etag
-        if entry is not None and entry.upstream_last_modified:
-            headers["If-Modified-Since"] = entry.upstream_last_modified
-        import httpx
-        resp = httpx.get(url, headers=headers or None,
-                         timeout=httpx.Timeout(policy.total_timeout, connect=policy.connect_timeout))
-        if resp.status_code == 304 and entry is not None:
-            # 条件 GET 命中：延长本地 TTL，不重置内容
-            state["fetched_at"] = now
-            state["fail_count"] = 0
-            state["next_retry_at"] = 0.0
-            return entry
-        resp.raise_for_status()
-        data = getattr(resp, "content", None)
-        if data is None:  # 兼容返回 json 对象的测试替身
-            data = json.dumps(resp.json()).encode("utf-8")
-        if not data:
-            raise ValueError("远端响应为空")
-        resp_headers = getattr(resp, "headers", None) or {}
-        get_h = getattr(resp_headers, "get", None)
-        new_entry = SnapshotEntry(path=None, payload_bytes=data, etag=weak_etag(data),
-                                  stat=(0, len(data), 0), loaded_at=now, source="remote",
-                                  upstream_etag=get_h("etag") if get_h else None,
-                                  upstream_last_modified=get_h("last-modified") if get_h else None,
-                                  fetched_at=_now_iso())
-        state["entry"] = new_entry
-        state["fetched_at"] = now
-        state["fail_count"] = 0
-        state["next_retry_at"] = 0.0
+        new_entry = _do_fetch(state, key, url, policy, now)
         return new_entry
     except Exception as exc:  # noqa: BLE001
-        state["fail_count"] += 1
-        idx = min(state["fail_count"] - 1, len(policy.backoff_seconds) - 1)
-        base = float(policy.backoff_seconds[idx])
-        state["next_retry_at"] = now + base + random.uniform(0, base * policy.jitter)
-        code = ""
-        resp_obj = getattr(exc, "response", None)
-        if resp_obj is not None and getattr(resp_obj, "status_code", None):
-            code = str(resp_obj.status_code)
-        state["last_error"] = f"{type(exc).__name__}:{code}"
-        logger.info("远程快照拉取失败(%s): %s %s", key, type(exc).__name__, code)
+        _record_failure(state, key, policy, exc, now)
         if entry is not None and policy.stale_ok:
-            return _mark_stale(entry, f"{type(exc).__name__}:{code}")
+            return _mark_stale(entry, f"{type(exc).__name__}:{state.get('last_error', '')}" if False else f"{type(exc).__name__}")
         return None
     finally:
         state["inflight"] = False
-        state["event"].set()  # 唤醒 single-flight 等待者（成功或失败均需唤醒）
+        state["event"].set()
 
 
 def remote_last_error(key: str) -> str:
-    """最近一次上游失败类型（供调用方组装 reason，保持 §2.4 响应形状）。"""
     with _remote_guard:
         state = _remote_state.get(key) or {}
         return state.get("last_error") or "upstream_unavailable"

@@ -121,7 +121,8 @@ async def test_email_endpoint():
 
 
 @router.get("/task-history")
-async def task_history(limit: int = Query(50, ge=1, le=500)):
+def task_history(limit: int = Query(50, ge=1, le=500)):
+    """同步 def（阻塞读含远程兜底走线程池，不阻塞事件循环；P0-3）。"""
     from ..services.task_history import read_task_history_resilient
 
     records = (read_task_history_resilient().get("records") or [])[-limit:]

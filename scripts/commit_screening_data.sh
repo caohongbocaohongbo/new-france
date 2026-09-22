@@ -51,9 +51,16 @@ trap cleanup EXIT
 
 mkdir -p "${snapshot_dir}/data" "${snapshot_dir}/reports"
 
-for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json; do
+for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json data/principal_capital_intraday_state.json data/principal_capital_intraday_state_shadow.json data/principal_capital_owner_conflict.json data/principal_capital_m5_audit.json; do
   if [[ -f "${file}" ]]; then
     cp "${file}" "${snapshot_dir}/${file}"
+  fi
+done
+
+# 23 v2：通知去重文件按日期落盘，一并进入快照（避免双写/重复通知）
+for nfile in data/principal_capital_*_notified_*.json; do
+  if [[ -f "${nfile}" ]]; then
+    cp "${nfile}" "${snapshot_dir}/${nfile}"
   fi
 done
 
@@ -70,6 +77,10 @@ cat > "${snapshot_dir}/data/snapshot_manifest.json" <<EOF
   "data_branch": "${DATA_BRANCH}"
 }
 EOF
+# 核验补充：逐文件 size + SHA-256 清单（含 reports/ 全部生成物；脚本缺失时跳过，兼容合成沙箱）
+if [[ -f "${SCRIPT_DIR}/snapshot_manifest.py" ]]; then
+  python3 "${SCRIPT_DIR}/snapshot_manifest.py" gen "${snapshot_dir}" "${snapshot_dir}/data/snapshot_manifest.json"
+fi
 
 if git show-ref --verify --quiet "refs/remotes/origin/${DATA_BRANCH}"; then
   git worktree add --detach --force "${data_worktree_dir}" "origin/${DATA_BRANCH}"
@@ -99,7 +110,8 @@ git -C "${data_worktree_dir}" config user.email "github-actions[bot]@users.norep
     fi
   done
 
-  rm -rf data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json data/snapshot_manifest.json reports
+  rm -rf data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json data/principal_capital_intraday_state.json data/principal_capital_intraday_state_shadow.json data/principal_capital_owner_conflict.json data/principal_capital_m5_audit.json data/snapshot_manifest.json reports
+  rm -rf data/principal_capital_*_notified_*.json
   mkdir -p data reports
   cp -R "${snapshot_dir}/data/." data/
   cp -R "${snapshot_dir}/reports/." reports/
@@ -108,11 +120,14 @@ git -C "${data_worktree_dir}" config user.email "github-actions[bot]@users.norep
   python3 "${SCRIPT_DIR}/merge_picker_snapshots.py" "${picker_keep_dir}" "$(pwd)" "${PICKER_FILES[@]}"
 
   add_paths=(data/snapshot_manifest.json)
-  for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json reports; do
+  for file in data/france.md data/new_france.db data/source_health.json data/principal_capital_source_health.json data/principal_capital_sina_codes.json data/principal_capital_intraday_state.json data/principal_capital_intraday_state_shadow.json data/principal_capital_owner_conflict.json data/principal_capital_m5_audit.json reports; do
     if [[ -e "${file}" ]]; then
       add_paths+=("${file}")
     fi
   done
+  if compgen -G "data/principal_capital_*_notified_*.json" > /dev/null; then
+    add_paths+=(data/principal_capital_*_notified_*.json)
+  fi
   git add -f "${add_paths[@]}"
 
   if git diff --cached --quiet; then

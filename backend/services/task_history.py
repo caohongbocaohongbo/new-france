@@ -60,16 +60,17 @@ def append_task_record(
 
 
 def _fetch_snapshot_json(filename: str) -> Optional[dict]:
-    """从 data-snapshots 分支拉取 reports/<filename>。失败返回 None。"""
-    import requests
+    """远程回退统一走 snapshot_store 合并缓存（single-flight/退避/条件GET/SWR）。失败返回 None。"""
+    from backend.services.snapshot_store import RemotePolicy, fetch_remote_snapshot
 
-    url = f"{SNAPSHOT_RAW_BASE}/reports/{filename}"
+    key = filename.replace(".json", "").replace("/", "_")
+    entry = fetch_remote_snapshot(key, f"{SNAPSHOT_RAW_BASE}/reports/{filename}", RemotePolicy(ttl_seconds=600.0))
+    if entry is None:
+        return None
     try:
-        resp = requests.get(url, timeout=8)
-        resp.raise_for_status()
-        return resp.json()
+        return dict(entry.parsed())  # 复制，不污染共享解析对象
     except Exception as exc:  # noqa: BLE001
-        logger.info("定时任务远程快照拉取失败(%s): %s", filename, exc)
+        logger.info("定时任务远程快照解析失败(%s): %s", filename, exc)
         return None
 
 

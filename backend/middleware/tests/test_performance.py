@@ -69,3 +69,52 @@ def test_route_template_and_health_summary(caplog, monkeypatch):
     assert any("route=/api/v1/items/{item_id}" in m for m in caplog.messages)
     assert any("health_summary" in m for m in caplog.messages)  # health 走 5 分钟汇总
     assert not any("request_id=" in m and "system/health" in m for m in caplog.messages)  # health 不写普通 access
+
+
+
+def _make_gzip_app():
+    """Performance 为最外层（后添加），位于 GZip 外 → 记录压缩后编码与字节。"""
+    from fastapi.middleware.gzip import GZipMiddleware
+
+    app = FastAPI()
+    app.add_middleware(GZipMiddleware, minimum_size=1)
+    app.add_middleware(PerformanceMiddleware)
+
+    @app.get("/api/v1/big")
+    async def big():
+        return {"payload": "x" * 5000}
+
+    @app.get("/api/v1/boom")
+    async def boom():
+        raise ValueError("boom")
+
+    return app
+
+
+def test_gzip_outer_observation(caplog):
+    """P0-1 验收：gzip 请求日志 content_encoding=gzip、字节数为压缩后字节。"""
+    caplog.set_level("INFO", logger="performance")
+    client = TestClient(_make_gzip_app())
+    resp = client.get("/api/v1/big", headers={"Accept-Encoding": "gzip"})
+    assert resp.headers.get("content-encoding") == "gzip"
+    line = next(l for l in caplog.messages if "request_id=" in l and "big" in l)
+    assert "content_encoding=gzip" in line
+    logged_bytes = int(line.split("response_bytes=")[1].split(" ")[0])
+    assert logged_bytes < 5000  # 压缩后字节数 < 原始 5000
+
+
+def test_exception_path_logs_error_type(caplog):
+    """P0-1 验收：异常请求必须记录一次日志且 error_type 非 none。"""
+    caplog.set_level("INFO", logger="performance")
+    client = TestClient(_make_gzip_app(), raise_server_exceptions=False)
+    client.get("/api/v1/boom")
+    line = next((l for l in caplog.messages if "request_id=" in l and "boom" in l), None)
+    assert line is not None
+    assert "error_type=ValueError" in line
+
+
+def test_x_request_id_header_present():
+    client = TestClient(_make_gzip_app(), raise_server_exceptions=False)
+    resp = client.get("/api/v1/big")
+    assert resp.headers.get("x-request-id")
+

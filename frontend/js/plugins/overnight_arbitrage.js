@@ -104,7 +104,7 @@ async function runOvernightArbitrage() {
         }
         for (let i = 0; i < 80; i++) {
             await new Promise(r => setTimeout(r, 3000));
-            const pollResp = await _oaApiFetch('/overnight-arbitrage/latest', { timeout: 12000, retries: 0 });
+            const pollResp = await _oaApiFetch('/overnight-arbitrage/latest?view=compact', { timeout: 12000, retries: 0 });
             const data = await pollResp.json();
             if (data.status === 'completed') {
                 renderOvernightDecision(data);
@@ -129,7 +129,7 @@ async function runOvernightArbitrage() {
 
 async function loadLatestOvernightDecision() {
     try {
-        const resp = await _oaApiFetch('/overnight-arbitrage/latest', { timeout: 12000, retries: 0 });
+        const resp = await _oaApiFetch('/overnight-arbitrage/latest?view=compact', { timeout: 12000, retries: 0 });
         const data = await resp.json();
         renderOvernightDecision(data);
     } catch (e) {

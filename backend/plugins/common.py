@@ -283,32 +283,34 @@ def _remote_cache_path(name: str) -> Path:
     return REMOTE_CACHE_DIR / f"{name}_remote.json"
 
 
-def _read_remote_cache(name: str, ttl_seconds: int) -> Optional[dict]:
-    """读磁盘 TTL 缓存；ttl_seconds<=0 或过期/损坏返回 None。"""
+def _read_remote_cache(name: str, ttl_seconds: int):
+    """读磁盘 TTL 缓存。返回 (payload, cached_at, expired)。
+
+    ttl_seconds<=0 / 缺失 / 损坏返回 (None, None, False)；过期保留 payload 作为 stale 候选。
+    """
     if int(ttl_seconds) <= 0:
-        return None
+        return None, None, False
     path = _remote_cache_path(name)
     if not path.exists():
-        return None
+        return None, None, False
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
         cached_at = datetime.fromisoformat(data["cached_at"])
-        if (now_beijing() - cached_at).total_seconds() < int(ttl_seconds):
-            return data.get("payload")
+        payload = data.get("payload")
+        expired = (now_beijing() - cached_at).total_seconds() >= int(ttl_seconds)
+        return payload, data["cached_at"], expired
     except (json.JSONDecodeError, OSError, KeyError, TypeError, ValueError):
-        return None
-    return None
+        return None, None, False
 
 
 def _write_remote_cache(name: str, payload: dict) -> None:
-    """写磁盘 TTL 缓存（best-effort，失败静默，不阻断主链路）。"""
+    """写磁盘 TTL 缓存（P1-4：原子写；best-effort，失败静默）。"""
     try:
-        REMOTE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        _remote_cache_path(name).write_text(
-            json.dumps({"cached_at": now_beijing().isoformat(), "payload": payload},
-                       ensure_ascii=False, default=str),
-            encoding="utf-8",
-        )
+        from backend.services.snapshot_store import atomic_write_json
+
+        atomic_write_json(_remote_cache_path(name), {
+            "cached_at": now_beijing().isoformat(), "payload": payload,
+        })
     except OSError:  # noqa: BLE001
         pass
 
@@ -337,16 +339,22 @@ def read_snapshot_resilient(snapshot_name: str, timeout: float = 5.0, ttl_second
         if not chip_remote_fetch:
             return {"status": "no_data", "_source": "local_only", "items": [],
                     "reason": "chip_remote_fetch_disabled"}
-    # 步骤 3.5：磁盘 TTL 缓存（未过期即命中，不再发网络）
-    payload = _read_remote_cache(name, ttl_seconds)
+    # 步骤 3.5：磁盘 TTL 缓存（未过期即命中；过期保留为 stale 候选）
+    payload, cached_at, expired = _read_remote_cache(name, ttl_seconds)
     if payload is not None:
+        payload = dict(payload) if isinstance(payload, dict) else {}
         payload["_source"] = "snapshot"
+        if expired:
+            payload["stale"] = True
+            payload["fetched_at"] = cached_at
+            payload["refresh_error"] = "disk_cache_expired"
         return payload
     # 步骤 4：远程合并缓存（P1 snapshot_store：single-flight/退避/条件GET/stale-while-revalidate）
     from backend.services.snapshot_store import RemotePolicy, fetch_remote_snapshot
 
     url = f"{SNAPSHOT_RAW_BASE}/reports/data_backend/{name}_latest.json"
-    policy = RemotePolicy(total_timeout=float(timeout), connect_timeout=1.5, ttl_seconds=float(ttl_seconds))
+    policy = RemotePolicy(total_timeout=float(timeout), connect_timeout=1.5,
+                          ttl_seconds=float(ttl_seconds), stale_ok=int(ttl_seconds) > 0)
     entry = fetch_remote_snapshot(name, url, policy)
     if entry is None:
         from backend.services.snapshot_store import remote_last_error
@@ -355,7 +363,7 @@ def read_snapshot_resilient(snapshot_name: str, timeout: float = 5.0, ttl_second
         return {"status": "no_data", "_source": "unavailable", "items": [],
                 "reason": f"remote_fetch_failed:err:{err.split(':', 1)[0]}"}
     try:
-        payload = entry.parsed()
+        payload = dict(entry.parsed())  # 复制后再附加元数据，不污染共享解析对象（P1-4）
     except Exception as exc:  # noqa: BLE001 永不抛异常
         return {"status": "no_data", "_source": "unavailable", "items": [],
                 "reason": f"remote_fetch_failed:err:{type(exc).__name__}"}
@@ -378,30 +386,48 @@ def _is_sqlite_busy(exc: Exception) -> bool:
     return "locked" in text or "busy" in text
 
 
+_db_initialized = False
+_db_init_lock = RLock()
+
+
+def _ensure_db() -> None:
+    """进程内仅初始化一次（P3 核验：db_append 不再每次重复建表 + WAL 检查）。"""
+    global _db_initialized
+    if _db_initialized:
+        return
+    with _db_init_lock:
+        if not _db_initialized:
+            from backend.db.database import init_db
+
+            init_db()
+            _db_initialized = True
+
+
 def db_append(table: str, rows: list) -> int:
-    """最佳努力写入 SQLite（pandas to_sql append）；busy 有界重试，其余失败返回 0 不阻断。"""
+    """最佳努力写入 SQLite；busy 有界重试，记录真实锁等待时间（非计划 sleep）。"""
     if not rows:
         return 0
     import pandas as pd
-    from backend.db.database import engine, init_db
+    from backend.db.database import engine
 
-    init_db()
+    _ensure_db()
     frame = pd.DataFrame(rows)
-    last_wait = 0.0
     for attempt in range(3):
-        if attempt:
-            time.sleep(min(0.2 * (2 ** (attempt - 1)), 1.0))
+        t0 = time.perf_counter()
         try:
             frame.to_sql(table, engine, if_exists="append", index=False)
             if attempt:
-                logger.info("SQLite 写入 %s busy 重试成功 retry_count=%d", table, attempt)
+                logger.info("SQLite 写入 %s busy 重试成功 retry_count=%d lock_wait_ms=%.1f",
+                            table, attempt, (time.perf_counter() - t0) * 1000)
             return len(rows)
         except Exception as exc:  # noqa: BLE001
+            waited_ms = (time.perf_counter() - t0) * 1000
             if not _is_sqlite_busy(exc) or attempt == 2:
                 logger.info("SQLite 写入 %s 失败(已忽略): %s", table, exc)
                 return 0
-            last_wait = round(0.2 * (2 ** attempt), 3)
-            logger.warning("SQLite 写入 %s 锁等待 retry=%d wait_s=%s table=%s", table, attempt + 1, last_wait, table)
+            logger.warning("SQLite 写入 %s 锁冲突 retry_count=%d lock_wait_ms=%.1f operation=append table=%s",
+                           table, attempt + 1, waited_ms, table)
+            time.sleep(0.1)
     return 0
 
 
@@ -413,18 +439,21 @@ def db_delete(table: str, where: dict) -> int:
 
     from backend.db.database import engine
 
+    _ensure_db()
     clauses = " AND ".join(f"{k} = :{k}" for k in where)
     for attempt in range(3):
-        if attempt:
-            time.sleep(min(0.2 * (2 ** (attempt - 1)), 1.0))
+        t0 = time.perf_counter()
         try:
             with engine.begin() as conn:
                 return conn.execute(text(f"DELETE FROM {table} WHERE {clauses}"), where).rowcount
         except Exception as exc:  # noqa: BLE001
+            waited_ms = (time.perf_counter() - t0) * 1000
             if not _is_sqlite_busy(exc) or attempt == 2:
                 logger.info("SQLite 删除 %s 失败(已忽略): %s", table, exc)
                 return 0
-            logger.warning("SQLite 删除 %s 锁等待 retry=%d table=%s", table, attempt + 1, table)
+            logger.warning("SQLite 删除 %s 锁冲突 retry_count=%d lock_wait_ms=%.1f operation=delete table=%s",
+                           table, attempt + 1, waited_ms, table)
+            time.sleep(0.1)
     return 0
 
 

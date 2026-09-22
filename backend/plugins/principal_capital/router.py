@@ -66,7 +66,7 @@ async def trigger_principal_capital(
 
 
 @router.get("/latest")
-async def latest_principal_capital():
+def latest_principal_capital():  # 同步 def：阻塞读（含远程兜底）走线程池（P0-3）
     try:
         return read_report_resilient()
     except Exception as exc:
@@ -74,7 +74,7 @@ async def latest_principal_capital():
 
 
 @router.get("/snapshot")
-async def principal_capital_snapshot(history_limit: int = Query(12, ge=1, le=1000)):
+def principal_capital_snapshot(history_limit: int = Query(12, ge=1, le=1000)):
     try:
         records = (read_history_resilient().get("records") or [])[-history_limit:]
         return {
@@ -88,7 +88,7 @@ async def principal_capital_snapshot(history_limit: int = Query(12, ge=1, le=100
 
 
 @router.get("/history")
-async def principal_capital_history(
+def principal_capital_history(
     direction: str = Query("all"),
     limit: int = Query(200, ge=1, le=1000),
 ):
@@ -102,7 +102,7 @@ async def principal_capital_history(
 
 
 @router.get("/source-health")
-async def principal_capital_source_health():
+def principal_capital_source_health():
     try:
         return _json_safe(read_source_health_resilient())
     except Exception as exc:
@@ -121,7 +121,7 @@ _TIER_FIELD_WHITELIST = _TIER_COMPACT_FIELDS + (
 @router.get("/tier-flow/latest")
 def tier_flow_latest(
     request: Request,
-    view: str = Query("compact"),
+    view: str = Query("full"),  # 迁移期默认 full（P1-1 兼容旧调用方）；前端显式传 view=compact
     limit: int = Query(100, ge=1, le=200),
     offset: int = Query(0, ge=0, le=10000),
     fields: str = Query(""),
