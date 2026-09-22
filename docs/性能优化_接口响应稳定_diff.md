@@ -822,3 +822,25 @@ curl -s 'http://127.0.0.1:8000/api/v1/principal-capital/tier-flow/latest?limit=2
 - **已提交并推送**：`61f8c3b perf: 查询接口响应稳定 P0-P3（...）`（仅 §0 清单内文件，混合文件按 HEAD+重放+还原做了分拣，principal_capital 重构等其它在途改动保持未提交）。
 - 干净检出验证（worktree @61f8c3b + 运行数据拷贝）：`tests backend/services backend/middleware` 235 passed。
 - 云端实测（new-france-api.onrender.com）：tier-flow compact total=3049/returned=100、`limit=201`→422、smart-picker source=snapshot；data-snapshots 白名单已补 tier_flow/oa_history_compact 防 GH 日跑清空。
+
+
+---
+
+## 7. 2026-09-22 核验阻断项修复记录（e25249a）
+
+按《代码核验与修复要求》逐项修复，阻断项清零：
+
+| 编号 | 修复 |
+|---|---|
+| P0-1 | PerformanceMiddleware 移为最外层（能看到 GZip 压缩后字节，实测日志 response_bytes=3949 content_encoding=gzip）；TTFB 改为首个 body；duration 在最终 send 之后；异常路径记一次日志（error_type 非 none）；请求进入即生成 request_id 并回 X-Request-ID；GZip compresslevel=5（旧 starlette 自动回退） |
+| P0-2 | 真 stale-while-revalidate：过期+有旧缓存立即返回 stale（<50ms，实测上游 400ms 睡眠时）并后台刷新（线程池上限 4）；冷缓存才同步等待；leader 完成/失败后等待者一致；状态变更全部在锁内；内容进入缓存前 JSON 解码校验顶层为对象 |
+| P0-3 | principal_capital/task_history 远程回退统一走 snapshot_store（删除第二套 requests.get）；对应 4 个读接口 async→def（线程池执行）；新增不得同步 requests.get 回归测试 |
+| P1-1 | 迁移期默认回退 full：tier-flow/OA latest/OA history(新增 view) 默认 full；前端三处显式传 view=compact |
+| P1-2 | OA /{code}/history 与列表共用同一 entry 获取函数（本地/远程/SWR/早期 ETag）；新增远程一致性测试 |
+| P1-3 | smart_money_radar orderbook（events/latest）+ service（stage_map/history/notified）全部 atomic_write_json；测试改为调用真实业务函数 + 写入中并发读完整 JSON 压测 |
+| P1-4 | LRU/统计加锁；单条超 32MB 跳过缓存；read_snapshot_resilient/principal_capital 解析对象复制后再附加元数据；磁盘缓存原子写 + 过期保留为 stale 候选（stale/fetched_at/refresh_error 标注） |
+| 性能目标 | screening 新增 view=compact（列表字段：rank/code/name/adjusted_score/drop_pct/recommendation/zt_date/factors/audit；顶层 8 字段），合成 100 只重样本响应 ≤100KB 门槛测试；前端列表/轮询切 compact，dashboard 维持 summary |
+| SQLite | db_append 不再每次 init_db（进程内一次）；日志记录真实 lock_wait_ms（非计划 sleep）；并发测试改用独立临时库 + apply_sqlite_pragmas |
+| Manifest | 新增 scripts/snapshot_manifest.py（gen/verify），commit 生成逐文件 size+SHA-256，restore 校验并告警 |
+
+回归：tests backend/services backend/middleware 245 passed；plugins 核心三套 186 passed；smr 定向 4 passed；干净检出 + 运行数据拷贝复核 245 passed。
