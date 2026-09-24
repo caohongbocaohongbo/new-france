@@ -63,7 +63,7 @@ class RecommendationAgent:
                              index_snapshot=index_snapshot)
 
         # 3. 发送邮件（无论有无推荐都发）
-        notify_ok = True
+        notify_ok = False
         if not dry_run:
             notify_ok = send_notification(scored_stocks, target_date,
                                           index_gain, str(md_path),
@@ -86,7 +86,10 @@ class RecommendationAgent:
             "notified": notify_ok,
         }
         logger.info(f"  报告: {md_path}")
-        logger.info(f"  通知: {'已发送' if notify_ok else '未发送/失败'}")
+        if dry_run:
+            logger.info("  通知: 未发送（dry-run：正式推荐已阻断或调试模式）")
+        else:
+            logger.info(f"  通知: {'已发送' if notify_ok else '未发送/失败'}")
         return summary
 
     def _ensure_path(self, path: Path) -> Path:

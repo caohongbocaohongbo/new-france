@@ -124,5 +124,7 @@ CONFIG = {
     "alert_cooldown_minutes": _env_int("ALERT_COOLDOWN_MINUTES", 30),
     "history_keep_days": _env_int("HISTORY_KEEP_DAYS", 7),
     "radar_source": RADAR_SOURCE,
+    # 行情源：tencent(默认，HTTP五档) | tdx(已失效的免费TDX，仅留作显式回退)
+    "radar_quote_source": os.environ.get("RADAR_QUOTE_SOURCE", "tencent"),
     "enable_sqlite_dump": _env_bool("ENABLE_SQLITE_DUMP", False),
 }

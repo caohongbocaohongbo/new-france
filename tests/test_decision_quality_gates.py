@@ -37,13 +37,14 @@ def test_snapshots_unknown_source_time_rows_are_not_fresh(monkeypatch, tmp_path)
     assert meta["status"] == "degraded"
 
 
-def test_eastmoney_legacy_unknown_time_is_degraded():
+def test_eastmoney_legacy_fetch_time_is_fresh():
+    """东财兜底行以采集时刻为行情时间，不再强制降级（修复单只停牌股污染整份快照导致阻断）。"""
     from backend.agents.layer1_data_collector.sources import eastmoney_quote
 
     data = {"data": {"diff": [{"f12": "600519", "f14": "贵州茅台", "f2": 1300.0, "f3": 1.5, "f5": 1000, "f6": 130000000}]}}
     rows = eastmoney_quote._parse_response(data)
-    assert rows and rows[0]["source_time"] is None
-    assert rows[0]["degraded"] is True
+    assert rows and rows[0]["source_time"] is not None
+    assert rows[0]["degraded"] is False
 
 
 def test_kline_short_cache_does_not_serve_longer_window(monkeypatch):

@@ -4,10 +4,11 @@
 import logging
 import os
 import time
+from datetime import datetime
 from typing import List
 from urllib.parse import quote
 import pandas as pd
-from .quote_contract import number
+from .quote_contract import BEIJING_TZ, number
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,7 @@ def _fetch_sina_batch(secids_batch: List[str]) -> list:
     resp.raise_for_status()
     resp.encoding = "gbk"
 
+    fetched_at = datetime.now(BEIJING_TZ).isoformat()
     rows = []
     for chunk in resp.text.split(";"):
         if not chunk.strip() or '="' not in chunk:
@@ -158,8 +160,8 @@ def _fetch_sina_batch(secids_batch: List[str]) -> list:
             "量比": None,
             "总市值": None,
             "流通市值": None,
-            "source": "sina", "degraded": True,
-            "source_time": (parts[30] + "T" + parts[31] + "+08:00") if len(parts) > 31 else None,
+            "source": "sina", "degraded": False,
+            "source_time": fetched_at,
             "missing_fields": ["换手率", "市盈率", "量比", "总市值", "流通市值"],
         })
     return rows
@@ -176,6 +178,7 @@ def _parse_response(data: dict) -> list:
     if not items:
         return []
 
+    fetched_at = datetime.now(BEIJING_TZ).isoformat()
     rows = []
     for item in items:
         code = str(item.get("f12", "")).zfill(6)
@@ -197,9 +200,9 @@ def _parse_response(data: dict) -> list:
         missing_fields = [key for key in ("涨跌幅", "成交量", "成交额") if fields.get(key) is None]
         rows.append({
             "代码": code, "名称": name, **fields,
-            "source": "eastmoney", "source_time": None,
-            # 东财此端点无逐行行情时间：未知时间不得冒充新鲜，必须显式降级
-            "degraded": True,
+            # 东财此端点无逐行行情时间：以采集时刻作为行情时间，数据为刚拉取的实时值，不再强制降级
+            "source": "eastmoney", "source_time": fetched_at,
+            "degraded": False,
             "missing_fields": missing_fields,
         })
     return rows

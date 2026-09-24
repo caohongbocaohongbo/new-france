@@ -137,6 +137,13 @@ jobs:
             echo "进入下午盘循环（收于 15:00），触发时刻北京 ${start_hm}"
           fi
 
+          # 延迟触发早退：若触发时刻已晚于本时段收盘，说明本时段已由正常触发处理完毕，
+          # 直接跳过（否则会以新 owner 跑 finalizer，撞上已成功 run 的 owner 租约导致 owner_conflict 误报）
+          if [ "${start_hm}" -ge "${SESSION_END}" ]; then
+            echo "触发时刻北京 ${start_hm} 已晚于本时段收盘 ${SESSION_END}，跳过（本时段已由正常触发处理）"
+            exit 0
+          fi
+
           while true; do
             bj_hm="$(TZ=Asia/Shanghai date +%H%M)"
             if [ "${bj_hm}" -ge "${SESSION_END}" ]; then

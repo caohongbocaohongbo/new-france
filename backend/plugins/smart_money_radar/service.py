@@ -6,7 +6,7 @@ import inspect
 import asyncio
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from backend.api.router_system import trading_session_status
 from backend.plugins.principal_capital.service import (
@@ -39,7 +39,8 @@ from . import orderflow as _orderflow
 from .notifier import build_and_send
 from .replay import RadarReplay
 from .scoring import launch_score, smart_money_score
-from .sources.tdx_source import TdxPool, poll_pool_once
+from .sources.tdx_source import poll_pool_once
+from .sources.tencent_source import make_quote_source
 from .store import RadarStore
 
 logger = logging.getLogger(__name__)
@@ -456,7 +457,7 @@ async def run_radar_once(
     dry_run: bool = False,
     force: bool = False,
     store: Optional[RadarStore] = None,
-    pool: Optional[TdxPool] = None,
+    pool: Optional[Any] = None,
 ) -> dict:
     now = now or datetime.now(BEIJING_TZ)
     if now.tzinfo is None:
@@ -475,7 +476,7 @@ async def run_radar_once(
         _write_latest(result)
         return result
 
-    pool = pool or TdxPool()
+    pool = pool or make_quote_source()
     maybe_payloads = poll_pool_once(pool, watch_pool, CONFIG)
     payloads = await maybe_payloads if inspect.isawaitable(maybe_payloads) else maybe_payloads
     today = now.date()

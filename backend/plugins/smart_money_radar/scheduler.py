@@ -8,7 +8,7 @@ from . import auction as _auction
 from .config import BEIJING_TZ, CONFIG
 from .notifier import build_and_send
 from .service import _STORE, run_radar_once
-from .sources.tdx_source import TdxPool
+from .sources.tencent_source import make_quote_source
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def run_radar_daemon(dry_run=False, force=False, store=None,
                            run_once_fn=run_radar_once,
                            sleep_fn=asyncio.sleep, max_cycles=None):
     store = store or _STORE
-    pool = pool or TdxPool()
+    pool = pool or make_quote_source()
     watchdog = RadarWatchdog(CONFIG.get("failure_threshold", 5), lambda: _send_watchdog_alert(now_fn()))
     cycles = 0
     while max_cycles is None or cycles < max_cycles:

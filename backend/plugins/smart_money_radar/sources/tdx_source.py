@@ -107,6 +107,31 @@ class TdxPool:
 
 async def poll_pool_once(pool: TdxPool, watch_pool: list, cfg: dict = None) -> list:
     cfg = cfg or CONFIG
+
+    # 批量源（腾讯 HTTP 五档）：一次请求拉全池，避免逐只 N 次请求
+    if hasattr(pool, "fetch_quotes_batch"):
+        codes = [str(item.get("code") or "").zfill(6) for item in watch_pool]
+        try:
+            quotes_map = await asyncio.to_thread(pool.fetch_quotes_batch, codes)
+        except Exception as exc:
+            logger.warning("批量五档拉取失败: %s", exc)
+            quotes_map = {}
+        now = datetime.now(BEIJING_TZ)
+        payloads = []
+        for item in watch_pool:
+            code = str(item.get("code") or "").zfill(6)
+            quote = quotes_map.get(code)
+            if quote is None:
+                payloads.append({"code": code, "name": item.get("name"), "error": f"{code} 无报价", "pool_item": item})
+                continue
+            payloads.append({
+                "code": code, "name": item.get("name"), "pool_item": item,
+                "quote": quote, "txs": [],
+                "servertime": now.strftime("%H:%M:%S"),
+                "fetched_at": now.isoformat(),
+            })
+        return payloads
+
     semaphore = asyncio.Semaphore(max(1, int(cfg.get("fetch_concurrency", 1))))
 
     async def fetch(item):
