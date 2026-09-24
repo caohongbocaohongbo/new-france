@@ -84,6 +84,28 @@ class BulkValidationTest(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(result["missing_reasons"]["000001"], "停牌")
 
+    def test_non_finite_suspended_outside_universe_does_not_block(self):
+        # 停牌股：不在当日活跃 universe，且 bulk 字段为 "-"（合法缺失），不应阻断准入
+        rows = sm.parse_bulk_rows([
+            _bulk_item("sh600000"),
+            _bulk_item("sz000002", amount="-", ratio=None, r0_net="-"),
+        ], NOW)
+        result = sm.validate_bulk_rows(rows, ["600000"])
+        self.assertTrue(result["valid"])
+        self.assertIn("000002", result["non_finite_codes"])
+        self.assertEqual(result["non_finite_unexplained_codes"], [])
+
+    def test_non_finite_trading_in_universe_blocks(self):
+        # 活跃 universe 内出现 non_finite 才是真故障，必须阻断准入
+        rows = sm.parse_bulk_rows([
+            _bulk_item("sh600000", amount="-", ratio=None),
+            _bulk_item("sz000001"),
+        ], NOW)
+        result = sm.validate_bulk_rows(rows, ["600000", "000001"])
+        self.assertFalse(result["valid"])
+        self.assertIn("600000", result["non_finite_unexplained_codes"])
+        self.assertIn("non_finite:1", result["reasons"])
+
 
 class CoarseUnionTest(unittest.TestCase):
     def test_union_dedup_stable_order(self):

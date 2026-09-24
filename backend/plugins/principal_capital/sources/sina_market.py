@@ -462,15 +462,19 @@ def validate_bulk_rows(rows, universe, known_non_trading=None) -> dict:
         row.get("code") for row in rows
         if any(row.get(field) is None for field in _BULK_KEY_FIELDS)
     })
+    # 只有「当日活跃主板 universe 内」的代码出现 non_finite 才算数据故障。
+    # universe 之外的 non_finite（停牌/退市/非主板如创业板·科创板·B股·ETF）
+    # 属预期现象：这些代码本就无成交，bulk 返回 "-" 是合法缺失而非损坏。
+    non_finite_unexplained = [code for code in non_finite if code in universe_set and code not in known]
     received_in_universe = sorted(unique_codes & universe_set)
     reasons = []
     if duplicates:
         reasons.append(f"duplicate_code:{len(duplicates)}")
     if unexplained_missing:
         reasons.append(f"missing_codes:{len(unexplained_missing)}")
-    if non_finite:
-        reasons.append(f"non_finite:{len(non_finite)}")
-    valid = not duplicates and not unexplained_missing and not non_finite
+    if non_finite_unexplained:
+        reasons.append(f"non_finite:{len(non_finite_unexplained)}")
+    valid = not duplicates and not unexplained_missing and not non_finite_unexplained
     coverage_ratio = round(len(received_in_universe) / len(universe_set), 6) if universe_set else 0.0
     return {
         "valid": valid,
@@ -482,6 +486,7 @@ def validate_bulk_rows(rows, universe, known_non_trading=None) -> dict:
         "extra_codes": extra,
         "duplicate_codes": duplicates,
         "non_finite_codes": non_finite,
+        "non_finite_unexplained_codes": non_finite_unexplained,
         "reasons": reasons,
     }
 

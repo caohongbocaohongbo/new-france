@@ -25,6 +25,21 @@ ALERT_DELIVERY_UNKNOWN = "delivery_unknown"
 ALERT_CONSISTENCY_ERROR = "consistency_error"
 ALERT_M5_GAP = "m5_gap"
 ALERT_M5_DAY_INVALID = "m5_day_invalid"
+
+# 告警标题标签（owner_conflict 等不应被笼统标成「数据源失败」）
+_KIND_LABELS = {
+    ALERT_NOT_STARTED: "未启动",
+    ALERT_SOURCE_FAILURE: "数据源失败",
+    ALERT_OWNER_CONFLICT: "写者冲突",
+    ALERT_DEGRADED: "质量降级",
+    ALERT_FINALIZER_MISSING: "摘要未完成",
+    ALERT_PENDING_STUCK: "摘要卡死",
+    ALERT_DELIVERY_UNKNOWN: "投递结果不明",
+    ALERT_CONSISTENCY_ERROR: "一致性错误",
+    ALERT_M5_GAP: "M5 缺口",
+    ALERT_M5_DAY_INVALID: "M5 当日无效",
+}
+
 STATE_FILE = REPORT_DIR / "principal_capital_watchdog_state.json"
 OWNER_CONFLICT_FILE = Path(__file__).resolve().parents[1] / "data" / "principal_capital_owner_conflict.json"
 INTRADAY_STATE_FILE = Path(__file__).resolve().parents[1] / "data" / "principal_capital_intraday_state.json"
@@ -79,6 +94,21 @@ def _summary_alert(intraday_state: Dict[str, Any], now: datetime) -> Optional[Di
     return None
 
 
+def _owner_conflict_active(owner_conflict: Optional[Dict[str, Any]], now: datetime) -> bool:
+    """独立 owner_conflict 诊断仅在「当日」才触发告警；跨日残留文件视为已过期。
+
+    该诊断文件一旦写入就长期滞留在 data-snapshots 分支，若不按交易日过滤，
+    watchdog 会每天都对同一份历史冲突反复误报。
+    """
+    if not owner_conflict or owner_conflict.get("status") != "owner_conflict":
+        return False
+    trade_date = owner_conflict.get("trade_date")
+    if trade_date:
+        return str(trade_date) == now.date().isoformat()
+    oc_now = _as_beijing_time(owner_conflict.get("now"))
+    return bool(oc_now and oc_now.date() == now.date())
+
+
 def evaluate_snapshot(
     snapshot: Optional[Dict[str, Any]],
     now: datetime,
@@ -105,7 +135,7 @@ def evaluate_snapshot(
             "message": "主力资金已运行但数据源失败/无数据。\n" + _attempts_text(snapshot),
         }
 
-    if status == "owner_conflict" or (owner_conflict and owner_conflict.get("status") == "owner_conflict"):
+    if status == "owner_conflict" or _owner_conflict_active(owner_conflict, now):
         return {
             "kind": ALERT_OWNER_CONFLICT,
             "message": "主力资金出现唯一写者冲突（owner_conflict），正式任务未能写入。",
@@ -161,7 +191,7 @@ def _save_state(state_path: Path, state: Dict[str, Any]) -> None:
 
 
 def _build_email(alert: Dict[str, str], snapshot: Dict[str, Any], now: datetime):
-    kind_label = "未启动" if alert["kind"] == ALERT_NOT_STARTED else "数据源失败"
+    kind_label = _KIND_LABELS.get(alert["kind"], "告警")
     snapshot_status = snapshot.get("status") or "empty"
     snapshot_time = snapshot.get("now") or "--"
     stamp = now.strftime("%Y-%m-%d %H:%M")

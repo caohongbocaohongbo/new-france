@@ -652,6 +652,28 @@ def write_owner_conflict_diagnostic(payload: dict) -> None:
     atomic_write_json(OWNER_CONFLICT_FILE, payload)
 
 
+def clear_stale_owner_conflict(trade_date: str) -> None:
+    """跨日清理历史 owner_conflict 诊断，避免 watchdog 对陈旧文件反复误报。
+
+    该诊断文件一旦写入就会随 data-snapshots 分支长期滞留；只有当冲突发生在
+    本交易日时才应保留。official 成功接管 owner 时（本日已无冲突）顺带清理
+    不属于今日的残留诊断。
+    """
+    if not OWNER_CONFLICT_FILE.exists():
+        return
+    try:
+        payload = json.loads(OWNER_CONFLICT_FILE.read_text(encoding="utf-8"))
+        if isinstance(payload, dict) and payload.get("trade_date") == trade_date:
+            return  # 今日冲突诊断保留
+    except (json.JSONDecodeError, OSError):
+        pass
+    try:
+        OWNER_CONFLICT_FILE.unlink(missing_ok=True)
+        logger.info("清理跨日 owner_conflict 诊断：%s", OWNER_CONFLICT_FILE.name)
+    except OSError:
+        pass
+
+
 def read_intraday_state() -> dict:
     """读取日内状态（供雷达/前端/诊断复用）。"""
     return intraday.load_state()
@@ -895,6 +917,7 @@ def run_principal_capital_scan(
                                    pipeline_mode=effective_pipeline_mode, owner_id=owner_id)
             write_owner_conflict_diagnostic(result)
             return result
+        clear_stale_owner_conflict(today.isoformat())
         cleanup_old_notified(today)
         buy_map = load_notified_map(today, DIRECTION_BUY)
         sell_map = load_notified_map(today, DIRECTION_SELL)

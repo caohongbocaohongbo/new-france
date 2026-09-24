@@ -47,6 +47,33 @@ class PrincipalCapitalWatchdogTest(unittest.TestCase):
 
         self.assertIsNone(alert)
 
+    def test_stale_owner_conflict_does_not_alert(self):
+        # 残留的昨日 owner_conflict 诊断不应触发告警（回归：跨日误报）
+        alert = watchdog.evaluate_snapshot(
+            {"status": "skipped", "now": "2026-08-11T09:25:00+08:00"},
+            self.now,
+            owner_conflict={
+                "status": "owner_conflict",
+                "trade_date": "2026-08-10",
+                "now": "2026-08-10T10:00:00+08:00",
+                "reason": "owner_conflict: other_owner",
+            },
+        )
+        self.assertIsNone(alert)
+
+    def test_today_owner_conflict_alerts(self):
+        alert = watchdog.evaluate_snapshot(
+            {"status": "skipped", "now": "2026-08-11T09:25:00+08:00"},
+            self.now,
+            owner_conflict={
+                "status": "owner_conflict",
+                "trade_date": "2026-08-11",
+                "now": "2026-08-11T09:25:00+08:00",
+                "reason": "owner_conflict: other_owner",
+            },
+        )
+        self.assertEqual(alert["kind"], watchdog.ALERT_OWNER_CONFLICT)
+
     def test_same_alert_is_sent_once_per_day(self):
         snapshot = {"status": "no_data", "now": "2026-08-11T09:40:00+08:00"}
         sender = Mock(return_value=(True, None))
