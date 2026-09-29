@@ -8,44 +8,30 @@
   "auto_fallback": "strict_auto_fallback",
   "summary_state": {
     "am": {
-      "status": "retry_wait",
+      "status": "skipped",
       "job_id": "1b36459602114aa9b6c3d0fbb14cf5f1",
+      "trade_date": "2026-09-29",
+      "session": "am",
       "selected_snapshot_id": null,
       "finalizer_due_at": "2026-09-29T11:35:00+08:00",
-      "queued_at": "2026-09-29T13:59:03.652741+08:00",
-      "trigger_source": "reconciler",
-      "started_at": "2026-09-29T13:59:03.652741+08:00",
+      "queued_at": "2026-09-29T18:37:01.296988+08:00",
+      "started_at": "2026-09-29T18:37:01.296988+08:00",
       "completed_at": null,
-      "next_retry_at": "2026-09-29T14:00:03.652741+08:00",
-      "run_id": "28246a4086344321aad72e2fc8f00ad0",
+      "attempt_count": 0,
+      "dispatch_count": 13,
+      "max_attempts": 3,
+      "next_retry_at": null,
+      "last_error_code": "NO_VALID_SNAPSHOT",
+      "last_error_message": "前置条件 13 次未满足，放弃重试",
+      "last_error_at": "2026-09-29T18:37:01.296988+08:00",
+      "skip_reason": "NO_VALID_SNAPSHOT",
+      "trigger_source": "reconciler",
+      "worker_id": "36556610790:1:reconcile",
+      "run_id": null,
       "history": [
         {
           "from": "queued",
           "to": "running",
-          "at": "2026-09-29T13:24:49.480077+08:00",
-          "reason": null,
-          "worker_id": "36523760156:1:scan",
-          "error": null
-        },
-        {
-          "from": "running",
-          "to": "retry_wait",
-          "at": "2026-09-29T13:24:49.480077+08:00",
-          "reason": "NO_VALID_SNAPSHOT",
-          "worker_id": "36523760156:1:scan",
-          "error": "NO_VALID_SNAPSHOT"
-        },
-        {
-          "from": "retry_wait",
-          "to": "queued",
-          "at": "2026-09-29T13:30:33.536162+08:00",
-          "reason": "reconciler",
-          "worker_id": null,
-          "error": null
-        },
-        {
-          "from": "queued",
-          "to": "running",
           "at": "2026-09-29T13:30:33.536162+08:00",
           "reason": null,
           "worker_id": "36523760156:1:scan",
@@ -177,17 +163,99 @@
           "at": "2026-09-29T13:59:03.652741+08:00",
           "reason": "NO_VALID_SNAPSHOT",
           "worker_id": "36523760156:1:scan",
+          "error": "NO_VALID_SNAPSHOT"
+        },
+        {
+          "from": "retry_wait",
+          "to": "queued",
+          "at": "2026-09-29T18:37:01.296988+08:00",
+          "reason": "reconciler",
+          "worker_id": null,
+          "error": null
+        },
+        {
+          "from": "queued",
+          "to": "running",
+          "at": "2026-09-29T18:37:01.296988+08:00",
+          "reason": null,
+          "worker_id": "36556610790:1:reconcile",
+          "error": null
+        },
+        {
+          "from": "running",
+          "to": "skipped",
+          "at": "2026-09-29T18:37:01.296988+08:00",
+          "reason": "NO_VALID_SNAPSHOT",
+          "worker_id": "36556610790:1:reconcile",
           "error": "NO_VALID_SNAPSHOT"
         }
       ],
-      "worker_id": "36523760156:1:scan",
-      "dispatch_count": 12,
-      "last_error_code": "NO_VALID_SNAPSHOT",
-      "last_error_message": "NO_VALID_SNAPSHOT",
-      "last_error_at": "2026-09-29T13:59:03.652741+08:00"
+      "delivery": {
+        "status": "not_started",
+        "idempotency_key": null,
+        "attempt_id": null,
+        "sent_at": null,
+        "provider": "smtp",
+        "message_id": null,
+        "last_error": null
+      }
     },
     "pm": {
-      "status": "not_attempted"
+      "status": "retry_wait",
+      "job_id": "897caf3cd37c418a8fc6a37a1c1ae7d0",
+      "trade_date": "2026-09-29",
+      "session": "pm",
+      "selected_snapshot_id": "406b116e03494d02902eb3b563248103",
+      "finalizer_due_at": "2026-09-29T15:05:00+08:00",
+      "queued_at": "2026-09-29T18:37:01.296988+08:00",
+      "started_at": "2026-09-29T18:37:01.296988+08:00",
+      "completed_at": null,
+      "attempt_count": 0,
+      "dispatch_count": 1,
+      "max_attempts": 3,
+      "next_retry_at": "2026-09-29T18:38:01.296988+08:00",
+      "last_error_code": "SNAPSHOT_NOT_READY",
+      "last_error_message": "SNAPSHOT_NOT_READY",
+      "last_error_at": "2026-09-29T18:37:01.296988+08:00",
+      "skip_reason": null,
+      "trigger_source": "reconciler",
+      "worker_id": "36556610790:1:reconcile",
+      "run_id": "a819eefedbab4d31b37051b3cf30a17f",
+      "history": [
+        {
+          "from": "not_attempted",
+          "to": "queued",
+          "at": "2026-09-29T18:37:01.296988+08:00",
+          "reason": "reconciler",
+          "worker_id": null,
+          "error": null
+        },
+        {
+          "from": "queued",
+          "to": "running",
+          "at": "2026-09-29T18:37:01.296988+08:00",
+          "reason": null,
+          "worker_id": "36556610790:1:reconcile",
+          "error": null
+        },
+        {
+          "from": "running",
+          "to": "retry_wait",
+          "at": "2026-09-29T18:37:01.296988+08:00",
+          "reason": "SNAPSHOT_NOT_READY",
+          "worker_id": "36556610790:1:reconcile",
+          "error": "SNAPSHOT_NOT_READY"
+        }
+      ],
+      "delivery": {
+        "status": "not_started",
+        "idempotency_key": null,
+        "attempt_id": null,
+        "sent_at": null,
+        "provider": "smtp",
+        "message_id": null,
+        "last_error": null
+      }
     }
   },
   "summary_attempted_at": {},
