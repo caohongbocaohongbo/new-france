@@ -111,3 +111,21 @@ class PrincipalCapitalWatchdogTest(unittest.TestCase):
         alert = watchdog._summary_alert(state, now)
         self.assertIsNotNone(alert)
         self.assertEqual(alert["kind"], watchdog.ALERT_FINALIZER_MISSING)
+
+    def test_am_snapshot_missing_alerts(self):
+        # AM 收盘后（13:15）无 am 快照 → 时段快照缺失告警
+        now = datetime(2026, 9, 15, 13, 15, tzinfo=BEIJING_TZ)
+        state = {"session_snapshots": {"pm": {"status": "completed"}}}
+        alert = watchdog._session_snapshot_alert(state, now)
+        self.assertEqual(alert["kind"], watchdog.ALERT_SESSION_SNAPSHOT_MISSING)
+
+    def test_am_snapshot_present_no_alert(self):
+        now = datetime(2026, 9, 15, 13, 15, tzinfo=BEIJING_TZ)
+        state = {"session_snapshots": {"am": {"status": "completed"}, "pm": {"status": "completed"}}}
+        self.assertIsNone(watchdog._session_snapshot_alert(state, now))
+
+    def test_before_am_close_no_snapshot_alert(self):
+        # AM 未收盘（9:45）无 am 快照 → 不应告警（扫描还在进行中）
+        now = datetime(2026, 9, 15, 9, 45, tzinfo=BEIJING_TZ)
+        state = {"session_snapshots": {}}
+        self.assertIsNone(watchdog._session_snapshot_alert(state, now))

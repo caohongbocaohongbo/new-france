@@ -2,7 +2,7 @@
 import html
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
@@ -25,6 +25,7 @@ ALERT_DELIVERY_UNKNOWN = "delivery_unknown"
 ALERT_CONSISTENCY_ERROR = "consistency_error"
 ALERT_M5_GAP = "m5_gap"
 ALERT_M5_DAY_INVALID = "m5_day_invalid"
+ALERT_SESSION_SNAPSHOT_MISSING = "session_snapshot_missing"
 
 # 告警标题标签（owner_conflict 等不应被笼统标成「数据源失败」）
 _KIND_LABELS = {
@@ -38,6 +39,7 @@ _KIND_LABELS = {
     ALERT_CONSISTENCY_ERROR: "一致性错误",
     ALERT_M5_GAP: "M5 缺口",
     ALERT_M5_DAY_INVALID: "M5 当日无效",
+    ALERT_SESSION_SNAPSHOT_MISSING: "时段快照缺失",
 }
 
 STATE_FILE = REPORT_DIR / "principal_capital_watchdog_state.json"
@@ -141,6 +143,27 @@ def _owner_conflict_active(owner_conflict: Optional[Dict[str, Any]], now: dateti
     return bool(oc_now and oc_now.date() == now.date())
 
 
+def _session_snapshot_alert(intraday_state: Optional[Dict[str, Any]], now: datetime) -> Optional[Dict[str, str]]:
+    """检测某时段该有快照却没有（如 AM 扫描未触发），单独报一条。"""
+    from backend.plugins.principal_capital.intraday_state import session_cutoff
+
+    snapshots = (intraday_state or {}).get("session_snapshots") or {}
+    for session, label in (("am", "AM 上午盘"), ("pm", "PM 下午盘")):
+        cutoff = session_cutoff(now.date().isoformat(), session)
+        if cutoff is None:
+            continue
+        # 收盘后 + 5 分钟宽限才检查，避免开盘前/刚收盘时误报
+        if now <= cutoff + timedelta(minutes=5):
+            continue
+        snap = snapshots.get(session)
+        if not isinstance(snap, dict) or snap.get("status") != "completed":
+            return {
+                "kind": ALERT_SESSION_SNAPSHOT_MISSING,
+                "message": f"当日 {label} 快照缺失，{session.upper()} 扫描可能未触发（session_snapshots 无有效 {session} 记录）。",
+            }
+    return None
+
+
 def evaluate_snapshot(
     snapshot: Optional[Dict[str, Any]],
     now: datetime,
@@ -190,6 +213,11 @@ def evaluate_snapshot(
     summary_alert = _summary_alert(intraday_state, now)
     if summary_alert is not None:
         return summary_alert
+
+    # 时段快照缺失检查（如 AM 扫描未触发）——根因告警，优先于「completed/skipped 不告警」
+    snapshot_alert = _session_snapshot_alert(intraday_state, now)
+    if snapshot_alert is not None:
+        return snapshot_alert
 
     if status in {"completed", "skipped"}:
         return None
