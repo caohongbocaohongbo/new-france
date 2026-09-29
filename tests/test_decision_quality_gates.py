@@ -486,7 +486,7 @@ def test_fallback_supplements_missing_codes_from_backup(monkeypatch):
             _quote_row("600001", 换手率=8.0),
             _quote_row("600002", 换手率=8.0),
         ])
-        df.attrs["coverage"] = {"source": "eastmoney_all_a", "universe_total": 100, "received": 2, "truncated": True}
+        df.attrs["coverage"] = {"source": "sina_all_a", "universe_total": 100, "received": 2, "truncated": True}
         return df
 
     def backup():
@@ -494,14 +494,14 @@ def test_fallback_supplements_missing_codes_from_backup(monkeypatch):
             _quote_row("600002", 换手率=9.0),
             _quote_row("600003", 换手率=7.0),
         ])
-        df.attrs["coverage"] = {"source": "sina_all_a", "universe_total": None, "received": 2, "truncated": False}
+        df.attrs["coverage"] = {"source": "eastmoney_all_a", "universe_total": None, "received": 2, "truncated": False}
         return df
 
-    monkeypatch.setattr(oa, "_sina_all_a_snapshot", backup)
+    monkeypatch.setattr(oa, "_eastmoney_all_a_snapshot", backup)
     quotes, statuses, errors = oa._fetch_quotes_with_fallbacks(primary, zt_pool=None)
     codes = set(quotes["代码"])
     assert codes == {"600001", "600002", "600003"}
-    assert any(s["source"] == "sina_all_a" for s in statuses)
+    assert any(s["source"] == "eastmoney_all_a" for s in statuses)
 
 
 def test_kline_adjustment_version_invalidation_on_change(monkeypatch):

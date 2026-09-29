@@ -228,13 +228,13 @@ class OvernightArbitragePipelineTest(unittest.TestCase):
 
         def _dns_failure_backup(*_args, **_kwargs):
             raise RuntimeError(
-                "HTTPSConnectionPool(host='vip.stock.finance.sina.com.cn', port=443): "
-                "Max retries exceeded (Caused by NameResolutionError(\"Failed to resolve 'vip.stock.finance.sina.com.cn' "
+                "HTTPSConnectionPool(host='push2.eastmoney.com', port=443): "
+                "Max retries exceeded (Caused by NameResolutionError(\"Failed to resolve 'push2.eastmoney.com' "
                 "([Errno 8] nodename nor servname provided, or not known)\"))"
             )
 
         with TemporaryDirectory() as tmp, \
-                patch("backend.plugins.overnight_arbitrage.service._sina_all_a_snapshot", side_effect=_dns_failure_backup), \
+                patch("backend.plugins.overnight_arbitrage.service._eastmoney_all_a_snapshot", side_effect=_dns_failure_backup), \
                 patch("backend.plugins.overnight_arbitrage.service.write_overnight_report"), \
                 patch("backend.plugins.overnight_arbitrage.service.notify_overnight_decision", return_value=False):
             result = asyncio.run(run_overnight_arbitrage(

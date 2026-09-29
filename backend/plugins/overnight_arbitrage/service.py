@@ -210,7 +210,7 @@ def _quote_quality_block(row: dict, now: Optional[datetime] = None) -> Optional[
     if row.get("degraded") is True or row.get("is_stale") is True:
         return "degraded_or_stale"
     source_time = row.get("source_time")
-    if source_time is None:
+    if source_time is None or (isinstance(source_time, float) and math.isnan(source_time)):
         if any(key in row for key in ("source", "数据源", "quote_source", "fetched_at")):
             return "source_time_unknown"
         return None
@@ -764,6 +764,7 @@ def _eastmoney_all_a_snapshot(max_pages: int = 40, budget_seconds: float = 60.0)
     import time as _time
     import requests
 
+    fetched_at = datetime.now(BEIJING_TZ)
     url = "https://push2.eastmoney.com/api/qt/clist/get"
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/center/gridlist.html"}
     fields = "f2,f3,f5,f6,f8,f9,f10,f12,f14,f15,f20,f21"
@@ -826,6 +827,8 @@ def _eastmoney_all_a_snapshot(max_pages: int = 40, budget_seconds: float = 60.0)
                     "量比": _float(item.get("f10")),
                     "总市值": _float(item.get("f20")),
                     "流通市值": _float(item.get("f21")),
+                    # 东财批量端点无逐票 source_time，以抓取时刻作为批次源时间
+                    "source_time": fetched_at.isoformat(),
                 })
             page += 1
         if page > max_pages and fs_total is not None and fs_received < fs_total:
@@ -853,6 +856,7 @@ def _sina_all_a_snapshot(max_pages: int = 80) -> pd.DataFrame:
     """新浪财经全A兜底源；过滤创业板，只保留沪深可交易A股字段（附覆盖元数据）。"""
     import requests
 
+    fetched_at = datetime.now(BEIJING_TZ)
     url = "https://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
     headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn/"}
     rows = []
@@ -896,6 +900,8 @@ def _sina_all_a_snapshot(max_pages: int = 80) -> pd.DataFrame:
                 "市盈率": _float(item.get("per")),
                 "总市值": (_float(item.get("mktcap")) or 0) * 10_000,
                 "流通市值": (_float(item.get("nmc")) or 0) * 10_000,
+                # 新浪批量端点无逐票 source_time，以抓取时刻作为批次源时间（去东财化补齐）
+                "source_time": fetched_at.isoformat(),
             })
             seen.add(code)
         if len(data) < 80:
@@ -1078,10 +1084,10 @@ def _fetch_quotes_with_fallbacks(
     primary_fetcher: Callable[[], pd.DataFrame],
     zt_pool: Optional[pd.DataFrame] = None,
 ) -> Tuple[pd.DataFrame, List[dict], List[str]]:
-    """按东方财富全市场 -> 新浪全A -> 涨停池窄范围的顺序取行情。"""
+    """按主源 -> 备源 -> 涨停池窄范围的顺序取行情（去东财化：主源默认新浪，东财补缺）。"""
     sources = [
-        ("eastmoney_all_a", primary_fetcher),
-        ("sina_all_a", _sina_all_a_snapshot),
+        ("sina_all_a", primary_fetcher),
+        ("eastmoney_all_a", _eastmoney_all_a_snapshot),
     ]
     statuses: List[dict] = []
     errors: List[str] = []
@@ -1254,7 +1260,7 @@ async def run_overnight_arbitrage(
     generated_at = current_time.strftime("%Y-%m-%d %H:%M:%S")
     wall_started = datetime.now(BEIJING_TZ).astimezone(BEIJING_TZ)
     notification_state_file = notification_state_file or NOTIFICATION_STATE_FILE
-    quote_fetcher = quote_fetcher or _eastmoney_all_a_snapshot
+    quote_fetcher = quote_fetcher or _sina_all_a_snapshot  # 去东财化：默认新浪全A主源
     if zt_fetcher is None:
         from .sources.zt_pool import fetch_zt_pool
         zt_fetcher = fetch_zt_pool
