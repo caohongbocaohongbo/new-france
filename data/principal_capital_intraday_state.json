@@ -8,7 +8,47 @@
   "auto_fallback": "strict_auto_fallback",
   "summary_state": {
     "am": {
-      "status": "not_attempted"
+      "status": "retry_wait",
+      "job_id": "1b36459602114aa9b6c3d0fbb14cf5f1",
+      "selected_snapshot_id": null,
+      "finalizer_due_at": "2026-09-29T11:35:00+08:00",
+      "queued_at": "2026-09-29T12:55:44.119756+08:00",
+      "trigger_source": "reconciler",
+      "started_at": "2026-09-29T12:55:44.119756+08:00",
+      "completed_at": null,
+      "next_retry_at": "2026-09-29T12:56:44.119756+08:00",
+      "run_id": "60118172be1141e6949d18fe359673ad",
+      "history": [
+        {
+          "from": "not_attempted",
+          "to": "queued",
+          "at": "2026-09-29T12:55:44.119756+08:00",
+          "reason": "reconciler",
+          "worker_id": null,
+          "error": null
+        },
+        {
+          "from": "queued",
+          "to": "running",
+          "at": "2026-09-29T12:55:44.119756+08:00",
+          "reason": null,
+          "worker_id": "36523760156:1:scan",
+          "error": null
+        },
+        {
+          "from": "running",
+          "to": "retry_wait",
+          "at": "2026-09-29T12:55:44.119756+08:00",
+          "reason": "NO_VALID_SNAPSHOT",
+          "worker_id": "36523760156:1:scan",
+          "error": "NO_VALID_SNAPSHOT"
+        }
+      ],
+      "worker_id": "36523760156:1:scan",
+      "dispatch_count": 1,
+      "last_error_code": "NO_VALID_SNAPSHOT",
+      "last_error_message": "NO_VALID_SNAPSHOT",
+      "last_error_at": "2026-09-29T12:55:44.119756+08:00"
     },
     "pm": {
       "status": "not_attempted"
@@ -16628,5 +16668,6 @@
       "warming": true,
       "warming_reason": "counter_reset"
     }
-  }
+  },
+  "session_snapshots": {}
 }
