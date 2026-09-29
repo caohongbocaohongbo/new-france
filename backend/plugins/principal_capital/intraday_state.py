@@ -226,11 +226,17 @@ def reset_state_for_trade_date(state: Optional[dict], trade_date: str) -> dict:
         )
     result = dict(state)
     result.setdefault("schema_version", SCHEMA_VERSION)
-    if not isinstance(result.get("summary_state"), dict) or set(result["summary_state"]) != {"am", "pm"}:
-        result["summary_state"] = {
-            TradingSession.AM.value: empty_summary_job(TradingSession.AM.value, trade_date),
-            TradingSession.PM.value: empty_summary_job(TradingSession.PM.value, trade_date),
-        }
+    # 迁移：无论旧 summary_state 是 minimal（{status}）还是完整 job，都补齐缺失字段，
+    # 避免旧状态文件被读取时 attempt_count/max_attempts/delivery/history 等字段为 None。
+    summary_state = result.get("summary_state")
+    migrated = {}
+    for session in (TradingSession.AM.value, TradingSession.PM.value):
+        old = (summary_state or {}).get(session) if isinstance(summary_state, dict) else None
+        full = empty_summary_job(session, trade_date)
+        if isinstance(old, dict):
+            full.update({k: v for k, v in old.items() if k in full})
+        migrated[session] = full
+    result["summary_state"] = migrated
     result.setdefault("summary_attempted_at", {})
     result.setdefault("summary_sent_at", {})
     result.setdefault("audit_cursor", 0)
@@ -637,29 +643,56 @@ def complete_summary_job(state: dict, session: str, now: datetime, run_id: Optio
 def fail_summary_job(state: dict, session: str, error_code: str, message: str,
                      now: datetime, next_retry_at: Optional[str] = None,
                      run_id: Optional[str] = None) -> dict:
-    """§15 失败处理：running → retry_wait / dead（按 attempt_count 与 max_attempts）。
+    """§15 失败处理：running → retry_wait / dead / skipped。
 
-    - attempt_count < max_attempts → RETRY_WAIT（等 next_retry_at 重试）。
-    - attempt_count >= max_attempts → DEAD（终态，需人工 repair）。
+    - 前置失败（NO_VALID_SNAPSHOT / SNAPSHOT_NOT_READY）不消耗 attempt_count，
+      但按 dispatch_count 上限重试；超过后终态 skipped（避免无限重试）。
+    - 实际发送失败（SEND_FAILED / WORKER_STALE 等）按 attempt_count 与 max_attempts：
+      attempt_count < max_attempts → RETRY_WAIT；>= → DEAD。
     """
     now = _ensure_aware(now)
     entry = dict(_summary_entry(state, session))
     if not _run_id_matches(entry, run_id):
         return state
     if not _transition_allowed(entry.get("status"), SummaryStatus.RETRY_WAIT) and \
-       not _transition_allowed(entry.get("status"), SummaryStatus.DEAD):
+       not _transition_allowed(entry.get("status"), SummaryStatus.DEAD) and \
+       not _transition_allowed(entry.get("status"), SummaryStatus.SKIPPED):
         return state
     from_status = entry.get("status")
-    attempts = int(entry.get("attempt_count", 0))
-    max_attempts = int(entry.get("max_attempts", 3))
-    dead = attempts >= max_attempts
-    target = SummaryStatus.DEAD if dead else SummaryStatus.RETRY_WAIT
+    attempts = int(entry.get("attempt_count", 0) or 0)
+    max_attempts = int(entry.get("max_attempts", 3) or 3)
+
+    is_prerequisite = error_code in (SummaryReason.NO_VALID_SNAPSHOT, SummaryReason.SNAPSHOT_NOT_READY)
+    if is_prerequisite:
+        dispatch_count = int(entry.get("dispatch_count", 0) or 0)
+        prereq_max = int(CONFIG.get("summary_prerequisite_max_retries", 6))
+        if dispatch_count >= prereq_max:
+            # 前置条件多次不满足（如该 session 当日确实未运行）→ 终态 skipped，不再无限重试
+            entry.update({
+                "status": SummaryStatus.SKIPPED,
+                "skip_reason": error_code,
+                "last_error_code": error_code,
+                "last_error_message": f"前置条件 {dispatch_count} 次未满足，放弃重试",
+                "last_error_at": now.isoformat(),
+                "next_retry_at": None,
+                "run_id": None,
+            })
+            _record_transition(entry, from_status, SummaryStatus.SKIPPED, now, reason=error_code,
+                               worker_id=entry.get("worker_id"), error=message)
+            return _set_summary_job(state, session, entry)
+        target = SummaryStatus.RETRY_WAIT
+        retry_at = next_retry_at or _next_retry_after(0, now)
+    else:
+        dead = attempts >= max_attempts
+        target = SummaryStatus.DEAD if dead else SummaryStatus.RETRY_WAIT
+        retry_at = None if dead else (next_retry_at or _next_retry_after(attempts, now))
+
     entry.update({
         "status": target,
         "last_error_code": error_code,
         "last_error_message": message[:500] if message else None,
         "last_error_at": now.isoformat(),
-        "next_retry_at": None if dead else (next_retry_at or _next_retry_after(attempts, now)),
+        "next_retry_at": retry_at,
     })
     _record_transition(entry, from_status, target, now, reason=error_code,
                        worker_id=entry.get("worker_id"), error=message)

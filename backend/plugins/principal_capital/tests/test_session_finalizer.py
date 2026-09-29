@@ -444,6 +444,17 @@ class SummaryStateMachineTest(unittest.TestCase):
             self.assertEqual(its.get_summary_job(state, "am")["attempt_count"], 0)
         self.assertNotEqual(its.get_summary_job(state, "am")["status"], "dead")
 
+    def test_prerequisite_retries_bounded(self):
+        # NO_VALID_SNAPSHOT 前置重试有上限（默认 6），超过后 skipped 终态，避免无限循环
+        state = its.empty_state("2026-09-15")
+        for _ in range(6):
+            ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler", force=True)
+            ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
+            run_id = its.get_summary_job(state, "am")["run_id"]
+            state = its.fail_summary_job(state, "am", its.SummaryReason.NO_VALID_SNAPSHOT, "no snapshot", NOW, run_id=run_id)
+        self.assertEqual(its.get_summary_job(state, "am")["status"], "skipped")
+        self.assertEqual(its.get_summary_job(state, "am")["skip_reason"], its.SummaryReason.NO_VALID_SNAPSHOT)
+
     def test_retryable_reason_goes_retry_wait_not_skipped(self):
         # P0：NO_VALID_SNAPSHOT / SNAPSHOT_NOT_READY 属于可恢复，不落 skipped 终态
         self.assertTrue(its.is_retryable(its.SummaryReason.NO_VALID_SNAPSHOT))
@@ -457,6 +468,18 @@ class SummaryStateMachineTest(unittest.TestCase):
     def test_idempotency_key(self):
         self.assertEqual(its.summary_job_idempotency_key("2026-09-28", "am"), "summary:2026-09-28:AM")
         self.assertEqual(its.summary_job_idempotency_key("2026-09-28", "pm"), "summary:2026-09-28:PM")
+
+    def test_old_minimal_summary_state_migrated(self):
+        # 旧状态文件的 minimal summary_state（仅 status）应被迁移补齐全部字段
+        state = its.empty_state("2026-09-15")
+        state["summary_state"] = {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}}
+        reset = its.reset_state_for_trade_date(state, "2026-09-15")
+        am = reset["summary_state"]["am"]
+        self.assertEqual(am["attempt_count"], 0)
+        self.assertEqual(am["dispatch_count"], 0)
+        self.assertIsInstance(am["history"], list)
+        self.assertIsInstance(am["delivery"], dict)
+        self.assertEqual(am["status"], "not_attempted")
 
     def test_timezone_independent(self):
         # §32：due/cutoff 固定北京时间，不受服务器本地时区影响

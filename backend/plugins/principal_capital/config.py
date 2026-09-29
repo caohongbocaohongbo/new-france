@@ -109,6 +109,8 @@ CONFIG = {
     # 失败重试上限与退避（秒）
     "summary_max_attempts": _env_int("PC_SUMMARY_MAX_ATTEMPTS", 3),
     "summary_retry_backoff_seconds": [60, 300, 900],
+    # 前置条件（无快照/快照未就绪）重试上限：超过后终态 skipped，避免无限重试
+    "summary_prerequisite_max_retries": _env_int("PC_SUMMARY_PREREQUISITE_MAX_RETRIES", 6),
 
     # 邮件 SMTP（与主项目共享相同环境变量名以复用 secrets）
     "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
