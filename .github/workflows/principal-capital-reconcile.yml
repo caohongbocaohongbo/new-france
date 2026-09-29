@@ -1,0 +1,63 @@
+name: Principal Capital Summary Reconcile
+
+# 25：摘要 finalizer 常驻兜底——不依赖单个扫描 job 的收盘补偿。
+# 每 10 分钟扫描 overdue 的 summary job 并补调度（幂等，多跑无副作用）。
+# 覆盖北京 09:00–15:59（UTC 01:00–07:59），含午间 11:30–13:00 空窗，
+# 解决「11:35 AM finalizer 异常 → 直到 15:00 才被 PM job 补跑」的问题。
+on:
+  schedule:
+    - cron: '*/10 1-7 * * 1-5'   # 北京 09:00/09:10/.../15:50，每 10 分钟
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # 与 principal-capital-scan 共用同一全局组，防止两个 runner 并发读写同一份状态
+  group: principal-capital-state-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+  DATA_BRANCH: data-snapshots
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore generated data snapshot
+        run: bash scripts/restore_screening_data.sh
+
+      - name: Reconcile overdue summary jobs
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+          PC_EXECUTION_MODE: official
+          PC_OFFICIAL_OWNER: "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
+          PC_ALLOW_PROVISIONAL_NOTIFY: "1"
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -m backend.main --reconcile-principal-capital-summary \
+            --execution-mode official \
+            --owner-id "${PC_OFFICIAL_OWNER}"
+
+      - name: Commit generated data snapshot
+        if: always()
+        # 关键：reconcile 可能变更 summary 状态，持久化失败致命退出（防重复邮件）
+        run: bash scripts/commit_screening_data.sh || { echo "摘要状态快照提交失败（致命）"; exit 1; }

@@ -57,10 +57,11 @@ class CandidateStateTest(unittest.TestCase):
     def test_cross_trade_date_resets(self):
         state = its.empty_state("2026-09-15")
         state["candidates"] = {"buy:600001": {"is_current": True}}
-        state["summary_state"] = {"am": {"status": "sent"}, "pm": {"status": "pending"}}
+        state["summary_state"]["am"]["status"] = "sent"
         reset = its.reset_state_for_trade_date(state, "2026-09-16")
         self.assertEqual(reset["candidates"], {})
-        self.assertEqual(reset["summary_state"], {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}})
+        self.assertEqual(reset["summary_state"]["am"]["status"], "not_attempted")
+        self.assertEqual(reset["summary_state"]["pm"]["status"], "not_attempted")
         self.assertEqual(reset["audit_cursor"], 0)
 
 

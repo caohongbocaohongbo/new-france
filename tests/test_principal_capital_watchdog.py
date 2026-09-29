@@ -97,3 +97,17 @@ class PrincipalCapitalWatchdogTest(unittest.TestCase):
         self.assertEqual(first["status"], "alert_sent")
         self.assertEqual(second["status"], "deduplicated")
         self.assertEqual(sender.call_count, 1)
+
+    def test_summary_alert_grace_period_no_premature_alert(self):
+        # 评审 #8：finalizer_due(11:35)+5min 宽限前，not_attempted 不应告警
+        now = datetime(2026, 9, 15, 11, 31, tzinfo=BEIJING_TZ)
+        state = {"summary_state": {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}}}
+        self.assertIsNone(watchdog._summary_alert(state, now))
+
+    def test_summary_alert_after_grace(self):
+        # 超过 11:40 宽限后，not_attempted 应告警 missing
+        now = datetime(2026, 9, 15, 11, 41, tzinfo=BEIJING_TZ)
+        state = {"summary_state": {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}}}
+        alert = watchdog._summary_alert(state, now)
+        self.assertIsNotNone(alert)
+        self.assertEqual(alert["kind"], watchdog.ALERT_FINALIZER_MISSING)

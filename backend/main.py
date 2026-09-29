@@ -271,6 +271,16 @@ def main():
                         help="[插件23v2] 执行午间/收盘日内汇总 finalizer")
     parser.add_argument("--session", choices=["am", "pm"], default="am",
                         help="[插件23v2] finalizer 会话（am=午间，pm=收盘）")
+    parser.add_argument("--reconcile-principal-capital-summary", action="store_true",
+                        help="[插件25] 主力资金摘要 Reconciler 自愈补调度")
+    parser.add_argument("--principal-capital-summary-doctor", action="store_true",
+                        help="[插件25] 主力资金摘要诊断（doctor）")
+    parser.add_argument("--principal-capital-summary-repair", action="store_true",
+                        help="[插件25] 主力资金摘要安全补跑（repair）")
+    parser.add_argument("--summary-trade-date", default=None,
+                        help="[插件25] doctor/repair 目标交易日 YYYY-MM-DD（默认今天）")
+    parser.add_argument("--summary-repair-execute", action="store_true",
+                        help="[插件25] repair 执行（不带此参数仅 dry-run）")
     parser.add_argument("--run-radar-once", action="store_true",
                         help="[插件] 执行 smart_money_radar 盘中雷达单轮扫描")
     parser.add_argument("--run-radar-daemon", action="store_true",
@@ -370,6 +380,18 @@ def main():
 
     if args.finalize_principal_capital_session:
         _run_principal_capital_finalize_cli(args, logger)
+        return
+
+    if args.reconcile_principal_capital_summary:
+        _run_principal_capital_reconcile_cli(args, logger)
+        return
+
+    if args.principal_capital_summary_doctor:
+        _run_principal_capital_summary_doctor_cli(args, logger)
+        return
+
+    if args.principal_capital_summary_repair:
+        _run_principal_capital_summary_repair_cli(args, logger)
         return
 
     if args.run_radar_once:
@@ -489,6 +511,48 @@ def _run_principal_capital_finalize_cli(args, logger):
     # P1-8：finalizer 关键失败（owner 冲突 / 发送失败 / 投递结果不明）非零退出
     if result.get("status") in {"owner_conflict", "send_failed", "delivery_unknown"}:
         raise SystemExit(2)
+
+
+def _run_principal_capital_reconcile_cli(args, logger):
+    """[插件25] 主力资金摘要 Reconciler CLI 入口。"""
+    import json as _json
+    try:
+        from .plugins.principal_capital import run_reconcile_cli
+    except ImportError as exc:
+        logger.error("主力资金插件未安装: %s", exc)
+        return
+    result = run_reconcile_cli(args)
+    logger.info("主力资金摘要 reconciler: %s", _json.dumps(result, ensure_ascii=False))
+
+
+def _run_principal_capital_summary_doctor_cli(args, logger):
+    """[插件25] 主力资金摘要诊断（doctor）CLI 入口。"""
+    import json as _json
+    from datetime import datetime, timezone, timedelta as _td
+    try:
+        from .plugins.principal_capital import run_summary_doctor_cli
+    except ImportError as exc:
+        logger.error("主力资金插件未安装: %s", exc)
+        return
+    args.summary_trade_date = args.summary_trade_date or datetime.now(
+        timezone(_td(hours=8))).date().isoformat()
+    result = run_summary_doctor_cli(args)
+    print(_json.dumps(result, ensure_ascii=False, indent=2))
+
+
+def _run_principal_capital_summary_repair_cli(args, logger):
+    """[插件25] 主力资金摘要安全补跑（repair）CLI 入口。"""
+    import json as _json
+    from datetime import datetime, timezone, timedelta as _td
+    try:
+        from .plugins.principal_capital import run_summary_repair_cli
+    except ImportError as exc:
+        logger.error("主力资金插件未安装: %s", exc)
+        return
+    args.summary_trade_date = args.summary_trade_date or datetime.now(
+        timezone(_td(hours=8))).date().isoformat()
+    result = run_summary_repair_cli(args)
+    print(_json.dumps(result, ensure_ascii=False, indent=2))
 
 
 def _run_smart_money_radar_once_cli(args, logger):

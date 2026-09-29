@@ -1,0 +1,2263 @@
+# 主力资金 Summary Finalizer 可靠性改造 — 全量 diff（最终版）
+# 生成时间: 2026-09-29 11:58:49
+
+diff --git a/.github/workflows/principal-capital-scan.yml b/.github/workflows/principal-capital-scan.yml
+index d36b9e6..c513ae1 100644
+--- a/.github/workflows/principal-capital-scan.yml
++++ b/.github/workflows/principal-capital-scan.yml
+@@ -33,7 +33,9 @@ permissions:
+   contents: write
+ 
+ concurrency:
+-  group: principal-capital-${{ github.ref }}
++  # 与 principal-capital-reconcile 共用同一全局组，防止两个 runner 并发读写同一份
++  # data-snapshots 状态（跨 runner 无文件锁，靠 concurrency 串行化兜底）
++  group: principal-capital-state-${{ github.ref }}
+   cancel-in-progress: false
+ 
+ env:
+@@ -94,6 +96,8 @@ jobs:
+           FORCE_FLAG: ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+           PC_EXECUTION_MODE: official
+           PC_OFFICIAL_OWNER: "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
++          # 25：允许 provisional（新浪无 source_time）数据发送午间/收盘摘要邮件
++          PC_ALLOW_PROVISIONAL_NOTIFY: "1"
+         run: |
+           # ── 自循环：每 5 分钟扫描一次，直至本时段收盘 ──
+           # 触发点无论早晚，只要落在交易日内进入循环即可覆盖整段。
+@@ -152,6 +156,8 @@ jobs:
+             fi
+             echo "===== 北京 ${bj_hm} 开始一轮扫描 ====="
+             scan_once
++            # 25：每轮顺带 reconcile（补漏本 session 或上一 session 的 overdue finalizer，幂等）
++            python -m backend.main --reconcile-principal-capital-summary --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || echo "reconcile 失败（忽略，下一轮再试）"
+             bash scripts/commit_screening_data.sh || echo "快照提交失败（忽略，继续下一轮）"
+ 
+             bj_hm="$(TZ=Asia/Shanghai date +%H%M)"
+@@ -165,4 +171,11 @@ jobs:
+ 
+           # 23 v2：session 边界额外调用一次 finalizer（午间/收盘日内汇总，恰好一次）
+           python -m backend.main --finalize-principal-capital-session --session "${SESSION}" --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || exit 2
+-          bash scripts/commit_screening_data.sh || echo "快照提交失败（忽略）"
++
++          # 25：reconcile 自愈补调度——若上午 session 的 finalizer 因调度缺失/崩溃未执行，
++          # 本步骤在收盘后扫描 overdue job 并补跑（幂等，不重复发送）。
++          python -m backend.main --reconcile-principal-capital-summary --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || echo "reconcile 失败（忽略，watchdog 会告警）"
++
++          # 关键：finalizer/reconcile 变更了 summary 状态（sending/accepted/completed 等），
++          # 持久化失败必须致命退出，否则下一 runner 恢复旧状态会重复发邮件。
++          bash scripts/commit_screening_data.sh || { echo "摘要状态快照提交失败（致命）"; exit 1; }
+diff --git a/backend/main.py b/backend/main.py
+index 30d1d98..e0373c8 100644
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -271,6 +271,16 @@ def main():
+                         help="[插件23v2] 执行午间/收盘日内汇总 finalizer")
+     parser.add_argument("--session", choices=["am", "pm"], default="am",
+                         help="[插件23v2] finalizer 会话（am=午间，pm=收盘）")
++    parser.add_argument("--reconcile-principal-capital-summary", action="store_true",
++                        help="[插件25] 主力资金摘要 Reconciler 自愈补调度")
++    parser.add_argument("--principal-capital-summary-doctor", action="store_true",
++                        help="[插件25] 主力资金摘要诊断（doctor）")
++    parser.add_argument("--principal-capital-summary-repair", action="store_true",
++                        help="[插件25] 主力资金摘要安全补跑（repair）")
++    parser.add_argument("--summary-trade-date", default=None,
++                        help="[插件25] doctor/repair 目标交易日 YYYY-MM-DD（默认今天）")
++    parser.add_argument("--summary-repair-execute", action="store_true",
++                        help="[插件25] repair 执行（不带此参数仅 dry-run）")
+     parser.add_argument("--run-radar-once", action="store_true",
+                         help="[插件] 执行 smart_money_radar 盘中雷达单轮扫描")
+     parser.add_argument("--run-radar-daemon", action="store_true",
+@@ -372,6 +382,18 @@ def main():
+         _run_principal_capital_finalize_cli(args, logger)
+         return
+ 
++    if args.reconcile_principal_capital_summary:
++        _run_principal_capital_reconcile_cli(args, logger)
++        return
++
++    if args.principal_capital_summary_doctor:
++        _run_principal_capital_summary_doctor_cli(args, logger)
++        return
++
++    if args.principal_capital_summary_repair:
++        _run_principal_capital_summary_repair_cli(args, logger)
++        return
++
+     if args.run_radar_once:
+         _run_smart_money_radar_once_cli(args, logger)
+         return
+@@ -491,6 +513,48 @@ def _run_principal_capital_finalize_cli(args, logger):
+         raise SystemExit(2)
+ 
+ 
++def _run_principal_capital_reconcile_cli(args, logger):
++    """[插件25] 主力资金摘要 Reconciler CLI 入口。"""
++    import json as _json
++    try:
++        from .plugins.principal_capital import run_reconcile_cli
++    except ImportError as exc:
++        logger.error("主力资金插件未安装: %s", exc)
++        return
++    result = run_reconcile_cli(args)
++    logger.info("主力资金摘要 reconciler: %s", _json.dumps(result, ensure_ascii=False))
++
++
++def _run_principal_capital_summary_doctor_cli(args, logger):
++    """[插件25] 主力资金摘要诊断（doctor）CLI 入口。"""
++    import json as _json
++    from datetime import datetime, timezone, timedelta as _td
++    try:
++        from .plugins.principal_capital import run_summary_doctor_cli
++    except ImportError as exc:
++        logger.error("主力资金插件未安装: %s", exc)
++        return
++    args.summary_trade_date = args.summary_trade_date or datetime.now(
++        timezone(_td(hours=8))).date().isoformat()
++    result = run_summary_doctor_cli(args)
++    print(_json.dumps(result, ensure_ascii=False, indent=2))
++
++
++def _run_principal_capital_summary_repair_cli(args, logger):
++    """[插件25] 主力资金摘要安全补跑（repair）CLI 入口。"""
++    import json as _json
++    from datetime import datetime, timezone, timedelta as _td
++    try:
++        from .plugins.principal_capital import run_summary_repair_cli
++    except ImportError as exc:
++        logger.error("主力资金插件未安装: %s", exc)
++        return
++    args.summary_trade_date = args.summary_trade_date or datetime.now(
++        timezone(_td(hours=8))).date().isoformat()
++    result = run_summary_repair_cli(args)
++    print(_json.dumps(result, ensure_ascii=False, indent=2))
++
++
+ def _run_smart_money_radar_once_cli(args, logger):
+     """[插件] 盘中雷达单轮扫描 CLI 入口。"""
+     try:
+diff --git a/backend/plugins/principal_capital/__init__.py b/backend/plugins/principal_capital/__init__.py
+index 0da9d11..a1a6600 100644
+--- a/backend/plugins/principal_capital/__init__.py
++++ b/backend/plugins/principal_capital/__init__.py
+@@ -42,3 +42,35 @@ def run_finalize_cli(args):
+         execution_mode=getattr(args, "execution_mode", None),
+         owner_id=getattr(args, "owner_id", None),
+     )
++
++
++def run_reconcile_cli(args):
++    """摘要 Reconciler CLI 入口（自愈补调度）。"""
++    from .service import reconcile_summary_jobs
++    return reconcile_summary_jobs(
++        execution_mode=getattr(args, "execution_mode", None),
++        owner_id=getattr(args, "owner_id", None),
++        dry_run=getattr(args, "dry_run", False),
++    )
++
++
++def run_summary_doctor_cli(args):
++    """摘要诊断 CLI 入口。"""
++    from .service import summary_doctor
++    return summary_doctor(
++        trade_date=getattr(args, "summary_trade_date", None) or getattr(args, "trade_date", None),
++        session=getattr(args, "session", "am"),
++    )
++
++
++def run_summary_repair_cli(args):
++    """摘要安全补跑 CLI 入口。"""
++    from .service import summary_repair
++    return summary_repair(
++        trade_date=getattr(args, "summary_trade_date", None) or getattr(args, "trade_date", None),
++        session=getattr(args, "session", "am"),
++        dry_run=getattr(args, "dry_run", True),
++        execute=getattr(args, "summary_repair_execute", False),
++        execution_mode=getattr(args, "execution_mode", None),
++        owner_id=getattr(args, "owner_id", None),
++    )
+diff --git a/backend/plugins/principal_capital/config.py b/backend/plugins/principal_capital/config.py
+index ef59def..0fc59a0 100644
+--- a/backend/plugins/principal_capital/config.py
++++ b/backend/plugins/principal_capital/config.py
+@@ -98,6 +98,18 @@ CONFIG = {
+     # 摘要 finalizer
+     "summary_max_age_min": _env_int("PC_SUMMARY_MAX_AGE_MIN", 15),
+ 
++    # ---- 25 摘要 Finalizer 可靠性：状态机 / 调度 / 重试 / 自愈 ----
++    # AM/PM cutoff 与 finalizer_due（沿用 A 股真实交易时段：午 11:30 收、13:00 开、15:00 收）
++    "summary_schedule": {
++        "am": {"cutoff": "11:30", "finalizer_due": "11:35"},
++        "pm": {"cutoff": "15:00", "finalizer_due": "15:05"},
++    },
++    # running 超过该时长未完成 → reconciler 判定 worker 卡死（WORKER_STALE）
++    "summary_running_timeout_seconds": _env_int("PC_SUMMARY_RUNNING_TIMEOUT_SECONDS", 600),
++    # 失败重试上限与退避（秒）
++    "summary_max_attempts": _env_int("PC_SUMMARY_MAX_ATTEMPTS", 3),
++    "summary_retry_backoff_seconds": [60, 300, 900],
++
+     # 邮件 SMTP（与主项目共享相同环境变量名以复用 secrets）
+     "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
+     "smtp_port": int(os.environ.get("SMTP_PORT", "587")),
+diff --git a/backend/plugins/principal_capital/intraday_state.py b/backend/plugins/principal_capital/intraday_state.py
+index adc9c04..ed6e91b 100644
+--- a/backend/plugins/principal_capital/intraday_state.py
++++ b/backend/plugins/principal_capital/intraday_state.py
+@@ -14,9 +14,11 @@ import json
+ import math
+ import os
+ import uuid
++from abc import ABC, abstractmethod
+ from datetime import datetime, timedelta, timezone
++from enum import Enum
+ from pathlib import Path
+-from typing import Optional
++from typing import List, Optional, Tuple
+ 
+ from .config import CONFIG, INTRADAY_STATE_FILE
+ 
+@@ -26,6 +28,72 @@ SCHEMA_VERSION = 2
+ _DIRECTION_BUY = "buy"
+ _DIRECTION_SELL = "sell"
+ 
++
++class TradingSession(str, Enum):
++    """A 股交易时段枚举（值保留小写 am/pm，与既有 JSON/前端/CLI 兼容）。"""
++
++    AM = "am"
++    PM = "pm"
++
++
++class SummaryStatus:
++    """Summary Job 状态机（§8）。
++
++    终态：COMPLETED（成功）/ SKIPPED（合法跳过）/ DEAD（重试耗尽，需人工）。
++    非终态：NOT_ATTEMPTED / QUEUED / RUNNING / RETRY_WAIT（失败待重试）。
++    """
++
++    NOT_ATTEMPTED = "not_attempted"
++    QUEUED = "queued"
++    RUNNING = "running"
++    RETRY_WAIT = "retry_wait"   # 失败，但 attempt_count < max_attempts，等 next_retry_at 后重试
++    COMPLETED = "completed"
++    SKIPPED = "skipped"         # 合法跳过（终态）：非交易日 / session 不匹配 / 不满足通知门禁
++    DEAD = "dead"               # 重试耗尽（终态），需人工 repair
++    DELIVERY_UNKNOWN = "delivery_unknown"  # 投递结果不明（终态，禁止自动重发），需人工确认
++
++    # 兼容旧字段名（已用 RETRY_WAIT 取代；保留避免历史状态文件被判非法）
++    FAILED = RETRY_WAIT
++
++
++class SummaryReason:
++    """Eligibility / skip / error reason code（§23 / 结构化日志）。"""
++
++    READY = "READY"
++    READY_PROVISIONAL = "READY_PROVISIONAL"
++    SNAPSHOT_NOT_READY = "SNAPSHOT_NOT_READY"
++    SESSION_MISMATCH = "SESSION_MISMATCH"
++    NOT_DUE = "NOT_DUE"
++    NON_TRADING_DAY = "NON_TRADING_DAY"
++    ALREADY_COMPLETED = "ALREADY_COMPLETED"
++    ALREADY_RUNNING = "ALREADY_RUNNING"
++    NO_VALID_SNAPSHOT = "NO_VALID_SNAPSHOT"
++    MAX_RETRIES_EXCEEDED = "MAX_RETRIES_EXCEEDED"
++    NOTIFY_NOT_ELIGIBLE = "NOTIFY_NOT_ELIGIBLE"
++    WORKER_STALE = "WORKER_STALE"
++    SEND_FAILED = "SEND_FAILED"
++    DELIVERY_UNKNOWN = "DELIVERY_UNKNOWN"
++
++    # 终态 skip 原因：一旦落到 skipped 就不再重试（产品/语义上不可逆）
++    TERMINAL_SKIP_REASONS = frozenset({
++        NON_TRADING_DAY, SESSION_MISMATCH, NOTIFY_NOT_ELIGIBLE, ALREADY_COMPLETED,
++    })
++    # 可恢复原因：落到 RETRY_WAIT，等 next_retry_at 后由 reconciler 重试
++    # 注意：DELIVERY_UNKNOWN 不在此列——投递结果不明时禁止自动重发（防重复邮件）。
++    RETRYABLE_REASONS = frozenset({
++        SNAPSHOT_NOT_READY, NO_VALID_SNAPSHOT, WORKER_STALE, SEND_FAILED,
++    })
++
++
++def is_terminal_skip(reason: Optional[str]) -> bool:
++    """该 reason 是否应作为终态 skipped（不可重试）。"""
++    return reason in SummaryReason.TERMINAL_SKIP_REASONS
++
++
++def is_retryable(reason: Optional[str]) -> bool:
++    """该 reason 是否应进入 RETRY_WAIT（可被 reconciler 重试）。"""
++    return reason in SummaryReason.RETRYABLE_REASONS
++
+ # 候选最新指标中保留的字段（稳定、可 JSON 序列化）。
+ _METRIC_KEYS = (
+     "name", "price", "change_pct", "total_amount", "main_net_inflow",
+@@ -83,6 +151,42 @@ def normalize_code(value) -> str:
+     return code if code.isdigit() and len(code) == 6 else ""
+ 
+ 
++def empty_summary_job(session: str, trade_date: str, max_attempts: Optional[int] = None) -> dict:
++    """返回一个完整 Summary Job 状态骨架（§8，UNIQUE(trade_date, session) 的 session 维度）。"""
++    return {
++        "status": SummaryStatus.NOT_ATTEMPTED,
++        "job_id": None,
++        "trade_date": trade_date,
++        "session": session,
++        "selected_snapshot_id": None,
++        "finalizer_due_at": None,
++        "queued_at": None,
++        "started_at": None,
++        "completed_at": None,
++        "attempt_count": 0,        # 实际发送尝试次数（P1：NO_VALID_SNAPSHOT 等前置失败不消耗）
++        "dispatch_count": 0,       # 总 dispatch 次数（诊断用，含前置重试）
++        "max_attempts": int(max_attempts) if max_attempts is not None else int(CONFIG.get("summary_max_attempts", 3)),
++        "next_retry_at": None,
++        "last_error_code": None,
++        "last_error_message": None,
++        "last_error_at": None,
++        "skip_reason": None,
++        "trigger_source": None,
++        "worker_id": None,
++        "run_id": None,          # lease token：防止 stale worker 回魂写状态（P0）
++        "history": [],           # 状态迁移历史（最近 N 条）
++        "delivery": {            # 邮件投递状态（send 前后持久化，防重复邮件）
++            "status": "not_started",  # not_started | sending | accepted | failed | unknown
++            "idempotency_key": None,
++            "attempt_id": None,
++            "sent_at": None,
++            "provider": "smtp",
++            "message_id": None,
++            "last_error": None,
++        },
++    }
++
++
+ def empty_state(
+     trade_date: str,
+     owner_id: Optional[str] = None,
+@@ -98,7 +202,10 @@ def empty_state(
+         "last_batch_id": None,
+         "pipeline_mode": pipeline_mode,
+         "auto_fallback": None,
+-        "summary_state": {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}},
++        "summary_state": {
++            TradingSession.AM.value: empty_summary_job(TradingSession.AM.value, trade_date),
++            TradingSession.PM.value: empty_summary_job(TradingSession.PM.value, trade_date),
++        },
+         "summary_attempted_at": {},
+         "summary_sent_at": {},
+         "audit_cursor": 0,
+@@ -106,6 +213,7 @@ def empty_state(
+         "candidates": {},
+         "pool_entries": {},
+         "fund_series": {},
++        "session_snapshots": {},
+     }
+ 
+ 
+@@ -118,7 +226,11 @@ def reset_state_for_trade_date(state: Optional[dict], trade_date: str) -> dict:
+         )
+     result = dict(state)
+     result.setdefault("schema_version", SCHEMA_VERSION)
+-    result.setdefault("summary_state", {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}})
++    if not isinstance(result.get("summary_state"), dict) or set(result["summary_state"]) != {"am", "pm"}:
++        result["summary_state"] = {
++            TradingSession.AM.value: empty_summary_job(TradingSession.AM.value, trade_date),
++            TradingSession.PM.value: empty_summary_job(TradingSession.PM.value, trade_date),
++        }
+     result.setdefault("summary_attempted_at", {})
+     result.setdefault("summary_sent_at", {})
+     result.setdefault("audit_cursor", 0)
+@@ -126,6 +238,7 @@ def reset_state_for_trade_date(state: Optional[dict], trade_date: str) -> dict:
+     result.setdefault("candidates", {})
+     result.setdefault("pool_entries", {})
+     result.setdefault("fund_series", {})
++    result.setdefault("session_snapshots", {})
+     result.setdefault("pipeline_mode", state.get("pipeline_mode", "strict"))
+     result.setdefault("auto_fallback", None)
+     return result
+@@ -181,6 +294,94 @@ def acquire_owner_atomic(path, owner_id: str, lease_seconds: int, now: datetime)
+             fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+ 
+ 
++def atomic_dispatch_summary_job(path, session: str, snapshot_id, now: datetime, trigger_source: str,
++                                job_id: Optional[str] = None, due_at: Optional[str] = None,
++                                force: bool = False) -> Tuple[bool, dict, Optional[str]]:
++    """§12 原子抢占：文件锁临界区内 CAS dispatch（not_attempted/retry_wait/dead → queued）。
++
++    返回 (ok, state, reason)。ok=False 表示已被其它 worker 抢占（rowcount==0 语义）。
++    """
++    now = _ensure_aware(now)
++    file_path = _state_path(path)
++    file_path.parent.mkdir(parents=True, exist_ok=True)
++    lock_path = file_path.with_suffix(file_path.suffix + ".lock")
++    with open(lock_path, "a+") as lock_file:
++        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
++        try:
++            state = load_state(path=file_path, trade_date=now.date().isoformat(), now=now)
++            ok, state, reason = dispatch_summary_job(
++                state, session, snapshot_id, now, trigger_source,
++                job_id=job_id, due_at=due_at, force=force,
++            )
++            if ok:
++                save_state(state, path=file_path)
++            return ok, state, reason
++        finally:
++            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
++
++
++def atomic_start_summary_job(path, session: str, worker_id: str, now: datetime,
++                             run_id: Optional[str] = None) -> Tuple[bool, dict, Optional[str]]:
++    """§13 Worker 原子启动：文件锁临界区内 CAS start（queued → running）。"""
++    now = _ensure_aware(now)
++    file_path = _state_path(path)
++    file_path.parent.mkdir(parents=True, exist_ok=True)
++    lock_path = file_path.with_suffix(file_path.suffix + ".lock")
++    with open(lock_path, "a+") as lock_file:
++        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
++        try:
++            state = load_state(path=file_path, trade_date=now.date().isoformat(), now=now)
++            ok, state, reason = start_summary_job(state, session, worker_id, now, run_id=run_id)
++            if ok:
++                save_state(state, path=file_path)
++            return ok, state, reason
++        finally:
++            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
++
++
++def atomic_recover_stale_running(path, now: datetime,
++                                 timeout_seconds: Optional[int] = None) -> Tuple[dict, List[str]]:
++    """§18 原子化 stale recovery：在文件锁临界区内 load → recover → save。
++
++    修复「read → modify → write 无锁」导致 completed 被旧 state 覆盖成 retry_wait 的竞态。
++    返回 (new_state, recovered_sessions)。
++    """
++    now = _ensure_aware(now)
++    file_path = _state_path(path)
++    file_path.parent.mkdir(parents=True, exist_ok=True)
++    lock_path = file_path.with_suffix(file_path.suffix + ".lock")
++    with open(lock_path, "a+") as lock_file:
++        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
++        try:
++            state = load_state(path=file_path, trade_date=now.date().isoformat(), now=now)
++            new_state, recovered = recover_stale_running(state, now, timeout_seconds)
++            if recovered:
++                save_state(new_state, path=file_path)
++            return new_state, recovered
++        finally:
++            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
++
++
++def atomic_summary_mutate(path, now: datetime, mutate_fn) -> dict:
++    """文件锁临界区内 load → mutate_fn(state) → save。
++    mutate_fn(state) 返回 new_state(dict) 或 (new_state, extra) 元组；本函数返回 new_state。
++    """
++    now = _ensure_aware(now)
++    file_path = _state_path(path)
++    file_path.parent.mkdir(parents=True, exist_ok=True)
++    lock_path = file_path.with_suffix(file_path.suffix + ".lock")
++    with open(lock_path, "a+") as lock_file:
++        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
++        try:
++            state = load_state(path=file_path, trade_date=now.date().isoformat(), now=now)
++            result = mutate_fn(state)
++            new_state = result[0] if (isinstance(result, tuple) and result) else result
++            save_state(new_state, path=file_path)
++            return new_state
++        finally:
++            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
++
++
+ def mark_sentinel_done(state: dict, label: str) -> dict:
+     result = dict(state)
+     done = list(result.get("sentinel_done") or [])
+@@ -229,6 +430,508 @@ def mark_summary_delivery_unknown(state: dict, session: str, at_iso: str) -> dic
+     return _set_summary_state(state, session, "delivery_unknown", at_iso)
+ 
+ 
++# --------------------------------------------------------------------------- #
++# Summary Job 状态机（§8/§11/§12/§13/§14/§15/§18）：纯函数 + 原子抢占
++# --------------------------------------------------------------------------- #
++
++def _summary_entry(state: dict, session: str) -> dict:
++    entry = ((state or {}).get("summary_state") or {}).get(session)
++    if not isinstance(entry, dict):
++        return empty_summary_job(session, (state or {}).get("trade_date", ""))
++    return entry
++
++
++def _set_summary_job(state: dict, session: str, entry: dict) -> dict:
++    result = dict(state)
++    summary_state = {s: dict(v) for s, v in (result.get("summary_state") or {}).items()}
++    summary_state[session] = entry
++    result["summary_state"] = summary_state
++    return result
++
++
++def get_summary_job(state: dict, session: str) -> dict:
++    """读取某 session 的 Summary Job（缺失时返回空骨架）。"""
++    return _summary_entry(state, session)
++
++
++def summary_job_idempotency_key(trade_date: str, session: str) -> str:
++    """摘要输出幂等键（§9）：summary:YYYY-MM-DD:AM/PM。"""
++    return f"summary:{trade_date}:{session.upper()}"
++
++
++def finalizer_due_at(trade_date: str, session: str, schedule: Optional[dict] = None) -> Optional[datetime]:
++    """按 SUMMARY_SCHEDULE 计算 finalizer_due_at（北京时间）。无效时返回 None。"""
++    schedule = schedule or CONFIG.get("summary_schedule") or {}
++    entry = (schedule or {}).get(session) or {}
++    due = entry.get("finalizer_due")
++    if not due:
++        return None
++    try:
++        hh, mm = str(due).split(":")
++        return datetime(int(trade_date[:4]), int(trade_date[5:7]), int(trade_date[8:10]),
++                        int(hh), int(mm), tzinfo=BEIJING_TZ)
++    except (TypeError, ValueError, IndexError):
++        return None
++
++
++def _parse_retry_backoff(cfg: Optional[dict] = None) -> List[int]:
++    cfg = cfg or {}
++    backoff = cfg.get("summary_retry_backoff_seconds") or CONFIG.get("summary_retry_backoff_seconds") or [60, 300, 900]
++    return [int(x) for x in backoff]
++
++
++_HISTORY_MAX = 20
++
++
++# 状态迁移白名单（P0：终态不可回退；所有迁移必须命中，否则拒绝）
++ALLOWED_TRANSITIONS = {
++    SummaryStatus.NOT_ATTEMPTED: {SummaryStatus.QUEUED, SummaryStatus.SKIPPED},
++    SummaryStatus.QUEUED: {SummaryStatus.RUNNING},
++    SummaryStatus.RUNNING: {
++        SummaryStatus.COMPLETED, SummaryStatus.RETRY_WAIT, SummaryStatus.DEAD,
++        SummaryStatus.SKIPPED, SummaryStatus.DELIVERY_UNKNOWN,
++    },
++    SummaryStatus.RETRY_WAIT: {SummaryStatus.QUEUED},
++    SummaryStatus.DEAD: {SummaryStatus.QUEUED},              # force only（manual repair）
++    SummaryStatus.DELIVERY_UNKNOWN: {SummaryStatus.QUEUED},  # force only（manual repair）
++    SummaryStatus.COMPLETED: set(),                          # 终态，不可回退
++    SummaryStatus.SKIPPED: set(),                            # 终态，不可回退
++}
++
++
++def _record_transition(entry: dict, from_status: Optional[str], to_status: str, now: datetime,
++                       reason: Optional[str] = None, worker_id: Optional[str] = None,
++                       error: Optional[str] = None) -> dict:
++    """在 entry 内追加一条状态迁移历史（保留最近 _HISTORY_MAX 条），返回修改后的 entry。"""
++    history = list(entry.get("history") or [])[-(_HISTORY_MAX - 1):]
++    history.append({
++        "from": from_status,
++        "to": to_status,
++        "at": now.isoformat(),
++        "reason": reason,
++        "worker_id": worker_id,
++        "error": (str(error)[:200] if error else None),
++    })
++    entry["history"] = history
++    return entry
++
++
++def _transition_allowed(from_status: Optional[str], to_status: str) -> bool:
++    """校验 from → to 是否在白名单内。"""
++    return to_status in ALLOWED_TRANSITIONS.get(from_status, set())
++
++
++def _next_retry_after(attempt_count: int, now: datetime, cfg: Optional[dict] = None) -> str:
++    """按 attempt_count 计算下次重试时间（backoff[attempt-1]，越界取末位）。"""
++    backoff = _parse_retry_backoff(cfg)
++    idx = max(0, min(int(attempt_count) - 1, len(backoff) - 1))
++    return (now + timedelta(seconds=backoff[idx])).isoformat()
++
++
++def dispatch_summary_job(
++    state: dict,
++    session: str,
++    snapshot_id: Optional[str],
++    now: datetime,
++    trigger_source: str,
++    job_id: Optional[str] = None,
++    due_at: Optional[str] = None,
++    force: bool = False,
++) -> Tuple[bool, dict, Optional[str]]:
++    """§12 原子抢占的纯函数部分：not_attempted/retry_wait → queued。
++
++    返回 (ok, new_state, reason)。重复 dispatch 时 ok=False（调用方据 rowcount==0 跳过）。
++    """
++    now = _ensure_aware(now)
++    entry = dict(_summary_entry(state, session))
++    status = entry.get("status", SummaryStatus.NOT_ATTEMPTED)
++
++    if status in (SummaryStatus.QUEUED, SummaryStatus.RUNNING):
++        return False, state, SummaryReason.ALREADY_RUNNING
++    if status == SummaryStatus.COMPLETED:
++        return False, state, SummaryReason.ALREADY_COMPLETED
++    if status == SummaryStatus.SKIPPED:
++        return False, state, entry.get("skip_reason") or SummaryReason.NOT_DUE
++    if status == SummaryStatus.DELIVERY_UNKNOWN:
++        if not force:
++            return False, state, SummaryReason.DELIVERY_UNKNOWN  # 终态：投递不明，禁止自动重发
++        entry["attempt_count"] = 0  # manual repair：操作者确认后重发
++    if status == SummaryStatus.DEAD:
++        if not force:
++            return False, state, SummaryReason.MAX_RETRIES_EXCEEDED
++        entry["attempt_count"] = 0  # manual repair：重置重试计数，重新进入队列
++    if status == SummaryStatus.RETRY_WAIT:
++        next_retry = _parse_dt(entry.get("next_retry_at"))
++        if not force and next_retry is not None and next_retry > now:
++            return False, state, SummaryReason.NOT_DUE
++
++    from_status = status
++    if not _transition_allowed(from_status, SummaryStatus.QUEUED):
++        return False, state, SummaryReason.ALREADY_COMPLETED if from_status == SummaryStatus.COMPLETED else SummaryReason.NOT_DUE
++    entry.update({
++        "status": SummaryStatus.QUEUED,
++        "job_id": job_id or entry.get("job_id") or uuid.uuid4().hex,
++        "selected_snapshot_id": snapshot_id or entry.get("selected_snapshot_id"),
++        "finalizer_due_at": due_at or entry.get("finalizer_due_at"),
++        "queued_at": now.isoformat(),
++        "trigger_source": trigger_source,
++        "started_at": None,
++        "completed_at": None,
++        "next_retry_at": None,
++        "run_id": None,
++    })
++    _record_transition(entry, from_status, SummaryStatus.QUEUED, now, reason=trigger_source)
++    return True, _set_summary_job(state, session, entry), None
++
++
++def start_summary_job(state: dict, session: str, worker_id: str, now: datetime,
++                      run_id: Optional[str] = None) -> Tuple[bool, dict, Optional[str]]:
++    """§13 Worker 原子启动：queued → running，attempt_count+1，写入 run_id（lease token）。"""
++    now = _ensure_aware(now)
++    entry = dict(_summary_entry(state, session))
++    from_status = entry.get("status")
++    if from_status != SummaryStatus.QUEUED:
++        return False, state, SummaryReason.ALREADY_RUNNING
++    token = run_id or uuid.uuid4().hex
++    entry.update({
++        "status": SummaryStatus.RUNNING,
++        "started_at": now.isoformat(),
++        "worker_id": worker_id,
++        "run_id": token,
++        "dispatch_count": int(entry.get("dispatch_count", 0)) + 1,
++    })
++    _record_transition(entry, from_status, SummaryStatus.RUNNING, now, worker_id=worker_id)
++    return True, _set_summary_job(state, session, entry), None
++
++
++def _run_id_matches(entry: dict, run_id: Optional[str]) -> bool:
++    """严格匹配：worker 写操作必须持有当前 run_id（防 stale worker 回魂）。
++
++    - run_id 为空 → 仅当 job 当前无 run_id（非 running/queued 态）时放行（终态迁移，如 not_attempted→skipped）。
++    - run_id 非空 → 必须与 entry 当前 run_id 严格相等；entry 无 run_id（已被 recovery 清空）→ 拒绝。
++    """
++    if run_id is None:
++        return not bool(entry.get("run_id"))
++    return bool(entry.get("run_id")) and entry.get("run_id") == run_id
++
++
++def complete_summary_job(state: dict, session: str, now: datetime, run_id: Optional[str] = None) -> dict:
++    """§14 成功提交：running → completed。run_id 不匹配 / 非法 from 状态则拒绝写入（返回原 state）。"""
++    now = _ensure_aware(now)
++    entry = dict(_summary_entry(state, session))
++    if not _run_id_matches(entry, run_id):
++        return state
++    if not _transition_allowed(entry.get("status"), SummaryStatus.COMPLETED):
++        return state
++    from_status = entry.get("status")
++    entry.update({
++        "status": SummaryStatus.COMPLETED,
++        "completed_at": now.isoformat(),
++        "last_error_code": None,
++        "last_error_message": None,
++    })
++    _record_transition(entry, from_status, SummaryStatus.COMPLETED, now, worker_id=entry.get("worker_id"))
++    return _set_summary_job(state, session, entry)
++
++
++def fail_summary_job(state: dict, session: str, error_code: str, message: str,
++                     now: datetime, next_retry_at: Optional[str] = None,
++                     run_id: Optional[str] = None) -> dict:
++    """§15 失败处理：running → retry_wait / dead（按 attempt_count 与 max_attempts）。
++
++    - attempt_count < max_attempts → RETRY_WAIT（等 next_retry_at 重试）。
++    - attempt_count >= max_attempts → DEAD（终态，需人工 repair）。
++    """
++    now = _ensure_aware(now)
++    entry = dict(_summary_entry(state, session))
++    if not _run_id_matches(entry, run_id):
++        return state
++    if not _transition_allowed(entry.get("status"), SummaryStatus.RETRY_WAIT) and \
++       not _transition_allowed(entry.get("status"), SummaryStatus.DEAD):
++        return state
++    from_status = entry.get("status")
++    attempts = int(entry.get("attempt_count", 0))
++    max_attempts = int(entry.get("max_attempts", 3))
++    dead = attempts >= max_attempts
++    target = SummaryStatus.DEAD if dead else SummaryStatus.RETRY_WAIT
++    entry.update({
++        "status": target,
++        "last_error_code": error_code,
++        "last_error_message": message[:500] if message else None,
++        "last_error_at": now.isoformat(),
++        "next_retry_at": None if dead else (next_retry_at or _next_retry_after(attempts, now)),
++    })
++    _record_transition(entry, from_status, target, now, reason=error_code,
++                       worker_id=entry.get("worker_id"), error=message)
++    return _set_summary_job(state, session, entry)
++
++
++def skip_summary_job(state: dict, session: str, reason: str, now: datetime,
++                     run_id: Optional[str] = None) -> dict:
++    """合法跳过（终态）：非交易日 / session 不匹配 / 不满足通知门禁 → skipped。"""
++    now = _ensure_aware(now)
++    entry = dict(_summary_entry(state, session))
++    if not _run_id_matches(entry, run_id):
++        return state
++    if not _transition_allowed(entry.get("status"), SummaryStatus.SKIPPED):
++        return state
++    from_status = entry.get("status")
++    entry.update({
++        "status": SummaryStatus.SKIPPED,
++        "skip_reason": reason,
++        "completed_at": entry.get("completed_at") or now.isoformat(),
++    })
++    _record_transition(entry, from_status, SummaryStatus.SKIPPED, now, reason=reason,
++                       worker_id=entry.get("worker_id"))
++    return _set_summary_job(state, session, entry)
++
++
++def _set_delivery(state: dict, session: str, updates: dict, run_id: Optional[str] = None) -> dict:
++    """更新 delivery 子状态（run_id 不匹配则拒绝）。"""
++    entry = dict(_summary_entry(state, session))
++    if not _run_id_matches(entry, run_id):
++        return state
++    delivery = dict(entry.get("delivery") or {})
++    delivery.update(updates)
++    entry["delivery"] = delivery
++    return _set_summary_job(state, session, entry)
++
++
++def mark_delivery_sending(state: dict, session: str, idempotency_key: str, attempt_id: str,
++                          now: datetime, run_id: Optional[str] = None) -> dict:
++    """send_email 前持久化「sending」标记（崩溃窗口防重复邮件）并计入实际发送尝试。"""
++    entry = dict(_summary_entry(state, session))
++    if not _run_id_matches(entry, run_id):
++        return state
++    delivery = dict(entry.get("delivery") or {})
++    delivery.update({
++        "status": "sending",
++        "idempotency_key": idempotency_key,
++        "attempt_id": attempt_id,
++        "sent_at": None,
++        "last_error": None,
++    })
++    entry["delivery"] = delivery
++    # P1：只有真正进入发送阶段才消耗 attempt_count（NO_VALID_SNAPSHOT 前置失败不消耗）
++    entry["attempt_count"] = int(entry.get("attempt_count", 0)) + 1
++    return _set_summary_job(state, session, entry)
++
++
++def mark_delivery_accepted(state: dict, session: str, now: datetime,
++                           run_id: Optional[str] = None, message_id: Optional[str] = None) -> dict:
++    return _set_delivery(state, session, {
++        "status": "accepted",
++        "sent_at": now.isoformat(),
++        "message_id": message_id,
++        "last_error": None,
++    }, run_id=run_id)
++
++
++def mark_delivery_failed(state: dict, session: str, error: str, now: datetime,
++                         run_id: Optional[str] = None) -> dict:
++    return _set_delivery(state, session, {
++        "status": "failed",
++        "last_error": (str(error)[:200] if error else None),
++    }, run_id=run_id)
++
++
++def mark_delivery_unknown_terminal(state: dict, session: str, error: str, now: datetime,
++                                   run_id: Optional[str] = None) -> dict:
++    """投递结果不明 → 终态 delivery_unknown（禁止自动重发）。"""
++    now = _ensure_aware(now)
++    entry = dict(_summary_entry(state, session))
++    if not _run_id_matches(entry, run_id):
++        return state
++    if not _transition_allowed(entry.get("status"), SummaryStatus.DELIVERY_UNKNOWN):
++        return state
++    from_status = entry.get("status")
++    delivery = dict(entry.get("delivery") or {})
++    delivery.update({"status": "unknown", "last_error": (str(error)[:200] if error else None)})
++    entry["delivery"] = delivery
++    entry["status"] = SummaryStatus.DELIVERY_UNKNOWN
++    entry["last_error_code"] = SummaryReason.DELIVERY_UNKNOWN
++    entry["last_error_message"] = (str(error)[:500] if error else None)
++    entry["last_error_at"] = now.isoformat()
++    _record_transition(entry, from_status, SummaryStatus.DELIVERY_UNKNOWN, now,
++                       reason=SummaryReason.DELIVERY_UNKNOWN,
++                       worker_id=entry.get("worker_id"), error=error)
++    return _set_summary_job(state, session, entry)
++
++
++def recover_stale_running(state: dict, now: datetime, timeout_seconds: Optional[int] = None) -> Tuple[dict, List[str]]:
++    """§18 Stale Running Recovery：running 且超时 → retry_wait/dead（WORKER_STALE）待重试。"""
++    now = _ensure_aware(now)
++    timeout_seconds = int(timeout_seconds if timeout_seconds is not None
++                          else CONFIG.get("summary_running_timeout_seconds", 600))
++    recovered: List[str] = []
++    result = state
++    for session in (TradingSession.AM.value, TradingSession.PM.value):
++        entry = dict(_summary_entry(result, session))
++        if entry.get("status") != SummaryStatus.RUNNING:
++            continue
++        started = _parse_dt(entry.get("started_at"))
++        if started is not None and (now - started).total_seconds() <= timeout_seconds:
++            continue
++        delivery_status = (entry.get("delivery") or {}).get("status")
++        from_status = entry.get("status")  # "running"
++        if delivery_status == "sending":
++            # 崩溃窗口：send_email 前已落盘「sending」，send 结果不明 → 终态 delivery_unknown，禁止自动重发
++            delivery = dict(entry.get("delivery") or {})
++            delivery.update({"status": "unknown", "last_error": "worker 在 sending 阶段卡死，投递结果不明"})
++            entry["delivery"] = delivery
++            entry["status"] = SummaryStatus.DELIVERY_UNKNOWN
++            entry["last_error_code"] = SummaryReason.DELIVERY_UNKNOWN
++            entry["last_error_message"] = "running 期间 delivery=sending 卡死，投递结果不明"
++            entry["last_error_at"] = now.isoformat()
++            entry["next_retry_at"] = None
++            entry["run_id"] = None
++            _record_transition(entry, from_status, SummaryStatus.DELIVERY_UNKNOWN, now,
++                               reason=SummaryReason.DELIVERY_UNKNOWN,
++                               worker_id=entry.get("worker_id"))
++            result = _set_summary_job(result, session, entry)
++            recovered.append(session)
++            continue
++        attempts = int(entry.get("attempt_count", 0))
++        dead = attempts >= int(entry.get("max_attempts", 3))
++        target = SummaryStatus.DEAD if dead else SummaryStatus.RETRY_WAIT
++        entry.update({
++            "status": target,
++            "last_error_code": SummaryReason.WORKER_STALE,
++            "last_error_message": f"running 超过 {timeout_seconds}s 未完成，判定 worker 卡死",
++            "last_error_at": now.isoformat(),
++            "next_retry_at": None if dead else _next_retry_after(attempts, now),
++            "run_id": None,
++        })
++        _record_transition(entry, from_status, target, now, reason=SummaryReason.WORKER_STALE,
++                           worker_id=entry.get("worker_id"))
++        result = _set_summary_job(result, session, entry)
++        recovered.append(session)
++    return result, recovered
++
++
++def summary_jobs_due(state: dict, now: datetime, schedule: Optional[dict] = None) -> List[dict]:
++    """§16 Reconciler 扫描：返回 (session, reason) 需要补调度的 Job 列表。
++
++    条件：finalizer_due_at <= now 且 status 为 not_attempted，或 retry_wait 且 next_retry_at <= now。
++    """
++    now = _ensure_aware(now)
++    due: List[dict] = []
++    for session in (TradingSession.AM.value, TradingSession.PM.value):
++        entry = _summary_entry(state, session)
++        status = entry.get("status", SummaryStatus.NOT_ATTEMPTED)
++        if status == SummaryStatus.NOT_ATTEMPTED:
++            due_at = finalizer_due_at(entry.get("trade_date") or now.date().isoformat(), session, schedule)
++            if due_at is not None and due_at <= now:
++                due.append({"session": session, "reason": SummaryReason.NOT_DUE, "snapshot_id": None, "due_at": due_at.isoformat()})
++        elif status == SummaryStatus.RETRY_WAIT:
++            next_retry = _parse_dt(entry.get("next_retry_at"))
++            if next_retry is None or next_retry <= now:
++                due.append({"session": session, "reason": SummaryReason.NOT_DUE, "snapshot_id": entry.get("selected_snapshot_id"), "due_at": entry.get("finalizer_due_at")})
++    return due
++
++
++def session_cutoff(trade_date: str, session: str, schedule: Optional[dict] = None) -> Optional[datetime]:
++    """返回该 session 的 cutoff（AM=11:30 / PM=15:00，北京时间）。"""
++    schedule = schedule or CONFIG.get("summary_schedule") or {}
++    entry = (schedule or {}).get(session) or {}
++    cutoff = entry.get("cutoff")
++    if not cutoff:
++        return None
++    try:
++        hh, mm = str(cutoff).split(":")
++        return datetime(int(trade_date[:4]), int(trade_date[5:7]), int(trade_date[8:10]),
++                        int(hh), int(mm), tzinfo=BEIJING_TZ)
++    except (TypeError, ValueError, IndexError):
++        return None
++
++
++def summary_eligibility(state: dict, session: str, snapshot: Optional[dict],
++                        now: datetime, cfg: Optional[dict] = None) -> dict:
++    """Session 感知的摘要 eligibility（§5/§6/§23）。
++
++    返回 {eligible, reason}。reason 为 SummaryReason 枚举值；eligible=False 时必须给出可解释原因。
++    """
++    now = _ensure_aware(now)
++    cfg = cfg or {}
++    job = get_summary_job(state, session)
++    status = job.get("status", SummaryStatus.NOT_ATTEMPTED)
++    if status == SummaryStatus.COMPLETED:
++        return {"eligible": False, "reason": SummaryReason.ALREADY_COMPLETED}
++    if status == SummaryStatus.SKIPPED:
++        return {"eligible": False, "reason": job.get("skip_reason") or SummaryReason.NOT_DUE}
++    # 注意：不在此处判定 running/queued —— 运行态由 dispatch/start 的 CAS 与
++    # stale running recovery 处理；本函数只回答「快照是否满足摘要 eligibility」。
++
++    if not snapshot or not isinstance(snapshot, dict):
++        return {"eligible": False, "reason": SummaryReason.NO_VALID_SNAPSHOT}
++    if snapshot.get("session") != session:
++        return {"eligible": False, "reason": SummaryReason.SESSION_MISMATCH}
++    if snapshot.get("trade_date") != now.date().isoformat():
++        return {"eligible": False, "reason": SummaryReason.SESSION_MISMATCH}
++    if snapshot.get("status") != "completed":
++        return {"eligible": False, "reason": SummaryReason.SNAPSHOT_NOT_READY}
++
++    # 会话相对新鲜度：快照应采集于该 session 交易窗口（距 cutoff 不超过 summary_max_age_min）。
++    # 与「now」解耦，保证 reconciler/repair 在盘后补跑 AM 摘要不会被误判 stale。
++    cutoff = session_cutoff(now.date().isoformat(), session, cfg.get("summary_schedule"))
++    captured = _parse_dt(snapshot.get("captured_at") or snapshot.get("now"))
++    max_age_min = int(cfg.get("summary_max_age_min", CONFIG["summary_max_age_min"]))
++    if captured is None or cutoff is None or (cutoff - captured).total_seconds() > max_age_min * 60:
++        return {"eligible": False, "reason": SummaryReason.SNAPSHOT_NOT_READY}
++
++    quality = snapshot.get("quality") or {}
++    quality_status = quality.get("status")
++    if quality_status == "accepted":
++        return {"eligible": True, "reason": SummaryReason.READY}
++    if quality_status == "provisional":
++        # 明确语义：provisional（无 source_time）仅在 allow_provisional_notify 打开时才发摘要。
++        allow_provisional = bool(cfg.get("allow_provisional_notify", CONFIG["allow_provisional_notify"]))
++        if allow_provisional:
++            return {"eligible": True, "reason": SummaryReason.READY_PROVISIONAL}
++        return {"eligible": False, "reason": SummaryReason.NOTIFY_NOT_ELIGIBLE}
++    if quality_status == "degraded":
++        return {"eligible": False, "reason": SummaryReason.NOTIFY_NOT_ELIGIBLE}
++    # 兼容无 status 字段的旧快照：退回 notify_eligible 布尔
++    if quality.get("notify_eligible"):
++        return {"eligible": True, "reason": SummaryReason.READY}
++    return {"eligible": False, "reason": SummaryReason.NOTIFY_NOT_ELIGIBLE}
++
++
++def assess_summary_health(state: dict, session: str, snapshot: Optional[dict],
++                          now: datetime, cfg: Optional[dict] = None) -> dict:
++    """单一健康判定（doctor 与 watchdog 复用的唯一判定来源）。
++
++    返回 {health, repairable, reason, recommended_action}。health ∈ healthy|warning|broken。
++    """
++    job = get_summary_job(state, session)
++    status = job.get("status", SummaryStatus.NOT_ATTEMPTED)
++    eligibility = summary_eligibility(state, session, snapshot, now, cfg)
++    if status == SummaryStatus.COMPLETED:
++        return {"health": "healthy", "repairable": False, "reason": SummaryReason.ALREADY_COMPLETED, "recommended_action": "已生成摘要，无需处理"}
++    if status == SummaryStatus.SKIPPED:
++        skip_reason = job.get("skip_reason")
++        # SESSION_MISMATCH 是数据完整性问题，不能算健康
++        if skip_reason == SummaryReason.SESSION_MISMATCH:
++            return {"health": "broken", "repairable": True, "reason": SummaryReason.SESSION_MISMATCH,
++                    "recommended_action": "快照 session 与目标 session 不一致，检查 session_snapshots 与快照绑定"}
++        return {"health": "healthy", "repairable": False, "reason": skip_reason, "recommended_action": "终态跳过，无需处理"}
++    if status == SummaryStatus.DEAD:
++        return {"health": "broken", "repairable": True, "reason": job.get("last_error_code") or SummaryReason.MAX_RETRIES_EXCEEDED, "recommended_action": "summary_repair --execute 补跑"}
++    if status == SummaryStatus.DELIVERY_UNKNOWN:
++        return {"health": "broken", "repairable": True, "reason": SummaryReason.DELIVERY_UNKNOWN, "recommended_action": "人工确认投递结果后 summary_repair --execute"}
++    if status == SummaryStatus.RETRY_WAIT:
++        return {"health": "warning", "repairable": True, "reason": job.get("last_error_code"), "recommended_action": "reconciler 会自动重试"}
++    if status == SummaryStatus.QUEUED:
++        return {"health": "warning", "repairable": True, "reason": "queued", "recommended_action": "等待 worker 消费"}
++    if status == SummaryStatus.RUNNING:
++        return {"health": "warning", "repairable": True, "reason": "running", "recommended_action": "等待完成，超时由 reconciler 恢复"}
++    # not_attempted：用 finalizer_due_at 判断是否真的 overdue（修「提前告警」）
++    due_at = finalizer_due_at(now.date().isoformat(), session, (cfg or {}).get("summary_schedule") if cfg else None)
++    if due_at is not None and now < due_at:
++        return {"health": "healthy", "repairable": False, "reason": SummaryReason.NOT_DUE, "recommended_action": "未到 finalizer_due_at"}
++    return {"health": "warning", "repairable": True, "reason": eligibility["reason"], "recommended_action": "scheduler/reconciler 会处理"}
++
++
+ # --------------------------------------------------------------------------- #
+ # 纯函数：候选状态合并
+ # --------------------------------------------------------------------------- #
+@@ -661,6 +1364,18 @@ def load_state(path=None, trade_date: Optional[str] = None, now: Optional[dateti
+     return reset_state_for_trade_date(state, trade_date)
+ 
+ 
++def load_state_raw(path=None) -> dict:
++    """读取状态文件原样（不跨日重置、不备份），供 doctor/repair 检查历史状态。"""
++    file_path = _state_path(path)
++    if not file_path.exists():
++        return {}
++    try:
++        payload = json.loads(file_path.read_text(encoding="utf-8"))
++        return payload if isinstance(payload, dict) else {}
++    except (json.JSONDecodeError, OSError):
++        return {}
++
++
+ def clean_state_for_save(state: dict) -> dict:
+     """P1-R3：保存前 schema 清理，只保留正式字段，剔除 _source_unavailable / warming_reason。"""
+     return {
+@@ -680,3 +1395,80 @@ def save_state(state: dict, path=None) -> None:
+         encoding="utf-8",
+     )
+     os.replace(tmp_path, file_path)
++
++
++# --------------------------------------------------------------------------- #
++# 状态存储抽象（第二轮）：把文件锁 CAS 收口到一个接口，未来可换 Redis/Postgres
++# --------------------------------------------------------------------------- #
++
++class SummaryStateStore(ABC):
++    """状态存储抽象。当前只有 FileSummaryStateStore；后续可无痛换 Redis/Postgres。
++
++    约束：所有变更都走 load → mutate → save 的原子临界区（跨进程/跨容器语义由实现保证）。
++    """
++
++    @abstractmethod
++    def load(self, trade_date: Optional[str] = None, now: Optional[datetime] = None) -> dict:
++        raise NotImplementedError
++
++    @abstractmethod
++    def load_raw(self) -> dict:
++        raise NotImplementedError
++
++    @abstractmethod
++    def save(self, state: dict) -> None:
++        raise NotImplementedError
++
++    @abstractmethod
++    def mutate(self, now: datetime, mutate_fn) -> dict:
++        """在原子临界区内 load → mutate_fn(state) → save，返回新 state。"""
++        raise NotImplementedError
++
++    @abstractmethod
++    def dispatch(self, session: str, snapshot_id: Optional[str], now: datetime,
++                 trigger_source: str, job_id: Optional[str] = None,
++                 due_at: Optional[str] = None, force: bool = False) -> Tuple[bool, dict, Optional[str]]:
++        raise NotImplementedError
++
++    @abstractmethod
++    def start(self, session: str, worker_id: str, now: datetime,
++              run_id: Optional[str] = None) -> Tuple[bool, dict, Optional[str]]:
++        raise NotImplementedError
++
++
++class FileSummaryStateStore(SummaryStateStore):
++    """文件 + fcntl 锁实现（单 runner 内跨进程安全；跨 runner 依赖 git 提交 + concurrency 兜底）。"""
++
++    def __init__(self, path=None):
++        self._path = path
++
++    def load(self, trade_date: Optional[str] = None, now: Optional[datetime] = None) -> dict:
++        return load_state(path=self._path, trade_date=trade_date, now=now)
++
++    def load_raw(self) -> dict:
++        return load_state_raw(path=self._path)
++
++    def save(self, state: dict) -> None:
++        save_state(state, path=self._path)
++
++    def mutate(self, now: datetime, mutate_fn) -> dict:
++        return atomic_summary_mutate(self._path, now, mutate_fn)
++
++    def dispatch(self, session: str, snapshot_id: Optional[str], now: datetime,
++                 trigger_source: str, job_id: Optional[str] = None,
++                 due_at: Optional[str] = None, force: bool = False) -> Tuple[bool, dict, Optional[str]]:
++        return atomic_dispatch_summary_job(
++            self._path, session, snapshot_id, now, trigger_source,
++            job_id=job_id, due_at=due_at, force=force)
++
++    def start(self, session: str, worker_id: str, now: datetime,
++              run_id: Optional[str] = None) -> Tuple[bool, dict, Optional[str]]:
++        return atomic_start_summary_job(self._path, session, worker_id, now, run_id=run_id)
++
++    def recover_stale(self, now: datetime,
++                      timeout_seconds: Optional[int] = None) -> Tuple[dict, List[str]]:
++        return atomic_recover_stale_running(self._path, now, timeout_seconds)
++
++
++# 默认存储实例（service 层统一走此实例，便于未来替换 Redis/Postgres 实现）
++STATE_STORE = FileSummaryStateStore()
+diff --git a/backend/plugins/principal_capital/service.py b/backend/plugins/principal_capital/service.py
+index 7a3ae5e..a0c1ee8 100644
+--- a/backend/plugins/principal_capital/service.py
++++ b/backend/plugins/principal_capital/service.py
+@@ -909,7 +909,7 @@ def run_principal_capital_scan(
+ 
+     if execution_mode == "official":
+         ok, state, conflict = intraday.acquire_owner_atomic(
+-            INTRADAY_STATE_FILE, owner_id, int(CONFIG["owner_lease_seconds"]), now
++            intraday.INTRADAY_STATE_FILE, owner_id, int(CONFIG["owner_lease_seconds"]), now
+         )
+         if not ok:
+             result = _empty_result("owner_conflict", conflict or "owner_conflict", now,
+@@ -1037,6 +1037,21 @@ def run_principal_capital_scan(
+         if auto_fallback:
+             state["auto_fallback"] = "strict_auto_fallback"
+ 
++        # 25：记录 session 绑定快照（供 summary finalizer 显式绑定 session，杜绝误用 latest）
++        session_snapshots = dict(state.get("session_snapshots") or {})
++        session_snapshots[session_label] = {
++            "snapshot_id": batch_id,
++            "batch_id": batch_id,
++            "captured_at": now.isoformat(),
++            "now": now.isoformat(),
++            "trade_date": today.isoformat(),
++            "session": session_label,
++            "status": status,
++            "quality": quality,
++            "scanned": len(received),
++        }
++        state["session_snapshots"] = session_snapshots
++
+         intraday.save_state(state)
+ 
+         if dry_run or not buy_fresh.empty:
+@@ -1123,6 +1138,73 @@ def run_principal_capital_scan(
+     return result
+ 
+ 
++def _summary_log(event: str, trade_date: str, session: str, **extra) -> None:
++    """§22 统一结构化日志：event=... trade_date=... session=... key=value 单行。"""
++    fields = {"event": event, "trade_date": trade_date, "session": session}
++    fields.update(extra)
++    logger.info("summary_finalizer " + " ".join(f"{k}={v}" for k, v in fields.items() if v is not None))
++
++
++def get_snapshot_for_session(trade_date: str, session: str) -> Optional[dict]:
++    """§5/§6/§7：读取 session 对应的最近快照（显式绑定 session，不使用 latest snapshot）。"""
++    state = intraday.STATE_STORE.load(trade_date=trade_date)
++    snapshot = (state.get("session_snapshots") or {}).get(session)
++    return snapshot if isinstance(snapshot, dict) else None
++
++
++def reconcile_summary_jobs(
++    now: Optional[datetime] = None,
++    execution_mode: Optional[str] = None,
++    owner_id: Optional[str] = None,
++    dry_run: bool = False,
++) -> dict:
++    """§16 Reconciler：发现 overdue summary job 并补调度，含 stale running 恢复。
++
++    - 先恢复 running 超时的 job（WORKER_STALE → retry_wait 待重试）。
++    - 再扫描 finalizer_due_at <= now 且 status ∈ {not_attempted, retry_wait(可重试)} 的 job 补 dispatch。
++    - 每个 job 的 dispatch 走原子 CAS；ok=False 表示已被抢占，跳过。
++    """
++    now = now or datetime.now(BEIJING_TZ)
++    now = intraday._ensure_aware(now)
++    trade_date = now.date().isoformat()
++    result = {"status": "ok", "trade_date": trade_date,
++              "recovered": [], "processed": [], "deferred": [], "broken": []}
++
++    # 1. stale running recovery（原子化：load → recover → save 在文件锁临界区内，防覆盖 completed）
++    if dry_run:
++        state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
++        _recovered_state, recovered = intraday.recover_stale_running(state, now)
++        if recovered:
++            result["recovered"] = recovered
++    else:
++        _recovered_state, recovered = intraday.STATE_STORE.recover_stale(now)
++        if recovered:
++            result["recovered"] = recovered
++            for session in recovered:
++                _summary_log("summary_finalizer_stale_recovery", trade_date, session,
++                             error_code=intraday.SummaryReason.WORKER_STALE)
++
++    # 2. 补调度 overdue job（execute 时直接走 finalize 完整状态机，dispatch CAS 在 finalize 内部）
++    state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
++    for item in intraday.summary_jobs_due(state, now):
++        session = item["session"]
++        if dry_run:
++            result["processed"].append(session)
++            continue
++        outcome = finalize_principal_capital_session(
++            session=session, now=now, execution_mode=execution_mode,
++            owner_id=owner_id, trigger_source="reconciler",
++        )
++        status = outcome.get("status")
++        if status in ("skipped", "completed"):
++            result["processed"].append(session)
++        elif status == "retry_wait":
++            result["deferred"].append({"session": session, "reason": outcome.get("reason")})
++        else:  # dead / delivery_unknown → 需人工
++            result["broken"].append({"session": session, "reason": outcome.get("reason")})
++    return result
++
++
+ def finalize_principal_capital_session(
+     session: str,
+     now: Optional[datetime] = None,
+@@ -1130,91 +1212,245 @@ def finalize_principal_capital_session(
+     owner_id: Optional[str] = None,
+     manual_retry: bool = False,
+     retry_operator: Optional[str] = None,
++    trigger_source: str = "scheduler",
+ ) -> dict:
+-    """午间/收盘摘要 finalizer（P0-R3）。
++    """午间/收盘摘要 finalizer（25 可靠性改造：显式 session 绑定 + Summary Job 状态机）。
+ 
+-    - 状态机：not_attempted / pending / sent / explicit_failed / delivery_unknown。
+-    - pending+attempt_id 重启后解释为 delivery_unknown，禁止自动重发。
+-    - explicit_failed 仅允许显式 manual_retry 重试（带操作者审计）。
++    状态流（§11）：not_attempted → queued → running → completed / retry_wait/dead →(retry)→ queued；skipped 为终态。
++    - dispatch / start 走文件锁 CAS，重复调度只成功一次（§12/§13）。
++    - 摘要使用 session 绑定的 snapshot（selected_snapshot_id），绝不使用 latest snapshot（§6/§7）。
++    - not eligible 时记录 skip_reason（终态），不再永久停留在 not_attempted（§23/§26）。
+     """
+     now = now or datetime.now(BEIJING_TZ)
+     now = intraday._ensure_aware(now)
+     execution_mode = resolve_execution_mode(execution_mode)
+-    if session not in ("am", "pm"):
++    if session not in (intraday.TradingSession.AM.value, intraday.TradingSession.PM.value):
+         raise ValueError(f"非法 session: {session!r}")
+-    state = intraday.load_state(trade_date=now.date().isoformat(), now=now)
+-    latest = read_report()
++    trade_date = now.date().isoformat()
+ 
+     result = {
+-        "status": "skipped", "session": session, "now": now.isoformat(),
+-        "reason": "", "skipped_reason": None, "email_sent": False, "email_error": None,
++        "status": "skipped", "session": session, "trade_date": trade_date,
++        "now": now.isoformat(), "reason": None, "job_id": None, "snapshot_id": None,
++        "email_sent": False, "email_error": None, "trigger_source": trigger_source,
+     }
+ 
+-    if execution_mode == "official":
+-        owner_id = owner_id or CONFIG["official_owner"]
+-        if not owner_id or (state.get("owner_id") or "") != owner_id:
+-            result.update({"status": "owner_conflict", "reason": "owner_mismatch"})
+-            return result
+-        expires = intraday._parse_dt(state.get("owner_lease_expires_at"))
+-        if expires is None or expires <= now:
+-            result.update({"status": "owner_conflict", "reason": "owner_lease_expired"})
+-            return result
++    # §21 非交易日 → skipped(NON_TRADING_DAY)
++    from backend.services.trading_calendar import is_trading_day
++    if not is_trading_day(now.date()):
++        if execution_mode == "official":
++            intraday.STATE_STORE.mutate(
++                now,
++                lambda s: intraday.skip_summary_job(s, session, intraday.SummaryReason.NON_TRADING_DAY, now))
++        result.update({"status": "skipped", "reason": intraday.SummaryReason.NON_TRADING_DAY})
++        _summary_log("summary_finalizer_skip", trade_date, session, reason=intraday.SummaryReason.NON_TRADING_DAY)
++        return result
+ 
+-    decision = intraday.should_finalize_session(state, session, latest, now, CONFIG)
+-    result["reason"] = decision["reason"]
+-    result["skipped_reason"] = decision.get("skipped_reason")
++    # §6/§7 显式 session snapshot 绑定
++    snapshot = get_snapshot_for_session(trade_date, session)
++    snapshot_id = (snapshot or {}).get("snapshot_id")
++    result["snapshot_id"] = snapshot_id
+ 
+-    # P0-R3：explicit_failed 仅允许显式手工重试
+-    allow_send = decision["should_send"]
+-    if decision["reason"] == "explicit_failed" and manual_retry:
+-        allow_send = True
+-        result["manual_retry"] = True
+-        result["retry_operator"] = retry_operator or "manual"
++    # §23 Eligibility 提前计算（只依赖 snapshot 与 job 终态，不依赖运行态）
++    state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
++    eligibility = intraday.summary_eligibility(state, session, snapshot, now, CONFIG)
++    result["reason"] = eligibility["reason"]
+ 
+-    if not allow_send:
+-        if execution_mode == "official":
+-            state = intraday.release_owner(state)
+-            intraday.save_state(state)
++    if execution_mode != "official":
++        # 只读/影子模式：不写 official 状态，仅构造内容供本地验证（不 dispatch/start）
++        if not eligibility["eligible"]:
++            result.update({"status": "skipped"})
++            return result
++        _buy_current, _sell_current, buy_today, _sell_today = intraday.current_candidate_lists(state)
++        subject, text, html_content = build_summary_payload(buy_today, session, now)
++        result.update({"status": "constructed", "subject": subject, "text": text})
++        _summary_log("summary_finalizer_construct", trade_date, session, mode=execution_mode,
++                     candidate_count=len(buy_today))
+         return result
+ 
++    # ── official：完整状态机 ──
++    job = intraday.get_summary_job(state, session)
++    if job.get("status") == intraday.SummaryStatus.COMPLETED:
++        result.update({"status": "skipped", "reason": intraday.SummaryReason.ALREADY_COMPLETED})
++        return result
++    if job.get("status") == intraday.SummaryStatus.SKIPPED:
++        result.update({"status": "skipped", "reason": job.get("skip_reason")})
++        return result
++
++    # §12 原子抢占：not_attempted/retry_wait/dead → queued
++    due_at = intraday.finalizer_due_at(trade_date, session)
++    ok, state, reason = intraday.STATE_STORE.dispatch(
++        session, snapshot_id, now, trigger_source,
++        due_at=due_at.isoformat() if due_at else None, force=manual_retry,
++    )
++    if not ok:
++        result.update({"status": "skipped", "reason": reason})
++        _summary_log("summary_finalizer_dispatch_conflict", trade_date, session, reason=reason)
++        return result
++    job = intraday.get_summary_job(state, session)
++    result["job_id"] = job.get("job_id")
++    _summary_log("summary_finalizer_dispatch", trade_date, session, job_id=job.get("job_id"),
++                 snapshot_id=snapshot_id, status_before="not_attempted", status_after="queued",
++                 trigger_source=trigger_source)
++
++    # §13 Worker 原子启动：queued → running，写入 run_id（lease token）
++    ok, state, reason = intraday.STATE_STORE.start(
++        session, worker_id=owner_id or execution_mode, now=now)
++    if not ok:
++        result.update({"status": "skipped", "reason": reason})
++        _summary_log("summary_finalizer_start_conflict", trade_date, session, reason=reason)
++        return result
++    job = intraday.get_summary_job(state, session)
++    run_id = job.get("run_id")
++    _summary_log("summary_finalizer_start", trade_date, session, job_id=job.get("job_id"),
++                 run_id=run_id, status_before="queued", status_after="running",
++                 attempt=job.get("attempt_count", 0))
++
++    if not eligibility["eligible"]:
++        reason = eligibility["reason"]
++        if intraday.is_terminal_skip(reason):
++            # 终态跳过（非交易日/session 不匹配/不满足通知门禁）
++            state = intraday.STATE_STORE.mutate(
++                now,
++                lambda s: intraday.skip_summary_job(s, session, reason, now, run_id=run_id))
++            result.update({"status": "skipped", "reason": reason})
++            _summary_log("summary_finalizer_skip", trade_date, session, reason=reason, job_id=job.get("job_id"))
++        else:
++            # 可恢复（无快照/快照未就绪等）→ RETRY_WAIT，等 reconciler 重试，不永久 skipped
++            state = intraday.STATE_STORE.mutate(
++                now,
++                lambda s: intraday.fail_summary_job(s, session, reason, reason, now, run_id=run_id))
++            after = intraday.get_summary_job(state, session)
++            result.update({"status": after.get("status"), "reason": reason})
++            _summary_log("summary_finalizer_retry_wait", trade_date, session, reason=reason,
++                         job_id=job.get("job_id"), status_after=after.get("status"))
++        return result
++
++    # 生成摘要内容（候选来自当日状态，非 latest report）
++    state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
+     _buy_current, _sell_current, buy_today, _sell_today = intraday.current_candidate_lists(state)
+     subject, text, html_content = build_summary_payload(buy_today, session, now)
+-    if execution_mode != "official":
+-        result.update({"status": "constructed", "subject": subject, "text": text})
+-        return result
+ 
+-    previous_entry = ((state.get("summary_state") or {}).get(session) or {})
++    # §15 + 第二轮：send 前持久化「sending」标记（崩溃窗口防重复邮件的关键）
+     attempt_id = uuid.uuid4().hex
+-    state = intraday.mark_summary_pending(state, session, now.isoformat(), attempt_id)
+-    if previous_entry.get("attempt_id"):
+-        # 记录原 attempt_id 便于审计（手工重试场景）
+-        entry = dict(state["summary_state"].get(session) or {})
+-        entry["previous_attempt_id"] = previous_entry.get("attempt_id")
+-        entry["retry_operator"] = result.get("retry_operator")
+-        state["summary_state"][session] = entry
+-    intraday.save_state(state)
++    idem_key = intraday.summary_job_idempotency_key(trade_date, session)
++    state = intraday.STATE_STORE.mutate(
++        now,
++        lambda s: intraday.mark_delivery_sending(s, session, idem_key, attempt_id, now, run_id=run_id))
++
+     try:
+         ok, error = send_email(subject, text, html_content, get_smtp_config())
+-    except Exception as exc:  # noqa: BLE001 结果不明 -> delivery_unknown，禁止自动重发
+-        state = intraday.mark_summary_delivery_unknown(state, session, now.isoformat())
+-        state = intraday.release_owner(state)
+-        intraday.save_state(state)
+-        result.update({"status": "delivery_unknown", "email_error": f"{type(exc).__name__}: {exc}"})
++    except Exception as exc:  # noqa: BLE001 结果不明 → 终态 delivery_unknown（禁止自动重发）
++        state = intraday.STATE_STORE.mutate(
++            now,
++            lambda s: intraday.mark_delivery_unknown_terminal(
++                s, session, f"{type(exc).__name__}: {exc}", now, run_id=run_id))
++        after = intraday.get_summary_job(state, session)
++        result.update({"status": after.get("status"), "reason": intraday.SummaryReason.DELIVERY_UNKNOWN,
++                       "email_error": f"{type(exc).__name__}: {exc}"})
++        _summary_log("summary_finalizer_delivery_unknown", trade_date, session, job_id=job.get("job_id"),
++                     run_id=run_id, error_code=intraday.SummaryReason.DELIVERY_UNKNOWN,
++                     status_after=after.get("status"), attempt=job.get("attempt_count", 0))
+         return result
+ 
+     result["email_sent"] = bool(ok)
+     result["email_error"] = error
+     if ok:
+-        state = intraday.mark_summary_sent(state, session, now.isoformat())
+-        result["status"] = "sent"
++        # §14 成功提交：delivery accepted + completed 同一次原子写（同一状态文件）
++        state = intraday.STATE_STORE.mutate(
++            now,
++            lambda s: intraday.mark_delivery_accepted(
++                intraday.complete_summary_job(s, session, now, run_id=run_id),
++                session, now, run_id=run_id))
++        result["status"] = "completed"
++        _summary_log("summary_finalizer_complete", trade_date, session, job_id=job.get("job_id"),
++                     run_id=run_id, status_before="running", status_after="completed")
+     else:
+-        state = intraday.mark_summary_explicit_failed(state, session, now.isoformat())
+-        result["status"] = "send_failed"
+-    state = intraday.release_owner(state)
+-    intraday.save_state(state)
++        state = intraday.STATE_STORE.mutate(
++            now,
++            lambda s: intraday.mark_delivery_failed(
++                intraday.fail_summary_job(
++                    s, session, intraday.SummaryReason.SEND_FAILED, error or "send_failed", now, run_id=run_id),
++                session, error or "send_failed", now, run_id=run_id))
++        after = intraday.get_summary_job(state, session)
++        result["status"] = after.get("status")
++        result["reason"] = intraday.SummaryReason.SEND_FAILED
++        _summary_log("summary_finalizer_fail", trade_date, session, job_id=job.get("job_id"),
++                     run_id=run_id, error_code=intraday.SummaryReason.SEND_FAILED,
++                     status_after=after.get("status"), attempt=job.get("attempt_count", 0))
+     return result
+ 
+ 
++def summary_doctor(trade_date: str, session: str, now: Optional[datetime] = None) -> dict:
++    """§24 诊断命令：输出 Summary Job / Snapshot / Eligibility 全貌，无需翻日志。"""
++    now = now or datetime.now(BEIJING_TZ)
++    now = intraday._ensure_aware(now)
++    if session not in (intraday.TradingSession.AM.value, intraday.TradingSession.PM.value):
++        raise ValueError(f"非法 session: {session!r}")
++
++    state = intraday.STATE_STORE.load_raw()
++    state_matches = state.get("trade_date") == trade_date
++    job = intraday.get_summary_job(state, session) if state_matches else intraday.empty_summary_job(session, trade_date)
++    snapshot = (state.get("session_snapshots") or {}).get(session) if state_matches else None
++    eligibility = intraday.summary_eligibility(
++        state if state_matches else {}, session, snapshot, now, CONFIG)
++    health = intraday.assess_summary_health(
++        state if state_matches else {}, session, snapshot, now, CONFIG)
++
++    return {
++        "trade_date": trade_date,
++        "session": session,
++        "state_trade_date": state.get("trade_date"),
++        "state_matches": state_matches,
++        "job": job,
++        "snapshot": snapshot,
++        "eligibility": eligibility,
++        "health": health,
++        "suggested_action": health["recommended_action"],
++    }
++
++
++def summary_repair(trade_date: str, session: str, dry_run: bool = True, execute: bool = False,
++                   execution_mode: Optional[str] = None, owner_id: Optional[str] = None) -> dict:
++    """§25 安全补跑命令：dry-run 只诊断；execute 走正常状态机 + 幂等（不绕过状态管理）。"""
++    if session not in (intraday.TradingSession.AM.value, intraday.TradingSession.PM.value):
++        raise ValueError(f"非法 session: {session!r}")
++    due = intraday.finalizer_due_at(trade_date, session)
++    now = due or datetime.strptime(trade_date + " 12:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=BEIJING_TZ)
++
++    doctor = summary_doctor(trade_date, session, now)
++    job = doctor["job"]
++    snapshot = doctor["snapshot"]
++    would_dispatch = (
++        doctor["state_matches"]
++        and job.get("status") not in (intraday.SummaryStatus.COMPLETED, intraday.SummaryStatus.SKIPPED)
++        and doctor["eligibility"]["eligible"]
++    )
++    base = {
++        "trade_date": trade_date, "session": session,
++        "would_dispatch": bool(would_dispatch),
++        "job_id": job.get("job_id"),
++        "snapshot_id": (snapshot or {}).get("snapshot_id"),
++        "reason": doctor["eligibility"]["reason"],
++    }
++    if dry_run or not execute:
++        base["doctor"] = doctor
++        return base
++
++    # P1：repair execute 禁止修改非当前 state_trade_date 的状态（跨日 reset 语义下易误改历史）
++    if not doctor["state_matches"]:
++        raise RuntimeError(
++            f"不允许对非当前 state_trade_date 执行 repair：state={doctor.get('state_trade_date')}, 请求={trade_date}"
++        )
++
++    result = finalize_principal_capital_session(
++        session=session, now=now, execution_mode=execution_mode or "readonly",
++        owner_id=owner_id, manual_retry=True, retry_operator="manual_repair",
++        trigger_source="manual_repair",
++    )
++    base["result"] = result
++    return base
++
++
+ def backtest_principal_capital(
+     start_date: date,
+     end_date: date,
+diff --git a/backend/plugins/principal_capital/tests/test_integration_v3.py b/backend/plugins/principal_capital/tests/test_integration_v3.py
+index 366f083..700ec0e 100644
+--- a/backend/plugins/principal_capital/tests/test_integration_v3.py
++++ b/backend/plugins/principal_capital/tests/test_integration_v3.py
+@@ -120,11 +120,10 @@ class SentinelTest(unittest.TestCase):
+ 
+ 
+ class FinalizerCrashTest(unittest.TestCase):
+-    def test_pending_persisted_then_restart_does_not_resend(self):
++    def test_stale_running_recovered_on_restart(self):
+         with TemporaryDirectory() as tmp:
+             state_file = Path(tmp) / "state.json"
+-            report_file = Path(tmp) / "latest.json"
+-            # 子进程写入 pending+attempt_id 后直接退出，模拟进程在 SMTP 前被强杀
++            # 子进程写入 running 状态后直接退出，模拟 worker 在 SMTP 前被强杀
+             code = (
+                 "import sys; sys.path.insert(0, %r); "
+                 "from backend.plugins.principal_capital import intraday_state as its; "
+@@ -134,20 +133,21 @@ class FinalizerCrashTest(unittest.TestCase):
+                 "state = its.empty_state('2026-09-15'); "
+                 "ok, state, _ = its.acquire_owner(state, 'github_actions', 600, now); "
+                 "state['last_batch_id'] = 'b1'; "
+-                "state = its.mark_summary_pending(state, 'pm', now.isoformat(), 'attempt-1'); "
++                "ok, state, _ = its.dispatch_summary_job(state, 'pm', 'b1', now, 'scheduler'); "
++                "ok, state, _ = its.start_summary_job(state, 'pm', 'worker-1', now); "
+                 "its.save_state(state, path=%r)"
+             ) % (str(Path.cwd()), str(state_file))
+             subprocess.run([sys.executable, "-c", code], check=True, cwd=Path.cwd())
+-            report_file.write_text(json.dumps({
+-                "status": "completed", "now": NOW.isoformat(), "batch_id": "b1",
+-                "trade_date": "2026-09-15", "quality": {"notify_eligible": True},
+-            }), encoding="utf-8")
+-            with patch.object(pcs.intraday, "INTRADAY_STATE_FILE", state_file),                  patch.object(pcs, "REPORT_FILE", report_file),                  patch.object(pcs, "send_email", return_value=(True, None)) as send:
+-                result = pcs.finalize_principal_capital_session(
+-                    "pm", now=NOW, execution_mode="official", owner_id="github_actions")
+-            self.assertEqual(result["status"], "skipped")
+-            self.assertEqual(result["reason"], "delivery_unknown")
+-            send.assert_not_called()
++            # 重启后 11 分钟，reconciler 判定 running 卡死并恢复
++            with patch.object(pcs.intraday, "INTRADAY_STATE_FILE", state_file):
++                result = pcs.reconcile_summary_jobs(
++                    now=NOW + timedelta(minutes=11), dry_run=False)
++            self.assertIn("pm", result["recovered"])
++            # 恢复后状态为 retry_wait(WORKER_STALE)，可被重试
++            state = its.load_state_raw(path=state_file)
++            job = its.get_summary_job(state, "pm")
++            self.assertEqual(job["status"], "retry_wait")
++            self.assertEqual(job["last_error_code"], "WORKER_STALE")
+ 
+ 
+ class ScanIntegrationTest(unittest.TestCase):
+diff --git a/backend/plugins/principal_capital/tests/test_intraday_state.py b/backend/plugins/principal_capital/tests/test_intraday_state.py
+index 31c7662..8f796ba 100644
+--- a/backend/plugins/principal_capital/tests/test_intraday_state.py
++++ b/backend/plugins/principal_capital/tests/test_intraday_state.py
+@@ -57,10 +57,11 @@ class CandidateStateTest(unittest.TestCase):
+     def test_cross_trade_date_resets(self):
+         state = its.empty_state("2026-09-15")
+         state["candidates"] = {"buy:600001": {"is_current": True}}
+-        state["summary_state"] = {"am": {"status": "sent"}, "pm": {"status": "pending"}}
++        state["summary_state"]["am"]["status"] = "sent"
+         reset = its.reset_state_for_trade_date(state, "2026-09-16")
+         self.assertEqual(reset["candidates"], {})
+-        self.assertEqual(reset["summary_state"], {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}})
++        self.assertEqual(reset["summary_state"]["am"]["status"], "not_attempted")
++        self.assertEqual(reset["summary_state"]["pm"]["status"], "not_attempted")
+         self.assertEqual(reset["audit_cursor"], 0)
+ 
+ 
+diff --git a/backend/plugins/principal_capital/tests/test_session_finalizer.py b/backend/plugins/principal_capital/tests/test_session_finalizer.py
+index afc37cf..a9af854 100644
+--- a/backend/plugins/principal_capital/tests/test_session_finalizer.py
++++ b/backend/plugins/principal_capital/tests/test_session_finalizer.py
+@@ -1,5 +1,4 @@
+-"""23 v2 午间/收盘 finalizer 测试。"""
+-import json
++"""25 午间/收盘 summary finalizer 状态机测试（显式 session 绑定 + CAS 抢占 + 幂等 + 可恢复）。"""
+ import unittest
+ from datetime import datetime, timedelta, timezone
+ from pathlib import Path
+@@ -14,54 +13,116 @@ NOW = datetime(2026, 9, 15, 11, 30, tzinfo=BEIJING_TZ)
+ OWNER = "github_actions"
+ 
+ 
+-def _write_state(state_file, owner=OWNER, batch_id="b1"):
++def _snapshot(session="am", status="completed", quality_status="accepted", batch_id="b1"):
++    return {
++        "snapshot_id": batch_id, "batch_id": batch_id,
++        "captured_at": NOW.isoformat(), "now": NOW.isoformat(),
++        "trade_date": "2026-09-15", "session": session,
++        "status": status, "quality": {"status": quality_status}, "scanned": 100,
++    }
++
++
++def _write_state(state_file, owner=OWNER, batch_id="b1", quality_status="accepted",
++                 status="completed", session="am"):
+     state = its.empty_state("2026-09-15")
+     ok, state, _ = its.acquire_owner(state, owner, 600, NOW)
+     assert ok
+     state["last_batch_id"] = batch_id
++    state["session_snapshots"] = {
++        session: _snapshot(session=session, status=status,
++                           quality_status=quality_status, batch_id=batch_id),
++    }
+     state_file.parent.mkdir(parents=True, exist_ok=True)
+     its.save_state(state, path=state_file)
+ 
+ 
+-def _write_report(report_file, now_iso, batch_id="b1", notify_eligible=True, status="completed"):
+-    report_file.parent.mkdir(parents=True, exist_ok=True)
+-    report_file.write_text(json.dumps({
+-        "status": status, "now": now_iso, "batch_id": batch_id, "trade_date": "2026-09-15",
+-        "quality": {"notify_eligible": notify_eligible},
+-    }), encoding="utf-8")
+-
+-
+ class SessionFinalizerTest(unittest.TestCase):
+     def _patches(self, tmp):
+         state_file = Path(tmp) / "intraday_state.json"
+-        report_file = Path(tmp) / "latest.json"
+         return (
+             patch.object(pcs.intraday, "INTRADAY_STATE_FILE", state_file),
+-            patch.object(pcs, "REPORT_FILE", report_file),
+-        ), state_file, report_file
++            patch("backend.services.trading_calendar.is_trading_day", return_value=True),
++        ), state_file
+ 
+     def test_official_sends_once(self):
+         with TemporaryDirectory() as tmp:
+-            patches, state_file, report_file = self._patches(tmp)
++            patches, state_file = self._patches(tmp)
+             _write_state(state_file)
+-            _write_report(report_file, NOW.isoformat())
+             for p in patches:
+                 p.start()
+             try:
+                 with patch.object(pcs, "send_email", return_value=(True, None)):
+                     first = pcs.finalize_principal_capital_session(
+                         "am", now=NOW, execution_mode="official", owner_id=OWNER)
++                state = its.load_state_raw(path=state_file)
+             finally:
+                 for p in patches:
+                     p.stop()
+-        self.assertEqual(first["status"], "sent")
++        self.assertEqual(first["status"], "completed")
+         self.assertTrue(first["email_sent"])
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "completed")
++
++    def test_provisional_skips_when_not_allowed(self):
++        with TemporaryDirectory() as tmp:
++            patches, state_file = self._patches(tmp)
++            _write_state(state_file, quality_status="provisional")
++            for p in patches:
++                p.start()
++            try:
++                with patch.object(pcs, "send_email", return_value=(True, None)) as send:
++                    result = pcs.finalize_principal_capital_session(
++                        "am", now=NOW, execution_mode="official", owner_id=OWNER)
++                state = its.load_state_raw(path=state_file)
++            finally:
++                for p in patches:
++                    p.stop()
++        self.assertEqual(result["status"], "skipped")
++        self.assertEqual(result["reason"], its.SummaryReason.NOTIFY_NOT_ELIGIBLE)
++        send.assert_not_called()
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "skipped")
++
++    def test_provisional_allowed_completes(self):
++        # P1：PC_ALLOW_PROVISIONAL_NOTIFY=1 时 provisional 应能发摘要（READY_PROVISIONAL）
++        with TemporaryDirectory() as tmp:
++            patches, state_file = self._patches(tmp)
++            _write_state(state_file, quality_status="provisional")
++            for p in patches:
++                p.start()
++            try:
++                with patch.dict(pcs.CONFIG, {"allow_provisional_notify": True}):
++                    with patch.object(pcs, "send_email", return_value=(True, None)):
++                        result = pcs.finalize_principal_capital_session(
++                            "am", now=NOW, execution_mode="official", owner_id=OWNER)
++            finally:
++                for p in patches:
++                    p.stop()
++        self.assertEqual(result["status"], "completed")
++        self.assertTrue(result["email_sent"])
+ 
+-    def test_owner_mismatch_conflict(self):
++    def test_no_snapshot_is_retryable(self):
++        # P0：NO_VALID_SNAPSHOT 不应进入终态 skipped，而应 retry_wait（snapshot 可能稍后就绪）
+         with TemporaryDirectory() as tmp:
+-            patches, state_file, report_file = self._patches(tmp)
+-            _write_state(state_file, owner="other_owner")
+-            _write_report(report_file, NOW.isoformat())
++            patches, state_file = self._patches(tmp)
++            state = its.empty_state("2026-09-15")
++            its.save_state(state, path=state_file)
++            for p in patches:
++                p.start()
++            try:
++                result = pcs.finalize_principal_capital_session(
++                    "am", now=NOW, execution_mode="official", owner_id=OWNER)
++                state = its.load_state_raw(path=state_file)
++            finally:
++                for p in patches:
++                    p.stop()
++        self.assertEqual(result["status"], "retry_wait")
++        self.assertEqual(result["reason"], its.SummaryReason.NO_VALID_SNAPSHOT)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "retry_wait")
++
++    def test_pm_snapshot_not_used_for_am(self):
++        # PM snapshot 不能供 AM finalizer 使用（§6/§7 显式绑定）
++        with TemporaryDirectory() as tmp:
++            patches, state_file = self._patches(tmp)
++            _write_state(state_file, session="pm")
+             for p in patches:
+                 p.start()
+             try:
+@@ -71,24 +132,44 @@ class SessionFinalizerTest(unittest.TestCase):
+             finally:
+                 for p in patches:
+                     p.stop()
+-        self.assertEqual(result["status"], "owner_conflict")
++        self.assertEqual(result["reason"], its.SummaryReason.NO_VALID_SNAPSHOT)
++        send.assert_not_called()
++
++    def test_eligibility_session_mismatch(self):
++        state = its.empty_state("2026-09-15")
++        pm_snapshot = _snapshot(session="pm")
++        decision = its.summary_eligibility(state, "am", pm_snapshot, NOW, {})
++        self.assertFalse(decision["eligible"])
++        self.assertEqual(decision["reason"], its.SummaryReason.SESSION_MISMATCH)
++
++    def test_shadow_constructs_without_sending(self):
++        with TemporaryDirectory() as tmp:
++            patches, state_file = self._patches(tmp)
++            _write_state(state_file)
++            for p in patches:
++                p.start()
++            try:
++                with patch.object(pcs, "send_email", return_value=(True, None)) as send:
++                    result = pcs.finalize_principal_capital_session(
++                        "am", now=NOW, execution_mode="shadow")
++            finally:
++                for p in patches:
++                    p.stop()
++        self.assertEqual(result["status"], "constructed")
++        self.assertIn("subject", result)
+         send.assert_not_called()
+ 
+     def test_delivery_unknown_blocks_resend(self):
+         with TemporaryDirectory() as tmp:
+-            patches, state_file, report_file = self._patches(tmp)
++            patches, state_file = self._patches(tmp)
+             _write_state(state_file)
+-            _write_report(report_file, NOW.isoformat())
+             for p in patches:
+                 p.start()
+             try:
+                 with patch.object(pcs, "send_email", side_effect=RuntimeError("smtp boom")):
+                     first = pcs.finalize_principal_capital_session(
+                         "am", now=NOW, execution_mode="official", owner_id=OWNER)
+-                # 重新续租（模拟下一次调度），再次调用不得自动重发
+-                state = its.load_state(path=state_file, now=NOW)
+-                ok, state, _ = its.acquire_owner(state, OWNER, 600, NOW)
+-                its.save_state(state, path=state_file)
++                # 下一次调用（重试未到 next_retry_at）不得自动重发
+                 with patch.object(pcs, "send_email", return_value=(True, None)) as send:
+                     second = pcs.finalize_principal_capital_session(
+                         "am", now=NOW, execution_mode="official", owner_id=OWNER)
+@@ -96,61 +177,322 @@ class SessionFinalizerTest(unittest.TestCase):
+                 for p in patches:
+                     p.stop()
+         self.assertEqual(first["status"], "delivery_unknown")
++        self.assertEqual(first["reason"], its.SummaryReason.DELIVERY_UNKNOWN)
+         self.assertEqual(second["status"], "skipped")
+-        self.assertEqual(second["reason"], "delivery_unknown")
++        self.assertEqual(second["reason"], its.SummaryReason.DELIVERY_UNKNOWN)
+         send.assert_not_called()
+ 
+-    def test_provisional_blocks(self):
++    def test_non_trading_day_skips(self):
+         with TemporaryDirectory() as tmp:
+-            patches, state_file, report_file = self._patches(tmp)
+-            _write_state(state_file)
+-            _write_report(report_file, NOW.isoformat(), notify_eligible=False)
++            patches, state_file = self._patches(tmp)
++            patches = (
++                patch.object(pcs.intraday, "INTRADAY_STATE_FILE", state_file),
++                patch("backend.services.trading_calendar.is_trading_day", return_value=False),
++            )
+             for p in patches:
+                 p.start()
+             try:
+-                with patch.object(pcs, "send_email", return_value=(True, None)) as send:
+-                    result = pcs.finalize_principal_capital_session(
+-                        "am", now=NOW, execution_mode="official", owner_id=OWNER)
++                result = pcs.finalize_principal_capital_session(
++                    "am", now=NOW, execution_mode="official", owner_id=OWNER)
+             finally:
+                 for p in patches:
+                     p.stop()
+         self.assertEqual(result["status"], "skipped")
+-        self.assertEqual(result["reason"], "notify_not_eligible")
+-        send.assert_not_called()
++        self.assertEqual(result["reason"], its.SummaryReason.NON_TRADING_DAY)
+ 
+-    def test_no_complete_batch_skipped(self):
++    def test_reconcile_recovers_missed_scheduler(self):
++        # 故障注入 #3：11:35 scheduler 完全没执行 → 12:00 reconciler 自动补 AM 并完成
+         with TemporaryDirectory() as tmp:
+-            patches, state_file, report_file = self._patches(tmp)
++            patches, state_file = self._patches(tmp)
+             _write_state(state_file)
+-            _write_report(report_file, NOW.isoformat(), status="no_data")
+             for p in patches:
+                 p.start()
+             try:
+-                result = pcs.finalize_principal_capital_session(
++                with patch.object(pcs, "send_email", return_value=(True, None)):
++                    result = pcs.reconcile_summary_jobs(
++                        now=datetime(2026, 9, 15, 12, 0, tzinfo=BEIJING_TZ),
++                        execution_mode="official")
++                state = its.load_state_raw(path=state_file)
++            finally:
++                for p in patches:
++                    p.stop()
++        self.assertIn("am", result["processed"])
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "completed")
++
++    def test_reconcile_retries_after_snapshot_arrives(self):
++        # 故障注入 #2：NO_VALID_SNAPSHOT → retry_wait；snapshot 到达 + 越过 next_retry → 完成
++        with TemporaryDirectory() as tmp:
++            patches, state_file = self._patches(tmp)
++            state = its.empty_state("2026-09-15")
++            its.save_state(state, path=state_file)
++            for p in patches:
++                p.start()
++            try:
++                first = pcs.finalize_principal_capital_session(
+                     "am", now=NOW, execution_mode="official", owner_id=OWNER)
++                self.assertEqual(first["status"], "retry_wait")
++                self.assertEqual(first["reason"], its.SummaryReason.NO_VALID_SNAPSHOT)
++                # snapshot 稍后到达
++                st = its.load_state_raw(path=state_file)
++                st["session_snapshots"] = {"am": _snapshot(session="am", batch_id="b1")}
++                its.save_state(st, path=state_file)
++                with patch.object(pcs, "send_email", return_value=(True, None)):
++                    result = pcs.reconcile_summary_jobs(
++                        now=NOW + timedelta(minutes=2), execution_mode="official")
++                state = its.load_state_raw(path=state_file)
+             finally:
+                 for p in patches:
+                     p.stop()
+-        self.assertEqual(result["status"], "skipped")
+-        self.assertEqual(result["reason"], "no_complete_batch")
++        self.assertIn("am", result["processed"])
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "completed")
+ 
+-    def test_shadow_constructs_without_sending(self):
++    def test_repair_blocks_non_current_trade_date(self):
++        # P1-6：repair execute 对非当前 state_trade_date 必须报错（禁止误改历史）
+         with TemporaryDirectory() as tmp:
+-            patches, state_file, report_file = self._patches(tmp)
+-            _write_state(state_file)
+-            _write_report(report_file, NOW.isoformat())
++            patches, state_file = self._patches(tmp)
++            _write_state(state_file)  # trade_date = 2026-09-15
+             for p in patches:
+                 p.start()
+             try:
+-                with patch.object(pcs, "send_email", return_value=(True, None)) as send:
+-                    result = pcs.finalize_principal_capital_session(
+-                        "am", now=NOW, execution_mode="shadow")
++                with self.assertRaises(RuntimeError):
++                    pcs.summary_repair("2026-09-20", "am", dry_run=False, execute=True)
+             finally:
+                 for p in patches:
+                     p.stop()
+-        self.assertEqual(result["status"], "constructed")
+-        self.assertIn("subject", result)
+-        send.assert_not_called()
++
++
++class SummaryStateMachineTest(unittest.TestCase):
++    """§8/§11/§12/§13 状态机纯函数 + 幂等 + 可恢复 + stale worker 防护测试。"""
++
++    def test_transitions_not_attempted_to_completed(self):
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        self.assertTrue(ok)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "queued")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        self.assertTrue(ok)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "running")
++        run_id = its.get_summary_job(state, "am")["run_id"]
++        state = its.complete_summary_job(state, "am", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "completed")
++        # transition history 精确记录 from→to（评审 #7）
++        history = [(h["from"], h["to"]) for h in its.get_summary_job(state, "am")["history"]]
++        self.assertEqual(history, [
++            ("not_attempted", "queued"),
++            ("queued", "running"),
++            ("running", "completed"),
++        ])
++
++    def test_dispatch_idempotent(self):
++        state = its.empty_state("2026-09-15")
++        ok1, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        self.assertTrue(ok1)
++        ok2, _, reason = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        self.assertFalse(ok2)
++        self.assertEqual(reason, its.SummaryReason.ALREADY_RUNNING)
++
++    def test_start_only_from_queued(self):
++        state = its.empty_state("2026-09-15")
++        ok, _, reason = its.start_summary_job(state, "am", "w1", NOW)
++        self.assertFalse(ok)
++        self.assertEqual(reason, its.SummaryReason.ALREADY_RUNNING)
++
++    def test_retry_wait_within_max_attempts(self):
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        run_id = its.get_summary_job(state, "am")["run_id"]
++        state = its.fail_summary_job(state, "am", "SEND_FAILED", "boom", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "retry_wait")
++        # 重试未到 next_retry_at → 拒绝 dispatch
++        ok, _, reason = its.dispatch_summary_job(state, "am", "b1", NOW, "retry")
++        self.assertFalse(ok)
++        self.assertEqual(reason, its.SummaryReason.NOT_DUE)
++        # force 可越过 next_retry_at（manual repair）
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "manual_repair", force=True)
++        self.assertTrue(ok)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "queued")
++
++    def test_dead_requires_manual_repair(self):
++        # 3 次实际发送失败后 → dead；自动 dispatch 拒绝，manual repair(force) 重置并重进队列
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        for i in range(3):
++            run_id = its.get_summary_job(state, "am")["run_id"]
++            # 模拟进入发送阶段（attempt_count 仅在真正发送时消耗）
++            state = its.mark_delivery_sending(state, "am", "summary:2026-09-15:AM", f"att-{i}", NOW, run_id=run_id)
++            state = its.fail_summary_job(state, "am", "SEND_FAILED", "boom", NOW, next_retry_at=None, run_id=run_id)
++            if its.get_summary_job(state, "am")["status"] == "dead":
++                break
++            ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "retry", force=True)
++            ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "dead")
++        # 自动 dispatch（无 force）→ MAX_RETRIES_EXCEEDED
++        ok, _, reason = its.dispatch_summary_job(state, "am", "b1", NOW, "retry")
++        self.assertFalse(ok)
++        self.assertEqual(reason, its.SummaryReason.MAX_RETRIES_EXCEEDED)
++        # manual repair（force）→ 重置计数，重新 queued
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "manual_repair", force=True)
++        self.assertTrue(ok)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "queued")
++        self.assertEqual(its.get_summary_job(state, "am")["attempt_count"], 0)
++
++    def test_stale_running_recovery(self):
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "running")
++        state2, recovered = its.recover_stale_running(state, NOW + timedelta(minutes=11), timeout_seconds=600)
++        self.assertEqual(recovered, ["am"])
++        self.assertEqual(its.get_summary_job(state2, "am")["status"], "retry_wait")
++        self.assertEqual(its.get_summary_job(state2, "am")["last_error_code"], "WORKER_STALE")
++
++    def test_stale_worker_cannot_write(self):
++        # P0：worker A stale 被 B 接管后，A 回魂用旧 run_id 写 completed 必须被拒绝
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "worker-A", NOW)
++        run_id_a = its.get_summary_job(state, "am")["run_id"]
++        # A 被判 stale，B 接管
++        state, recovered = its.recover_stale_running(state, NOW + timedelta(minutes=11), timeout_seconds=600)
++        self.assertEqual(recovered, ["am"])
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW + timedelta(minutes=12), "reconciler", force=True)
++        ok, state, _ = its.start_summary_job(state, "am", "worker-B", NOW + timedelta(minutes=12))
++        run_id_b = its.get_summary_job(state, "am")["run_id"]
++        self.assertNotEqual(run_id_a, run_id_b)
++        # A 回魂：旧 run_id complete → 拒绝，状态保持 running
++        state2 = its.complete_summary_job(state, "am", NOW + timedelta(minutes=13), run_id=run_id_a)
++        self.assertEqual(its.get_summary_job(state2, "am")["status"], "running")
++        # B 用正确 run_id complete → 成功
++        state3 = its.complete_summary_job(state, "am", NOW + timedelta(minutes=13), run_id=run_id_b)
++        self.assertEqual(its.get_summary_job(state3, "am")["status"], "completed")
++
++    def test_stale_worker_after_recovery_before_new_start(self):
++        # 评审 #1：A stale → recovery 清空 run_id → B 还没 start → A 回魂 → 拒绝
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        run_id_a = its.get_summary_job(state, "am")["run_id"]
++        state, recovered = its.recover_stale_running(state, NOW + timedelta(minutes=11), timeout_seconds=600)
++        self.assertEqual(recovered, ["am"])
++        self.assertIsNone(its.get_summary_job(state, "am")["run_id"])
++        # A 回魂 complete（run_id 已被清空）→ 严格匹配拒绝
++        state2 = its.complete_summary_job(state, "am", NOW + timedelta(minutes=12), run_id=run_id_a)
++        self.assertEqual(its.get_summary_job(state2, "am")["status"], "retry_wait")
++
++    def test_completed_cannot_fail_skip_delivery_unknown(self):
++        # 评审 #2/#3/#4：终态 completed 不得被 fail/skip/delivery_unknown 回退
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        run_id = its.get_summary_job(state, "am")["run_id"]
++        state = its.complete_summary_job(state, "am", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "completed")
++        s2 = its.fail_summary_job(state, "am", "SEND_FAILED", "x", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(s2, "am")["status"], "completed")
++        s3 = its.skip_summary_job(state, "am", "X", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(s3, "am")["status"], "completed")
++        s4 = its.mark_delivery_unknown_terminal(state, "am", "x", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(s4, "am")["status"], "completed")
++
++    def test_session_mismatch_is_broken(self):
++        # 评审 #9：SESSION_MISMATCH 是数据完整性问题，health 应为 broken（非 healthy skipped）
++        state = its.empty_state("2026-09-15")
++        state = its.skip_summary_job(state, "am", its.SummaryReason.SESSION_MISMATCH, NOW)
++        health = its.assess_summary_health(state, "am", None, NOW)
++        self.assertEqual(health["health"], "broken")
++        self.assertEqual(health["reason"], its.SummaryReason.SESSION_MISMATCH)
++
++    def test_send_then_crash_no_resend(self):
++        # 第二轮 #1：send 成功后、complete 前 crash（running + delivery=sending）
++        # → 恢复为 delivery_unknown 终态，禁止自动重发
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        run_id = its.get_summary_job(state, "am")["run_id"]
++        state = its.mark_delivery_sending(state, "am", "summary:2026-09-15:AM", "att-1", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(state, "am")["delivery"]["status"], "sending")
++        # 11 分钟后 reconciler 判定 stale → delivery_unknown 终态
++        state2, recovered = its.recover_stale_running(state, NOW + timedelta(minutes=11), timeout_seconds=600)
++        self.assertEqual(recovered, ["am"])
++        self.assertEqual(its.get_summary_job(state2, "am")["status"], "delivery_unknown")
++        self.assertEqual(its.get_summary_job(state2, "am")["delivery"]["status"], "unknown")
++        # 自动 dispatch 被拒绝（禁止重发）
++        ok, _, reason = its.dispatch_summary_job(state2, "am", "b1", NOW + timedelta(minutes=12), "reconciler")
++        self.assertFalse(ok)
++        self.assertEqual(reason, its.SummaryReason.DELIVERY_UNKNOWN)
++
++    def test_skip_is_terminal(self):
++        state = its.empty_state("2026-09-15")
++        state = its.skip_summary_job(state, "am", its.SummaryReason.NON_TRADING_DAY, NOW)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "skipped")
++        ok, _, reason = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        self.assertFalse(ok)
++        self.assertEqual(reason, its.SummaryReason.NON_TRADING_DAY)
++
++    def test_no_snapshot_does_not_consume_retry_budget(self):
++        # P1-5：NO_VALID_SNAPSHOT 前置失败不消耗 attempt_count，多次重试不 DEAD
++        state = its.empty_state("2026-09-15")
++        for _ in range(5):
++            ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler", force=True)
++            self.assertTrue(ok)
++            ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++            run_id = its.get_summary_job(state, "am")["run_id"]
++            state = its.fail_summary_job(state, "am", its.SummaryReason.NO_VALID_SNAPSHOT, "no snapshot", NOW, run_id=run_id)
++            self.assertEqual(its.get_summary_job(state, "am")["status"], "retry_wait")
++            self.assertEqual(its.get_summary_job(state, "am")["attempt_count"], 0)
++        self.assertNotEqual(its.get_summary_job(state, "am")["status"], "dead")
++
++    def test_retryable_reason_goes_retry_wait_not_skipped(self):
++        # P0：NO_VALID_SNAPSHOT / SNAPSHOT_NOT_READY 属于可恢复，不落 skipped 终态
++        self.assertTrue(its.is_retryable(its.SummaryReason.NO_VALID_SNAPSHOT))
++        self.assertTrue(its.is_retryable(its.SummaryReason.SNAPSHOT_NOT_READY))
++        self.assertTrue(its.is_retryable(its.SummaryReason.WORKER_STALE))
++        self.assertFalse(its.is_retryable(its.SummaryReason.NOTIFY_NOT_ELIGIBLE))
++        self.assertTrue(its.is_terminal_skip(its.SummaryReason.NOTIFY_NOT_ELIGIBLE))
++        self.assertTrue(its.is_terminal_skip(its.SummaryReason.SESSION_MISMATCH))
++        self.assertFalse(its.is_terminal_skip(its.SummaryReason.NO_VALID_SNAPSHOT))
++
++    def test_idempotency_key(self):
++        self.assertEqual(its.summary_job_idempotency_key("2026-09-28", "am"), "summary:2026-09-28:AM")
++        self.assertEqual(its.summary_job_idempotency_key("2026-09-28", "pm"), "summary:2026-09-28:PM")
++
++    def test_timezone_independent(self):
++        # §32：due/cutoff 固定北京时间，不受服务器本地时区影响
++        due_am = its.finalizer_due_at("2026-09-28", "am")
++        due_pm = its.finalizer_due_at("2026-09-28", "pm")
++        self.assertEqual(due_am.hour, 11)
++        self.assertEqual(due_am.minute, 35)
++        self.assertEqual(due_am.utcoffset(), timedelta(hours=8))
++        self.assertEqual(due_pm.hour, 15)
++        self.assertEqual(due_pm.minute, 5)
++        self.assertEqual(due_pm.utcoffset(), timedelta(hours=8))
++
++    def test_two_reconcilers_only_one_dispatches(self):
++        # 第二轮 #4：两个 reconciler 并发 dispatch，文件锁 CAS 保证只有一个成功
++        with TemporaryDirectory() as tmp:
++            sf = Path(tmp) / "state.json"
++            its.save_state(its.empty_state("2026-09-15"), path=sf)
++            with patch.object(its, "INTRADAY_STATE_FILE", sf):
++                ok1, _, _ = its.atomic_dispatch_summary_job(its.INTRADAY_STATE_FILE, "am", "b1", NOW, "reconciler")
++                ok2, _, reason = its.atomic_dispatch_summary_job(its.INTRADAY_STATE_FILE, "am", "b1", NOW, "reconciler")
++        self.assertTrue(ok1)
++        self.assertFalse(ok2)
++        self.assertEqual(reason, its.SummaryReason.ALREADY_RUNNING)
++
++    def test_completed_cannot_regress(self):
++        # 第二轮 #8：repair 与 reconciler 都不允许把 completed 状态回退
++        state = its.empty_state("2026-09-15")
++        ok, state, _ = its.dispatch_summary_job(state, "am", "b1", NOW, "scheduler")
++        ok, state, _ = its.start_summary_job(state, "am", "w1", NOW)
++        run_id = its.get_summary_job(state, "am")["run_id"]
++        state = its.complete_summary_job(state, "am", NOW, run_id=run_id)
++        self.assertEqual(its.get_summary_job(state, "am")["status"], "completed")
++        # 任何后续 dispatch/start 都不得回退
++        ok, _, reason = its.dispatch_summary_job(state, "am", "b1", NOW, "reconciler", force=True)
++        self.assertFalse(ok)
++        self.assertEqual(reason, its.SummaryReason.ALREADY_COMPLETED)
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/scripts/principal_capital_watchdog.py b/scripts/principal_capital_watchdog.py
+index 1c8a6e4..48137b3 100644
+--- a/scripts/principal_capital_watchdog.py
++++ b/scripts/principal_capital_watchdog.py
+@@ -75,22 +75,54 @@ def _attempts_text(snapshot: Dict[str, Any]) -> str:
+ 
+ 
+ def _summary_alert(intraday_state: Dict[str, Any], now: datetime) -> Optional[Dict[str, str]]:
+-    """根据 summary_state 检查 finalizer 未完成 / pending 卡死 / delivery_unknown。"""
+-    summary_state = (intraday_state or {}).get("summary_state") or {}
+-    now_hm = now.hour * 100 + now.minute
+-    for session, boundary in (("am", 1130), ("pm", 1500)):
+-        entry = summary_state.get(session) or {}
+-        status = entry.get("status")
+-        if now_hm < boundary:
++    """根据 summary_state 检查 finalizer 未完成 / pending 卡死 / delivery_unknown。
++
++    25 改造 + 第二轮：复用 intraday.assess_summary_health 作为唯一「broken」判定来源，
++    避免 doctor / watchdog / reconciler 三套规则分歧。boundary 之后的告警规则：
++      - broken（dead / delivery_unknown）→ 告警（需人工 repair）
++      - running / queued（warning，卡死）→ 告警
++      - not_attempted（warning，从未调度）→ 告警
++      - retry_wait（warning，reconciler 自动重试）→ 不告警
++      - completed / skipped / sent（healthy）→ 不告警
++    """
++    from backend.plugins.principal_capital.intraday_state import (
++        SummaryStatus, assess_summary_health, finalizer_due_at,
++    )
++    from datetime import timedelta as _td
++
++    # 用 finalizer_due_at + 5 分钟宽限，而不是 session cutoff(11:30/15:00)，
++    # 修「finalizer 11:35 才 due、watchdog 11:31 就告警 missing」的提前告警。
++    grace = _td(minutes=5)
++    for session in ("am", "pm"):
++        due = finalizer_due_at(now.date().isoformat(), session)
++        if due is None:
+             continue
+-        if status == "delivery_unknown":
+-            return {"kind": ALERT_DELIVERY_UNKNOWN, "message": f"{session} 摘要投递结果不明（delivery_unknown），需人工确认。"}
++        if now <= due + grace:
++            continue
++        entry = ((intraday_state or {}).get("summary_state") or {}).get(session) or {}
++        status = entry.get("status")
++        snapshot = ((intraday_state or {}).get("session_snapshots") or {}).get(session)
++        health = assess_summary_health(intraday_state or {}, session, snapshot, now)
++
++        if status == SummaryStatus.DELIVERY_UNKNOWN:
++            return {"kind": ALERT_DELIVERY_UNKNOWN,
++                    "message": f"{session} 摘要投递结果不明（delivery_unknown），需人工确认。"}
++        if health.get("health") == "broken":
++            return {"kind": ALERT_FINALIZER_MISSING,
++                    "message": f"{session} 摘要 finalizer 异常（{health.get('reason')}），需人工 repair。"}
++        if status in (SummaryStatus.RUNNING, SummaryStatus.QUEUED):
++            return {"kind": ALERT_FINALIZER_MISSING,
++                    "message": f"{session} 摘要 finalizer 停留在 {status}，疑似卡死。"}
+         if status == "pending":
+             updated = _as_beijing_time(entry.get("updated_at"))
+             if updated is None or (now - updated).total_seconds() > 30 * 60:
+-                return {"kind": ALERT_PENDING_STUCK, "message": f"{session} 摘要停留在 pending 超过 30 分钟，疑似卡死。"}
+-        if status not in ("sent", "explicit_failed"):
+-            return {"kind": ALERT_FINALIZER_MISSING, "message": f"{session} 摘要 finalizer 尚未完成（状态 {status or 'not_attempted'}）。"}
++                return {"kind": ALERT_PENDING_STUCK,
++                        "message": f"{session} 摘要停留在 pending 超过 30 分钟，疑似卡死。"}
++            continue
++        if status in (None, "", SummaryStatus.NOT_ATTEMPTED):
++            return {"kind": ALERT_FINALIZER_MISSING,
++                    "message": f"{session} 摘要 finalizer 尚未完成（状态 not_attempted）。"}
++        # retry_wait / completed / skipped / sent → 不告警
+     return None
+ 
+ 
+diff --git a/tests/test_principal_capital_watchdog.py b/tests/test_principal_capital_watchdog.py
+index a21ed19..0ab267f 100644
+--- a/tests/test_principal_capital_watchdog.py
++++ b/tests/test_principal_capital_watchdog.py
+@@ -97,3 +97,17 @@ class PrincipalCapitalWatchdogTest(unittest.TestCase):
+         self.assertEqual(first["status"], "alert_sent")
+         self.assertEqual(second["status"], "deduplicated")
+         self.assertEqual(sender.call_count, 1)
++
++    def test_summary_alert_grace_period_no_premature_alert(self):
++        # 评审 #8：finalizer_due(11:35)+5min 宽限前，not_attempted 不应告警
++        now = datetime(2026, 9, 15, 11, 31, tzinfo=BEIJING_TZ)
++        state = {"summary_state": {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}}}
++        self.assertIsNone(watchdog._summary_alert(state, now))
++
++    def test_summary_alert_after_grace(self):
++        # 超过 11:40 宽限后，not_attempted 应告警 missing
++        now = datetime(2026, 9, 15, 11, 41, tzinfo=BEIJING_TZ)
++        state = {"summary_state": {"am": {"status": "not_attempted"}, "pm": {"status": "not_attempted"}}}
++        alert = watchdog._summary_alert(state, now)
++        self.assertIsNotNone(alert)
++        self.assertEqual(alert["kind"], watchdog.ALERT_FINALIZER_MISSING)
+
+# ===== 新增文件: .github/workflows/principal-capital-reconcile.yml =====
+name: Principal Capital Summary Reconcile
+
+# 25：摘要 finalizer 常驻兜底——不依赖单个扫描 job 的收盘补偿。
+# 每 10 分钟扫描 overdue 的 summary job 并补调度（幂等，多跑无副作用）。
+# 覆盖北京 09:00–15:59（UTC 01:00–07:59），含午间 11:30–13:00 空窗，
+# 解决「11:35 AM finalizer 异常 → 直到 15:00 才被 PM job 补跑」的问题。
+on:
+  schedule:
+    - cron: '*/10 1-7 * * 1-5'   # 北京 09:00/09:10/.../15:50，每 10 分钟
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # 与 principal-capital-scan 共用同一全局组，防止两个 runner 并发读写同一份状态
+  group: principal-capital-state-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+  DATA_BRANCH: data-snapshots
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore generated data snapshot
+        run: bash scripts/restore_screening_data.sh
+
+      - name: Reconcile overdue summary jobs
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+          PC_EXECUTION_MODE: official
+          PC_OFFICIAL_OWNER: "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
+          PC_ALLOW_PROVISIONAL_NOTIFY: "1"
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -m backend.main --reconcile-principal-capital-summary \
+            --execution-mode official \
+            --owner-id "${PC_OFFICIAL_OWNER}"
+
+      - name: Commit generated data snapshot
+        if: always()
+        # 关键：reconcile 可能变更 summary 状态，持久化失败致命退出（防重复邮件）
+        run: bash scripts/commit_screening_data.sh || { echo "摘要状态快照提交失败（致命）"; exit 1; }

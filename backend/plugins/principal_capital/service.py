@@ -909,7 +909,7 @@ def run_principal_capital_scan(
 
     if execution_mode == "official":
         ok, state, conflict = intraday.acquire_owner_atomic(
-            INTRADAY_STATE_FILE, owner_id, int(CONFIG["owner_lease_seconds"]), now
+            intraday.INTRADAY_STATE_FILE, owner_id, int(CONFIG["owner_lease_seconds"]), now
         )
         if not ok:
             result = _empty_result("owner_conflict", conflict or "owner_conflict", now,
@@ -1037,6 +1037,21 @@ def run_principal_capital_scan(
         if auto_fallback:
             state["auto_fallback"] = "strict_auto_fallback"
 
+        # 25：记录 session 绑定快照（供 summary finalizer 显式绑定 session，杜绝误用 latest）
+        session_snapshots = dict(state.get("session_snapshots") or {})
+        session_snapshots[session_label] = {
+            "snapshot_id": batch_id,
+            "batch_id": batch_id,
+            "captured_at": now.isoformat(),
+            "now": now.isoformat(),
+            "trade_date": today.isoformat(),
+            "session": session_label,
+            "status": status,
+            "quality": quality,
+            "scanned": len(received),
+        }
+        state["session_snapshots"] = session_snapshots
+
         intraday.save_state(state)
 
         if dry_run or not buy_fresh.empty:
@@ -1123,6 +1138,73 @@ def run_principal_capital_scan(
     return result
 
 
+def _summary_log(event: str, trade_date: str, session: str, **extra) -> None:
+    """§22 统一结构化日志：event=... trade_date=... session=... key=value 单行。"""
+    fields = {"event": event, "trade_date": trade_date, "session": session}
+    fields.update(extra)
+    logger.info("summary_finalizer " + " ".join(f"{k}={v}" for k, v in fields.items() if v is not None))
+
+
+def get_snapshot_for_session(trade_date: str, session: str) -> Optional[dict]:
+    """§5/§6/§7：读取 session 对应的最近快照（显式绑定 session，不使用 latest snapshot）。"""
+    state = intraday.STATE_STORE.load(trade_date=trade_date)
+    snapshot = (state.get("session_snapshots") or {}).get(session)
+    return snapshot if isinstance(snapshot, dict) else None
+
+
+def reconcile_summary_jobs(
+    now: Optional[datetime] = None,
+    execution_mode: Optional[str] = None,
+    owner_id: Optional[str] = None,
+    dry_run: bool = False,
+) -> dict:
+    """§16 Reconciler：发现 overdue summary job 并补调度，含 stale running 恢复。
+
+    - 先恢复 running 超时的 job（WORKER_STALE → retry_wait 待重试）。
+    - 再扫描 finalizer_due_at <= now 且 status ∈ {not_attempted, retry_wait(可重试)} 的 job 补 dispatch。
+    - 每个 job 的 dispatch 走原子 CAS；ok=False 表示已被抢占，跳过。
+    """
+    now = now or datetime.now(BEIJING_TZ)
+    now = intraday._ensure_aware(now)
+    trade_date = now.date().isoformat()
+    result = {"status": "ok", "trade_date": trade_date,
+              "recovered": [], "processed": [], "deferred": [], "broken": []}
+
+    # 1. stale running recovery（原子化：load → recover → save 在文件锁临界区内，防覆盖 completed）
+    if dry_run:
+        state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
+        _recovered_state, recovered = intraday.recover_stale_running(state, now)
+        if recovered:
+            result["recovered"] = recovered
+    else:
+        _recovered_state, recovered = intraday.STATE_STORE.recover_stale(now)
+        if recovered:
+            result["recovered"] = recovered
+            for session in recovered:
+                _summary_log("summary_finalizer_stale_recovery", trade_date, session,
+                             error_code=intraday.SummaryReason.WORKER_STALE)
+
+    # 2. 补调度 overdue job（execute 时直接走 finalize 完整状态机，dispatch CAS 在 finalize 内部）
+    state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
+    for item in intraday.summary_jobs_due(state, now):
+        session = item["session"]
+        if dry_run:
+            result["processed"].append(session)
+            continue
+        outcome = finalize_principal_capital_session(
+            session=session, now=now, execution_mode=execution_mode,
+            owner_id=owner_id, trigger_source="reconciler",
+        )
+        status = outcome.get("status")
+        if status in ("skipped", "completed"):
+            result["processed"].append(session)
+        elif status == "retry_wait":
+            result["deferred"].append({"session": session, "reason": outcome.get("reason")})
+        else:  # dead / delivery_unknown → 需人工
+            result["broken"].append({"session": session, "reason": outcome.get("reason")})
+    return result
+
+
 def finalize_principal_capital_session(
     session: str,
     now: Optional[datetime] = None,
@@ -1130,89 +1212,243 @@ def finalize_principal_capital_session(
     owner_id: Optional[str] = None,
     manual_retry: bool = False,
     retry_operator: Optional[str] = None,
+    trigger_source: str = "scheduler",
 ) -> dict:
-    """午间/收盘摘要 finalizer（P0-R3）。
+    """午间/收盘摘要 finalizer（25 可靠性改造：显式 session 绑定 + Summary Job 状态机）。
 
-    - 状态机：not_attempted / pending / sent / explicit_failed / delivery_unknown。
-    - pending+attempt_id 重启后解释为 delivery_unknown，禁止自动重发。
-    - explicit_failed 仅允许显式 manual_retry 重试（带操作者审计）。
+    状态流（§11）：not_attempted → queued → running → completed / retry_wait/dead →(retry)→ queued；skipped 为终态。
+    - dispatch / start 走文件锁 CAS，重复调度只成功一次（§12/§13）。
+    - 摘要使用 session 绑定的 snapshot（selected_snapshot_id），绝不使用 latest snapshot（§6/§7）。
+    - not eligible 时记录 skip_reason（终态），不再永久停留在 not_attempted（§23/§26）。
     """
     now = now or datetime.now(BEIJING_TZ)
     now = intraday._ensure_aware(now)
     execution_mode = resolve_execution_mode(execution_mode)
-    if session not in ("am", "pm"):
+    if session not in (intraday.TradingSession.AM.value, intraday.TradingSession.PM.value):
         raise ValueError(f"非法 session: {session!r}")
-    state = intraday.load_state(trade_date=now.date().isoformat(), now=now)
-    latest = read_report()
+    trade_date = now.date().isoformat()
 
     result = {
-        "status": "skipped", "session": session, "now": now.isoformat(),
-        "reason": "", "skipped_reason": None, "email_sent": False, "email_error": None,
+        "status": "skipped", "session": session, "trade_date": trade_date,
+        "now": now.isoformat(), "reason": None, "job_id": None, "snapshot_id": None,
+        "email_sent": False, "email_error": None, "trigger_source": trigger_source,
     }
 
-    if execution_mode == "official":
-        owner_id = owner_id or CONFIG["official_owner"]
-        if not owner_id or (state.get("owner_id") or "") != owner_id:
-            result.update({"status": "owner_conflict", "reason": "owner_mismatch"})
-            return result
-        expires = intraday._parse_dt(state.get("owner_lease_expires_at"))
-        if expires is None or expires <= now:
-            result.update({"status": "owner_conflict", "reason": "owner_lease_expired"})
-            return result
-
-    decision = intraday.should_finalize_session(state, session, latest, now, CONFIG)
-    result["reason"] = decision["reason"]
-    result["skipped_reason"] = decision.get("skipped_reason")
-
-    # P0-R3：explicit_failed 仅允许显式手工重试
-    allow_send = decision["should_send"]
-    if decision["reason"] == "explicit_failed" and manual_retry:
-        allow_send = True
-        result["manual_retry"] = True
-        result["retry_operator"] = retry_operator or "manual"
-
-    if not allow_send:
+    # §21 非交易日 → skipped(NON_TRADING_DAY)
+    from backend.services.trading_calendar import is_trading_day
+    if not is_trading_day(now.date()):
         if execution_mode == "official":
-            state = intraday.release_owner(state)
-            intraday.save_state(state)
+            intraday.STATE_STORE.mutate(
+                now,
+                lambda s: intraday.skip_summary_job(s, session, intraday.SummaryReason.NON_TRADING_DAY, now))
+        result.update({"status": "skipped", "reason": intraday.SummaryReason.NON_TRADING_DAY})
+        _summary_log("summary_finalizer_skip", trade_date, session, reason=intraday.SummaryReason.NON_TRADING_DAY)
         return result
 
+    # §6/§7 显式 session snapshot 绑定
+    snapshot = get_snapshot_for_session(trade_date, session)
+    snapshot_id = (snapshot or {}).get("snapshot_id")
+    result["snapshot_id"] = snapshot_id
+
+    # §23 Eligibility 提前计算（只依赖 snapshot 与 job 终态，不依赖运行态）
+    state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
+    eligibility = intraday.summary_eligibility(state, session, snapshot, now, CONFIG)
+    result["reason"] = eligibility["reason"]
+
+    if execution_mode != "official":
+        # 只读/影子模式：不写 official 状态，仅构造内容供本地验证（不 dispatch/start）
+        if not eligibility["eligible"]:
+            result.update({"status": "skipped"})
+            return result
+        _buy_current, _sell_current, buy_today, _sell_today = intraday.current_candidate_lists(state)
+        subject, text, html_content = build_summary_payload(buy_today, session, now)
+        result.update({"status": "constructed", "subject": subject, "text": text})
+        _summary_log("summary_finalizer_construct", trade_date, session, mode=execution_mode,
+                     candidate_count=len(buy_today))
+        return result
+
+    # ── official：完整状态机 ──
+    job = intraday.get_summary_job(state, session)
+    if job.get("status") == intraday.SummaryStatus.COMPLETED:
+        result.update({"status": "skipped", "reason": intraday.SummaryReason.ALREADY_COMPLETED})
+        return result
+    if job.get("status") == intraday.SummaryStatus.SKIPPED:
+        result.update({"status": "skipped", "reason": job.get("skip_reason")})
+        return result
+
+    # §12 原子抢占：not_attempted/retry_wait/dead → queued
+    due_at = intraday.finalizer_due_at(trade_date, session)
+    ok, state, reason = intraday.STATE_STORE.dispatch(
+        session, snapshot_id, now, trigger_source,
+        due_at=due_at.isoformat() if due_at else None, force=manual_retry,
+    )
+    if not ok:
+        result.update({"status": "skipped", "reason": reason})
+        _summary_log("summary_finalizer_dispatch_conflict", trade_date, session, reason=reason)
+        return result
+    job = intraday.get_summary_job(state, session)
+    result["job_id"] = job.get("job_id")
+    _summary_log("summary_finalizer_dispatch", trade_date, session, job_id=job.get("job_id"),
+                 snapshot_id=snapshot_id, status_before="not_attempted", status_after="queued",
+                 trigger_source=trigger_source)
+
+    # §13 Worker 原子启动：queued → running，写入 run_id（lease token）
+    ok, state, reason = intraday.STATE_STORE.start(
+        session, worker_id=owner_id or execution_mode, now=now)
+    if not ok:
+        result.update({"status": "skipped", "reason": reason})
+        _summary_log("summary_finalizer_start_conflict", trade_date, session, reason=reason)
+        return result
+    job = intraday.get_summary_job(state, session)
+    run_id = job.get("run_id")
+    _summary_log("summary_finalizer_start", trade_date, session, job_id=job.get("job_id"),
+                 run_id=run_id, status_before="queued", status_after="running",
+                 attempt=job.get("attempt_count", 0))
+
+    if not eligibility["eligible"]:
+        reason = eligibility["reason"]
+        if intraday.is_terminal_skip(reason):
+            # 终态跳过（非交易日/session 不匹配/不满足通知门禁）
+            state = intraday.STATE_STORE.mutate(
+                now,
+                lambda s: intraday.skip_summary_job(s, session, reason, now, run_id=run_id))
+            result.update({"status": "skipped", "reason": reason})
+            _summary_log("summary_finalizer_skip", trade_date, session, reason=reason, job_id=job.get("job_id"))
+        else:
+            # 可恢复（无快照/快照未就绪等）→ RETRY_WAIT，等 reconciler 重试，不永久 skipped
+            state = intraday.STATE_STORE.mutate(
+                now,
+                lambda s: intraday.fail_summary_job(s, session, reason, reason, now, run_id=run_id))
+            after = intraday.get_summary_job(state, session)
+            result.update({"status": after.get("status"), "reason": reason})
+            _summary_log("summary_finalizer_retry_wait", trade_date, session, reason=reason,
+                         job_id=job.get("job_id"), status_after=after.get("status"))
+        return result
+
+    # 生成摘要内容（候选来自当日状态，非 latest report）
+    state = intraday.STATE_STORE.load(trade_date=trade_date, now=now)
     _buy_current, _sell_current, buy_today, _sell_today = intraday.current_candidate_lists(state)
     subject, text, html_content = build_summary_payload(buy_today, session, now)
-    if execution_mode != "official":
-        result.update({"status": "constructed", "subject": subject, "text": text})
-        return result
 
-    previous_entry = ((state.get("summary_state") or {}).get(session) or {})
+    # §15 + 第二轮：send 前持久化「sending」标记（崩溃窗口防重复邮件的关键）
     attempt_id = uuid.uuid4().hex
-    state = intraday.mark_summary_pending(state, session, now.isoformat(), attempt_id)
-    if previous_entry.get("attempt_id"):
-        # 记录原 attempt_id 便于审计（手工重试场景）
-        entry = dict(state["summary_state"].get(session) or {})
-        entry["previous_attempt_id"] = previous_entry.get("attempt_id")
-        entry["retry_operator"] = result.get("retry_operator")
-        state["summary_state"][session] = entry
-    intraday.save_state(state)
+    idem_key = intraday.summary_job_idempotency_key(trade_date, session)
+    state = intraday.STATE_STORE.mutate(
+        now,
+        lambda s: intraday.mark_delivery_sending(s, session, idem_key, attempt_id, now, run_id=run_id))
+
     try:
         ok, error = send_email(subject, text, html_content, get_smtp_config())
-    except Exception as exc:  # noqa: BLE001 结果不明 -> delivery_unknown，禁止自动重发
-        state = intraday.mark_summary_delivery_unknown(state, session, now.isoformat())
-        state = intraday.release_owner(state)
-        intraday.save_state(state)
-        result.update({"status": "delivery_unknown", "email_error": f"{type(exc).__name__}: {exc}"})
+    except Exception as exc:  # noqa: BLE001 结果不明 → 终态 delivery_unknown（禁止自动重发）
+        state = intraday.STATE_STORE.mutate(
+            now,
+            lambda s: intraday.mark_delivery_unknown_terminal(
+                s, session, f"{type(exc).__name__}: {exc}", now, run_id=run_id))
+        after = intraday.get_summary_job(state, session)
+        result.update({"status": after.get("status"), "reason": intraday.SummaryReason.DELIVERY_UNKNOWN,
+                       "email_error": f"{type(exc).__name__}: {exc}"})
+        _summary_log("summary_finalizer_delivery_unknown", trade_date, session, job_id=job.get("job_id"),
+                     run_id=run_id, error_code=intraday.SummaryReason.DELIVERY_UNKNOWN,
+                     status_after=after.get("status"), attempt=job.get("attempt_count", 0))
         return result
 
     result["email_sent"] = bool(ok)
     result["email_error"] = error
     if ok:
-        state = intraday.mark_summary_sent(state, session, now.isoformat())
-        result["status"] = "sent"
+        # §14 成功提交：delivery accepted + completed 同一次原子写（同一状态文件）
+        state = intraday.STATE_STORE.mutate(
+            now,
+            lambda s: intraday.mark_delivery_accepted(
+                intraday.complete_summary_job(s, session, now, run_id=run_id),
+                session, now, run_id=run_id))
+        result["status"] = "completed"
+        _summary_log("summary_finalizer_complete", trade_date, session, job_id=job.get("job_id"),
+                     run_id=run_id, status_before="running", status_after="completed")
     else:
-        state = intraday.mark_summary_explicit_failed(state, session, now.isoformat())
-        result["status"] = "send_failed"
-    state = intraday.release_owner(state)
-    intraday.save_state(state)
+        state = intraday.STATE_STORE.mutate(
+            now,
+            lambda s: intraday.mark_delivery_failed(
+                intraday.fail_summary_job(
+                    s, session, intraday.SummaryReason.SEND_FAILED, error or "send_failed", now, run_id=run_id),
+                session, error or "send_failed", now, run_id=run_id))
+        after = intraday.get_summary_job(state, session)
+        result["status"] = after.get("status")
+        result["reason"] = intraday.SummaryReason.SEND_FAILED
+        _summary_log("summary_finalizer_fail", trade_date, session, job_id=job.get("job_id"),
+                     run_id=run_id, error_code=intraday.SummaryReason.SEND_FAILED,
+                     status_after=after.get("status"), attempt=job.get("attempt_count", 0))
     return result
+
+
+def summary_doctor(trade_date: str, session: str, now: Optional[datetime] = None) -> dict:
+    """§24 诊断命令：输出 Summary Job / Snapshot / Eligibility 全貌，无需翻日志。"""
+    now = now or datetime.now(BEIJING_TZ)
+    now = intraday._ensure_aware(now)
+    if session not in (intraday.TradingSession.AM.value, intraday.TradingSession.PM.value):
+        raise ValueError(f"非法 session: {session!r}")
+
+    state = intraday.STATE_STORE.load_raw()
+    state_matches = state.get("trade_date") == trade_date
+    job = intraday.get_summary_job(state, session) if state_matches else intraday.empty_summary_job(session, trade_date)
+    snapshot = (state.get("session_snapshots") or {}).get(session) if state_matches else None
+    eligibility = intraday.summary_eligibility(
+        state if state_matches else {}, session, snapshot, now, CONFIG)
+    health = intraday.assess_summary_health(
+        state if state_matches else {}, session, snapshot, now, CONFIG)
+
+    return {
+        "trade_date": trade_date,
+        "session": session,
+        "state_trade_date": state.get("trade_date"),
+        "state_matches": state_matches,
+        "job": job,
+        "snapshot": snapshot,
+        "eligibility": eligibility,
+        "health": health,
+        "suggested_action": health["recommended_action"],
+    }
+
+
+def summary_repair(trade_date: str, session: str, dry_run: bool = True, execute: bool = False,
+                   execution_mode: Optional[str] = None, owner_id: Optional[str] = None) -> dict:
+    """§25 安全补跑命令：dry-run 只诊断；execute 走正常状态机 + 幂等（不绕过状态管理）。"""
+    if session not in (intraday.TradingSession.AM.value, intraday.TradingSession.PM.value):
+        raise ValueError(f"非法 session: {session!r}")
+    due = intraday.finalizer_due_at(trade_date, session)
+    now = due or datetime.strptime(trade_date + " 12:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=BEIJING_TZ)
+
+    doctor = summary_doctor(trade_date, session, now)
+    job = doctor["job"]
+    snapshot = doctor["snapshot"]
+    would_dispatch = (
+        doctor["state_matches"]
+        and job.get("status") not in (intraday.SummaryStatus.COMPLETED, intraday.SummaryStatus.SKIPPED)
+        and doctor["eligibility"]["eligible"]
+    )
+    base = {
+        "trade_date": trade_date, "session": session,
+        "would_dispatch": bool(would_dispatch),
+        "job_id": job.get("job_id"),
+        "snapshot_id": (snapshot or {}).get("snapshot_id"),
+        "reason": doctor["eligibility"]["reason"],
+    }
+    if dry_run or not execute:
+        base["doctor"] = doctor
+        return base
+
+    # P1：repair execute 禁止修改非当前 state_trade_date 的状态（跨日 reset 语义下易误改历史）
+    if not doctor["state_matches"]:
+        raise RuntimeError(
+            f"不允许对非当前 state_trade_date 执行 repair：state={doctor.get('state_trade_date')}, 请求={trade_date}"
+        )
+
+    result = finalize_principal_capital_session(
+        session=session, now=now, execution_mode=execution_mode or "readonly",
+        owner_id=owner_id, manual_retry=True, retry_operator="manual_repair",
+        trigger_source="manual_repair",
+    )
+    base["result"] = result
+    return base
 
 
 def backtest_principal_capital(

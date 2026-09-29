@@ -75,22 +75,54 @@ def _attempts_text(snapshot: Dict[str, Any]) -> str:
 
 
 def _summary_alert(intraday_state: Dict[str, Any], now: datetime) -> Optional[Dict[str, str]]:
-    """根据 summary_state 检查 finalizer 未完成 / pending 卡死 / delivery_unknown。"""
-    summary_state = (intraday_state or {}).get("summary_state") or {}
-    now_hm = now.hour * 100 + now.minute
-    for session, boundary in (("am", 1130), ("pm", 1500)):
-        entry = summary_state.get(session) or {}
-        status = entry.get("status")
-        if now_hm < boundary:
+    """根据 summary_state 检查 finalizer 未完成 / pending 卡死 / delivery_unknown。
+
+    25 改造 + 第二轮：复用 intraday.assess_summary_health 作为唯一「broken」判定来源，
+    避免 doctor / watchdog / reconciler 三套规则分歧。boundary 之后的告警规则：
+      - broken（dead / delivery_unknown）→ 告警（需人工 repair）
+      - running / queued（warning，卡死）→ 告警
+      - not_attempted（warning，从未调度）→ 告警
+      - retry_wait（warning，reconciler 自动重试）→ 不告警
+      - completed / skipped / sent（healthy）→ 不告警
+    """
+    from backend.plugins.principal_capital.intraday_state import (
+        SummaryStatus, assess_summary_health, finalizer_due_at,
+    )
+    from datetime import timedelta as _td
+
+    # 用 finalizer_due_at + 5 分钟宽限，而不是 session cutoff(11:30/15:00)，
+    # 修「finalizer 11:35 才 due、watchdog 11:31 就告警 missing」的提前告警。
+    grace = _td(minutes=5)
+    for session in ("am", "pm"):
+        due = finalizer_due_at(now.date().isoformat(), session)
+        if due is None:
             continue
-        if status == "delivery_unknown":
-            return {"kind": ALERT_DELIVERY_UNKNOWN, "message": f"{session} 摘要投递结果不明（delivery_unknown），需人工确认。"}
+        if now <= due + grace:
+            continue
+        entry = ((intraday_state or {}).get("summary_state") or {}).get(session) or {}
+        status = entry.get("status")
+        snapshot = ((intraday_state or {}).get("session_snapshots") or {}).get(session)
+        health = assess_summary_health(intraday_state or {}, session, snapshot, now)
+
+        if status == SummaryStatus.DELIVERY_UNKNOWN:
+            return {"kind": ALERT_DELIVERY_UNKNOWN,
+                    "message": f"{session} 摘要投递结果不明（delivery_unknown），需人工确认。"}
+        if health.get("health") == "broken":
+            return {"kind": ALERT_FINALIZER_MISSING,
+                    "message": f"{session} 摘要 finalizer 异常（{health.get('reason')}），需人工 repair。"}
+        if status in (SummaryStatus.RUNNING, SummaryStatus.QUEUED):
+            return {"kind": ALERT_FINALIZER_MISSING,
+                    "message": f"{session} 摘要 finalizer 停留在 {status}，疑似卡死。"}
         if status == "pending":
             updated = _as_beijing_time(entry.get("updated_at"))
             if updated is None or (now - updated).total_seconds() > 30 * 60:
-                return {"kind": ALERT_PENDING_STUCK, "message": f"{session} 摘要停留在 pending 超过 30 分钟，疑似卡死。"}
-        if status not in ("sent", "explicit_failed"):
-            return {"kind": ALERT_FINALIZER_MISSING, "message": f"{session} 摘要 finalizer 尚未完成（状态 {status or 'not_attempted'}）。"}
+                return {"kind": ALERT_PENDING_STUCK,
+                        "message": f"{session} 摘要停留在 pending 超过 30 分钟，疑似卡死。"}
+            continue
+        if status in (None, "", SummaryStatus.NOT_ATTEMPTED):
+            return {"kind": ALERT_FINALIZER_MISSING,
+                    "message": f"{session} 摘要 finalizer 尚未完成（状态 not_attempted）。"}
+        # retry_wait / completed / skipped / sent → 不告警
     return None
 
 

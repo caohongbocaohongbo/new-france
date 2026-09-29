@@ -98,6 +98,18 @@ CONFIG = {
     # 摘要 finalizer
     "summary_max_age_min": _env_int("PC_SUMMARY_MAX_AGE_MIN", 15),
 
+    # ---- 25 摘要 Finalizer 可靠性：状态机 / 调度 / 重试 / 自愈 ----
+    # AM/PM cutoff 与 finalizer_due（沿用 A 股真实交易时段：午 11:30 收、13:00 开、15:00 收）
+    "summary_schedule": {
+        "am": {"cutoff": "11:30", "finalizer_due": "11:35"},
+        "pm": {"cutoff": "15:00", "finalizer_due": "15:05"},
+    },
+    # running 超过该时长未完成 → reconciler 判定 worker 卡死（WORKER_STALE）
+    "summary_running_timeout_seconds": _env_int("PC_SUMMARY_RUNNING_TIMEOUT_SECONDS", 600),
+    # 失败重试上限与退避（秒）
+    "summary_max_attempts": _env_int("PC_SUMMARY_MAX_ATTEMPTS", 3),
+    "summary_retry_backoff_seconds": [60, 300, 900],
+
     # 邮件 SMTP（与主项目共享相同环境变量名以复用 secrets）
     "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
     "smtp_port": int(os.environ.get("SMTP_PORT", "587")),

@@ -42,3 +42,35 @@ def run_finalize_cli(args):
         execution_mode=getattr(args, "execution_mode", None),
         owner_id=getattr(args, "owner_id", None),
     )
+
+
+def run_reconcile_cli(args):
+    """摘要 Reconciler CLI 入口（自愈补调度）。"""
+    from .service import reconcile_summary_jobs
+    return reconcile_summary_jobs(
+        execution_mode=getattr(args, "execution_mode", None),
+        owner_id=getattr(args, "owner_id", None),
+        dry_run=getattr(args, "dry_run", False),
+    )
+
+
+def run_summary_doctor_cli(args):
+    """摘要诊断 CLI 入口。"""
+    from .service import summary_doctor
+    return summary_doctor(
+        trade_date=getattr(args, "summary_trade_date", None) or getattr(args, "trade_date", None),
+        session=getattr(args, "session", "am"),
+    )
+
+
+def run_summary_repair_cli(args):
+    """摘要安全补跑 CLI 入口。"""
+    from .service import summary_repair
+    return summary_repair(
+        trade_date=getattr(args, "summary_trade_date", None) or getattr(args, "trade_date", None),
+        session=getattr(args, "session", "am"),
+        dry_run=getattr(args, "dry_run", True),
+        execute=getattr(args, "summary_repair_execute", False),
+        execution_mode=getattr(args, "execution_mode", None),
+        owner_id=getattr(args, "owner_id", None),
+    )

@@ -33,7 +33,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: principal-capital-${{ github.ref }}
+  # 与 principal-capital-reconcile 共用同一全局组，防止两个 runner 并发读写同一份
+  # data-snapshots 状态（跨 runner 无文件锁，靠 concurrency 串行化兜底）
+  group: principal-capital-state-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -94,6 +96,8 @@ jobs:
           FORCE_FLAG: ${{ github.event.inputs.force == 'true' && '--force' || '' }}
           PC_EXECUTION_MODE: official
           PC_OFFICIAL_OWNER: "${{ github.run_id }}:${{ github.run_attempt }}:${{ github.job }}"
+          # 25：允许 provisional（新浪无 source_time）数据发送午间/收盘摘要邮件
+          PC_ALLOW_PROVISIONAL_NOTIFY: "1"
         run: |
           # ── 自循环：每 5 分钟扫描一次，直至本时段收盘 ──
           # 触发点无论早晚，只要落在交易日内进入循环即可覆盖整段。
@@ -152,6 +156,8 @@ jobs:
             fi
             echo "===== 北京 ${bj_hm} 开始一轮扫描 ====="
             scan_once
+            # 25：每轮顺带 reconcile（补漏本 session 或上一 session 的 overdue finalizer，幂等）
+            python -m backend.main --reconcile-principal-capital-summary --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || echo "reconcile 失败（忽略，下一轮再试）"
             bash scripts/commit_screening_data.sh || echo "快照提交失败（忽略，继续下一轮）"
 
             bj_hm="$(TZ=Asia/Shanghai date +%H%M)"
@@ -165,4 +171,11 @@ jobs:
 
           # 23 v2：session 边界额外调用一次 finalizer（午间/收盘日内汇总，恰好一次）
           python -m backend.main --finalize-principal-capital-session --session "${SESSION}" --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || exit 2
-          bash scripts/commit_screening_data.sh || echo "快照提交失败（忽略）"
+
+          # 25：reconcile 自愈补调度——若上午 session 的 finalizer 因调度缺失/崩溃未执行，
+          # 本步骤在收盘后扫描 overdue job 并补跑（幂等，不重复发送）。
+          python -m backend.main --reconcile-principal-capital-summary --execution-mode official --owner-id "${PC_OFFICIAL_OWNER}" || echo "reconcile 失败（忽略，watchdog 会告警）"
+
+          # 关键：finalizer/reconcile 变更了 summary 状态（sending/accepted/completed 等），
+          # 持久化失败必须致命退出，否则下一 runner 恢复旧状态会重复发邮件。
+          bash scripts/commit_screening_data.sh || { echo "摘要状态快照提交失败（致命）"; exit 1; }

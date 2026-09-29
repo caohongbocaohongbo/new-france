@@ -120,11 +120,10 @@ class SentinelTest(unittest.TestCase):
 
 
 class FinalizerCrashTest(unittest.TestCase):
-    def test_pending_persisted_then_restart_does_not_resend(self):
+    def test_stale_running_recovered_on_restart(self):
         with TemporaryDirectory() as tmp:
             state_file = Path(tmp) / "state.json"
-            report_file = Path(tmp) / "latest.json"
-            # 子进程写入 pending+attempt_id 后直接退出，模拟进程在 SMTP 前被强杀
+            # 子进程写入 running 状态后直接退出，模拟 worker 在 SMTP 前被强杀
             code = (
                 "import sys; sys.path.insert(0, %r); "
                 "from backend.plugins.principal_capital import intraday_state as its; "
@@ -134,20 +133,21 @@ class FinalizerCrashTest(unittest.TestCase):
                 "state = its.empty_state('2026-09-15'); "
                 "ok, state, _ = its.acquire_owner(state, 'github_actions', 600, now); "
                 "state['last_batch_id'] = 'b1'; "
-                "state = its.mark_summary_pending(state, 'pm', now.isoformat(), 'attempt-1'); "
+                "ok, state, _ = its.dispatch_summary_job(state, 'pm', 'b1', now, 'scheduler'); "
+                "ok, state, _ = its.start_summary_job(state, 'pm', 'worker-1', now); "
                 "its.save_state(state, path=%r)"
             ) % (str(Path.cwd()), str(state_file))
             subprocess.run([sys.executable, "-c", code], check=True, cwd=Path.cwd())
-            report_file.write_text(json.dumps({
-                "status": "completed", "now": NOW.isoformat(), "batch_id": "b1",
-                "trade_date": "2026-09-15", "quality": {"notify_eligible": True},
-            }), encoding="utf-8")
-            with patch.object(pcs.intraday, "INTRADAY_STATE_FILE", state_file),                  patch.object(pcs, "REPORT_FILE", report_file),                  patch.object(pcs, "send_email", return_value=(True, None)) as send:
-                result = pcs.finalize_principal_capital_session(
-                    "pm", now=NOW, execution_mode="official", owner_id="github_actions")
-            self.assertEqual(result["status"], "skipped")
-            self.assertEqual(result["reason"], "delivery_unknown")
-            send.assert_not_called()
+            # 重启后 11 分钟，reconciler 判定 running 卡死并恢复
+            with patch.object(pcs.intraday, "INTRADAY_STATE_FILE", state_file):
+                result = pcs.reconcile_summary_jobs(
+                    now=NOW + timedelta(minutes=11), dry_run=False)
+            self.assertIn("pm", result["recovered"])
+            # 恢复后状态为 retry_wait(WORKER_STALE)，可被重试
+            state = its.load_state_raw(path=state_file)
+            job = its.get_summary_job(state, "pm")
+            self.assertEqual(job["status"], "retry_wait")
+            self.assertEqual(job["last_error_code"], "WORKER_STALE")
 
 
 class ScanIntegrationTest(unittest.TestCase):
