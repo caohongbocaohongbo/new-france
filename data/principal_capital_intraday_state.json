@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "trade_date": "2026-10-06",
+  "trade_date": "2026-10-07",
   "owner_id": null,
   "owner_lease_expires_at": null,
   "last_batch_id": null,
@@ -10,13 +10,13 @@
     "am": {
       "status": "skipped",
       "job_id": null,
-      "trade_date": "2026-10-06",
+      "trade_date": "2026-10-07",
       "session": "am",
       "selected_snapshot_id": null,
       "finalizer_due_at": null,
       "queued_at": null,
       "started_at": null,
-      "completed_at": "2026-10-06T11:32:21.979106+08:00",
+      "completed_at": "2026-10-07T11:31:57.681888+08:00",
       "attempt_count": 0,
       "dispatch_count": 0,
       "max_attempts": 3,
@@ -32,7 +32,7 @@
         {
           "from": "not_attempted",
           "to": "skipped",
-          "at": "2026-10-06T11:32:21.979106+08:00",
+          "at": "2026-10-07T11:31:57.681888+08:00",
           "reason": "NON_TRADING_DAY",
           "worker_id": null,
           "error": null
@@ -49,15 +49,15 @@
       }
     },
     "pm": {
-      "status": "skipped",
+      "status": "not_attempted",
       "job_id": null,
-      "trade_date": "2026-10-06",
+      "trade_date": "2026-10-07",
       "session": "pm",
       "selected_snapshot_id": null,
       "finalizer_due_at": null,
       "queued_at": null,
       "started_at": null,
-      "completed_at": "2026-10-06T15:02:01.553835+08:00",
+      "completed_at": null,
       "attempt_count": 0,
       "dispatch_count": 0,
       "max_attempts": 3,
@@ -65,20 +65,11 @@
       "last_error_code": null,
       "last_error_message": null,
       "last_error_at": null,
-      "skip_reason": "NON_TRADING_DAY",
+      "skip_reason": null,
       "trigger_source": null,
       "worker_id": null,
       "run_id": null,
-      "history": [
-        {
-          "from": "not_attempted",
-          "to": "skipped",
-          "at": "2026-10-06T15:02:01.553835+08:00",
-          "reason": "NON_TRADING_DAY",
-          "worker_id": null,
-          "error": null
-        }
-      ],
+      "history": [],
       "delivery": {
         "status": "not_started",
         "idempotency_key": null,
