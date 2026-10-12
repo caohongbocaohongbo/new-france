@@ -4,7 +4,7 @@
 各插件通过 backend.plugins.common 的 db 辅助函数做最佳努力写入，
 主读取路径为 reports/<name>_latest.json 快照（秒开），SQLite 供历史/明细查询。
 """
-from sqlalchemy import Column, Float, Integer, String, Text, Index
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text, Index, UniqueConstraint
 
 from backend.db.database import Base
 
@@ -434,4 +434,212 @@ class PickerPerfDaily(Base):
     data_missing = Column(Integer, default=0)
     updated_at = Column(String(30))
     __table_args__ = (Index("idx_ppd_date", "signal_date"), Index("idx_ppd_code", "code", "signal_date"))
+
+# ===================== 26 方案：五大功能新表 =====================
+
+class PaperAccount(Base):
+    """26 绩效模拟盘：虚拟账户。"""
+    __tablename__ = "paper_accounts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), unique=True, nullable=False, default="main")
+    initial_capital = Column(Float, default=100000.0)
+    cash = Column(Float, default=100000.0)
+    updated_at = Column(String(30))
+
+
+class PaperPosition(Base):
+    """26 绩效模拟盘：持仓。"""
+    __tablename__ = "paper_positions"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(Integer, nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    level = Column(String(20))
+    open_date = Column(String(10), nullable=False)
+    open_price = Column(Float, nullable=False)
+    shares = Column(Integer, nullable=False)
+    cost = Column(Float)
+    status = Column(String(20), default="open")
+    close_date = Column(String(10))
+    close_price = Column(Float)
+    pnl = Column(Float, default=0.0)
+    pnl_pct = Column(Float, default=0.0)
+    reason = Column(String(200))
+    __table_args__ = (Index("idx_pp_acct", "account_id"), Index("idx_pp_status", "status"))
+
+
+class PaperNav(Base):
+    """26 绩效模拟盘：每日净值。"""
+    __tablename__ = "paper_nav"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(Integer, nullable=False)
+    trade_date = Column(String(10), nullable=False)
+    nav = Column(Float)
+    daily_return = Column(Float, default=0.0)
+    drawdown = Column(Float, default=0.0)
+    __table_args__ = (Index("idx_pn_acct_date", "account_id", "trade_date"),)
+
+
+class PaperTrade(Base):
+    """26 绩效模拟盘：交易流水。"""
+    __tablename__ = "paper_trades"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(Integer, nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    side = Column(String(10), nullable=False)
+    price = Column(Float)
+    shares = Column(Integer)
+    trade_date = Column(String(10), nullable=False)
+    reason = Column(String(200))
+    __table_args__ = (Index("idx_pt_acct_date", "account_id", "trade_date"),)
+
+
+class WatchRule(Base):
+    """26 条件盯盘：监控规则。"""
+    __tablename__ = "watch_rules"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    product_type = Column(String(20), default="stock")
+    condition = Column(Text, nullable=False)
+    variables_json = Column(Text)
+    channels_json = Column(Text)
+    enabled = Column(Integer, default=1)
+    last_trigger_key = Column(String(200))
+    created_at = Column(String(30))
+    __table_args__ = (Index("idx_wr_code", "code"), Index("idx_wr_enabled", "enabled"))
+
+
+class WatchAlert(Base):
+    """26 条件盯盘：触发记录。"""
+    __tablename__ = "watch_alerts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rule_id = Column(Integer, nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    condition = Column(Text)
+    triggered_at = Column(String(30))
+    price = Column(Float)
+    change_pct = Column(Float)
+    message = Column(Text)
+    dedup_key = Column(String(200), unique=True)
+    notified = Column(Integer, default=0)
+    __table_args__ = (Index("idx_wa_rule", "rule_id"), Index("idx_wa_code_date", "code", "triggered_at"))
+
+
+class HotScan(Base):
+    """26 舆情热度聚合：每日扫描结果。"""
+    __tablename__ = "hot_scan"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    scan_date = Column(String(10), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    score = Column(Integer, default=0)
+    sources_json = Column(Text)
+    rank = Column(Integer)
+    in_watchlist = Column(Integer, default=0)
+    created_at = Column(String(30))
+    __table_args__ = (Index("idx_hs_date_rank", "scan_date", "rank"), Index("idx_hs_code", "code", "scan_date"))
+
+
+class EventScan(Base):
+    """26 事件驱动雷达：事件扫描结果。"""
+    __tablename__ = "event_scan"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    event_type = Column(String(30), nullable=False)
+    title = Column(String(200))
+    source = Column(String(80))
+    impact_score = Column(Integer, default=0)
+    event_date = Column(String(10), nullable=False)
+    url = Column(String(500))
+    dedup_key = Column(String(200), unique=True)
+    in_watchlist = Column(Integer, default=0)
+    created_at = Column(String(30))
+    __table_args__ = (Index("idx_es_date", "event_date"), Index("idx_es_code", "code", "event_date"), Index("idx_es_type", "event_type"))
+
+
+# ===================== 28 方案：低位竞价雷达（端到端验收链） =====================
+
+class AuctionRun(Base):
+    """28 低位竞价雷达：每日 run 主状态 + 六里程碑明细。"""
+    __tablename__ = "auction_runs"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_date = Column(String(10), nullable=False)
+    strategy_version = Column(String(40), nullable=False)
+    revision = Column(Integer, default=1, nullable=False)
+    phase = Column(String(30))
+    state = Column(String(30))
+    pool_hash = Column(String(64))
+    factor_spec_version = Column(String(40))
+    config_hash = Column(String(64))
+    code_commit = Column(String(64))
+    snapshot_version = Column(String(64))
+    started_at = Column(String(30))
+    confirmed_at = Column(String(30))
+    published_at = Column(String(30))
+    milestones_json = Column(Text)
+    last_error = Column(Text)
+    __table_args__ = (
+        UniqueConstraint("trade_date", "strategy_version", "revision", name="uq_auction_runs"),
+        Index("idx_auction_runs_date_state", "trade_date", "state"),
+    )
+
+
+class AuctionCandidate(Base):
+    """28 低位竞价雷达：每日候选评分与证据。"""
+    __tablename__ = "auction_candidates"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(Integer, ForeignKey("auction_runs.id"), nullable=False)
+    code = Column(String(6), nullable=False)
+    name = Column(String(50))
+    low_score = Column(Float)
+    auction_score = Column(Float)
+    total_score = Column(Float)
+    quality = Column(String(20))
+    coverage = Column(Float)
+    tradability = Column(String(40))
+    source = Column(String(30))
+    source_timestamp = Column(String(30))
+    excluded_reason = Column(Text)
+    confirmed_fields_json = Column(Text)
+    evidence_json = Column(Text)
+    rank = Column(Integer)
+    price = Column(Float)
+    last_close = Column(Float)
+    gap = Column(Float)
+    volume_ratio = Column(Float)
+    turnover = Column(Float)
+    __table_args__ = (
+        UniqueConstraint("run_id", "code", name="uq_auction_cand_code"),
+        UniqueConstraint("run_id", "rank", name="uq_auction_cand_rank"),
+        Index("idx_auction_cand_code", "code"),
+    )
+
+
+class AuctionOutbox(Base):
+    """28 低位竞价雷达：邮件 Outbox 任务。"""
+    __tablename__ = "auction_outbox"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_key = Column(String(120), nullable=False)
+    run_id = Column(Integer, ForeignKey("auction_runs.id"), nullable=False)
+    channel = Column(String(20), nullable=False)
+    recipient_key = Column(String(120), nullable=False)
+    status = Column(String(30), default="WAITING_PUBLISH")
+    attempts = Column(Integer, default=0)
+    next_attempt_at = Column(String(30))
+    sending_started_at = Column(String(30))
+    last_attempt_at = Column(String(30))
+    accepted_at = Column(String(30))
+    updated_at = Column(String(30))
+    last_error = Column(Text)
+    payload_json = Column(Text)
+    created_at = Column(String(30))
+    __table_args__ = (
+        UniqueConstraint("event_key", "channel", "recipient_key", name="uq_auction_outbox"),
+        Index("idx_auction_outbox_status", "status", "next_attempt_at"),
+    )
+
 

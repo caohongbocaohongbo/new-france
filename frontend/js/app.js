@@ -280,7 +280,10 @@ function navigateTo(route, pushState = true, force = false) {
         'tail-raid':'尾盘抢筹',board:'板块轮动','zt-seal':'涨停封单',
         'volume-profile':'分价成本带','factor-lab':'因子实验室',l2:'真实L2升级',
         'low-position':'低位涨停选股',resonance:'四维共振信号',
-        'smart-picker':'智能选股器'
+        'smart-picker':'智能选股器','auction-radar':'低位竞价雷达',
+        'risk-override':'风险否决', 'paper-trading':'绩效模拟盘',
+        'conditional-watch':'条件盯盘', 'hot-scanner':'舆情热度聚合',
+        'event-radar':'事件驱动雷达'
     }[page] || page;
     setTopbarMeta(page);
     if (page === 'dashboard') loadDashboard();
@@ -289,6 +292,7 @@ function navigateTo(route, pushState = true, force = false) {
     if (page === 'screening') setupScreeningPage();
     if (page === 'national-team') loadNationalTeam();
     if (page === 'settings') setupSettingsPage();
+    if (page === 'auction-radar') setupAuctionRadarPage();
     // 插件：主力资金（懒加载，不影响其它页面）
     if (page === 'principal-capital' && typeof setupPrincipalCapitalPage === 'function') {
         setupPrincipalCapitalPage();
@@ -299,6 +303,10 @@ function navigateTo(route, pushState = true, force = false) {
     // 14 方案新功能页面（通用渲染）
     if (typeof setupResearchPage === 'function' && window.RESEARCH_PAGES && window.RESEARCH_PAGES.includes(page)) {
         setupResearchPage(page);
+    }
+    // 26 方案：舆情聚合雷达（5 个子页）
+    if (typeof setupRadarPage === 'function' && window.RADAR_PAGES && window.RADAR_PAGES.includes(page)) {
+        setupRadarPage(page);
     }
 }
 
@@ -2911,3 +2919,131 @@ function setupScreeningPage() {
         }
     }
 }
+// ===== 低位竞价雷达（一级菜单，列表渲染邮件推送的股票评分数据） =====
+let auctionRadarData = [];
+let auctionRadarSort = { key: 'total_score', order: 'desc' };
+let auctionRadarPage = 1;
+const AUCTION_RADAR_PAGE_SIZE = 20;
+
+function setupAuctionRadarPage() {
+    if (auctionRadarData.length === 0) { loadAuctionRadar(); } else { renderAuctionRadarTable(); }
+}
+
+async function loadAuctionRadar() {
+    const hint = document.getElementById('arQueryHint');
+    const tbody = document.getElementById('arTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">加载中...</td></tr>';
+    const t0 = performance.now();
+    try {
+        const data = await apiFetch('/api/v1/auction-radar/candidates');
+        auctionRadarData = Array.isArray(data.items) ? data.items : [];
+        populateAuctionRadarDateFilters(auctionRadarData);
+        renderAuctionRadarTable();
+        if (hint) hint.textContent = '查询完成 ' + auctionRadarData.length + ' 条 · ' + Math.round(performance.now() - t0) + 'ms';
+    } catch (e) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">加载失败</td></tr>';
+        if (hint) hint.textContent = '加载失败';
+    }
+}
+
+function populateAuctionRadarDateFilters(items) {
+    const addedSel = document.getElementById('arAddedDate');
+    const alertSel = document.getElementById('arAlertDate');
+    if (!addedSel || !alertSel) return;
+    const added = [...new Set(items.map(i => String(i.added_date || '').slice(0, 10)).filter(Boolean))].sort().reverse();
+    const alert = [...new Set(items.map(i => String(i.alert_time || '').slice(0, 10)).filter(Boolean))].sort().reverse();
+    const addedVal = addedSel.value, alertVal = alertSel.value;
+    addedSel.innerHTML = '<option value="">全部加入时间</option>' + added.map(d => '<option value="' + d + '">' + d + '</option>').join('');
+    alertSel.innerHTML = '<option value="">全部告警时间</option>' + alert.map(d => '<option value="' + d + '">' + d + '</option>').join('');
+    addedSel.value = addedVal; alertSel.value = alertVal;
+}
+
+function getAuctionRadarFiltered() {
+    const q = (document.getElementById('arSearch')?.value || '').trim().toLowerCase();
+    const added = document.getElementById('arAddedDate')?.value || '';
+    const alert = document.getElementById('arAlertDate')?.value || '';
+    return auctionRadarData.filter(it => {
+        if (q) {
+            const code = String(it.code || '').toLowerCase();
+            const name = String(it.name || '').toLowerCase();
+            if (!code.includes(q) && !name.includes(q)) return false;
+        }
+        if (added && String(it.added_date || '').slice(0, 10) !== added) return false;
+        if (alert && String(it.alert_time || '').slice(0, 10) !== alert) return false;
+        return true;
+    });
+}
+
+function setAuctionRadarSort(key) {
+    if (auctionRadarSort.key === key) {
+        auctionRadarSort.order = auctionRadarSort.order === 'asc' ? 'desc' : 'asc';
+    } else {
+        auctionRadarSort.key = key; auctionRadarSort.order = 'desc';
+    }
+    renderAuctionRadarTable();
+}
+
+function renderAuctionRadarTable() {
+    const tbody = document.getElementById('arTableBody');
+    const pag = document.getElementById('arPagination');
+    if (!tbody) return;
+    const filtered = getAuctionRadarFiltered();
+    const key = auctionRadarSort.key, order = auctionRadarSort.order;
+    filtered.sort((a, b) => {
+        let av = a[key], bv = b[key];
+        const avEmpty = av === null || av === undefined || av === '';
+        const bvEmpty = bv === null || bv === undefined || bv === '';
+        if (avEmpty && bvEmpty) return 0;
+        if (avEmpty) return 1;
+        if (bvEmpty) return -1;
+        if (typeof av === 'string' && typeof bv === 'string') {
+            av = av.toLowerCase(); bv = bv.toLowerCase();
+            const cmp = av < bv ? -1 : (av > bv ? 1 : 0);
+            return order === 'asc' ? cmp : -cmp;
+        }
+        return order === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av);
+    });
+    const total = filtered.length;
+    const pages = Math.max(1, Math.ceil(total / AUCTION_RADAR_PAGE_SIZE));
+    if (auctionRadarPage > pages) auctionRadarPage = pages;
+    const start = (auctionRadarPage - 1) * AUCTION_RADAR_PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + AUCTION_RADAR_PAGE_SIZE);
+    if (!pageItems.length) {
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-cell">暂无数据</td></tr>';
+    } else {
+        tbody.innerHTML = pageItems.map(it => {
+            const gap = toNumber(it.gap, 0);
+            const gapCls = gap > 0 ? 'up' : (gap < 0 ? 'down' : '');
+            const gapText = isRealNumber(it.gap) ? (gap > 0 ? '+' : '') + gap.toFixed(2) + '%' : '--';
+            const tradeTime = String(it.trade_time || '').slice(11, 19);
+            return '<tr>' +
+                '<td class="mono">' + escapeHtml(it.code) + '</td>' +
+                '<td>' + escapeHtml(it.name) + '</td>' +
+                '<td class="num">' + (isRealNumber(it.price) ? Number(it.price).toFixed(2) : '--') + '</td>' +
+                '<td class="num">' + (isRealNumber(it.last_close) ? Number(it.last_close).toFixed(2) : '--') + '</td>' +
+                '<td class="num ' + gapCls + '">' + gapText + '</td>' +
+                '<td class="num">' + (isRealNumber(it.volume_ratio) ? Number(it.volume_ratio).toFixed(2) : '--') + '</td>' +
+                '<td class="num">' + (isRealNumber(it.turnover) ? Number(it.turnover).toFixed(2) + '%' : '--') + '</td>' +
+                '<td>' + escapeHtml(tradeTime) + '</td>' +
+                '<td class="num">' + (isRealNumber(it.auction_score) ? Number(it.auction_score).toFixed(2) : '--') + '</td>' +
+                '<td class="num">' + (isRealNumber(it.total_score) ? Number(it.total_score).toFixed(2) : '--') + '</td>' +
+                '</tr>';
+        }).join('');
+    }
+    if (pag) {
+        renderPagination('arPagination', total, auctionRadarPage, AUCTION_RADAR_PAGE_SIZE, auctionRadarGo);
+    }
+    document.querySelectorAll('#page-auction-radar .sort-header').forEach(b => {
+        const th = b.closest('th');
+        if (th) th.setAttribute('aria-sort', b.dataset.sortKey === auctionRadarSort.key ? (auctionRadarSort.order === 'asc' ? 'ascending' : 'descending') : 'none');
+    });
+}
+
+function auctionRadarGo(page) {
+    const filtered = getAuctionRadarFiltered();
+    const pages = Math.max(1, Math.ceil(filtered.length / AUCTION_RADAR_PAGE_SIZE));
+    if (page < 1 || page > pages) return;
+    auctionRadarPage = page;
+    renderAuctionRadarTable();
+}
+

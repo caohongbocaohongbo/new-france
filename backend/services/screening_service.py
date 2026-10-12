@@ -618,6 +618,45 @@ async def run_full_pipeline(
             elif old_rec == "BUY" and s.recommendation == "WATCH":
                 s.adjusted_score = min(s.adjusted_score, 54.0)
             logger.info(f"  降级: {s.name}({s.code}) {old_rec} → {s.recommendation}")
+    # ---- Layer 2.6: 风险否决/降级规则层（26 方案功能 1，在审核降级之后） ----
+    _ro_cfg = runtime_config.get("riskOverrides") or runtime_config.get("risk_overrides") or {}
+    if _ro_cfg.get("enabled", True):
+        from .risk_overrides import apply_risk_overrides, build_stock_ctx
+
+        _cand_map = {c["code"]: c for c in candidates}
+        for s in scored:
+            c = _cand_map.get(s.code, {})
+            _mc_raw = c.get("流通市值")
+            _mc_yi = float(_mc_raw) / 1e8 if _mc_raw and float(_mc_raw) > 0 else None
+            _ctx = build_stock_ctx(
+                code=s.code,
+                level=s.recommendation,
+                historical_df=historical.get(s.code),
+                break_count=c.get("炸板次数"),
+                float_market_cap_yi=_mc_yi,
+                turnover_rate=c.get("换手率"),
+                index_gain=index_gain,
+            )
+            _res = apply_risk_overrides(_ctx, s.recommendation, _ro_cfg)
+            if _res.hits:
+                _old = s.recommendation
+                s.recommendation = _res.level
+                if _old == "STRONG_BUY" and _res.level == "BUY":
+                    s.adjusted_score = min(s.adjusted_score, 69.0)
+                elif _old == "BUY" and _res.level == "WATCH":
+                    s.adjusted_score = min(s.adjusted_score, 54.0)
+                elif _res.level == "HOLD":
+                    s.adjusted_score = min(s.adjusted_score, 49.0)
+                if not getattr(s, "extra", None):
+                    s.extra = {}
+                s.extra["risk_override"] = {
+                    "hits": _res.hits,
+                    "reasons": _res.reasons,
+                    "pre_level": _old,
+                    "post_level": _res.level,
+                    "confidence_multiplier": _res.confidence_multiplier,
+                }
+                logger.info(f"  风险否决: {s.name}({s.code}) {_old} → {_res.level} {_res.hits}")
 
     # [邮件升级] 模块 A：生成可执行操作计划（在审核降级完成后填充，避免仓位基于未降级得分计算）
     if runtime_config.get("actionPlan", {}).get("enabled", True):
@@ -724,6 +763,7 @@ async def run_full_pipeline(
             "factors": factor_list,
             "price_history": s.extra.get("price_history", []) if getattr(s, "extra", None) else [],
             "audit": audit_map.get(s.code, {}),
+            "risk_override": (s.extra or {}).get("risk_override"),
             "evidence": _build_stock_evidence(s, historical, quotes_meta, zt_snapshot_meta, index_meta),
         })
 

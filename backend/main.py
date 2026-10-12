@@ -180,6 +180,11 @@ def get_app():
         ("pattern_scanner", "register_router", "/api/v1/pattern-scanner", "形态突破"),
         ("chip_scanner", "register_router", "/api/v1/chip-scanner", "筹码集中度"),
         ("smart_picker_hub", "register_router", "/api/v1/smart-picker", "智能选股聚合中枢"),
+        ("paper_trading", "register_router", "/api/v1/paper-trading", "绩效模拟盘"),
+        ("conditional_watch", "register_router", "/api/v1/watch", "条件盯盘"),
+        ("hot_scanner", "register_router", "/api/v1/hot", "舆情热度聚合"),
+        ("event_scanner", "register_router", "/api/v1/event-radar", "事件驱动雷达"),
+        ("auction_radar", "register_router", "/api/v1/auction-radar", "低位竞价雷达"),
     ]
     for _mod, _fn, _prefix, _tag in _new_plugins:
         try:
@@ -325,6 +330,14 @@ def main():
                         help="[插件12] 真实L2升级路径(M1调研)")
     parser.add_argument("--run-low-position-once", action="store_true",
                         help="[插件16] 低位涨停选股器")
+    parser.add_argument("--run-auction-radar-once", action="store_true",
+                        help="[插件28] 低位竞价雷达单轮")
+    parser.add_argument("--run-auction-radar-daemon", action="store_true",
+                        help="[插件28] 低位竞价雷达本地常驻")
+    parser.add_argument("--run-auction-radar-review", action="store_true",
+                        help="[插件28] 低位竞价雷达盘后结果标签回填")
+    parser.add_argument("--run-auction-radar-probe", action="store_true",
+                        help="[插件28] 低位竞价雷达竞价源采样")
     parser.add_argument("--run-resonance-once", action="store_true",
                         help="[插件15] 四维共振信号")
     parser.add_argument("--run-tech-indicators-once", action="store_true",
@@ -442,6 +455,10 @@ def main():
         (args.run_volume_profile_once, "backend.plugins.volume_profile", "run_volume_profile_cli", "分价成本带"),
         (args.run_l2_daemon, "backend.plugins.l2_feed", "run_l2_cli", "真实L2"),
         (args.run_low_position_once, "backend.plugins.low_position_scanner", "run_low_position_cli", "低位涨停选股"),
+        (args.run_auction_radar_once, "backend.plugins.auction_radar", "run_auction_radar_cli", "低位竞价雷达"),
+        (args.run_auction_radar_daemon, "backend.plugins.auction_radar", "run_auction_radar_daemon_cli", "低位竞价雷达常驻"),
+        (args.run_auction_radar_review, "backend.plugins.auction_radar", "run_auction_radar_review_cli", "低位竞价雷达结果回填"),
+        (args.run_auction_radar_probe, "backend.plugins.auction_radar.probe", "run_probe_cli", "低位竞价雷达采样"),
         (args.run_resonance_once, "backend.plugins.resonance", "run_resonance_cli", "四维共振"),
         (args.run_tech_indicators_once, "backend.plugins.tech_indicators", "run_tech_indicators_cli", "经典技术指标"),
         (args.run_trend_strength_once, "backend.plugins.trend_strength", "run_trend_strength_cli", "趋势强度"),
@@ -458,16 +475,24 @@ def main():
 
 
 def _run_plugin_cli(mod_path, cli_name, args, logger, label):
-    """[插件] 通用 CLI 分发（动态导入，失败只记录不阻断）。"""
+    """[插件] 通用 CLI 分发；业务失败/导入失败/异常均返回非零退出码。"""
     import importlib
     try:
         module = importlib.import_module(mod_path)
         result = getattr(module, cli_name)(args)
-        logger.info("%s 完成: status=%s", label, result.get("status"))
+        status = result.get("status") if isinstance(result, dict) else None
+        logger.info("%s 完成: status=%s", label, status)
+        if status in ("error", "failed"):
+            logger.error("%s 业务失败: status=%s", label, status)
+            raise SystemExit(1)
+    except SystemExit:
+        raise
     except ImportError as exc:
         logger.error("%s 插件未安装: %s", label, exc)
+        raise SystemExit(1)
     except Exception as exc:  # noqa: BLE001
         logger.exception("%s 执行异常: %s", label, exc)
+        raise SystemExit(1)
 
 
 def _run_principal_capital_cli(args, logger):

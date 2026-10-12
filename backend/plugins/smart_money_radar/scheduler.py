@@ -47,7 +47,7 @@ async def run_radar_daemon(dry_run=False, force=False, store=None,
     watchdog = RadarWatchdog(CONFIG.get("failure_threshold", 5), lambda: _send_watchdog_alert(now_fn()))
     cycles = 0
     while max_cycles is None or cycles < max_cycles:
-        cycles += 1; now = now_fn(); session = session_fn(now); name = session.get("session", "non_trading_day")
+        cycles += 1; now = now_fn(); session = session_fn(now); name = session.get("market_session", session.get("session", "non_trading_day"))
         try:
             if force or session.get("is_trading_hours"):
                 result = await run_once_fn(now=now, dry_run=dry_run, force=force, store=store, pool=pool)
