@@ -34,6 +34,8 @@ TASKS = [
     {"cli": "--run-factor-lab",          "label": "因子实验室",   "blocking": False, "timeout_s": 300},
     {"cli": "--run-resonance-once",      "label": "四维共振",     "blocking": False, "timeout_s": 600},
     {"cli": "--run-tier-flow-once",      "label": "分层资金流",   "blocking": False, "timeout_s": 300},
+    # 注：--run-l2-daemon 实际是 one-shot M1 调研报告（非常驻、非 L2 采集），label 已标注"调研"
+    {"cli": "--run-l2-daemon",           "label": "真实L2调研",   "blocking": False, "timeout_s": 120},
 ]
 
 MAX_WORKERS = int(os.environ.get("PLUGIN_TASK_WORKERS", "2"))

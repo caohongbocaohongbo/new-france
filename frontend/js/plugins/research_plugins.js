@@ -14,7 +14,7 @@
             cols: [['code','代码'],['name','名称'],['vwap','VWAP'],['poc_price','最大量价'],['profit_ratio','获利盘比例']] },
         'factor-lab': { path: '/factor-lab/stats/latest', title: '因子实验室', kind: 'table', key: 'items', tips: '计算各因子的 IC(信息系数) 与 IR(信息比率)，评估因子对次日收益的预测能力，供因子筛选参考。',
             cols: [['factor','因子'],['sample_count','样本数'],['ic','IC'],['ir','IR']] },
-        'l2': { path: '/l2/latest', title: '真实 L2 升级', kind: 'l2', tips: '展示 Level-2 十档行情与逐笔成交数据(需本地/授权源)，用于盘口强度与主力挂撤单观察。' },
+        'l2': { path: '/l2/latest', title: '真实 L2 升级', kind: 'l2', tips: '当前为 M1 调研阶段：对比 QMT/miniQMT、PTrade、同花顺东财 L2 等候选源，输出接入架构建议；真实十档/逐笔采集端 M2 后置，当前不采集 L2 数据。' },
         'tier-flow': { path: '/principal-capital/tier-flow/latest?view=compact', title: '分层资金流', kind: 'table', key: 'items', tips: '按超大单/大单/中单/小单拆解净流入，计算聪明钱占比，识别吸筹/出货/拉升阶段。',
             cols: [['code','代码'],['name','名称'],['super_net','超大单净'],['big_net','大单净'],['smart_ratio','聪明钱占比'],['state','状态']] },
         'low-position': { path: '/low-position/latest', title: '低位涨停选股', kind: 'table', key: 'items', tips: '距 60 日高点回撤≥25% 且(120 日百分位≤30% 或 20 日均线下)，且近期有涨停历史，按低位分排序。',
