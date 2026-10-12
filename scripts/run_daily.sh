@@ -24,6 +24,8 @@ fi
 
 # 第七波智能选股器 + 聚合中枢（可延后任务；21本地专属失败不阻断）
 /usr/bin/python3 -m backend.main --run-smart-picker-all 2>&1 | tee -a "$LOG_FILE"
+# 技术指标等插件任务（可扩展清单 + 线程池并发 + 超时；阻断任务失败才非零退出）
+/usr/bin/python3 "$PROJECT_DIR/scripts/run_plugin_tasks.py" 2>&1 | tee -a "$LOG_FILE"
 # 提交 data-snapshots（路径B：本地产数后立即推送，云端 web 兜底读当日数据）
 /bin/bash "$PROJECT_DIR/scripts/commit_screening_data.sh" >> "$LOG_FILE" 2>&1 || true
 echo "[$(date '+%H:%M:%S')] New France daily run finished" | tee -a "$LOG_FILE"
