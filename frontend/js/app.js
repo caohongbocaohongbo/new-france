@@ -2865,6 +2865,10 @@ function taskHistoryStatusLabel(status) {
     }[status] || (status || '--');
 }
 
+let taskHistoryData = [];
+let taskHistoryPage = 1;
+const TASK_HISTORY_PAGE_SIZE = 7;
+
 async function loadTaskHistory() {
     const tbody = document.getElementById('taskHistoryBody');
     if (!tbody) return;
@@ -2872,21 +2876,50 @@ async function loadTaskHistory() {
     try {
         const resp = await apiFetch('/system/task-history', { timeout: 15000, retries: 1 });
         const data = await readJsonResponse(resp);
-        const records = Array.isArray(data.records) ? data.records : [];
-        if (!records.length) {
+        taskHistoryData = Array.isArray(data.records) ? data.records : [];
+        if (!taskHistoryData.length) {
             tbody.innerHTML = '<tr><td colspan="3">暂无执行历史</td></tr>';
+            const pag = document.getElementById('taskHistoryPagination');
+            if (pag) pag.innerHTML = '';
             return;
         }
-        tbody.innerHTML = records.map(item => `
+        taskHistoryPage = 1;
+        renderTaskHistoryTable();
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="3">执行历史读取失败</td></tr>';
+    }
+}
+
+function renderTaskHistoryTable() {
+    const tbody = document.getElementById('taskHistoryBody');
+    const pag = document.getElementById('taskHistoryPagination');
+    if (!tbody) return;
+    const total = taskHistoryData.length;
+    const pages = Math.max(1, Math.ceil(total / TASK_HISTORY_PAGE_SIZE));
+    if (taskHistoryPage > pages) taskHistoryPage = pages;
+    const start = (taskHistoryPage - 1) * TASK_HISTORY_PAGE_SIZE;
+    const pageItems = taskHistoryData.slice(start, start + TASK_HISTORY_PAGE_SIZE);
+    if (!pageItems.length) {
+        tbody.innerHTML = '<tr><td colspan="3">暂无执行历史</td></tr>';
+    } else {
+        tbody.innerHTML = pageItems.map(item => `
             <tr>
                 <td>${escapeHtml(item.run_time_display || item.run_time || '--')}</td>
                 <td><span class="history-status ${escapeHtml(item.status || '')}">${escapeHtml(taskHistoryStatusLabel(item.status))}</span></td>
                 <td>${escapeHtml(item.operator || '--')}</td>
             </tr>
         `).join('');
-    } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="3">执行历史读取失败</td></tr>';
     }
+    if (pag) {
+        renderPagination('taskHistoryPagination', total, taskHistoryPage, TASK_HISTORY_PAGE_SIZE, taskHistoryGo);
+    }
+}
+
+function taskHistoryGo(page) {
+    const pages = Math.max(1, Math.ceil(taskHistoryData.length / TASK_HISTORY_PAGE_SIZE));
+    if (page < 1 || page > pages) return;
+    taskHistoryPage = page;
+    renderTaskHistoryTable();
 }
 function saveConfig() {
     saveFactorWeights();

@@ -2,26 +2,37 @@
 (function () {
     'use strict';
     const PAGES = {
-        'emotion': { path: '/emotion/latest', title: '情绪周期', kind: 'emotion' },
-        'lhb': { path: '/lhb/latest', title: '龙虎榜', kind: 'lhb' },
-        'tail-raid': { path: '/tail-raid/latest', title: '尾盘抢筹', kind: 'table', key: 'items',
+        'emotion': { path: '/emotion/latest', title: '情绪周期', kind: 'emotion', tips: '基于涨停家数、连板梯队、炸板率、晋级率综合成情绪温度(0-100)，判断市场处于冰点/修复/高潮/退潮，辅助判断连板接力与仓位。' },
+        'lhb': { path: '/lhb/latest', title: '龙虎榜', kind: 'lhb', tips: '统计上榜个股的机构/游资席位买卖，聚合席位历史胜率与偏好，识别主力资金动向与知名游资身影。' },
+        'tail-raid': { path: '/tail-raid/latest', title: '尾盘抢筹', kind: 'table', key: 'items', tips: '扫描 14:30 后量价异动，结合涨幅、量比、主力净流入占比等因子打分，筛选尾盘抢筹的潜在启动标的。',
             cols: [['code','代码'],['name','名称'],['price','价格'],['change_pct','涨幅'],['volume_ratio','量比'],['main_inflow_ratio','主力占比'],['score','尾盘分']] },
-        'board': { path: '/board/latest', title: '板块轮动', kind: 'table', key: 'items',
+        'board': { path: '/board/latest', title: '板块轮动', kind: 'table', key: 'items', tips: '按板块涨幅、主力净流入、涨停家数、最高连板综合评分，识别当日主线板块与轮动方向。',
             cols: [['name','板块'],['change_pct','涨幅'],['net_inflow','主力净流入'],['zt_count','涨停家数'],['max_height','最高连板'],['score','板块分'],['stage','阶段'],['mainline','主线']] },
-        'zt-seal': { path: '/zt-seal/latest', title: '涨停封单', kind: 'table', key: 'items',
+        'zt-seal': { path: '/zt-seal/latest', title: '涨停封单', kind: 'table', key: 'items', tips: '以封单金额、封单量、封成比(封单额/成交额)、炸板次数评估涨停封板强度，辅助判断次日溢价与开板风险。',
             cols: [['code','代码'],['name','名称'],['seal_amount','封单额'],['seal_vol','封单量'],['seal_ratio','封成比'],['break_count','炸板次数']] },
-        'volume-profile': { path: '/volume-profile/latest', title: '分价成本带', kind: 'table', key: 'items',
+        'volume-profile': { path: '/volume-profile/latest', title: '分价成本带', kind: 'table', key: 'items', tips: '按价格档位统计成交量分布，计算 VWAP、最大量价(POC)、获利盘比例，识别主力成本区与支撑压力位。',
             cols: [['code','代码'],['name','名称'],['vwap','VWAP'],['poc_price','最大量价'],['profit_ratio','获利盘比例']] },
-        'factor-lab': { path: '/factor-lab/stats/latest', title: '因子实验室', kind: 'table', key: 'items',
+        'factor-lab': { path: '/factor-lab/stats/latest', title: '因子实验室', kind: 'table', key: 'items', tips: '计算各因子的 IC(信息系数) 与 IR(信息比率)，评估因子对次日收益的预测能力，供因子筛选参考。',
             cols: [['factor','因子'],['sample_count','样本数'],['ic','IC'],['ir','IR']] },
-        'l2': { path: '/l2/latest', title: '真实 L2 升级', kind: 'l2' },
-        'tier-flow': { path: '/principal-capital/tier-flow/latest?view=compact', title: '分层资金流', kind: 'table', key: 'items',
+        'l2': { path: '/l2/latest', title: '真实 L2 升级', kind: 'l2', tips: '展示 Level-2 十档行情与逐笔成交数据(需本地/授权源)，用于盘口强度与主力挂撤单观察。' },
+        'tier-flow': { path: '/principal-capital/tier-flow/latest?view=compact', title: '分层资金流', kind: 'table', key: 'items', tips: '按超大单/大单/中单/小单拆解净流入，计算聪明钱占比，识别吸筹/出货/拉升阶段。',
             cols: [['code','代码'],['name','名称'],['super_net','超大单净'],['big_net','大单净'],['smart_ratio','聪明钱占比'],['state','状态']] },
-        'low-position': { path: '/low-position/latest', title: '低位涨停选股', kind: 'table', key: 'items',
+        'low-position': { path: '/low-position/latest', title: '低位涨停选股', kind: 'table', key: 'items', tips: '距 60 日高点回撤≥25% 且(120 日百分位≤30% 或 20 日均线下)，且近期有涨停历史，按低位分排序。',
             cols: [['code','代码'],['name','名称'],['price','价格'],['pullback_pct','回撤'],['price_percentile','百分位'],['zt_count_250d','涨停次数'],['low_score','低位分']] },
-        'resonance': { path: '/resonance/latest', title: '四维共振', kind: 'resonance' },
+        'resonance': { path: '/resonance/latest', title: '四维共振', kind: 'resonance', tips: '日线结构、盘中强度、资金、情绪四维独立评分后共振，输出共振信号与强度。' },
         'smart-picker': { title: '智能选股器', kind: 'smart-picker' },
     };
+
+    function tipsIcon(tips) {
+        if (!tips) return '';
+        return '<span class="tip-icon" data-tip="' + escapeHtml(tips) + '">' +
+            '<svg width="14" height="14" viewBox="0 0 200 200" fill="none"><path d="M100 50C93.125 50 87.5 55.625 87.5 62.5V100C87.5 106.875 93.125 112.5 100 112.5C106.875 112.5 112.5 106.875 112.5 100V62.5C112.5 55.625 106.875 50 100 50ZM100 12.5C51.625 12.5 12.5 51.625 12.5 100C12.5 148.375 51.625 187.5 100 187.5C148.375 187.5 187.5 148.375 187.5 100C187.5 51.625 148.25 12.5 100 12.5ZM100 175C58.625 175 25 141.375 25 100C25 58.625 58.625 25 100 25C141.375 25 175 58.625 175 100C175 141.375 141.375 175 100 175ZM100 125C93.125 125 87.5 130.625 87.5 137.5C87.5 144.375 93.125 150 100 150C106.875 150 112.5 144.375 112.5 137.5C112.5 130.625 106.875 125 100 125Z" fill="#8993A4"/></svg>' +
+            '</span>';
+    }
+
+    function panelWithTitle(title, tips, bodyHtml) {
+        return '<div class="panel"><div class="panel-header"><h2>' + escapeHtml(title) + tipsIcon(tips) + '</h2></div><div class="panel-body">' + bodyHtml + '</div></div>';
+    }
 
     function fmt(v) {
         if (v === null || v === undefined || v === '') return '--';
@@ -582,11 +593,11 @@
         try {
             const resp = await apiFetch(cfg.path, { timeout: 15000, retries: 0 });
             const data = await resp.json();
-            if (cfg.kind === 'emotion') el.innerHTML = renderEmotion(data);
-            else if (cfg.kind === 'l2') el.innerHTML = renderL2(data);
-            else if (cfg.kind === 'lhb') el.innerHTML = renderLhb(data);
-            else if (cfg.kind === 'resonance') { el.innerHTML = renderResonance(data); bindResonanceRows(); }
-            else el.innerHTML = renderTable(data[cfg.key], cfg.cols);
+            if (cfg.kind === 'emotion') el.innerHTML = panelWithTitle(cfg.title, cfg.tips, renderEmotion(data));
+            else if (cfg.kind === 'l2') el.innerHTML = panelWithTitle(cfg.title, cfg.tips, renderL2(data));
+            else if (cfg.kind === 'lhb') el.innerHTML = panelWithTitle(cfg.title, cfg.tips, renderLhb(data));
+            else if (cfg.kind === 'resonance') { el.innerHTML = panelWithTitle(cfg.title, cfg.tips, renderResonance(data)); bindResonanceRows(); }
+            else el.innerHTML = panelWithTitle(cfg.title, cfg.tips, renderTable(data[cfg.key], cfg.cols));
         } catch (e) {
             el.innerHTML = '<div class="empty-state">加载失败：' + escapeHtml(String(e)) + '</div>';
         }

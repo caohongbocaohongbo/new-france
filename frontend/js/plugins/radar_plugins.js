@@ -114,8 +114,8 @@
             '<input id="cwCode" class="input" placeholder="代码 如 600000" maxlength="6">' +
             '<input id="cwName" class="input" placeholder="名称(可选)">' +
             '<input id="cwCond" class="input" placeholder="条件 如 price >= 12.5 and turnover_rate >= 0.01">' +
-            '<button type="button" class="btn btn-primary btn-sm" onclick="window.radarWatchCreate()">创建</button>' +
-            '<button type="button" class="btn btn-sm" onclick="window.radarWatchCheck()">立即检查</button>' +
+            '<button type="button" class="btn btn-primary" onclick="window.radarWatchCreate()">创建</button>' +
+            '<button type="button" class="btn" onclick="window.radarWatchCheck()">立即检查</button>' +
             '</div></div></div>' +
             '<div class="panel"><div class="panel-header"><h2>盯盘规则</h2><span class="table-note">命中后去重告警</span></div><div class="panel-body">' +
             renderTable(rules, [

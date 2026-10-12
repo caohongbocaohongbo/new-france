@@ -336,6 +336,36 @@ button.metric-card {
     font-size: 14px;
     font-weight: 600;
     color: var(--body);
+    display: flex;
+    align-items: center;
+}
+
+.tip-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    cursor: help;
+}
+
+.tip-icon:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 260px;
+    padding: 8px 10px;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    margin-left: 8px;
+    pointer-events: none;
 }
 
 .link {
