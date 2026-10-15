@@ -2,8 +2,8 @@
   "schema_version": 2,
   "trade_date": "2026-10-15",
   "owner_id": "38683994726:1:scan",
-  "owner_lease_expires_at": "2026-10-15T14:50:15.778278+08:00",
-  "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+  "owner_lease_expires_at": "2026-10-15T14:56:08.173933+08:00",
+  "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
   "pipeline_mode": "strict",
   "auto_fallback": "strict_auto_fallback",
   "summary_state": {
@@ -99,7 +99,7 @@
   },
   "summary_attempted_at": {},
   "summary_sent_at": {},
-  "audit_cursor": 1009,
+  "audit_cursor": 1309,
   "sentinel_done": [
     "09:35",
     "10:30",
@@ -278,10 +278,10 @@
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -308,10 +308,10 @@
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -889,9 +889,9 @@
     },
     "sell:600202": {
       "first_seen_at": "2026-10-15T09:30:50.880435+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "哈空调",
@@ -911,7 +911,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -919,29 +919,29 @@
     },
     "sell:002647": {
       "first_seen_at": "2026-10-15T09:30:50.880435+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 39,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 40,
       "is_current": true,
       "latest_metrics": {
         "name": "仁东控股",
         "price": 8.78,
         "change_pct": -10.041,
-        "total_amount": 43965850.0,
+        "total_amount": 44307392.0,
         "main_net_inflow": -23428552.0,
-        "main_inflow_ratio": -53.2881,
+        "main_inflow_ratio": -52.8773,
         "super_net": -14818006.0,
         "big_net": -8610546.0,
-        "mid_net": -11460534.0,
-        "small_net": -9076764.0,
+        "mid_net": -11636134.0,
+        "small_net": -9242706.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -1042,7 +1042,7 @@
       "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
       "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
       "seen_rounds": 39,
-      "is_current": true,
+      "is_current": false,
       "latest_metrics": {
         "name": "供销大集",
         "price": 1.37,
@@ -1159,29 +1159,29 @@
     },
     "sell:001231": {
       "first_seen_at": "2026-10-15T09:30:50.880435+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 39,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 40,
       "is_current": true,
       "latest_metrics": {
         "name": "农心科技",
         "price": 22.82,
         "change_pct": -9.9803,
-        "total_amount": 53521911.0,
+        "total_amount": 53800315.0,
         "main_net_inflow": -36358776.0,
-        "main_inflow_ratio": -67.9325,
+        "main_inflow_ratio": -67.581,
         "super_net": -26706856.0,
         "big_net": -9651920.0,
         "mid_net": -6745089.0,
-        "small_net": -7311528.0,
+        "small_net": -7589932.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -1969,9 +1969,9 @@
     },
     "sell:600567": {
       "first_seen_at": "2026-10-15T09:30:50.880435+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "山鹰国际",
@@ -1991,7 +1991,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -2801,7 +2801,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -2989,29 +2989,29 @@
     },
     "sell:000668": {
       "first_seen_at": "2026-10-15T09:36:42.259683+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "荣丰控股",
         "price": 20.36,
         "change_pct": -9.9912,
-        "total_amount": 49244448.0,
+        "total_amount": 49665900.0,
         "main_net_inflow": -34420268.0,
-        "main_inflow_ratio": -69.8967,
+        "main_inflow_ratio": -69.3036,
         "super_net": -21274368.0,
         "big_net": -13145900.0,
-        "mid_net": -8807800.0,
-        "small_net": -6016380.0,
+        "mid_net": -9206856.0,
+        "small_net": -6038776.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -3079,9 +3079,9 @@
     },
     "sell:600693": {
       "first_seen_at": "2026-10-15T09:36:42.259683+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "东百集团",
@@ -3101,7 +3101,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -3319,29 +3319,29 @@
     },
     "sell:600221": {
       "first_seen_at": "2026-10-15T09:36:42.259683+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "海航控股",
-        "price": 1.18,
-        "change_pct": -2.4793,
-        "total_amount": 259729509.53,
-        "main_net_inflow": -98617726.75,
-        "main_inflow_ratio": -37.9694,
+        "price": 1.2,
+        "change_pct": -0.8264,
+        "total_amount": 268779957.53,
+        "main_net_inflow": -96980965.75,
+        "main_inflow_ratio": -36.0819,
         "super_net": -93403250.54,
-        "big_net": -5214476.21,
-        "mid_net": -3998829.97,
-        "small_net": 2381146.75,
+        "big_net": -3577715.21,
+        "mid_net": -466575.97,
+        "small_net": 3983435.75,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 18.0849,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -3769,29 +3769,29 @@
     },
     "sell:600871": {
       "first_seen_at": "2026-10-15T09:36:42.259683+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "石化油服",
-        "price": 2.03,
-        "change_pct": -5.5814,
-        "total_amount": 368703501.88,
-        "main_net_inflow": -124006252.06,
-        "main_inflow_ratio": -33.6331,
-        "super_net": -125964058.04,
-        "big_net": 1957805.98,
-        "mid_net": -21708.0,
-        "small_net": 4083109.14,
+        "price": 2.04,
+        "change_pct": -5.1163,
+        "total_amount": 379779503.88,
+        "main_net_inflow": -123616473.06,
+        "main_inflow_ratio": -32.5495,
+        "super_net": -125894290.04,
+        "big_net": 2277816.98,
+        "mid_net": 283315.0,
+        "small_net": 3865511.14,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 3.5191,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -4519,9 +4519,9 @@
     },
     "sell:000937": {
       "first_seen_at": "2026-10-15T09:36:42.259683+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 38,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 39,
       "is_current": true,
       "latest_metrics": {
         "name": "冀中能源",
@@ -4541,7 +4541,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -5269,29 +5269,29 @@
     },
     "sell:002146": {
       "first_seen_at": "2026-10-15T09:36:42.259683+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 36,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 37,
       "is_current": true,
       "latest_metrics": {
         "name": "荣盛发展",
         "price": 1.14,
         "change_pct": -4.2017,
-        "total_amount": 148118478.0,
-        "main_net_inflow": -56259822.0,
-        "main_inflow_ratio": -37.983,
-        "super_net": -47606163.0,
-        "big_net": -8653659.0,
-        "mid_net": 2141498.0,
-        "small_net": 2916672.0,
+        "total_amount": 156234526.0,
+        "main_net_inflow": -49444902.0,
+        "main_inflow_ratio": -31.6479,
+        "super_net": -41483109.0,
+        "big_net": -7961793.0,
+        "mid_net": 1712174.0,
+        "small_net": 2858086.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 83.9685,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -6769,29 +6769,29 @@
     },
     "buy:002103": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "广博股份",
         "price": 7.5,
         "change_pct": 9.9707,
-        "total_amount": 285480475.0,
+        "total_amount": 286864975.0,
         "main_net_inflow": 213890950.0,
-        "main_inflow_ratio": 74.9231,
+        "main_inflow_ratio": 74.5615,
         "super_net": 148225458.0,
         "big_net": 65665492.0,
-        "mid_net": 36451025.0,
-        "small_net": 19263580.0,
+        "mid_net": 37060025.0,
+        "small_net": 20039080.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -6799,29 +6799,29 @@
     },
     "buy:002543": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "万和电气",
         "price": 7.88,
         "change_pct": 10.0559,
-        "total_amount": 268990554.99,
-        "main_net_inflow": 175990272.75,
-        "main_inflow_ratio": 65.4262,
+        "total_amount": 280016487.39,
+        "main_net_inflow": 182966673.15,
+        "main_inflow_ratio": 65.3414,
         "super_net": 98033927.47,
-        "big_net": 77956345.28,
-        "mid_net": 44366239.64,
-        "small_net": 25393482.6,
+        "big_net": 84932745.68,
+        "mid_net": 46803523.64,
+        "small_net": 27005730.6,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 63.2727,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -6859,29 +6859,29 @@
     },
     "buy:603999": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "读者传媒",
         "price": 7.62,
         "change_pct": 9.9567,
-        "total_amount": 131080874.8,
+        "total_amount": 131704190.8,
         "main_net_inflow": 77998697.0,
-        "main_inflow_ratio": 59.5043,
+        "main_inflow_ratio": 59.2226,
         "super_net": 40431390.0,
         "big_net": 37567307.0,
-        "mid_net": 25668648.6,
-        "small_net": 15568879.2,
+        "mid_net": 26080890.6,
+        "small_net": 15779953.2,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -6919,29 +6919,29 @@
     },
     "buy:002134": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "天津普林",
         "price": 24.34,
         "change_pct": 9.9864,
-        "total_amount": 591720956.26,
-        "main_net_inflow": 346602068.26,
-        "main_inflow_ratio": 58.5753,
+        "total_amount": 593079128.26,
+        "main_net_inflow": 347001244.26,
+        "main_inflow_ratio": 58.5084,
         "super_net": 243051423.0,
-        "big_net": 103550645.26,
-        "mid_net": 30293240.0,
-        "small_net": 15902134.0,
+        "big_net": 103949821.26,
+        "mid_net": 30784908.0,
+        "small_net": 16369462.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 29.3907,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -6979,29 +6979,29 @@
     },
     "sell:002860": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 36,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 37,
       "is_current": true,
       "latest_metrics": {
         "name": "星帅尔",
         "price": 18.21,
         "change_pct": -9.9852,
-        "total_amount": 753267985.24,
+        "total_amount": 753297121.24,
         "main_net_inflow": -282175113.02,
-        "main_inflow_ratio": -37.4601,
+        "main_inflow_ratio": -37.4587,
         "super_net": -262391578.87,
         "big_net": -19783534.15,
         "mid_net": -13462614.62,
-        "small_net": -6888313.6,
+        "small_net": -6917449.6,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -7039,9 +7039,9 @@
     },
     "sell:600022": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "山东钢铁",
@@ -7061,7 +7061,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -7219,9 +7219,9 @@
     },
     "sell:601518": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 33,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 34,
       "is_current": true,
       "latest_metrics": {
         "name": "吉林高速",
@@ -7241,7 +7241,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -7999,29 +7999,29 @@
     },
     "sell:601188": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 32,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 33,
       "is_current": true,
       "latest_metrics": {
         "name": "龙江交通",
         "price": 3.18,
         "change_pct": -9.915,
-        "total_amount": 478078040.33,
+        "total_amount": 479537024.33,
         "main_net_inflow": -153480827.87,
-        "main_inflow_ratio": -32.1037,
+        "main_inflow_ratio": -32.006,
         "super_net": -131376570.87,
         "big_net": -22104257.0,
-        "mid_net": 1228610.6,
-        "small_net": -6608454.28,
+        "mid_net": 673064.6,
+        "small_net": -7511892.28,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -8422,7 +8422,7 @@
       "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
       "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
       "seen_rounds": 37,
-      "is_current": true,
+      "is_current": false,
       "latest_metrics": {
         "name": "江南化工",
         "price": 4.95,
@@ -8989,9 +8989,9 @@
     },
     "sell:001359": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "平安电工",
@@ -9011,7 +9011,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -9439,29 +9439,29 @@
     },
     "sell:000531": {
       "first_seen_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 37,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 38,
       "is_current": true,
       "latest_metrics": {
         "name": "穗恒运Ａ",
-        "price": 5.37,
-        "change_pct": -3.2432,
-        "total_amount": 44754285.4,
+        "price": 5.38,
+        "change_pct": -3.0631,
+        "total_amount": 45546843.4,
         "main_net_inflow": -17166998.0,
-        "main_inflow_ratio": -38.3583,
+        "main_inflow_ratio": -37.6909,
         "super_net": -6401051.0,
         "big_net": -10765947.0,
-        "mid_net": -3206221.0,
-        "small_net": 856288.4,
+        "mid_net": -2908169.0,
+        "small_net": 790030.4,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -10279,29 +10279,29 @@
     },
     "sell:600165": {
       "first_seen_at": "2026-10-15T09:48:59.984035+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 36,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 37,
       "is_current": true,
       "latest_metrics": {
         "name": "宁科生物",
         "price": 3.15,
         "change_pct": -3.3742,
-        "total_amount": 38981782.0,
-        "main_net_inflow": -12785074.0,
-        "main_inflow_ratio": -32.7976,
+        "total_amount": 39865666.0,
+        "main_net_inflow": -12405814.0,
+        "main_inflow_ratio": -31.119,
         "super_net": -5123816.0,
-        "big_net": -7661258.0,
-        "mid_net": -669288.0,
-        "small_net": -820070.0,
+        "big_net": -7281998.0,
+        "mid_net": -464538.0,
+        "small_net": -865722.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 42.9083,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -10879,29 +10879,29 @@
     },
     "buy:003029": {
       "first_seen_at": "2026-10-15T09:54:47.050363+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 35,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 36,
       "is_current": true,
       "latest_metrics": {
         "name": "吉大正元",
         "price": 19.99,
         "change_pct": 10.0165,
-        "total_amount": 284525094.09,
-        "main_net_inflow": 188993011.0,
-        "main_inflow_ratio": 66.424,
+        "total_amount": 286759976.09,
+        "main_net_inflow": 189394810.0,
+        "main_inflow_ratio": 66.0465,
         "super_net": 112958780.0,
-        "big_net": 76034231.0,
-        "mid_net": 52433730.09,
-        "small_net": 24130089.0,
+        "big_net": 76436030.0,
+        "mid_net": 53297298.09,
+        "small_net": 25099604.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 17.9785,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -10909,29 +10909,29 @@
     },
     "buy:600721": {
       "first_seen_at": "2026-10-15T09:54:47.050363+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 35,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 36,
       "is_current": true,
       "latest_metrics": {
         "name": "百花医药",
         "price": 12.05,
         "change_pct": 10.0457,
-        "total_amount": 661419443.1,
-        "main_net_inflow": 360677847.02,
-        "main_inflow_ratio": 54.5309,
+        "total_amount": 661966513.1,
+        "main_net_inflow": 360962227.02,
+        "main_inflow_ratio": 54.5288,
         "super_net": 244654693.02,
-        "big_net": 116023154.0,
+        "big_net": 116307534.0,
         "mid_net": 67571007.0,
-        "small_net": 36130720.0,
+        "small_net": 36393410.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 51.9824,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -11029,29 +11029,29 @@
     },
     "sell:002496": {
       "first_seen_at": "2026-10-15T09:54:47.050363+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 24,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 25,
       "is_current": true,
       "latest_metrics": {
         "name": "辉丰股份",
-        "price": 1.99,
-        "change_pct": -4.7847,
-        "total_amount": 94586742.8,
-        "main_net_inflow": -30469399.2,
-        "main_inflow_ratio": -32.2132,
+        "price": 2.0,
+        "change_pct": -4.3062,
+        "total_amount": 100448880.8,
+        "main_net_inflow": -31061896.59,
+        "main_inflow_ratio": -30.9231,
         "super_net": -13150759.2,
-        "big_net": -17318640.0,
-        "mid_net": 370001.8,
-        "small_net": -155757.4,
+        "big_net": -17911137.39,
+        "mid_net": 537535.8,
+        "small_net": 636347.21,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": -10.1072,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -11149,29 +11149,29 @@
     },
     "sell:605118": {
       "first_seen_at": "2026-10-15T10:00:36.634325+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 34,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 35,
       "is_current": true,
       "latest_metrics": {
         "name": "力鼎光电",
-        "price": 27.95,
-        "change_pct": -6.9884,
-        "total_amount": 108642163.82,
-        "main_net_inflow": -42395209.0,
-        "main_inflow_ratio": -39.0228,
+        "price": 28.11,
+        "change_pct": -6.4559,
+        "total_amount": 111988083.82,
+        "main_net_inflow": -42611502.0,
+        "main_inflow_ratio": -38.05,
         "super_net": -33960702.0,
-        "big_net": -8434507.0,
-        "mid_net": -9233255.0,
-        "small_net": -2019588.18,
+        "big_net": -8650800.0,
+        "mid_net": -9018989.0,
+        "small_net": -1933887.18,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": -6.4644,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -11719,29 +11719,29 @@
     },
     "sell:001220": {
       "first_seen_at": "2026-10-15T10:06:33.690211+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 33,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 34,
       "is_current": true,
       "latest_metrics": {
         "name": "世盟股份",
-        "price": 29.27,
-        "change_pct": -3.6537,
-        "total_amount": 34315180.82,
+        "price": 29.34,
+        "change_pct": -3.4233,
+        "total_amount": 34810391.99,
         "main_net_inflow": -20845776.7,
-        "main_inflow_ratio": -60.748,
+        "main_inflow_ratio": -59.8838,
         "super_net": -11663608.7,
         "big_net": -9182168.0,
-        "mid_net": -1608066.09,
-        "small_net": -290474.51,
+        "mid_net": -1462968.09,
+        "small_net": -254762.82,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -12229,29 +12229,29 @@
     },
     "sell:001325": {
       "first_seen_at": "2026-10-15T10:12:34.627437+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 29,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 30,
       "is_current": true,
       "latest_metrics": {
         "name": "元创股份",
-        "price": 36.32,
-        "change_pct": -3.7626,
-        "total_amount": 46576148.0,
+        "price": 36.24,
+        "change_pct": -3.9746,
+        "total_amount": 46950014.0,
         "main_net_inflow": -15178710.0,
-        "main_inflow_ratio": -32.589,
+        "main_inflow_ratio": -32.3295,
         "super_net": -9052468.0,
         "big_net": -6126242.0,
         "mid_net": -4892020.28,
-        "small_net": 1462111.72,
+        "small_net": 1386349.72,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -12278,10 +12278,10 @@
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": -12.3476,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -12289,9 +12289,9 @@
     },
     "buy:600668": {
       "first_seen_at": "2026-10-15T10:18:22.569529+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 31,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 32,
       "is_current": true,
       "latest_metrics": {
         "name": "尖峰集团",
@@ -12311,7 +12311,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -12739,20 +12739,20 @@
     },
     "sell:600926": {
       "first_seen_at": "2026-10-15T11:18:10.061045+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 21,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 22,
       "is_current": true,
       "latest_metrics": {
         "name": "杭州银行",
         "price": 16.8,
         "change_pct": -1.524,
-        "total_amount": 1035708097.28,
-        "main_net_inflow": -320887144.07,
-        "main_inflow_ratio": -30.9824,
+        "total_amount": 1035222903.28,
+        "main_net_inflow": -321122204.07,
+        "main_inflow_ratio": -31.0196,
         "super_net": -221801585.8,
-        "big_net": -99085558.27,
-        "mid_net": -49717944.71,
+        "big_net": -99320618.27,
+        "mid_net": -49655970.71,
         "small_net": -13145303.92,
         "source": "sina_single",
         "features": {
@@ -12761,7 +12761,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "counter_reset"
         }
       },
       "quality_status": "provisional",
@@ -12829,29 +12829,29 @@
     },
     "buy:603535": {
       "first_seen_at": "2026-10-15T13:06:54.895037+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 17,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 18,
       "is_current": true,
       "latest_metrics": {
         "name": "嘉诚国际",
         "price": 6.73,
         "change_pct": 9.9673,
-        "total_amount": 118319185.25,
-        "main_net_inflow": 76579693.72,
-        "main_inflow_ratio": 64.723,
+        "total_amount": 118947767.25,
+        "main_net_inflow": 76918885.72,
+        "main_inflow_ratio": 64.6661,
         "super_net": 43834684.0,
-        "big_net": 32745009.72,
-        "mid_net": 15712557.04,
-        "small_net": 8602698.49,
+        "big_net": 33084201.72,
+        "mid_net": 15766397.04,
+        "small_net": 8838248.49,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 53.9615,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -12979,9 +12979,9 @@
     },
     "sell:600578": {
       "first_seen_at": "2026-10-15T13:24:25.301954+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 9,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 10,
       "is_current": true,
       "latest_metrics": {
         "name": "京能电力",
@@ -13001,7 +13001,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -13099,29 +13099,29 @@
     },
     "buy:603237": {
       "first_seen_at": "2026-10-15T13:47:48.065647+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 10,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 11,
       "is_current": true,
       "latest_metrics": {
         "name": "五芳斋",
         "price": 16.47,
         "change_pct": 10.02,
-        "total_amount": 138809626.75,
-        "main_net_inflow": 72323963.2,
-        "main_inflow_ratio": 52.103,
-        "super_net": 36525482.96,
+        "total_amount": 141602938.75,
+        "main_net_inflow": 74712113.2,
+        "main_inflow_ratio": 52.7617,
+        "super_net": 38913632.96,
         "big_net": 35798480.24,
-        "mid_net": 18859102.39,
-        "small_net": 11449767.16,
+        "mid_net": 19058389.39,
+        "small_net": 11655642.16,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 85.4953,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -13189,29 +13189,29 @@
     },
     "sell:001288": {
       "first_seen_at": "2026-10-15T14:22:42.755286+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 4,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 5,
       "is_current": true,
       "latest_metrics": {
         "name": "运机集团",
         "price": 27.18,
         "change_pct": -10.0,
-        "total_amount": 142856365.5,
+        "total_amount": 143024881.5,
         "main_net_inflow": -45346101.0,
-        "main_inflow_ratio": -31.7424,
+        "main_inflow_ratio": -31.705,
         "super_net": -16123810.0,
         "big_net": -29222291.0,
-        "mid_net": -12617326.0,
-        "small_net": -5960002.5,
+        "mid_net": -12734200.0,
+        "small_net": -6011644.5,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       },
       "quality_status": "provisional",
@@ -13219,21 +13219,21 @@
     },
     "sell:600538": {
       "first_seen_at": "2026-10-15T14:34:23.368423+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "last_batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "seen_rounds": 2,
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "last_batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "seen_rounds": 3,
       "is_current": true,
       "latest_metrics": {
         "name": "国发股份",
-        "price": 4.51,
-        "change_pct": -3.0107,
-        "total_amount": 48363916.0,
+        "price": 4.5,
+        "change_pct": -3.2258,
+        "total_amount": 48155932.0,
         "main_net_inflow": -22688804.0,
-        "main_inflow_ratio": -46.9127,
+        "main_inflow_ratio": -47.1153,
         "super_net": -21310201.0,
         "big_net": -1378603.0,
-        "mid_net": -262481.0,
-        "small_net": 157075.0,
+        "mid_net": -250131.0,
+        "small_net": 151563.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
@@ -13241,7 +13241,7 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "counter_reset"
         }
       },
       "quality_status": "provisional",
@@ -13249,93 +13249,6 @@
     }
   },
   "pool_entries": {
-    "002103": {
-      "code": "002103",
-      "entered_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
-      "source_batch_id": null,
-      "latest_metrics": {
-        "name": "广博股份",
-        "price": 7.5,
-        "change_pct": 9.9707,
-        "total_amount": 285480475.0,
-        "main_net_inflow": 213890950.0,
-        "main_inflow_ratio": 74.9231,
-        "super_net": 148225458.0,
-        "big_net": 65665492.0,
-        "mid_net": 36451025.0,
-        "small_net": 19263580.0,
-        "source": "sina_single",
-        "features": {
-          "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
-          "warming": true,
-          "warming_reason": "batch_partial"
-        }
-      }
-    },
-    "003029": {
-      "code": "003029",
-      "entered_at": "2026-10-15T09:54:47.050363+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
-      "source_batch_id": null,
-      "latest_metrics": {
-        "name": "吉大正元",
-        "price": 19.99,
-        "change_pct": 10.0165,
-        "total_amount": 284525094.09,
-        "main_net_inflow": 188993011.0,
-        "main_inflow_ratio": 66.424,
-        "super_net": 112958780.0,
-        "big_net": 76034231.0,
-        "mid_net": 52433730.09,
-        "small_net": 24130089.0,
-        "source": "sina_single",
-        "features": {
-          "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
-          "warming": true,
-          "warming_reason": "batch_partial"
-        }
-      }
-    },
-    "002543": {
-      "code": "002543",
-      "entered_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
-      "source_batch_id": null,
-      "latest_metrics": {
-        "name": "万和电气",
-        "price": 7.88,
-        "change_pct": 10.0559,
-        "total_amount": 268990554.99,
-        "main_net_inflow": 175990272.75,
-        "main_inflow_ratio": 65.4262,
-        "super_net": 98033927.47,
-        "big_net": 77956345.28,
-        "mid_net": 44366239.64,
-        "small_net": 25393482.6,
-        "source": "sina_single",
-        "features": {
-          "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
-          "warming": true,
-          "warming_reason": "batch_partial"
-        }
-      }
-    },
     "603535": {
       "code": "603535",
       "entered_at": "2026-10-15T13:06:54.895037+08:00",
@@ -13347,30 +13260,146 @@
         "name": "嘉诚国际",
         "price": 6.73,
         "change_pct": 9.9673,
-        "total_amount": 118319185.25,
-        "main_net_inflow": 76579693.72,
-        "main_inflow_ratio": 64.723,
+        "total_amount": 118947767.25,
+        "main_net_inflow": 76918885.72,
+        "main_inflow_ratio": 64.6661,
         "super_net": 43834684.0,
-        "big_net": 32745009.72,
-        "mid_net": 15712557.04,
-        "small_net": 8602698.49,
+        "big_net": 33084201.72,
+        "mid_net": 15766397.04,
+        "small_net": 8838248.49,
+        "source": "sina_single",
+        "features": {
+          "roll_net_30m": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 53.9615,
+          "interval_seconds": 352,
+          "warming": true,
+          "warming_reason": "insufficient_coverage"
+        }
+      }
+    },
+    "603237": {
+      "code": "603237",
+      "entered_at": "2026-10-15T13:47:48.065647+08:00",
+      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
+      "dwell_until": "2026-10-15T15:10:15.778278+08:00",
+      "selection_reason": "protected_dwell",
+      "source_batch_id": null,
+      "latest_metrics": {
+        "name": "五芳斋",
+        "price": 16.47,
+        "change_pct": 10.02,
+        "total_amount": 141602938.75,
+        "main_net_inflow": 74712113.2,
+        "main_inflow_ratio": 52.7617,
+        "super_net": 38913632.96,
+        "big_net": 35798480.24,
+        "mid_net": 19058389.39,
+        "small_net": 11655642.16,
+        "source": "sina_single",
+        "features": {
+          "roll_net_30m": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 85.4953,
+          "interval_seconds": 352,
+          "warming": true,
+          "warming_reason": "insufficient_coverage"
+        }
+      }
+    },
+    "002103": {
+      "code": "002103",
+      "entered_at": "2026-10-15T09:42:27.336575+08:00",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
+      "source_batch_id": null,
+      "latest_metrics": {
+        "name": "广博股份",
+        "price": 7.5,
+        "change_pct": 9.9707,
+        "total_amount": 286864975.0,
+        "main_net_inflow": 213890950.0,
+        "main_inflow_ratio": 74.5615,
+        "super_net": 148225458.0,
+        "big_net": 65665492.0,
+        "mid_net": 37060025.0,
+        "small_net": 20039080.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
+        }
+      }
+    },
+    "003029": {
+      "code": "003029",
+      "entered_at": "2026-10-15T09:54:47.050363+08:00",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
+      "source_batch_id": null,
+      "latest_metrics": {
+        "name": "吉大正元",
+        "price": 19.99,
+        "change_pct": 10.0165,
+        "total_amount": 286759976.09,
+        "main_net_inflow": 189394810.0,
+        "main_inflow_ratio": 66.0465,
+        "super_net": 112958780.0,
+        "big_net": 76436030.0,
+        "mid_net": 53297298.09,
+        "small_net": 25099604.0,
+        "source": "sina_single",
+        "features": {
+          "roll_net_30m": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 17.9785,
+          "interval_seconds": 352,
+          "warming": true,
+          "warming_reason": "insufficient_coverage"
+        }
+      }
+    },
+    "002543": {
+      "code": "002543",
+      "entered_at": "2026-10-15T09:42:27.336575+08:00",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
+      "source_batch_id": null,
+      "latest_metrics": {
+        "name": "万和电气",
+        "price": 7.88,
+        "change_pct": 10.0559,
+        "total_amount": 280016487.39,
+        "main_net_inflow": 182966673.15,
+        "main_inflow_ratio": 65.3414,
+        "super_net": 98033927.47,
+        "big_net": 84932745.68,
+        "mid_net": 46803523.64,
+        "small_net": 27005730.6,
+        "source": "sina_single",
+        "features": {
+          "roll_net_30m": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 63.2727,
+          "interval_seconds": 352,
+          "warming": true,
+          "warming_reason": "insufficient_coverage"
         }
       }
     },
     "600668": {
       "code": "600668",
       "entered_at": "2026-10-15T10:18:22.569529+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
       "source_batch_id": null,
       "latest_metrics": {
         "name": "尖峰集团",
@@ -13390,152 +13419,94 @@
           "inc_ratio_5m": null,
           "interval_seconds": null,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       }
     },
     "603999": {
       "code": "603999",
       "entered_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
       "source_batch_id": null,
       "latest_metrics": {
         "name": "读者传媒",
         "price": 7.62,
         "change_pct": 9.9567,
-        "total_amount": 131080874.8,
+        "total_amount": 131704190.8,
         "main_net_inflow": 77998697.0,
-        "main_inflow_ratio": 59.5043,
+        "main_inflow_ratio": 59.2226,
         "super_net": 40431390.0,
         "big_net": 37567307.0,
-        "mid_net": 25668648.6,
-        "small_net": 15568879.2,
+        "mid_net": 26080890.6,
+        "small_net": 15779953.2,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
           "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "inc_ratio_5m": 0.0,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       }
     },
     "002134": {
       "code": "002134",
       "entered_at": "2026-10-15T09:42:27.336575+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
       "source_batch_id": null,
       "latest_metrics": {
         "name": "天津普林",
         "price": 24.34,
         "change_pct": 9.9864,
-        "total_amount": 591720956.26,
-        "main_net_inflow": 346602068.26,
-        "main_inflow_ratio": 58.5753,
+        "total_amount": 593079128.26,
+        "main_net_inflow": 347001244.26,
+        "main_inflow_ratio": 58.5084,
         "super_net": 243051423.0,
-        "big_net": 103550645.26,
-        "mid_net": 30293240.0,
-        "small_net": 15902134.0,
+        "big_net": 103949821.26,
+        "mid_net": 30784908.0,
+        "small_net": 16369462.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 29.3907,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       }
     },
     "600721": {
       "code": "600721",
       "entered_at": "2026-10-15T09:54:47.050363+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
+      "last_seen_at": "2026-10-15T14:46:08.173933+08:00",
+      "dwell_until": "2026-10-15T15:16:08.173933+08:00",
+      "selection_reason": "rotation",
       "source_batch_id": null,
       "latest_metrics": {
         "name": "百花医药",
         "price": 12.05,
         "change_pct": 10.0457,
-        "total_amount": 661419443.1,
-        "main_net_inflow": 360677847.02,
-        "main_inflow_ratio": 54.5309,
+        "total_amount": 661966513.1,
+        "main_net_inflow": 360962227.02,
+        "main_inflow_ratio": 54.5288,
         "super_net": 244654693.02,
-        "big_net": 116023154.0,
+        "big_net": 116307534.0,
         "mid_net": 67571007.0,
-        "small_net": 36130720.0,
+        "small_net": 36393410.0,
         "source": "sina_single",
         "features": {
           "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
+          "acc_win": 1,
+          "inc_ratio_5m": 51.9824,
+          "interval_seconds": 352,
           "warming": true,
-          "warming_reason": "batch_partial"
-        }
-      }
-    },
-    "603258": {
-      "code": "603258",
-      "entered_at": "2026-10-15T10:18:22.569529+08:00",
-      "last_seen_at": "2026-10-15T14:28:33.414152+08:00",
-      "dwell_until": "2026-10-15T14:58:33.414152+08:00",
-      "selection_reason": "protected_dwell",
-      "source_batch_id": null,
-      "latest_metrics": {
-        "name": "电魂网络",
-        "price": 16.99,
-        "change_pct": 5.2012,
-        "total_amount": 571016473.83,
-        "main_net_inflow": 300688095.3,
-        "main_inflow_ratio": 52.6584,
-        "super_net": 250514589.3,
-        "big_net": 50173506.0,
-        "mid_net": 36849745.0,
-        "small_net": 21326831.85,
-        "source": "sina_single",
-        "features": {
-          "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
-          "warming": true,
-          "warming_reason": "batch_partial"
-        }
-      }
-    },
-    "603237": {
-      "code": "603237",
-      "entered_at": "2026-10-15T13:47:48.065647+08:00",
-      "last_seen_at": "2026-10-15T14:40:15.778278+08:00",
-      "dwell_until": "2026-10-15T15:10:15.778278+08:00",
-      "selection_reason": "rotation",
-      "source_batch_id": null,
-      "latest_metrics": {
-        "name": "五芳斋",
-        "price": 16.47,
-        "change_pct": 10.02,
-        "total_amount": 138809626.75,
-        "main_net_inflow": 72323963.2,
-        "main_inflow_ratio": 52.103,
-        "super_net": 36525482.96,
-        "big_net": 35798480.24,
-        "mid_net": 18859102.39,
-        "small_net": 11449767.16,
-        "source": "sina_single",
-        "features": {
-          "roll_net_30m": null,
-          "acc_win": 0,
-          "inc_ratio_5m": null,
-          "interval_seconds": null,
-          "warming": true,
-          "warming_reason": "batch_partial"
+          "warming_reason": "insufficient_coverage"
         }
       }
     }
@@ -14431,16 +14402,6 @@
     ],
     "601188": [
       {
-        "observed_at": "2026-10-15T10:30:25.259063+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -106010693.15,
-        "total_amount": 338586028.08,
-        "batch_id": "391eb1f522f94c3199848aaaa7820d96",
-        "partial": true,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -134026287.87,
@@ -14666,6 +14627,16 @@
         "main_net_inflow": -153480827.87,
         "total_amount": 478078040.33,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -153480827.87,
+        "total_amount": 479537024.33,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -14983,16 +14954,6 @@
     ],
     "001231": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -35596588.0,
-        "total_amount": 50466313.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -35596588.0,
@@ -15218,6 +15179,16 @@
         "main_net_inflow": -36358776.0,
         "total_amount": 53521911.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -36358776.0,
+        "total_amount": 53800315.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -15661,16 +15632,6 @@
     ],
     "000668": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -27483616.0,
-        "total_amount": 38700004.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -27483616.0,
@@ -15896,6 +15857,16 @@
         "main_net_inflow": -34420268.0,
         "total_amount": 49244448.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -34420268.0,
+        "total_amount": 49665900.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -16243,16 +16214,6 @@
     ],
     "002647": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -19595204.0,
-        "total_amount": 33570330.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -19595204.0,
@@ -16478,6 +16439,16 @@
         "main_net_inflow": -23428552.0,
         "total_amount": 43965850.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -23428552.0,
+        "total_amount": 44307392.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -17109,16 +17080,6 @@
     ],
     "600202": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -145686666.23,
-        "total_amount": 263663527.67,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -149348872.23,
@@ -17347,19 +17308,19 @@
         "partial": false,
         "stale": false,
         "cache": false
-      }
-    ],
-    "600567": [
+      },
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -18517032.0,
-        "total_amount": 35848783.6,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
+        "main_net_inflow": -164543023.92,
+        "total_amount": 381835285.22,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
-      },
+      }
+    ],
+    "600567": [
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -17589,6 +17550,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -31670806.63,
+        "total_amount": 76306757.87,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "600241": [
@@ -17792,16 +17763,6 @@
       }
     ],
     "002146": [
-      {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -29812967.0,
-        "total_amount": 96702322.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -18028,6 +17989,16 @@
         "main_net_inflow": -56259822.0,
         "total_amount": 148118478.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -49444902.0,
+        "total_amount": 156234526.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -18445,16 +18416,6 @@
     ],
     "600221": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -35590204.0,
-        "total_amount": 89148406.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -35364604.0,
@@ -18680,6 +18641,16 @@
         "main_net_inflow": -98617726.75,
         "total_amount": 259729509.53,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -96980965.75,
+        "total_amount": 268779957.53,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -19313,16 +19284,6 @@
     ],
     "000937": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -36106554.17,
-        "total_amount": 98136624.43,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -37412026.17,
@@ -19548,6 +19509,16 @@
         "main_net_inflow": -49170763.77,
         "total_amount": 162554329.33,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -49170763.77,
+        "total_amount": 162554329.33,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -20105,16 +20076,6 @@
     ],
     "600693": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -35617396.0,
-        "total_amount": 59592331.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -35617396.0,
@@ -20340,6 +20301,16 @@
         "main_net_inflow": -35852154.0,
         "total_amount": 64599039.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -35852154.0,
+        "total_amount": 64599039.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -23747,16 +23718,6 @@
     ],
     "600871": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -94332066.54,
-        "total_amount": 247952348.4,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -94126066.54,
@@ -23982,6 +23943,16 @@
         "main_net_inflow": -124006252.06,
         "total_amount": 368703501.88,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -123616473.06,
+        "total_amount": 379779503.88,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -24653,16 +24624,6 @@
     ],
     "000531": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -14227133.0,
-        "total_amount": 30207045.4,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -14227133.0,
@@ -24891,19 +24852,19 @@
         "partial": false,
         "stale": false,
         "cache": false
-      }
-    ],
-    "600022": [
+      },
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -20771283.0,
-        "total_amount": 45356597.1,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
+        "main_net_inflow": -17166998.0,
+        "total_amount": 45546843.4,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
-      },
+      }
+    ],
+    "600022": [
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -25130,6 +25091,16 @@
         "main_net_inflow": -35816756.64,
         "total_amount": 105011046.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -35816756.64,
+        "total_amount": 105011046.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -26699,16 +26670,6 @@
     ],
     "603999": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 67367273.0,
-        "total_amount": 107386942.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": 67367273.0,
@@ -26934,6 +26895,16 @@
         "main_net_inflow": 77998697.0,
         "total_amount": 131080874.8,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 77998697.0,
+        "total_amount": 131704190.8,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -27183,16 +27154,6 @@
     ],
     "601518": [
       {
-        "observed_at": "2026-10-15T10:36:24.508373+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -13907737.8,
-        "total_amount": 35867336.0,
-        "batch_id": "e3dc6c1f37de4db395ca08f737e0d6e8",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T10:42:16.679976+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -14147137.8,
@@ -27418,6 +27379,16 @@
         "main_net_inflow": -27681807.4,
         "total_amount": 82458496.8,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -27681807.4,
+        "total_amount": 82458496.8,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -27815,16 +27786,6 @@
     ],
     "002103": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 189208450.0,
-        "total_amount": 244227962.5,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": 189208450.0,
@@ -28053,6 +28014,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 213890950.0,
+        "total_amount": 286864975.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "002958": [
@@ -28238,16 +28209,6 @@
       }
     ],
     "002860": [
-      {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -225049431.43,
-        "total_amount": 623175599.41,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -28474,6 +28435,16 @@
         "main_net_inflow": -282175113.02,
         "total_amount": 753267985.24,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -282175113.02,
+        "total_amount": 753297121.24,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -29335,16 +29306,6 @@
     ],
     "001359": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -50786931.1,
-        "total_amount": 147715088.6,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -66395035.5,
@@ -29573,6 +29534,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -136060538.8,
+        "total_amount": 312477192.1,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "000528": [
@@ -29762,16 +29733,6 @@
       }
     ],
     "002543": [
-      {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 112493404.55,
-        "total_amount": 166209475.51,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -29998,6 +29959,16 @@
         "main_net_inflow": 175990272.75,
         "total_amount": 268990554.99,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 182966673.15,
+        "total_amount": 280016487.39,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -30345,16 +30316,6 @@
     ],
     "002134": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 271717517.0,
-        "total_amount": 491511345.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": 271717517.0,
@@ -30580,6 +30541,16 @@
         "main_net_inflow": 346602068.26,
         "total_amount": 591720956.26,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 347001244.26,
+        "total_amount": 593079128.26,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -32823,16 +32794,6 @@
     ],
     "600165": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -9052222.0,
-        "total_amount": 26432227.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -9052222.0,
@@ -33058,6 +33019,16 @@
         "main_net_inflow": -12785074.0,
         "total_amount": 38981782.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -12405814.0,
+        "total_amount": 39865666.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -34465,16 +34436,6 @@
     ],
     "600721": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 257998592.02,
-        "total_amount": 504980318.1,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": 260063962.02,
@@ -34703,6 +34664,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 360962227.02,
+        "total_amount": 661966513.1,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "601326": [
@@ -34728,16 +34699,6 @@
       }
     ],
     "002496": [
-      {
-        "observed_at": "2026-10-15T09:54:47.050363+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -8322794.0,
-        "total_amount": 24757169.0,
-        "batch_id": "e4e3029f97404dabaab9856f7e282776",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
       {
         "observed_at": "2026-10-15T10:00:36.634325+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -34967,6 +34928,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -31061896.59,
+        "total_amount": 100448880.8,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "600743": [
@@ -35046,16 +35017,6 @@
       }
     ],
     "003029": [
-      {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 145526755.0,
-        "total_amount": 210580085.09,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -35282,6 +35243,16 @@
         "main_net_inflow": 188993011.0,
         "total_amount": 284525094.09,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 189394810.0,
+        "total_amount": 286759976.09,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -35531,16 +35502,6 @@
     ],
     "605118": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -40932280.0,
-        "total_amount": 78509810.0,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -41410770.0,
@@ -35766,6 +35727,16 @@
         "main_net_inflow": -42395209.0,
         "total_amount": 108642163.82,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -42611502.0,
+        "total_amount": 111988083.82,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -37319,16 +37290,6 @@
     ],
     "001220": [
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -15434975.6,
-        "total_amount": 23443081.58,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -15434975.6,
@@ -37554,6 +37515,16 @@
         "main_net_inflow": -20845776.7,
         "total_amount": 34315180.82,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -20845776.7,
+        "total_amount": 34810391.99,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -37961,16 +37932,6 @@
     ],
     "001325": [
       {
-        "observed_at": "2026-10-15T10:42:16.679976+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": -5539140.0,
-        "total_amount": 15982866.0,
-        "batch_id": "3aced91b20bb42ef91db637b3e488dbc",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
-      {
         "observed_at": "2026-10-15T10:48:09.862638+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
         "main_net_inflow": -5539140.0,
@@ -38199,6 +38160,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -15178710.0,
+        "total_amount": 46950014.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "600956": [
@@ -38366,16 +38337,6 @@
       }
     ],
     "600668": [
-      {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
-        "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 104633717.01,
-        "total_amount": 186471695.22,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
-        "partial": false,
-        "stale": false,
-        "cache": false
-      },
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -38605,19 +38566,19 @@
         "partial": false,
         "stale": false,
         "cache": false
-      }
-    ],
-    "603258": [
+      },
       {
-        "observed_at": "2026-10-15T11:00:20.399440+08:00",
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
-        "main_net_inflow": 238781379.3,
-        "total_amount": 383766889.98,
-        "batch_id": "e7c641b5dcd9476a9115cb648fdd0d38",
+        "main_net_inflow": 154134584.81,
+        "total_amount": 254064663.59,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
-      },
+      }
+    ],
+    "603258": [
       {
         "observed_at": "2026-10-15T11:06:12.942930+08:00",
         "source_segment": "sina_full:v1:2026-10-15",
@@ -38844,6 +38805,16 @@
         "main_net_inflow": 296807038.3,
         "total_amount": 621099189.83,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 295632579.3,
+        "total_amount": 630610839.83,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -39773,6 +39744,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -321122204.07,
+        "total_amount": 1035222903.28,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "000932": [
@@ -40139,6 +40120,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 76918885.72,
+        "total_amount": 118947767.25,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "601686": [
@@ -40469,6 +40460,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -104589224.26,
+        "total_amount": 340468192.14,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "603167": [
@@ -40687,6 +40688,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": 74712113.2,
+        "total_amount": 141602938.75,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "603192": [
@@ -40823,6 +40834,16 @@
         "partial": false,
         "stale": false,
         "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -45346101.0,
+        "total_amount": 143024881.5,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+        "partial": false,
+        "stale": false,
+        "cache": false
       }
     ],
     "600538": [
@@ -40842,6 +40863,16 @@
         "main_net_inflow": -22688804.0,
         "total_amount": 48363916.0,
         "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
+        "partial": false,
+        "stale": false,
+        "cache": false
+      },
+      {
+        "observed_at": "2026-10-15T14:46:08.173933+08:00",
+        "source_segment": "sina_full:v1:2026-10-15",
+        "main_net_inflow": -22688804.0,
+        "total_amount": 48155932.0,
+        "batch_id": "21b32d80104542eda3e76a90f98bfd80",
         "partial": false,
         "stale": false,
         "cache": false
@@ -40867,10 +40898,10 @@
       "scanned": 2920
     },
     "pm": {
-      "snapshot_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "batch_id": "e79131409a8b4bd88b4d422d46e1ef1e",
-      "captured_at": "2026-10-15T14:40:15.778278+08:00",
-      "now": "2026-10-15T14:40:15.778278+08:00",
+      "snapshot_id": "21b32d80104542eda3e76a90f98bfd80",
+      "batch_id": "21b32d80104542eda3e76a90f98bfd80",
+      "captured_at": "2026-10-15T14:46:08.173933+08:00",
+      "now": "2026-10-15T14:46:08.173933+08:00",
       "trade_date": "2026-10-15",
       "session": "pm",
       "status": "completed",
@@ -40885,13 +40916,53 @@
     }
   },
   "features": {
-    "605118": {
+    "601518": {
       "roll_net_30m": null,
       "acc_win": 0,
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
+    },
+    "603999": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "600871": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 3.5191,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002860": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "605118": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": -6.4644,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002146": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 83.9685,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
     },
     "600668": {
       "roll_net_30m": null,
@@ -40899,23 +40970,23 @@
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
-    "000937": {
+    "003029": {
       "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 17.9785,
+      "interval_seconds": 352,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
-    "002496": {
+    "603237": {
       "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 85.4953,
+      "interval_seconds": 352,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
     "600578": {
       "roll_net_30m": null,
@@ -40923,199 +40994,23 @@
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "001359": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "001288": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
     "001231": {
       "roll_net_30m": null,
       "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
-    "000564": {
+    "001288": {
       "roll_net_30m": null,
       "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
       "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "601188": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002226": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002860": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600871": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002647": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "000531": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "603535": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600693": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600567": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "001325": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002543": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "603237": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600022": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002103": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "603999": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002146": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "002134": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600165": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600538": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "601518": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
     "600926": {
       "roll_net_30m": null,
@@ -41123,23 +41018,119 @@
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "counter_reset"
+    },
+    "600721": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 51.9824,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "600221": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 18.0849,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
     },
     "000668": {
       "roll_net_30m": null,
       "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
-    "003029": {
+    "600693": {
       "roll_net_30m": null,
       "acc_win": 0,
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
+    },
+    "603535": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 53.9615,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "001359": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": null,
+      "interval_seconds": null,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002647": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "600165": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 42.9083,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002134": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 29.3907,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002103": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "000531": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "600538": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": null,
+      "interval_seconds": null,
+      "warming": true,
+      "warming_reason": "counter_reset"
+    },
+    "603258": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": -12.3476,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "600022": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": null,
+      "interval_seconds": null,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
     },
     "600202": {
       "roll_net_30m": null,
@@ -41147,39 +41138,63 @@
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
-    "600221": {
+    "001325": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "601188": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002543": {
+      "roll_net_30m": null,
+      "acc_win": 1,
+      "inc_ratio_5m": 63.2727,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "002496": {
+      "roll_net_30m": null,
+      "acc_win": 0,
+      "inc_ratio_5m": -10.1072,
+      "interval_seconds": 352,
+      "warming": true,
+      "warming_reason": "insufficient_coverage"
+    },
+    "000937": {
       "roll_net_30m": null,
       "acc_win": 0,
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
-    "603258": {
+    "600567": {
       "roll_net_30m": null,
       "acc_win": 0,
       "inc_ratio_5m": null,
       "interval_seconds": null,
       "warming": true,
-      "warming_reason": "batch_partial"
-    },
-    "600721": {
-      "roll_net_30m": null,
-      "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
-      "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     },
     "001220": {
       "roll_net_30m": null,
       "acc_win": 0,
-      "inc_ratio_5m": null,
-      "interval_seconds": null,
+      "inc_ratio_5m": 0.0,
+      "interval_seconds": 352,
       "warming": true,
-      "warming_reason": "batch_partial"
+      "warming_reason": "insufficient_coverage"
     }
   }
 }
