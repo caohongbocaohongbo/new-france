@@ -1,31 +1,6 @@
 {
   "records": [
     {
-      "batch_id": "7431150fda8d4aefaf749c6eceebad28",
-      "trade_date": "2026-09-24",
-      "session": "pm",
-      "now": "2026-09-24T14:54:16.337540+08:00",
-      "truth_source": "sina_full",
-      "universe_count": 3196,
-      "requested_count": 3196,
-      "received_count": 3196,
-      "coverage_ratio": 1.0,
-      "config_fingerprint": "1d63bcba0730",
-      "thresholds": {
-        "buy": 50.0,
-        "sell": 30.0
-      },
-      "candidate_summary": {
-        "buy": 17,
-        "sell": 40
-      },
-      "false_negative_buy": [],
-      "false_negative_sell": [],
-      "latency_ms": 56146,
-      "deadline_met": true,
-      "valid_for_admission": false
-    },
-    {
       "batch_id": "7c3f323a81a143f39768eda81034261a",
       "trade_date": "2026-09-28",
       "session": "am",
@@ -26533,6 +26508,55 @@
       "latency_ms": 37532,
       "deadline_met": true,
       "valid_for_admission": true
+    },
+    {
+      "batch_id": "2d7cf904e22c4366bab29fef14e68b87",
+      "trade_date": "2026-11-06",
+      "session": "am",
+      "now": "2026-11-06T09:30:58.304334+08:00",
+      "truth_source": "sina_full",
+      "universe_count": 2590,
+      "requested_count": 2590,
+      "received_count": 2582,
+      "coverage_ratio": 0.996911,
+      "config_fingerprint": "1d63bcba0730",
+      "thresholds": {
+        "buy": 50.0,
+        "sell": 30.0
+      },
+      "candidate_summary": {
+        "buy": 28,
+        "sell": 51
+      },
+      "false_negative_buy": [
+        "000635",
+        "002506",
+        "600206",
+        "603200",
+        "603236",
+        "603500"
+      ],
+      "false_negative_sell": [
+        "000525",
+        "000700",
+        "000932",
+        "002128",
+        "002565",
+        "002915",
+        "600029",
+        "600031",
+        "600216",
+        "600438",
+        "600707",
+        "601179",
+        "601288",
+        "601788",
+        "603686",
+        "603888"
+      ],
+      "latency_ms": 42272,
+      "deadline_met": true,
+      "valid_for_admission": false
     }
   ]
 }
