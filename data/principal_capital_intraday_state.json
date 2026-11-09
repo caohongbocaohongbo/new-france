@@ -191,20 +191,20 @@
       "session": "pm",
       "selected_snapshot_id": "ca0d733e2f494f9aa362e07802b54a8b",
       "finalizer_due_at": "2026-11-09T15:05:00+08:00",
-      "queued_at": "2026-11-09T15:00:38.624612+08:00",
-      "started_at": "2026-11-09T15:00:38.624612+08:00",
+      "queued_at": "2026-11-09T15:47:44.902054+08:00",
+      "started_at": "2026-11-09T15:47:44.902054+08:00",
       "completed_at": null,
       "attempt_count": 0,
-      "dispatch_count": 1,
+      "dispatch_count": 2,
       "max_attempts": 3,
-      "next_retry_at": "2026-11-09T15:01:38.624612+08:00",
+      "next_retry_at": "2026-11-09T15:48:44.902054+08:00",
       "last_error_code": "SNAPSHOT_NOT_READY",
       "last_error_message": "SNAPSHOT_NOT_READY",
-      "last_error_at": "2026-11-09T15:00:38.624612+08:00",
+      "last_error_at": "2026-11-09T15:47:44.902054+08:00",
       "skip_reason": null,
-      "trigger_source": "scheduler",
-      "worker_id": "42564378409:1:scan",
-      "run_id": "aee93e2e700546d0bda7a27adc388dee",
+      "trigger_source": "reconciler",
+      "worker_id": "42581505712:1:reconcile",
+      "run_id": "b23c70d1c7e343eda881cf7f4958f261",
       "history": [
         {
           "from": "not_attempted",
@@ -228,6 +228,30 @@
           "at": "2026-11-09T15:00:38.624612+08:00",
           "reason": "SNAPSHOT_NOT_READY",
           "worker_id": "42564378409:1:scan",
+          "error": "SNAPSHOT_NOT_READY"
+        },
+        {
+          "from": "retry_wait",
+          "to": "queued",
+          "at": "2026-11-09T15:47:44.902054+08:00",
+          "reason": "reconciler",
+          "worker_id": null,
+          "error": null
+        },
+        {
+          "from": "queued",
+          "to": "running",
+          "at": "2026-11-09T15:47:44.902054+08:00",
+          "reason": null,
+          "worker_id": "42581505712:1:reconcile",
+          "error": null
+        },
+        {
+          "from": "running",
+          "to": "retry_wait",
+          "at": "2026-11-09T15:47:44.902054+08:00",
+          "reason": "SNAPSHOT_NOT_READY",
+          "worker_id": "42581505712:1:reconcile",
           "error": "SNAPSHOT_NOT_READY"
         }
       ],
