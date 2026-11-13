@@ -3,46 +3,48 @@
   "sources": {
     "national_team": {
       "key": "national_team",
-      "ok": true,
-      "stable": true,
-      "consecutive_successes": 27,
+      "ok": false,
+      "stable": false,
+      "consecutive_successes": 0,
       "required_successes": 3,
       "max_age_hours": 72,
-      "updated_at": "2026-11-12T23:57:05.762144+08:00",
+      "updated_at": "2026-11-13T23:19:52.983936+08:00",
       "last_success_at": "2026-11-12T23:57:05.606428+08:00",
-      "last_failure_at": null,
+      "last_failure_at": "2026-11-13T23:19:52.983945+08:00",
       "source_status": {
         "source": "东方财富股东分析",
         "source_url": "https://data.eastmoney.com/gdfx/HoldingAnalyse.html",
-        "fetched_at": "2026-11-12T23:57:05.606428+08:00",
-        "errors": [],
+        "fetched_at": "2026-11-13T23:19:52.837374+08:00",
+        "errors": [
+          "(HOLDER_NAME=\"中国证券金融股份有限公司\"): HTTPSConnectionPool(host='datacenter-web.eastmoney.com', port=443): Read timed out. (read timeout=15)"
+        ],
         "note": "证金/汇金按精确股东名过滤，社保基金按东方财富股东类型过滤"
       },
       "data": {
-        "record_count": 240,
-        "holding_count": 240,
-        "change_count": 153,
-        "event_count": 73,
+        "record_count": 210,
+        "holding_count": 210,
+        "change_count": 130,
+        "event_count": 72,
         "periods": [
+          "2026-11-10",
           "2026-11-09",
           "2026-11-06",
           "2026-11-05",
           "2026-11-04",
           "2026-11-03",
           "2026-11-02",
+          "2026-10-30",
           "2026-10-29",
           "2026-10-28",
           "2026-10-23",
-          "2026-10-16",
           "2026-09-30",
-          "2026-09-14",
           "2026-06-30",
           "2026-03-31",
           "2025-12-31"
         ]
       },
-      "error": null
+      "error": "(HOLDER_NAME=\"中国证券金融股份有限公司\"): HTTPSConnectionPool(host='datacenter-web.eastmoney.com', port=443): Read timed out. (read timeout=15)"
     }
   },
-  "updated_at": "2026-11-12T23:57:05.762162+08:00"
+  "updated_at": "2026-11-13T23:19:52.983954+08:00"
 }
