@@ -1,31 +1,6 @@
 {
   "records": [
     {
-      "batch_id": "e84ea1f9fad0466d9e3ed48e723d952f",
-      "trade_date": "2026-10-19",
-      "session": "am",
-      "now": "2026-10-19T11:17:57.675131+08:00",
-      "truth_source": "sina_full",
-      "universe_count": 2320,
-      "requested_count": 2320,
-      "received_count": 2313,
-      "coverage_ratio": 0.996983,
-      "config_fingerprint": "1d63bcba0730",
-      "thresholds": {
-        "buy": 50.0,
-        "sell": 30.0
-      },
-      "candidate_summary": {
-        "buy": 6,
-        "sell": 17
-      },
-      "false_negative_buy": [],
-      "false_negative_sell": [],
-      "latency_ms": 40338,
-      "deadline_met": true,
-      "valid_for_admission": false
-    },
-    {
       "batch_id": "6d139d4134a144f0a2fd32ea6caed4e7",
       "trade_date": "2026-10-19",
       "session": "am",
@@ -26623,6 +26598,45 @@
       "latency_ms": 39109,
       "deadline_met": true,
       "valid_for_admission": true
+    },
+    {
+      "batch_id": "3f2ab92e4cdd47d891b287ad0b3fce47",
+      "trade_date": "2026-11-20",
+      "session": "am",
+      "now": "2026-11-20T09:30:58.965585+08:00",
+      "truth_source": "sina_full",
+      "universe_count": 2597,
+      "requested_count": 2597,
+      "received_count": 2597,
+      "coverage_ratio": 1.0,
+      "config_fingerprint": "1d63bcba0730",
+      "thresholds": {
+        "buy": 50.0,
+        "sell": 30.0
+      },
+      "candidate_summary": {
+        "buy": 11,
+        "sell": 40
+      },
+      "false_negative_buy": [
+        "002077",
+        "600520",
+        "603931"
+      ],
+      "false_negative_sell": [
+        "001282",
+        "002240",
+        "002273",
+        "002837",
+        "600368",
+        "600853",
+        "601599",
+        "603366",
+        "603818"
+      ],
+      "latency_ms": 30353,
+      "deadline_met": true,
+      "valid_for_admission": false
     }
   ]
 }
