@@ -14,20 +14,20 @@
       "session": "am",
       "selected_snapshot_id": "edb8a2f5a71e42219a8a8e6e8bcbf6b0",
       "finalizer_due_at": "2026-11-23T11:35:00+08:00",
-      "queued_at": "2026-11-23T11:30:42.364125+08:00",
-      "started_at": "2026-11-23T11:30:42.364125+08:00",
+      "queued_at": "2026-11-23T12:55:48.603678+08:00",
+      "started_at": "2026-11-23T12:55:48.603678+08:00",
       "completed_at": null,
       "attempt_count": 0,
-      "dispatch_count": 1,
+      "dispatch_count": 2,
       "max_attempts": 3,
-      "next_retry_at": "2026-11-23T11:31:42.364125+08:00",
+      "next_retry_at": "2026-11-23T12:56:48.603678+08:00",
       "last_error_code": "SNAPSHOT_NOT_READY",
       "last_error_message": "SNAPSHOT_NOT_READY",
-      "last_error_at": "2026-11-23T11:30:42.364125+08:00",
+      "last_error_at": "2026-11-23T12:55:48.603678+08:00",
       "skip_reason": null,
-      "trigger_source": "scheduler",
-      "worker_id": "45094467922:1:scan",
-      "run_id": "2a7254e7bbeb472b9c6a205ef57eb127",
+      "trigger_source": "reconciler",
+      "worker_id": "45114639604:1:scan",
+      "run_id": "82bef27b25704f3fbbcdc93d45557695",
       "history": [
         {
           "from": "not_attempted",
@@ -51,6 +51,30 @@
           "at": "2026-11-23T11:30:42.364125+08:00",
           "reason": "SNAPSHOT_NOT_READY",
           "worker_id": "45094467922:1:scan",
+          "error": "SNAPSHOT_NOT_READY"
+        },
+        {
+          "from": "retry_wait",
+          "to": "queued",
+          "at": "2026-11-23T12:55:48.603678+08:00",
+          "reason": "reconciler",
+          "worker_id": null,
+          "error": null
+        },
+        {
+          "from": "queued",
+          "to": "running",
+          "at": "2026-11-23T12:55:48.603678+08:00",
+          "reason": null,
+          "worker_id": "45114639604:1:scan",
+          "error": null
+        },
+        {
+          "from": "running",
+          "to": "retry_wait",
+          "at": "2026-11-23T12:55:48.603678+08:00",
+          "reason": "SNAPSHOT_NOT_READY",
+          "worker_id": "45114639604:1:scan",
           "error": "SNAPSHOT_NOT_READY"
         }
       ],
