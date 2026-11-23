@@ -1,31 +1,6 @@
 {
   "records": [
     {
-      "batch_id": "72705d28600d46b78332aaeec5b7731f",
-      "trade_date": "2026-10-20",
-      "session": "am",
-      "now": "2026-10-20T11:24:02.614451+08:00",
-      "truth_source": "sina_full",
-      "universe_count": 2320,
-      "requested_count": 2320,
-      "received_count": 2320,
-      "coverage_ratio": 1.0,
-      "config_fingerprint": "1d63bcba0730",
-      "thresholds": {
-        "buy": 50.0,
-        "sell": 30.0
-      },
-      "candidate_summary": {
-        "buy": 10,
-        "sell": 33
-      },
-      "false_negative_buy": [],
-      "false_negative_sell": [],
-      "latency_ms": 32958,
-      "deadline_met": true,
-      "valid_for_admission": true
-    },
-    {
       "batch_id": "6d41fcf20b4e4152adbb2287820170df",
       "trade_date": "2026-10-20",
       "session": "am",
@@ -26653,6 +26628,73 @@
         "601360"
       ],
       "latency_ms": 65702,
+      "deadline_met": true,
+      "valid_for_admission": false
+    },
+    {
+      "batch_id": "dd8f57642489469c89435b64d0c30558",
+      "trade_date": "2026-11-23",
+      "session": "am",
+      "now": "2026-11-23T09:37:01.801807+08:00",
+      "truth_source": "sina_full",
+      "universe_count": 2371,
+      "requested_count": 2371,
+      "received_count": 2370,
+      "coverage_ratio": 0.999578,
+      "config_fingerprint": "1d63bcba0730",
+      "thresholds": {
+        "buy": 50.0,
+        "sell": 30.0
+      },
+      "candidate_summary": {
+        "buy": 30,
+        "sell": 113
+      },
+      "false_negative_buy": [
+        "000426",
+        "000519",
+        "002289",
+        "002558",
+        "002859",
+        "002945",
+        "003006",
+        "003031",
+        "600127",
+        "601869",
+        "603319",
+        "603806"
+      ],
+      "false_negative_sell": [
+        "000066",
+        "001248",
+        "001287",
+        "002199",
+        "002223",
+        "002303",
+        "002361",
+        "002460",
+        "002467",
+        "002578",
+        "002714",
+        "002943",
+        "600011",
+        "600115",
+        "600176",
+        "600426",
+        "600926",
+        "601066",
+        "601225",
+        "601319",
+        "601595",
+        "601658",
+        "601668",
+        "601838",
+        "603019",
+        "603078",
+        "603528",
+        "603980"
+      ],
+      "latency_ms": 63009,
       "deadline_met": true,
       "valid_for_admission": false
     }
